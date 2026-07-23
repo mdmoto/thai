@@ -41,8 +41,8 @@ npm run dev
 
 ## 目标域名
 
-- 生产: lazzor.com/ai
-- 开发: localhost:3000
+- 生产: https://ai.lazzor.com
+- 开发: http://localhost:3000
 
 ## GitHub
 
