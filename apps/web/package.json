@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pages:build": "next-on-pages",
-    "deploy": "next-on-pages && wrangler pages deploy .vercel/output/static --project-name=thailand-market-twin"
+    "pages:build": "npm run build",
+    "deploy": "npm run build && wrangler pages deploy out --project-name=thailand-market-twin"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",
