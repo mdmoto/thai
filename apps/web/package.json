@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "deploy": "npx @cloudflare/next-on-pages && npx wrangler pages deploy .vercel/output/static --project-name=thailand-market-twin"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.21",
