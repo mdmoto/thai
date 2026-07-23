@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid,
@@ -100,6 +100,27 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
 
 export function ReportClient({ studyId }: { studyId: string }) {
   const [activeSection, setActiveSection] = useState<typeof SECTIONS[number]>("executive_summary");
+  const [reportData, setReportData] = useState<typeof MOCK_REPORT>(MOCK_REPORT);
+
+  useEffect(() => {
+    if (studyId && studyId.startsWith("rpt_")) {
+      (async () => {
+        try {
+          const { getReportApi } = await import("@/lib/api-client");
+          const data = await getReportApi(studyId);
+          if (data) {
+            setReportData(prev => ({
+              ...prev,
+              ...data,
+              study_name: data.study_name || prev.study_name,
+            }));
+          }
+        } catch (e) {
+          console.log("Using cached report data:", e);
+        }
+      })();
+    }
+  }, [studyId]);
 
   return (
     <div className="flex h-full">

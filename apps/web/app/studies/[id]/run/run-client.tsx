@@ -46,6 +46,8 @@ export function RunProgressClient({ studyId }: { studyId: string }) {
     return () => clearInterval(timer);
   }, [done]);
 
+  const [reportId, setReportId] = useState<string | null>(null);
+
   useEffect(() => {
     if (done) return;
     if (currentStage >= STAGES.length) {
@@ -55,6 +57,27 @@ export function RunProgressClient({ studyId }: { studyId: string }) {
 
     const stage = STAGES[currentStage];
     const startTime = Date.now();
+
+    // Trigger real backend run at simulation stage
+    if (stage.id === "simulation" && !reportId) {
+      (async () => {
+        try {
+          const { runSimulationApi } = await import("@/lib/api-client");
+          const popSize = studyId.includes("study_") ? 30000 : 10000;
+          const report = await runSimulationApi({
+            study_id: studyId,
+            population_size: popSize,
+            mc_rounds: 50,
+          });
+          if (report && report.report_id) {
+            setReportId(report.report_id);
+          }
+        } catch (err) {
+          console.log("Backend simulation call fallback:", err);
+        }
+      })();
+    }
+
     const interval = setInterval(() => {
       const elapsedMs = Date.now() - startTime;
       const pct = Math.min(99, (elapsedMs / stage.durationMs) * 100);
@@ -81,7 +104,7 @@ export function RunProgressClient({ studyId }: { studyId: string }) {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentStage, done]);
+  }, [currentStage, done, reportId, studyId]);
 
   function getStageDetail(stageIdx: number, pct: number): string {
     switch (stageIdx) {

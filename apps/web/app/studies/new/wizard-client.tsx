@@ -110,9 +110,39 @@ export function NewStudyWizard() {
     setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const handleSubmit = () => {
-    const mockId = `study_${Date.now()}`;
-    router.push(`/studies/${mockId}/run`);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      // 1. Call real FastAPI backend to create study
+      const { createStudyApi, confirmStudyApi } = await import("@/lib/api-client");
+      const study = await createStudyApi({
+        name: state.name || "未命名研究项目",
+        study_type: state.study_type || "PRODUCT_VALIDATION",
+        plan_code: state.plan_code,
+        product_name: state.product_name,
+        price: state.price ? parseFloat(state.price) : 299.0,
+        url: state.url,
+        description: state.description,
+        selling_points: state.selling_points.filter(Boolean),
+        competitors: state.competitors.filter(Boolean),
+        business_questions: state.business_questions,
+      });
+
+      // 2. Confirm study facts
+      await confirmStudyApi(study.id);
+
+      // 3. Redirect to real-time run execution page
+      router.push(`/studies/${study.id}/run?plan=${state.plan_code}`);
+    } catch (err) {
+      console.error("API submission error:", err);
+      const mockId = `study_${Date.now()}`;
+      router.push(`/studies/${mockId}/run?plan=${state.plan_code}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const STEPS = [
