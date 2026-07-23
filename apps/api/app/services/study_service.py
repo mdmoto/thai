@@ -65,18 +65,26 @@ class StudyService:
         study["updated_at"] = datetime.utcnow().isoformat() + "Z"
         return study
 
-    async def execute_run(self, study_id: str, pop_size: int = 30000, mc_rounds: int = 50, seed: int = 42) -> Dict[str, Any]:
+    async def execute_run(self, study_id: str, pop_size: Optional[int] = None, mc_rounds: Optional[int] = None, seed: int = 42) -> Dict[str, Any]:
         if study_id not in self.studies_db:
             raise KeyError("Study not found")
 
         study = self.studies_db[study_id]
         run_id = f"run_{uuid.uuid4().hex[:8]}"
         study["status"] = "RUNNING_SIMULATION"
+        plan_code = study.get("plan_code", "FREE")
 
-        # 1. World Model Population Generation
-        pop_gen = PopulationGenerator(seed=seed)
-        pop_df = pop_gen.generate(size=pop_size, study_type=study["study_type"])
-        segments = pop_gen.segment_population(pop_df)
+        # Determine population size & MC rounds based on tier
+        if pop_size is None or pop_size <= 0:
+            if plan_code in ["ENTERPRISE", "DEEP"]:
+                pop_size = 100000
+                mc_rounds = mc_rounds or 200
+            elif plan_code == "PROFESSIONAL":
+                pop_size = 30000
+                mc_rounds = mc_rounds or 50
+            else:
+                pop_size = 100  # FREE / PREVIEW tier default 100 agents
+                mc_rounds = mc_rounds or 20
 
         # 2. Representative Consumer Agent Reasoning via Gemini Gateway
         gateway = GeminiAgentGateway()
