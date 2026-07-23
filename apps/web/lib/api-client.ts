@@ -2,7 +2,11 @@
  * API Client for Thailand Digital Market Twin FastAPI Backend Service
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname.includes("lazzor.com")
+    ? "https://ai-100282158973.asia-southeast1.run.app"
+    : "http://127.0.0.1:8080");
 
 export interface CreateStudyPayload {
   name: string;
