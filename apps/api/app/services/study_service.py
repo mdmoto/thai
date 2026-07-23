@@ -82,7 +82,8 @@ class StudyService:
         gateway = GeminiAgentGateway()
         diverse_voices = await gateway.generate_diverse_voices(
             product_info=study["facts"],
-            business_questions=study["inputs"].get("business_questions", [])
+            business_questions=study["inputs"].get("business_questions", []),
+            plan_code=study.get("plan_code", "PROFESSIONAL")
         )
 
         # 3. Vector Monte Carlo Simulation Core

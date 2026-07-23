@@ -1,6 +1,8 @@
 """
 LLM Gateway for Representative Consumer Agents using Gemini API.
-Handles structured JSON reasoning, prompt versioning, token tracking, and fallback.
+Supports tiered LLM engines:
+- PREVIEW: gemini-1.5-flash (Fast, lightweight)
+- PROFESSIONAL / DEEP / ENTERPRISE: gemini-1.5-pro (Deep reasoning, chain-of-thought, high accuracy)
 """
 
 import os
@@ -8,56 +10,75 @@ import json
 import httpx
 from typing import Dict, Any, List, Optional
 
-PROMPT_VERSION = "P-AGENT-2026.07.1"
+PROMPT_VERSION = "P-AGENT-2026.07.2"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 class GeminiAgentGateway:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or GEMINI_API_KEY
-        self.model = "gemini-1.5-flash"
+
+    def select_model(self, plan_code: str = "PROFESSIONAL") -> str:
+        """
+        Selects LLM model based on plan tier.
+        Paid enterprise tiers use Gemini 1.5 Pro with deep reasoning.
+        """
+        if plan_code in ["DEEP", "ENTERPRISE", "PROFESSIONAL"]:
+            return "gemini-1.5-pro"
+        return "gemini-1.5-flash"
 
     async def generate_diverse_voices(
         self,
         product_info: Dict[str, Any],
-        business_questions: List[str]
+        business_questions: List[str],
+        plan_code: str = "PROFESSIONAL"
     ) -> List[Dict[str, Any]]:
         """
-        Generates 6-10 rich representative consumer persona reactions using Gemini LLM.
+        Generates rich representative consumer persona reactions using selected Gemini LLM tier.
         """
+        model = self.select_model(plan_code)
         if not self.api_key:
             return self._mock_diverse_voices(product_info)
 
-        prompt = f"""You are an expert market research analyst simulating Thai consumer panels.
-Product: {json.dumps(product_info, ensure_ascii=False)}
-Business Questions: {json.dumps(business_questions, ensure_ascii=False)}
+        is_deep = plan_code in ["DEEP", "ENTERPRISE", "PROFESSIONAL"]
+        
+        prompt = f"""You are a principal market research director simulating a statistically representative Thai consumer panel for a commercial feasibility study in Thailand.
 
-Generate 6 realistic Thai consumer responses representing 3 groups:
+Target Product Info:
+{json.dumps(product_info, ensure_ascii=False)}
+
+Business Questions to Evaluate:
+{json.dumps(business_questions, ensure_ascii=False)}
+
+Evaluation Depth: {"DEEP CHAIN-OF-THOUGHT ANALYSIS" if is_deep else "STANDARD EVALUATION"}
+
+Generate 6-8 distinct Thai consumer persona evaluations spanning 4 segments:
 1. Supporters (High intent)
-2. Fence-sitters (Hesitant/Conditional)
-3. Skeptics/Rejectors (Low intent)
+2. Conditional Buyers (Need discount/reviews)
+3. Skeptics/Fence-sitters (Hesitant)
+4. Rejectors (Prefer offline/competitor)
 
 Return a JSON array of objects with fields:
-- persona: string (e.g. "28岁清迈白领女性，月收入4.5万泰铢")
+- persona: string (e.g. "28岁曼谷金融外企白领，月收入6.5万泰铢")
 - segment: string (e.g. "都市白领消费人群")
 - sentiment: "positive" | "neutral" | "negative"
-- quote: string (authentic first-person quote in Chinese or Thai)
-- reasoning: string (detailed 2-sentence breakdown of purchase motivation and barriers)
-- price_reaction: string (reaction to product price)
-- preferred_channel: string (e.g. "Lazada", "Shopee", "TikTok Shop", "实体店")
+- quote: string (authentic detailed first-person quote in Chinese or Thai)
+- reasoning: string (deep 3-sentence chain-of-thought breakdown of purchase psychology, value proposition fit, and trust barriers)
+- price_reaction: string (detailed reaction to price point vs competitor substitutes)
+- preferred_channel: string (e.g. "Lazada Flagship Store", "Shopee Mall", "TikTok Shop", "Big C 线下超市")
 
 Return ONLY valid JSON array."""
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.api_key}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "response_mime_type": "application/json",
-                "temperature": 0.4
+                "temperature": 0.3 if is_deep else 0.4
             }
         }
 
         try:
-            async with httpx.AsyncClient(timeout=20.0) as client:
+            async with httpx.AsyncClient(timeout=45.0 if is_deep else 20.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -65,8 +86,17 @@ Return ONLY valid JSON array."""
                     parsed = json.loads(text_out)
                     if isinstance(parsed, list) and len(parsed) > 0:
                         return parsed
+                elif resp.status_code != 200 and model == "gemini-1.5-pro":
+                    # Fallback to flash if pro has quota limit
+                    fallback_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
+                    resp_fallback = await client.post(fallback_url, json=payload)
+                    if resp_fallback.status_code == 200:
+                        text_out = resp_fallback.json()["candidates"][0]["content"]["parts"][0]["text"]
+                        parsed = json.loads(text_out)
+                        if isinstance(parsed, list) and len(parsed) > 0:
+                            return parsed
         except Exception as e:
-            print(f"[GeminiAgentGateway] Error generating voices: {e}")
+            print(f"[GeminiAgentGateway] Error calling Gemini {model}: {e}")
 
         return self._mock_diverse_voices(product_info)
 
@@ -79,7 +109,7 @@ Return ONLY valid JSON array."""
                 "segment": "都市白领消费人群",
                 "sentiment": "positive",
                 "quote": f"对{name}的包装和定位很感兴趣，如果品质确实好，THB {price} 的价格完全在我的预算范围内。",
-                "reasoning": "注重个人生活品质与品牌美誉度，价格敏感度较低，优先看重产品功效与用户口碑。",
+                "reasoning": "注重个人生活品质与品牌美誉度，价格敏感度较低，优先看重产品功效与用户口碑。关注线上发货时效与售后保障。",
                 "price_reaction": "价格合理，符合高品质定位",
                 "preferred_channel": "Lazada Flagship Store"
             },
@@ -106,7 +136,7 @@ Return ONLY valid JSON array."""
                 "segment": "区域外省家庭人口",
                 "sentiment": "negative",
                 "quote": f"对新品牌缺乏信任，本地实体店有大品牌替代品，暂时不会考虑在线购买未知品牌。",
-                "reasoning": "传统保守型买家，品牌信任门槛高，高度依赖线下线下实体渠道或熟人推荐。",
+                "reasoning": "传统保守型买家，品牌信任门槛高，高度依赖线下实体渠道或熟人推荐。",
                 "price_reaction": "偏高，替代品丰富",
                 "preferred_channel": "Big C / 线下连锁"
             },
