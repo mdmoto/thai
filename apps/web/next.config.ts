@@ -4,15 +4,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  // Production: lazzor.com/ai
-  // basePath: '/ai',
+  output: "export",
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
+    unoptimized: true,
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
