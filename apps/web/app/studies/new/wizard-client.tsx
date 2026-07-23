@@ -4,10 +4,9 @@ import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronRight, Upload, Plus, X, MapPin, Link as LinkIcon } from "lucide-react";
 import { STUDY_TYPE_META, PLAN_META } from "@/lib/mock-data";
-import { Card, Input, ProgressBar } from "@/components/ui";
+import { Card, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-// ─── Types ───────────────────────────────
 type StudyType = keyof typeof STUDY_TYPE_META;
 type PlanCode = keyof typeof PLAN_META;
 
@@ -96,9 +95,6 @@ function getQuestions(type: StudyType | null) {
   return BUSINESS_QUESTIONS[type as keyof typeof BUSINESS_QUESTIONS] ?? BUSINESS_QUESTIONS.DEFAULT;
 }
 
-// ─────────────────────────────────────────
-// Main Wizard
-// ─────────────────────────────────────────
 export function NewStudyWizard() {
   const router = useRouter();
   const params = useSearchParams();
@@ -114,27 +110,23 @@ export function NewStudyWizard() {
     setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const isOnlineType = (t: StudyType | null) =>
-    !t || ["PRODUCT_VALIDATION", "PRICING_STUDY", "CREATIVE_TEST"].includes(t);
-
   const handleSubmit = () => {
-    // In production: POST /v1/studies then redirect
     const mockId = `study_${Date.now()}`;
     router.push(`/studies/${mockId}/run`);
   };
 
   const STEPS = [
-    { label: "选择类型" },
-    { label: "填写资料" },
-    { label: "确认假设" },
-    { label: "选择问题" },
-    { label: "选择规模" },
+    { label: "研究选型" },
+    { label: "资料填写" },
+    { label: "假设确认" },
+    { label: "商业问题" },
+    { label: "模拟规模" },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto p-6 animate-fade-in-up">
-      {/* Step indicators */}
-      <div className="flex items-center gap-2 mb-8">
+    <div className="max-w-4xl mx-auto p-8 space-y-8">
+      {/* Steps indicator */}
+      <div className="flex items-center gap-2 pb-6 border-b border-neutral-900">
         {STEPS.map((s, i) => {
           const num = i + 1;
           const done = step > num;
@@ -142,24 +134,23 @@ export function NewStudyWizard() {
           return (
             <div key={i} className="flex items-center gap-2 flex-1">
               <div className={cn(
-                "flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 transition-smooth",
-                done ? "bg-emerald-500/20 text-emerald-400" :
-                active ? "bg-[var(--color-gold-glow)] text-gold border border-[var(--color-gold)]" :
-                "bg-[var(--color-bg-elevated)] text-muted"
+                "w-6 h-6 rounded-full text-xs font-mono font-semibold flex items-center justify-center shrink-0 transition-colors",
+                done ? "bg-white text-black" :
+                active ? "bg-neutral-800 text-white border border-neutral-600" :
+                "bg-neutral-950 text-neutral-600 border border-neutral-900"
               )}>
-                {done ? <Check size={13} /> : num}
+                {done ? "✓" : num}
               </div>
               <span className={cn(
-                "text-xs hidden sm:block transition-smooth",
-                active ? "text-primary font-medium" :
-                done ? "text-emerald-400" : "text-muted"
+                "text-xs font-medium hidden sm:block truncate transition-colors",
+                active ? "text-white" : done ? "text-neutral-300" : "text-neutral-600"
               )}>
                 {s.label}
               </span>
               {i < STEPS.length - 1 && (
                 <div className={cn(
                   "flex-1 h-px mx-1",
-                  done ? "bg-emerald-500/30" : "bg-[var(--color-border-subtle)]"
+                  done ? "bg-neutral-600" : "bg-neutral-900"
                 )} />
               )}
             </div>
@@ -168,7 +159,7 @@ export function NewStudyWizard() {
       </div>
 
       {/* Step content */}
-      <div className="animate-fade-in-up" key={step}>
+      <div key={step}>
         {step === 1 && <Step1 state={state} update={update} onNext={() => setStep(2)} />}
         {step === 2 && <Step2 state={state} update={update} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
         {step === 3 && <Step3 state={state} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
@@ -180,7 +171,7 @@ export function NewStudyWizard() {
 }
 
 // ─────────────────────────────────────────
-// Step 1: Select Study Type
+// Step 1: Study Type
 // ─────────────────────────────────────────
 function Step1({ state, update, onNext }: {
   state: WizardState;
@@ -190,11 +181,12 @@ function Step1({ state, update, onNext }: {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-primary">选择研究类型</h2>
-        <p className="text-sm text-secondary mt-1">根据您的商业目标选择最合适的研究类型</p>
+        <div className="eyebrow mb-1">Step 01</div>
+        <h2 className="text-xl font-light text-white tracking-tight">选择研究类型</h2>
+        <p className="text-xs text-neutral-400 font-light mt-1">根据您的商业分析目标选择匹配的研究类型</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-children">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {Object.entries(STUDY_TYPE_META).map(([key, meta]) => {
           const active = state.study_type === key;
           return (
@@ -202,34 +194,22 @@ function Step1({ state, update, onNext }: {
               key={key}
               onClick={() => update({ study_type: key as StudyType })}
               className={cn(
-                "glass-card p-4 text-left transition-smooth",
-                active
-                  ? "border-[var(--color-gold)] bg-[var(--color-gold-glow)]"
-                  : "hover:border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]"
+                "card-lazzor p-5 text-left transition-colors relative group",
+                active ? "bg-neutral-900 border-white" : "hover:bg-[#151515]"
               )}
             >
-              <div className="flex items-start gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-                  style={{ background: `${meta.color}20` }}
-                >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xl shrink-0">
                   {meta.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={cn("font-semibold text-sm", active ? "text-gold" : "text-primary")}>
+                  <div className="flex items-center justify-between">
+                    <span className={cn("text-xs font-semibold tracking-tight", active ? "text-white" : "text-neutral-200")}>
                       {meta.label}
                     </span>
-                    {active && <Check size={14} className="text-gold" />}
+                    {active && <Check size={14} className="text-white" />}
                   </div>
-                  <p className="text-xs text-muted mt-1 line-clamp-2">{meta.desc}</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {meta.outputs.slice(0, 3).map(o => (
-                      <span key={o} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-bg-base)] text-muted">
-                        {o}
-                      </span>
-                    ))}
-                  </div>
+                  <p className="text-[11px] text-neutral-400 font-light mt-1 line-clamp-2 leading-relaxed">{meta.desc}</p>
                 </div>
               </div>
             </button>
@@ -237,13 +217,13 @@ function Step1({ state, update, onNext }: {
         })}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-4">
         <button
           onClick={onNext}
           disabled={!state.study_type}
-          className={cn("btn-primary", !state.study_type && "opacity-40 cursor-not-allowed")}
+          className={cn("btn-lazzor-primary", !state.study_type && "opacity-40 cursor-not-allowed")}
         >
-          下一步 <ChevronRight size={16} />
+          下一步 <ChevronRight size={14} />
         </button>
       </div>
     </div>
@@ -283,15 +263,15 @@ function Step2({ state, update, onNext, onBack }: {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-primary">填写研究资料</h2>
-        <p className="text-sm text-secondary mt-1">
+        <div className="eyebrow mb-1">Step 02</div>
+        <h2 className="text-xl font-light text-white tracking-tight">填写研究资料</h2>
+        <p className="text-xs text-neutral-400 font-light mt-1">
           {meta ? `${meta.icon} ${meta.label} — ` : ""}
           输入越完整，模拟结果越有参考价值
         </p>
       </div>
 
       <div className="space-y-4">
-        {/* Project name */}
         <Input
           label="项目名称"
           required
@@ -302,21 +282,21 @@ function Step2({ state, update, onNext, onBack }: {
 
         {/* Upload area */}
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-secondary">上传文件</label>
-          <div className="border-2 border-dashed border-[var(--color-border)] rounded-xl p-8 text-center hover:border-[var(--color-gold-dim)] transition-smooth cursor-pointer">
-            <Upload size={24} className="text-muted mx-auto mb-2" />
-            <p className="text-sm text-secondary">拖放文件或点击上传</p>
-            <p className="text-xs text-muted mt-1">支持：图片、PDF、Excel、菜单、广告图、Logo</p>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">上传文件</label>
+          <div className="border border-dashed border-neutral-800 rounded-xl p-8 text-center hover:border-neutral-600 transition-colors cursor-pointer bg-neutral-950">
+            <Upload size={20} className="text-neutral-500 mx-auto mb-2" />
+            <p className="text-xs text-neutral-300 font-light">点击或拖放上传资料包</p>
+            <p className="text-[11px] text-neutral-500 mt-1">支持：图片、PDF、Excel、菜单、广告素材</p>
           </div>
         </div>
 
         {/* URL input */}
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-secondary">或输入网址</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">或输入网址</label>
           <div className="relative">
-            <LinkIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <LinkIcon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
-              className="input-field pl-9"
+              className="input-lazzor pl-9"
               placeholder="https:// 官网、产品页或 Google Maps 链接"
               value={state.url}
               onChange={e => update({ url: e.target.value })}
@@ -329,7 +309,7 @@ function Step2({ state, update, onNext, onBack }: {
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="产品名称"
-              placeholder="例：BKK宠物零食系列"
+              placeholder="例：BKK宠物零食"
               value={state.product_name}
               onChange={e => update({ product_name: e.target.value })}
             />
@@ -347,11 +327,11 @@ function Step2({ state, update, onNext, onBack }: {
         {isVenue && (
           <>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-secondary">地址</label>
+              <label className="block text-xs font-medium text-neutral-400 tracking-wide">地址</label>
               <div className="relative">
-                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
                 <input
-                  className="input-field pl-9"
+                  className="input-lazzor pl-9"
                   placeholder="输入地址或 Google Maps 链接"
                   value={state.location_address}
                   onChange={e => update({ location_address: e.target.value })}
@@ -391,74 +371,59 @@ function Step2({ state, update, onNext, onBack }: {
 
         {/* Selling points */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-secondary">核心卖点</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">核心卖点</label>
           {state.selling_points.map((sp, i) => (
             <div key={i} className="flex gap-2">
               <input
-                className="input-field flex-1"
-                placeholder={`卖点 ${i + 1}，例：泰国独家配方`}
+                className="input-lazzor flex-1"
+                placeholder={`卖点 ${i + 1}`}
                 value={sp}
                 onChange={e => updateListItem("selling_points", i, e.target.value)}
               />
               {state.selling_points.length > 1 && (
-                <button onClick={() => removeListItem("selling_points", i)}
-                  className="text-muted hover:text-red-400 transition-smooth p-2">
-                  <X size={16} />
+                <button onClick={() => removeListItem("selling_points", i)} className="text-neutral-500 hover:text-rose-400 p-2">
+                  <X size={14} />
                 </button>
               )}
             </div>
           ))}
-          <button onClick={() => addListItem("selling_points")}
-            className="text-xs text-gold hover:text-gold-light transition-smooth flex items-center gap-1">
-            <Plus size={14} /> 添加卖点
+          <button onClick={() => addListItem("selling_points")} className="text-xs text-neutral-300 hover:text-white flex items-center gap-1">
+            <Plus size={13} /> 添加卖点
           </button>
         </div>
 
         {/* Competitors */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-secondary">竞品（选填）</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">竞品（选填）</label>
           {state.competitors.map((c, i) => (
             <div key={i} className="flex gap-2">
               <input
-                className="input-field flex-1"
+                className="input-lazzor flex-1"
                 placeholder={`竞品 ${i + 1}`}
                 value={c}
                 onChange={e => updateListItem("competitors", i, e.target.value)}
               />
               {state.competitors.length > 1 && (
-                <button onClick={() => removeListItem("competitors", i)}
-                  className="text-muted hover:text-red-400 transition-smooth p-2">
-                  <X size={16} />
+                <button onClick={() => removeListItem("competitors", i)} className="text-neutral-500 hover:text-rose-400 p-2">
+                  <X size={14} />
                 </button>
               )}
             </div>
           ))}
-          <button onClick={() => addListItem("competitors")}
-            className="text-xs text-gold hover:text-gold-light transition-smooth flex items-center gap-1">
-            <Plus size={14} /> 添加竞品
+          <button onClick={() => addListItem("competitors")} className="text-xs text-neutral-300 hover:text-white flex items-center gap-1">
+            <Plus size={13} /> 添加竞品
           </button>
-        </div>
-
-        {/* Description */}
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-secondary">补充说明（选填）</label>
-          <textarea
-            className="input-field resize-none h-20"
-            placeholder="其他需要系统了解的信息..."
-            value={state.description}
-            onChange={e => update({ description: e.target.value })}
-          />
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <button onClick={onBack} className="btn-ghost">← 返回</button>
+      <div className="flex justify-between pt-4">
+        <button onClick={onBack} className="btn-lazzor-ghost">← 返回</button>
         <button
           onClick={onNext}
           disabled={!canProceed}
-          className={cn("btn-primary", !canProceed && "opacity-40 cursor-not-allowed")}
+          className={cn("btn-lazzor-primary", !canProceed && "opacity-40 cursor-not-allowed")}
         >
-          下一步 <ChevronRight size={16} />
+          下一步 <ChevronRight size={14} />
         </button>
       </div>
     </div>
@@ -466,7 +431,7 @@ function Step2({ state, update, onNext, onBack }: {
 }
 
 // ─────────────────────────────────────────
-// Step 3: Confirmation
+// Step 3: Assumption Confirmation
 // ─────────────────────────────────────────
 function Step3({ state, onNext, onBack }: {
   state: WizardState;
@@ -484,129 +449,85 @@ function Step3({ state, onNext, onBack }: {
   ].filter(Boolean) as { label: string; value: string }[];
 
   const inferences = [
-    { label: "目标市场", value: "泰国曼谷/清迈城市消费者", confidence: "B" },
-    { label: "价格定位", value: state.price && Number(state.price) > 500 ? "中高端" : "大众市场", confidence: "B" },
-    { label: "目标人群", value: "25-40岁有收入成年人", confidence: "C" },
+    { label: "目标市场", value: "泰国曼谷/清迈城市消费者", grade: "B" },
+    { label: "价格定位", value: state.price && Number(state.price) > 500 ? "中高端" : "大众市场", grade: "B" },
+    { label: "目标人群", value: "25-40岁有收入成年人", grade: "C" },
   ];
 
   const defaults = [
     { label: "广告曝光预算", value: "未提供，使用行业中位数估算", grade: "D" },
     { label: "竞争强度", value: "未提供，使用地区平均水平", grade: "D" },
     { label: "复购周期", value: "未提供，使用类别默认值", grade: "D" },
-    { label: "停车位", value: "未提供，假设有停车位", grade: "D" },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-primary">确认研究参数</h2>
-        <p className="text-sm text-secondary mt-1">请检查以下内容，系统将基于此运行模拟</p>
+        <div className="eyebrow mb-1">Step 03</div>
+        <h2 className="text-xl font-light text-white tracking-tight">确认研究假设</h2>
+        <p className="text-xs text-neutral-400 font-light mt-1">请检查以下内容，平台将基于此运行模拟</p>
       </div>
 
-      {/* Identified facts */}
-      <ConfirmSection
-        title="已识别事实"
-        badge="来自您的输入，可修改"
-        badgeColor="text-emerald-400 bg-emerald-500/10"
-        dot="#22C55E"
-      >
-        {facts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3">
-            {facts.map((f, i) => (
-              <div key={i} className="flex justify-between items-center py-2 border-b border-[var(--color-border-subtle)] last:border-0">
-                <span className="text-xs text-muted">{f.label}</span>
-                <span className="text-xs font-medium text-primary">{f.value}</span>
-              </div>
-            ))}
-            <div className="flex justify-between items-center py-2 border-b border-[var(--color-border-subtle)]">
-              <span className="text-xs text-muted">项目名称</span>
-              <span className="text-xs font-medium text-primary">{state.name}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-[var(--color-border-subtle)]">
-              <span className="text-xs text-muted">研究类型</span>
-              <span className="text-xs font-medium text-primary">{meta?.label}</span>
-            </div>
+      <Card>
+        <div className="eyebrow mb-3">01. 已识别事实 (Identified Facts)</div>
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between py-1.5 border-b border-neutral-900">
+            <span className="text-neutral-400">项目名称</span>
+            <span className="text-white font-medium">{state.name}</span>
           </div>
-        ) : (
-          <p className="text-xs text-muted">请返回填写更多资料以提高结果准确性</p>
-        )}
-      </ConfirmSection>
+          <div className="flex justify-between py-1.5 border-b border-neutral-900">
+            <span className="text-neutral-400">研究类型</span>
+            <span className="text-white font-medium">{meta?.label}</span>
+          </div>
+          {facts.map((f, i) => (
+            <div key={i} className="flex justify-between py-1.5 border-b border-neutral-900 last:border-0">
+              <span className="text-neutral-400">{f.label}</span>
+              <span className="text-white font-medium">{f.value}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
 
-      {/* System inferences */}
-      <ConfirmSection
-        title="系统推断"
-        badge="系统根据输入推断，请确认"
-        badgeColor="text-amber-400 bg-amber-500/10"
-        dot="#F59E0B"
-      >
-        <div className="space-y-2">
+      <Card>
+        <div className="eyebrow mb-3">02. 系统推断 (System Inferences)</div>
+        <div className="space-y-2 text-xs">
           {inferences.map((inf, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0">
-              <span className="text-xs text-muted">{inf.label}</span>
+            <div key={i} className="flex justify-between items-center py-1.5 border-b border-neutral-900 last:border-0">
+              <span className="text-neutral-400">{inf.label}</span>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-primary">{inf.value}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">
-                  {inf.confidence}级
-                </span>
+                <span className="text-neutral-200">{inf.value}</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-900 text-neutral-400">{inf.grade}级</span>
               </div>
             </div>
           ))}
         </div>
-      </ConfirmSection>
+      </Card>
 
-      {/* Missing defaults */}
-      <ConfirmSection
-        title="缺失假设（使用默认值）"
-        badge="未提供，使用平台默认，可修改"
-        badgeColor="text-blue-400 bg-blue-500/10"
-        dot="#3B82F6"
-      >
-        <div className="space-y-2">
+      <Card>
+        <div className="eyebrow mb-3">03. 缺失假设 (Missing Defaults)</div>
+        <div className="space-y-2 text-xs">
           {defaults.map((d, i) => (
-            <div key={i} className="flex items-start justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0">
-              <span className="text-xs text-muted">{d.label}</span>
+            <div key={i} className="flex justify-between items-center py-1.5 border-b border-neutral-900 last:border-0">
+              <span className="text-neutral-400">{d.label}</span>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-secondary text-right max-w-48">{d.value}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 shrink-0">
-                  {d.grade}级
-                </span>
+                <span className="text-neutral-300 font-light">{d.value}</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">{d.grade}级</span>
               </div>
             </div>
           ))}
         </div>
-        <p className="text-xs text-muted mt-3 p-3 bg-[var(--color-bg-base)] rounded-lg">
-          ⚠️ D级假设基于专家估算，结果报告中将明确标注不确定性范围。客户输入越完整，D级假设越少。
+        <p className="text-[11px] text-neutral-400 font-light mt-3 p-3 bg-black rounded-lg border border-neutral-900">
+          * D 级假设基于专家与历史数据估估算。模拟报告中将暴露对应的敏感性与不确定性范围。
         </p>
-      </ConfirmSection>
+      </Card>
 
-      <div className="flex justify-between">
-        <button onClick={onBack} className="btn-ghost">← 返回</button>
-        <button onClick={onNext} className="btn-primary">
-          确认并继续 <ChevronRight size={16} />
+      <div className="flex justify-between pt-4">
+        <button onClick={onBack} className="btn-lazzor-ghost">← 返回</button>
+        <button onClick={onNext} className="btn-lazzor-primary">
+          确认并继续 <ChevronRight size={14} />
         </button>
       </div>
     </div>
-  );
-}
-
-function ConfirmSection({
-  title, badge, badgeColor, dot, children
-}: {
-  title: string;
-  badge: string;
-  badgeColor: string;
-  dot: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <div className="flex items-center gap-3 mb-4">
-        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: dot, boxShadow: `0 0 6px ${dot}` }} />
-        <h3 className="text-sm font-semibold text-primary">{title}</h3>
-        <span className={cn("status-badge ml-auto text-[10px]", badgeColor)}>{badge}</span>
-      </div>
-      {children}
-    </Card>
   );
 }
 
@@ -633,11 +554,12 @@ function Step4({ state, update, onNext, onBack }: {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-primary">选择商业问题</h2>
-        <p className="text-sm text-secondary mt-1">选择您最想得到答案的问题（可多选）</p>
+        <div className="eyebrow mb-1">Step 04</div>
+        <h2 className="text-xl font-light text-white tracking-tight">选择重点商业问题</h2>
+        <p className="text-xs text-neutral-400 font-light mt-1">报告将针对选中的核心商业问题重点解答</p>
       </div>
 
-      <div className="space-y-2 stagger-children">
+      <div className="space-y-2">
         {questions.map((q, i) => {
           const selected = state.business_questions.includes(q);
           return (
@@ -645,17 +567,17 @@ function Step4({ state, update, onNext, onBack }: {
               key={i}
               onClick={() => toggle(q)}
               className={cn(
-                "w-full glass-card p-4 text-left flex items-center gap-3 transition-smooth",
-                selected ? "border-[var(--color-gold)] bg-[var(--color-gold-glow)]" : "hover:border-[var(--color-border)]"
+                "w-full card-lazzor p-4 text-left flex items-center gap-3 transition-colors",
+                selected ? "bg-neutral-900 border-white" : "hover:bg-[#151515]"
               )}
             >
               <div className={cn(
-                "w-5 h-5 rounded shrink-0 border flex items-center justify-center transition-smooth",
-                selected ? "bg-[var(--color-gold)] border-[var(--color-gold)]" : "border-[var(--color-border)]"
+                "w-4 h-4 rounded border flex items-center justify-center text-[10px] shrink-0 transition-colors",
+                selected ? "bg-white border-white text-black font-bold" : "border-neutral-700"
               )}>
-                {selected && <Check size={12} className="text-[#0A1628]" />}
+                {selected && "✓"}
               </div>
-              <span className={cn("text-sm", selected ? "text-primary font-medium" : "text-secondary")}>
+              <span className={cn("text-xs font-medium", selected ? "text-white" : "text-neutral-300")}>
                 {q}
               </span>
             </button>
@@ -663,15 +585,10 @@ function Step4({ state, update, onNext, onBack }: {
         })}
       </div>
 
-      <p className="text-xs text-muted">
-        已选 <span className="text-gold font-medium">{state.business_questions.length}</span> 个问题。
-        报告将重点呈现这些问题的答案。
-      </p>
-
-      <div className="flex justify-between">
-        <button onClick={onBack} className="btn-ghost">← 返回</button>
-        <button onClick={onNext} className="btn-primary">
-          下一步 <ChevronRight size={16} />
+      <div className="flex justify-between pt-4">
+        <button onClick={onBack} className="btn-lazzor-ghost">← 返回</button>
+        <button onClick={onNext} className="btn-lazzor-primary">
+          下一步 <ChevronRight size={14} />
         </button>
       </div>
     </div>
@@ -679,7 +596,7 @@ function Step4({ state, update, onNext, onBack }: {
 }
 
 // ─────────────────────────────────────────
-// Step 5: Select Plan
+// Step 5: Scale Selection
 // ─────────────────────────────────────────
 function Step5({ state, update, onBack, onSubmit }: {
   state: WizardState;
@@ -692,11 +609,12 @@ function Step5({ state, update, onBack, onSubmit }: {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-primary">选择模拟规模</h2>
-        <p className="text-sm text-secondary mt-1">规模越大，结果越稳定，成本越高</p>
+        <div className="eyebrow mb-1">Step 05</div>
+        <h2 className="text-xl font-light text-white tracking-tight">选择模拟规模与配置</h2>
+        <p className="text-xs text-neutral-400 font-light mt-1">控制合成人口数量、Monte Carlo 轮数与情景数量</p>
       </div>
 
-      <div className="space-y-3 stagger-children">
+      <div className="space-y-3">
         {(Object.entries(PLAN_META) as [PlanCode, typeof PLAN_META[PlanCode]][]).map(([code, plan]) => {
           const active = state.plan_code === code;
           return (
@@ -704,98 +622,52 @@ function Step5({ state, update, onBack, onSubmit }: {
               key={code}
               onClick={() => update({ plan_code: code })}
               className={cn(
-                "w-full glass-card p-4 text-left transition-smooth relative",
-                active ? "border-[var(--color-gold)] bg-[var(--color-gold-glow)]" : "hover:border-[var(--color-border)]"
+                "w-full card-lazzor p-5 text-left transition-colors relative",
+                active ? "bg-neutral-900 border-white" : "hover:bg-[#151515]"
               )}
             >
-              {(plan as any).popular && (
-                <span className="absolute -top-2 right-4 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: "linear-gradient(90deg,#D4A853,#B8902E)", color: "#0A1628" }}>
-                  推荐
-                </span>
-              )}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-5 h-5 rounded-full border shrink-0 transition-smooth"
-                  style={{
-                    borderColor: active ? plan.color : "var(--color-border)",
-                    background: active ? `${plan.color}20` : "transparent",
-                  }}>
-                  {active && <span className="w-2.5 h-2.5 rounded-full" style={{ background: plan.color }} />}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-xs text-white">{plan.label}</span>
+                  <span className="text-xs font-mono text-neutral-400">{plan.population.toLocaleString()} 人</span>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-primary">{plan.label}</span>
-                    <span className="text-sm" style={{ color: plan.color }}>
-                      {plan.population.toLocaleString()} 人
-                    </span>
-                    {plan.price_thb > 0 ? (
-                      <span className="ml-auto text-sm font-bold text-primary">
-                        ฿{plan.price_thb.toLocaleString()}
-                      </span>
-                    ) : code === "PREVIEW" ? (
-                      <span className="ml-auto text-sm font-bold text-emerald-400">免费</span>
-                    ) : (
-                      <span className="ml-auto text-sm text-muted">询价</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted mt-0.5">{plan.desc}</p>
-                  <div className="flex gap-3 mt-1 text-xs text-muted">
-                    <span>Monte Carlo {plan.mc_rounds} 轮</span>
-                    <span>·</span>
-                    <span>{plan.scenarios} 个情景</span>
-                    <span>·</span>
-                    <span>消耗 {plan.credits} 额度</span>
-                  </div>
-                </div>
+                {plan.price_thb > 0 ? (
+                  <span className="text-xs font-bold font-mono text-white">฿{plan.price_thb.toLocaleString()}</span>
+                ) : code === "PREVIEW" ? (
+                  <span className="text-xs font-mono text-emerald-400">Free</span>
+                ) : (
+                  <span className="text-xs text-neutral-500 font-mono">Custom</span>
+                )}
+              </div>
+              <p className="text-[11px] text-neutral-400 font-light mt-1">{plan.desc}</p>
+              <div className="flex items-center gap-3 mt-2 text-[10px] text-neutral-500 font-mono">
+                <span>Monte Carlo {plan.mc_rounds} 轮</span>
+                <span>·</span>
+                <span>{plan.scenarios} 个情景</span>
+                <span>·</span>
+                <span>消耗 {plan.credits} 额度</span>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Summary */}
-      <Card className="bg-[var(--color-bg-base)]">
-        <h3 className="text-sm font-semibold text-primary mb-3">提交摘要</h3>
-        <div className="space-y-2 text-xs">
-          <SummaryRow label="项目名称" value={state.name || "（未填写）"} />
-          <SummaryRow label="研究类型" value={state.study_type ? STUDY_TYPE_META[state.study_type].label : "—"} />
-          <SummaryRow label="模拟规模" value={`${selected.label} · ${selected.population.toLocaleString()} 人`} />
-          <SummaryRow label="情景数量" value={`${selected.scenarios} 个`} />
-          <SummaryRow label="Monte Carlo 轮数" value={`${selected.mc_rounds} 轮`} />
-          <SummaryRow label="消耗额度" value={`${selected.credits} 次`} />
-          {selected.price_thb > 0 && (
-            <SummaryRow label="费用" value={`฿${selected.price_thb.toLocaleString()}`} />
-          )}
+      <Card className="bg-black">
+        <div className="eyebrow mb-2">Order Summary</div>
+        <div className="space-y-1.5 text-xs font-light">
+          <div className="flex justify-between"><span className="text-neutral-400">项目名称</span><span className="text-white">{state.name || "（未填写）"}</span></div>
+          <div className="flex justify-between"><span className="text-neutral-400">研究类型</span><span className="text-white">{state.study_type ? STUDY_TYPE_META[state.study_type].label : "—"}</span></div>
+          <div className="flex justify-between"><span className="text-neutral-400">选择规模</span><span className="text-white font-mono">{selected.label} ({selected.population.toLocaleString()}人)</span></div>
+          <div className="flex justify-between"><span className="text-neutral-400">消耗额度</span><span className="text-white font-mono">{selected.credits} 次</span></div>
         </div>
-        <div className="divider my-3" />
-        <p className="text-xs text-muted">
-          预计运行时间：{
-            state.plan_code === "PREVIEW" ? "1-3 分钟" :
-            state.plan_code === "STANDARD" ? "5-15 分钟" :
-            state.plan_code === "PROFESSIONAL" ? "15-30 分钟" :
-            state.plan_code === "DEEP" ? "25-40 分钟" : "30-45 分钟"
-          }。可关闭页面，完成后将通知您。
-        </p>
       </Card>
 
-      <div className="flex justify-between">
-        <button onClick={onBack} className="btn-ghost">← 返回</button>
-        <div className="flex gap-3">
-          <button className="btn-secondary">保存草稿</button>
-          <button onClick={onSubmit} className="btn-primary">
-            提交运行 →
-          </button>
-        </div>
+      <div className="flex justify-between pt-4">
+        <button onClick={onBack} className="btn-lazzor-ghost">← 返回</button>
+        <button onClick={onSubmit} className="btn-lazzor-primary">
+          提交并立即运行 →
+        </button>
       </div>
-    </div>
-  );
-}
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between">
-      <span className="text-muted">{label}</span>
-      <span className="text-secondary font-medium">{value}</span>
     </div>
   );
 }

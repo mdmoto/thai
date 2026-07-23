@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import {
   TrendingUp, AlertCircle, CheckCircle2, Clock,
-  ArrowRight, Zap, BarChart3, Users, Globe,
+  ArrowRight, Plus, BarChart3, Users, Globe, ArrowUpRight,
 } from "lucide-react";
 import { MOCK_STUDIES, MOCK_ORG, MOCK_USAGE, PLAN_META, STUDY_TYPE_META } from "@/lib/mock-data";
 import { StatusBadge, PlanBadge, Card, EmptyState } from "@/components/ui";
@@ -15,10 +14,10 @@ const completed = MOCK_STUDIES.filter(s => s.status === "COMPLETED");
 const actionRequired = MOCK_STUDIES.filter(s => needsAction(s.status));
 
 const QUICK_TEMPLATES = [
-  { icon: "📦", label: "产品测试", href: "/studies/new?type=PRODUCT_VALIDATION" },
+  { icon: "📦", label: "产品验证", href: "/studies/new?type=PRODUCT_VALIDATION" },
   { icon: "🍜", label: "餐厅评估", href: "/studies/new?type=RESTAURANT" },
   { icon: "☕", label: "咖啡馆", href: "/studies/new?type=CAFE" },
-  { icon: "🍺", label: "酒吧", href: "/studies/new?type=BAR" },
+  { icon: "🍺", label: "酒吧方案", href: "/studies/new?type=BAR" },
   { icon: "💰", label: "定价测试", href: "/studies/new?type=PRICING_STUDY" },
   { icon: "📍", label: "选址对比", href: "/studies/new?type=SITE_COMPARISON" },
 ];
@@ -27,80 +26,66 @@ export function DashboardClient() {
   const plan = PLAN_META[MOCK_ORG.plan_code as keyof typeof PLAN_META];
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in-up">
-      {/* Welcome banner */}
-      <div className="glass-card p-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5"
-          style={{ background: "radial-gradient(circle at 80% 50%, #D4A853 0%, transparent 60%)" }} />
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="text-sm text-muted mb-1">欢迎回来</p>
-            <h2 className="text-2xl font-bold text-primary mb-2">
-              <span className="text-gradient-gold">Thailand</span> Market Twin
-            </h2>
-            <p className="text-sm text-secondary max-w-md">
-              把产品或门店方案放入泰国合成消费者市场，<br />
-              在投入之前发现风险，比较方案。
-            </p>
-          </div>
-          <div className="hidden sm:flex flex-col items-end gap-2">
-            <div className="glass-card px-4 py-2 text-center">
-              <div className="text-2xl font-bold text-gradient-gold">{MOCK_ORG.credits_balance}</div>
-              <div className="text-xs text-muted">剩余额度</div>
-            </div>
-            <span className="text-xs text-muted">{plan?.label} 套餐</span>
-          </div>
+    <div className="p-8 space-y-10 max-w-7xl mx-auto">
+      {/* Hero section: Lazzor Apple-style typography */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-6 border-b border-neutral-900">
+        <div>
+          <div className="eyebrow mb-2">Thailand Market Twin</div>
+          <h1 className="text-3xl sm:text-4xl font-light text-white tracking-tight leading-tight">
+            Digital Market Twin <span className="font-semibold text-neutral-100">Platform</span>
+          </h1>
+          <p className="text-sm text-neutral-400 font-light mt-2 max-w-xl leading-relaxed">
+            把产品与商业方案放入由泰国合成消费者构成的数字市场，在真实投入前比较方案并评估风险。
+          </p>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link href="/studies/new" className="btn-primary">
-            <Zap size={15} /> 新建项目
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href="/studies/new" className="btn-lazzor-primary">
+            <Plus size={15} /> 新建研究项目
           </Link>
-          <Link href="/templates" className="btn-secondary">
-            <BarChart3 size={15} /> 浏览模板
+          <Link href="/templates" className="btn-lazzor-secondary">
+            浏览模板
           </Link>
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 stagger-children">
+      {/* Stats row - Minimal high contrast stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
         <StatCard
-          label="运行中"
+          eyebrow="Running"
+          label="运行中任务"
           value={running.length}
-          icon={<Clock size={18} className="text-violet-400" />}
-          color="text-violet-400"
           href="/studies?status=running"
         />
         <StatCard
-          label="已完成"
+          eyebrow="Completed"
+          label="已完成模拟"
           value={completed.length}
-          icon={<CheckCircle2 size={18} className="text-emerald-400" />}
-          color="text-emerald-400"
           href="/studies?status=completed"
         />
         <StatCard
-          label="待处理"
+          eyebrow="Action"
+          label="待确认 / 处理"
           value={actionRequired.length}
-          icon={<AlertCircle size={18} className="text-amber-400" />}
-          color="text-amber-400"
           href="/studies?status=action"
           alert={actionRequired.length > 0}
         />
         <StatCard
-          label="剩余额度"
+          eyebrow="Credits"
+          label="剩余运行额度"
           value={MOCK_ORG.credits_balance}
-          icon={<TrendingUp size={18} className="text-[var(--color-gold)]" />}
-          color="text-[var(--color-gold)]"
           href="/billing"
+          badge={plan?.label}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent studies */}
-        <div className="lg:col-span-2 space-y-3">
+      {/* Main Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left 8 cols: Recent studies */}
+        <div className="lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="section-heading">最近项目</span>
-            <Link href="/studies" className="text-xs text-gold hover:text-gold-light transition-smooth flex items-center gap-1">
+            <h2 className="text-sm font-semibold text-white tracking-tight">最近研究项目</h2>
+            <Link href="/studies" className="text-xs text-neutral-400 hover:text-white transition-colors flex items-center gap-1 font-light">
               查看全部 <ArrowRight size={12} />
             </Link>
           </div>
@@ -108,18 +93,17 @@ export function DashboardClient() {
           {MOCK_STUDIES.length === 0 ? (
             <Card>
               <EmptyState
-                icon="📊"
-                title="还没有项目"
-                description="新建一个项目，把您的产品或门店放入泰国消费者市场测试"
+                title="还没有研究项目"
+                description="新建一个项目，把您的产品或门店放入泰国消费者市场跑模拟"
                 action={
-                  <Link href="/studies/new" className="btn-primary text-sm">
+                  <Link href="/studies/new" className="btn-lazzor-primary text-xs mt-2">
                     新建第一个项目
                   </Link>
                 }
               />
             </Card>
           ) : (
-            <div className="space-y-2 stagger-children">
+            <div className="space-y-3">
               {MOCK_STUDIES.slice(0, 5).map(study => (
                 <StudyRow key={study.id} study={study} />
               ))}
@@ -127,63 +111,60 @@ export function DashboardClient() {
           )}
         </div>
 
-        {/* Right column */}
-        <div className="space-y-4">
+        {/* Right 4 cols: Quick Start & Platform Info */}
+        <div className="lg:col-span-4 space-y-6">
           {/* Quick templates */}
           <div className="space-y-3">
-            <span className="section-heading">快速开始</span>
-            <div className="grid grid-cols-2 gap-2 stagger-children">
+            <h2 className="text-sm font-semibold text-white tracking-tight">快速模版入口</h2>
+            <div className="grid grid-cols-2 gap-3">
               {QUICK_TEMPLATES.map(t => (
                 <Link
                   key={t.label}
                   href={t.href}
-                  className="glass-card p-3 flex flex-col items-center gap-1.5 hover:border-[var(--color-gold-dim)] transition-smooth cursor-pointer text-center"
+                  className="card-lazzor p-4 flex flex-col items-start gap-2 hover:bg-[#181818] transition-colors group"
                 >
                   <span className="text-xl">{t.icon}</span>
-                  <span className="text-xs font-medium text-secondary">{t.label}</span>
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xs font-medium text-neutral-200 group-hover:text-white">{t.label}</span>
+                    <ArrowUpRight size={12} className="text-neutral-500 group-hover:text-white transition-colors" />
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Platform info */}
+          {/* Usage Chart */}
           <Card>
-            <div className="space-y-3">
-              <span className="section-heading">平台说明</span>
-              <InfoRow icon={<Users size={14} />} text="使用合成人口，非真实自然人" />
-              <InfoRow icon={<Globe size={14} />} text="结果适合比较方案、发现风险" />
-              <InfoRow icon={<BarChart3 size={14} />} text="不保证实际销量或投资回报" />
-              <div className="divider mt-2" />
-              <p className="text-xs text-muted leading-relaxed">
-                客户输入越完整，结果越有参考价值。所有数字均可追溯至模拟任务和数据版本。
-              </p>
-            </div>
-          </Card>
-
-          {/* Usage mini chart */}
-          <Card>
-            <div className="space-y-3">
-              <span className="section-heading">本周使用</span>
-              <div className="flex items-end gap-1 h-16">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="eyebrow">Usage</span>
+                <span className="text-xs text-neutral-400 font-light">本周共 {MOCK_USAGE.reduce((s, d) => s + d.runs, 0)} 次</span>
+              </div>
+              <div className="flex items-end gap-2 h-20 pt-2">
                 {MOCK_USAGE.map((d, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                     <div
-                      className="w-full rounded-t-sm transition-all"
+                      className="w-full rounded-t transition-all bg-neutral-100"
                       style={{
-                        height: `${d.runs > 0 ? (d.runs / 3) * 100 : 4}%`,
-                        background: d.runs > 0
-                          ? "linear-gradient(to top, var(--color-gold-dim), var(--color-gold))"
-                          : "var(--color-border)",
-                        minHeight: "4px",
+                        height: `${d.runs > 0 ? (d.runs / 3) * 100 : 8}%`,
+                        opacity: d.runs > 0 ? 1 : 0.15,
                       }}
                     />
-                    <span className="text-[9px] text-muted">{d.date.slice(3)}</span>
+                    <span className="text-[10px] text-neutral-500 font-mono">{d.date.slice(3)}</span>
                   </div>
                 ))}
               </div>
-              <div className="text-xs text-secondary">
-                本周共运行 <span className="text-gold font-medium">{MOCK_USAGE.reduce((s, d) => s + d.runs, 0)}</span> 次模拟
-              </div>
+            </div>
+          </Card>
+
+          {/* Platform Standards */}
+          <Card>
+            <div className="space-y-3">
+              <span className="eyebrow">Platform Assurance</span>
+              <h3 className="text-xs font-semibold text-white">严谨的数据与模型约束</h3>
+              <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                平台基于 Thailand World Model 合成人口计算。不自由编造数字，所有报告结果均能追溯至对应的运行 ID 与数据版本。
+              </p>
             </div>
           </Card>
         </div>
@@ -196,26 +177,28 @@ export function DashboardClient() {
 // Sub components
 // ─────────────────────────────────────────
 function StatCard({
-  label, value, icon, color, href, alert,
+  eyebrow, label, value, href, alert, badge,
 }: {
+  eyebrow: string;
   label: string;
   value: number;
-  icon: React.ReactNode;
-  color: string;
   href: string;
   alert?: boolean;
+  badge?: string;
 }) {
   return (
     <Link href={href}>
-      <Card hover className="relative">
-        {alert && value > 0 && (
-          <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        )}
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-[var(--color-bg-base)]">{icon}</div>
+      <Card hover className="relative group">
+        <div className="flex items-center justify-between mb-3">
+          <span className="eyebrow">{eyebrow}</span>
+          {alert && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
+          {badge && <span className="text-[10px] font-mono text-neutral-400">{badge}</span>}
         </div>
-        <div className={`text-2xl font-bold ${color}`}>{value}</div>
-        <div className="text-xs text-muted mt-1">{label}</div>
+        <div className="text-3xl sm:text-4xl font-light text-white tracking-tight">{value}</div>
+        <div className="text-xs text-neutral-400 font-light mt-1 flex items-center justify-between">
+          <span>{label}</span>
+          <ArrowRight size={13} className="opacity-0 group-hover:opacity-100 transition-opacity text-white" />
+        </div>
       </Card>
     </Link>
   );
@@ -226,31 +209,23 @@ function StudyRow({ study }: { study: typeof MOCK_STUDIES[0] }) {
   return (
     <Link href={`/studies/${study.id}`}>
       <Card hover className="!p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-lg"
-            style={{ background: `${meta?.color}18` }}>
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-lg shrink-0">
             {meta?.icon}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <StatusBadge status={study.status as Parameters<typeof StatusBadge>[0]["status"]} />
               <PlanBadge plan={study.plan_code as Parameters<typeof PlanBadge>[0]["plan"]} />
             </div>
-            <p className="text-sm font-medium text-primary truncate">{study.name}</p>
-            <p className="text-xs text-muted mt-0.5">{formatRelativeTime(study.updated_at)}</p>
+            <p className="text-xs font-medium text-white truncate">{study.name}</p>
           </div>
-          <ArrowRight size={16} className="text-muted shrink-0" />
+          <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
+            <span className="text-[11px] text-neutral-500 font-light">{formatRelativeTime(study.updated_at)}</span>
+            <ArrowUpRight size={14} className="text-neutral-500 group-hover:text-white transition-colors" />
+          </div>
         </div>
       </Card>
     </Link>
-  );
-}
-
-function InfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
-  return (
-    <div className="flex items-start gap-2 text-xs text-secondary">
-      <span className="text-muted mt-0.5">{icon}</span>
-      <span>{text}</span>
-    </div>
   );
 }
