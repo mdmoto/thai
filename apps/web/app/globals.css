@@ -1,10 +1,27 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────
+   Design Tokens — Lazzor / Chiang Mai AI Center
+   Dark, Apple-style base with a warm gold accent
+   ───────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #f5f5f7;
   --font-sans: var(--font-geist-sans), Inter, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+
+  --color-gold: #D4A853;
+  --color-gold-light: #E8C879;
+  --color-gold-dark: #B8902E;
+
+  --color-surface: #070707;
+  --color-surface-hover: #0f0f0f;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+
+  --color-text-primary: #f5f5f7;
+  --color-text-secondary: #a1a1a6;
+  --color-text-muted: #86868b;
 }
 
 .dark, :root[class~="dark"] {
@@ -12,36 +29,85 @@
   --foreground: #f5f5f7;
 }
 
+* {
+  border-color: var(--color-border);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Lazzor / CMAI Design Utilities */
-.cmai-card {
-  background-color: #070707;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem; /* 16px */
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.cmai-card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
+/* ─────────────────────────────────────────
+   Typography utilities
+   ───────────────────────────────────────── */
+.eyebrow,
 .eyebrow-label {
   font-size: 11px;
   font-family: var(--font-sans);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-weight: 600;
-  color: #86868b;
+  color: var(--color-text-muted);
   display: block;
 }
 
-/* Buttons matching lazzor.com */
-.btn-cmai-primary {
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted { color: var(--color-text-muted); }
+.text-gold { color: var(--color-gold); }
+.text-gold-light { color: var(--color-gold-light); }
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-base { background: var(--background); }
+
+.divider {
+  height: 1px;
+  width: 100%;
+  background: var(--color-border);
+  border: none;
+}
+
+/* ─────────────────────────────────────────
+   Cards
+   ───────────────────────────────────────── */
+.cmai-card,
+.card-lazzor {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cmai-card:hover,
+.card-lazzor:hover {
+  border-color: var(--color-border-strong);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ─────────────────────────────────────────
+   Buttons — one shared visual language
+   across every naming variant used in the app
+   ───────────────────────────────────────── */
+.btn-cmai-primary,
+.btn-lazzor-primary,
+.btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -60,12 +126,16 @@ body {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.btn-cmai-primary:hover {
+.btn-cmai-primary:hover,
+.btn-lazzor-primary:hover,
+.btn-primary:hover {
   background-color: #ffffff;
   transform: translateY(-1px);
 }
 
-.btn-cmai-secondary {
+.btn-cmai-secondary,
+.btn-lazzor-secondary,
+.btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -75,20 +145,23 @@ body {
   font-size: 13px;
   font-weight: 500;
   background-color: transparent;
-  color: #f5f5f7;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   white-space: nowrap;
 }
 
-.btn-cmai-secondary:hover {
+.btn-cmai-secondary:hover,
+.btn-lazzor-secondary:hover,
+.btn-secondary:hover {
   border-color: rgba(255, 255, 255, 0.4);
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.btn-cmai-ghost {
+.btn-cmai-ghost,
+.btn-lazzor-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -98,40 +171,112 @@ body {
   font-size: 13px;
   font-weight: 500;
   background-color: transparent;
-  color: #86868b;
+  color: var(--color-text-muted);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
 }
 
-.btn-cmai-ghost:hover {
-  color: #f5f5f7;
+.btn-cmai-ghost:hover,
+.btn-lazzor-ghost:hover {
+  color: var(--color-text-primary);
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Form Inputs */
-.input-cmai {
+/* Gold CTA — reserved for rare, high-emphasis moments
+   (e.g. upgrade prompts), not everyday buttons */
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: #1d1508;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(212, 168, 83, 0.25);
+}
+
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(212, 168, 83, 0.35);
+}
+
+/* ─────────────────────────────────────────
+   Form Inputs
+   ───────────────────────────────────────── */
+.input-cmai,
+.input-lazzor,
+.input-field {
   width: 100%;
   padding: 0.625rem 1rem;
   border-radius: 0.75rem;
   font-size: 13px;
-  background-color: #070707;
+  background-color: var(--color-surface);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f5f5f7;
+  color: var(--color-text-primary);
   outline: none;
   transition: border-color 0.2s ease;
 }
 
-.input-cmai::placeholder {
+.input-cmai::placeholder,
+.input-lazzor::placeholder,
+.input-field::placeholder {
   color: #515154;
 }
 
-.input-cmai:focus {
-  border-color: rgba(255, 255, 255, 0.3);
+.input-cmai:focus,
+.input-lazzor:focus,
+.input-field:focus {
+  border-color: var(--color-border-strong);
 }
 
-/* Custom Scrollbar */
+/* ─────────────────────────────────────────
+   Motion utilities
+   ───────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease both;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stagger-children > * {
+  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.22s; }
+
+/* ─────────────────────────────────────────
+   Custom Scrollbar
+   ───────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -148,6 +293,6 @@ body {
 }
 
 ::selection {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(212, 168, 83, 0.3);
   color: #ffffff;
 }
