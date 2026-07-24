@@ -191,6 +191,13 @@ def main() -> int:
         ["PREVIEW", "STANDARD", "PROFESSIONAL"],
         "public plan catalog mismatch",
     )
+    expect(
+        list(catalog.get("credit_pricing", {})),
+        ["PREVIEW", "STANDARD", "PROFESSIONAL"],
+        "internal plans leaked into public pricing",
+    )
+    if "DEEP" in json.dumps(catalog) or "ENTERPRISE" in json.dumps(catalog):
+        raise RuntimeError("internal plans leaked into public catalog")
 
     suffix = f"{int(time.time())}-{secrets.token_hex(3)}"
     password = f"Smoke-{secrets.token_urlsafe(20)}"

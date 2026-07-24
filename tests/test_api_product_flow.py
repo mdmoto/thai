@@ -58,6 +58,18 @@ class ApiProductFlowTests(unittest.TestCase):
             {"status": "healthy", "database": "connected"},
         )
 
+    def test_public_catalog_excludes_internal_plans(self):
+        response = self.client.get("/v1/catalog")
+        self.assertEqual(response.status_code, 200, response.text)
+        catalog = response.json()
+        expected = ["PREVIEW", "STANDARD", "PROFESSIONAL"]
+        self.assertEqual(catalog["self_service_plans"], expected)
+        self.assertEqual(catalog["assisted_plans"], [])
+        self.assertEqual(list(catalog["credit_pricing"]), expected)
+        self.assertEqual(list(catalog["plans"]), expected)
+        self.assertNotIn("DEEP", response.text)
+        self.assertNotIn("ENTERPRISE", response.text)
+
     def test_authenticated_product_flow_is_private_and_idempotent(self):
         first_user, first_headers = self._register("owner@example.com")
         _, second_headers = self._register("other@example.com")

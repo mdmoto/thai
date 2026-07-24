@@ -18,6 +18,8 @@ CREDIT_PRICING = {
     "ENTERPRISE": 120,
 }
 
+PUBLIC_PLAN_CODES = ("PREVIEW", "STANDARD", "PROFESSIONAL")
+
 PACKAGE_CATALOG: Dict[str, Dict[str, Any]] = {
     "STARTER": {
         "code": "STARTER",
@@ -48,9 +50,11 @@ PACKAGE_CATALOG: Dict[str, Dict[str, Any]] = {
 
 def public_catalog() -> Dict[str, Any]:
     return {
-        "credit_pricing": CREDIT_PRICING,
+        "credit_pricing": {
+            code: CREDIT_PRICING[code] for code in PUBLIC_PLAN_CODES
+        },
         "packages": list(PACKAGE_CATALOG.values()),
-        "self_service_plans": ["PREVIEW", "STANDARD", "PROFESSIONAL"],
+        "self_service_plans": list(PUBLIC_PLAN_CODES),
         "assisted_plans": [],
     }
 
