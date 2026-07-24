@@ -8,8 +8,10 @@
    - `market-twin-jwt-secret`
    - `market-twin-admin-api-key`
 3. Artifact Registry repository `market-twin` in `asia-southeast1`.
-4. Cloud Run service `market-twin-api`.
-5. Static frontend with `NEXT_PUBLIC_API_URL` fixed to the deployed API URL at
+4. Runtime service account `market-twin-api` with only Secret Manager access
+   and Cloud SQL Client permissions.
+5. Cloud Run service `market-twin-api`, attached to the Cloud SQL instance.
+6. Static frontend with `NEXT_PUBLIC_API_URL` fixed to the deployed API URL at
    build time.
 
 Use independent random values of at least 32 bytes for JWT and admin keys.
@@ -26,6 +28,18 @@ gcloud builds submit \
   --config cloudbuild.yaml \
   --substitutions=_CORS_ORIGIN=https://ai.lazzor.com
 ```
+
+The database secret must use the Cloud SQL Unix socket form:
+
+```text
+postgresql+psycopg://USER:PASSWORD@/DATABASE?host=/cloudsql/PROJECT:asia-southeast1:market-twin-db
+```
+
+Before the build, grant `roles/cloudsql.client` and
+`roles/secretmanager.secretAccessor` to the dedicated runtime service account.
+Grant the Cloud Build service account permission to deploy Cloud Run, use the
+runtime service account and read the image repository. Do not grant those
+roles to public users or to the frontend.
 
 `Base.metadata.create_all` creates a new schema. Startup also performs the
 limited pre-v2 compatibility migration needed for existing users,

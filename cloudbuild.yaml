@@ -1,6 +1,8 @@
 substitutions:
   _REGION: asia-southeast1
   _REPOSITORY: market-twin
+  _CLOUD_SQL_INSTANCE: market-twin-db
+  _SERVICE_ACCOUNT: market-twin-api
   _CORS_ORIGIN: https://ai.lazzor.com
 
 steps:
@@ -28,6 +30,8 @@ steps:
       - --region=${_REGION}
       - --platform=managed
       - --allow-unauthenticated
+      - --service-account=${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com
+      - --add-cloudsql-instances=$PROJECT_ID:${_REGION}:${_CLOUD_SQL_INSTANCE}
       - --cpu=2
       - --memory=4Gi
       - --concurrency=10
