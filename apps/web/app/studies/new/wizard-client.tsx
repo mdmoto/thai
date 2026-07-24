@@ -24,6 +24,13 @@ interface WizardState {
   url: string;
   plan_code: PlanCode;
   business_questions: string[];
+  venue_type: string;
+  location_text: string;
+  average_check: string;
+  capacity: string;
+  opening_hours: string;
+  creative_format: string;
+  channel: string;
 }
 
 const INIT_STATE: WizardState = {
@@ -38,6 +45,13 @@ const INIT_STATE: WizardState = {
   url: "",
   plan_code: "STANDARD",
   business_questions: [],
+  venue_type: "RESTAURANT",
+  location_text: "",
+  average_check: "",
+  capacity: "",
+  opening_hours: "",
+  creative_format: "IMAGE",
+  channel: "META",
 };
 
 const BUSINESS_QUESTIONS = {
@@ -53,6 +67,27 @@ const BUSINESS_QUESTIONS = {
     "哪个价格毛利最大化？",
     "价格敏感人群占比多少？",
     "提价对转化率影响多少？",
+  ],
+  VENUE_STUDY: [
+    "核心到店客群是谁？",
+    "客单价是否适合该客群？",
+    "主要到店阻力是什么？",
+    "哪种经营情景更值得实测？",
+  ],
+  SITE_COMPARISON: [
+    "哪个候选点位的相对表现最好？",
+    "目标客群覆盖差异有多大？",
+    "出行与竞品阻力分别是什么？",
+  ],
+  CREATIVE_TEST: [
+    "哪套素材最容易被理解？",
+    "哪套素材的信任与行动倾向更高？",
+    "主要误解和拒绝原因是什么？",
+  ],
+  OPERATING_SCENARIO: [
+    "营业时间如何影响到店机会？",
+    "容量和服务配置的主要风险是什么？",
+    "哪个经营方案更值得线下试运行？",
   ],
   DEFAULT: [
     "最适合的目标人群是谁？",
@@ -79,7 +114,10 @@ export function NewStudyWizard() {
   const [state, setState] = useState<WizardState>({
     ...INIT_STATE,
     study_type: initialType,
-    category: initialCategory || INIT_STATE.category,
+    category: initialType && ["PRODUCT_VALIDATION", "PRICING_STUDY", "CREATIVE_TEST"].includes(initialType)
+      ? initialCategory || INIT_STATE.category
+      : INIT_STATE.category,
+    venue_type: initialCategory || INIT_STATE.venue_type,
   });
 
   const update = useCallback((updates: Partial<WizardState>) => {
@@ -103,18 +141,39 @@ export function NewStudyWizard() {
     try {
       // 1. Call real FastAPI backend to create study
       const { createStudyApi, confirmStudyApi } = await import("@/lib/api-client");
+      const isOffline = Boolean(
+        state.study_type
+        && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type),
+      );
+      const candidateLocations = state.study_type === "SITE_COMPARISON"
+        ? state.location_text.split(/[;\n、]+/).map(value => value.trim()).filter(Boolean)
+        : [];
       const study = await createStudyApi({
         name: state.name || "未命名研究项目",
         study_type: state.study_type || "PRODUCT_VALIDATION",
         plan_code: state.plan_code,
         product_name: state.product_name,
         category: state.category,
-        price: parseFloat(state.price),
+        price: state.price ? Number(state.price) : undefined,
         url: state.url,
         description: state.description,
         selling_points: state.selling_points.filter(Boolean),
         competitors: state.competitors.filter(Boolean),
         business_questions: state.business_questions,
+        venue_type: isOffline ? state.venue_type : undefined,
+        average_check: state.average_check ? Number(state.average_check) : undefined,
+        capacity: state.capacity ? Number(state.capacity) : undefined,
+        opening_hours: state.opening_hours || undefined,
+        creative_format: state.study_type === "CREATIVE_TEST" ? state.creative_format : undefined,
+        channel: state.study_type === "CREATIVE_TEST" ? state.channel : undefined,
+        location: state.location_text
+          ? { label: state.location_text }
+          : undefined,
+        candidate_locations: candidateLocations.map(label => ({ label })),
+        scenarios: candidateLocations.map(label => ({
+          name: label,
+          price: Number(state.average_check),
+        })),
       });
 
       // 2. Confirm study facts
@@ -299,7 +358,10 @@ function Step2({ state, update, onNext, onBack }: {
   onBack: () => void;
 }) {
   const meta = state.study_type ? STUDY_TYPE_META[state.study_type] : null;
-  const isOnline = !state.study_type || ["PRODUCT_VALIDATION", "PRICING_STUDY"].includes(state.study_type);
+  const isProduct = !state.study_type || ["PRODUCT_VALIDATION", "PRICING_STUDY"].includes(state.study_type);
+  const isCreative = state.study_type === "CREATIVE_TEST";
+  const isOffline = Boolean(state.study_type && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type));
+  const siteCount = state.location_text.split(/[;\n、]+/).map(value => value.trim()).filter(Boolean).length;
 
   const addListItem = (field: "selling_points" | "competitors") => {
     update({ [field]: [...state[field], ""] });
@@ -316,10 +378,15 @@ function Step2({ state, update, onNext, onBack }: {
     update({ [field]: arr.length ? arr : [""] });
   };
 
-  const canProceed =
-    state.name.trim().length > 0
+  const canProceed = state.name.trim().length > 0
     && state.product_name.trim().length > 0
-    && Number(state.price) > 0;
+    && (
+      isOffline
+        ? state.location_text.trim().length > 0
+          && Number(state.average_check) > 0
+          && (state.study_type !== "SITE_COMPARISON" || siteCount >= 2)
+        : Number(state.price) > 0
+    );
 
   return (
     <div className="space-y-6">
@@ -356,11 +423,11 @@ function Step2({ state, update, onNext, onBack }: {
         </div>
 
         {/* Product info */}
-        {(isOnline || !state.study_type) && (
+        {(isProduct || isCreative) && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input
-              label="产品名称"
-              placeholder="例：BKK宠物零食"
+              label={isCreative ? "推广产品 / 品牌" : "产品名称"}
+              placeholder={isCreative ? "例：新款智能饮水机" : "例：BKK宠物零食"}
               value={state.product_name}
               onChange={e => update({ product_name: e.target.value })}
             />
@@ -382,13 +449,89 @@ function Step2({ state, update, onNext, onBack }: {
               </select>
             </div>
             <Input
-              label="售价 (THB)"
+              label={isCreative ? "产品售价 (THB)" : "售价 (THB)"}
               type="number"
               placeholder="例：299"
               value={state.price}
               onChange={e => update({ price: e.target.value })}
             />
           </div>
+        )}
+
+        {isCreative && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-neutral-400 tracking-wide">素材形式</label>
+              <select className="input-lazzor" value={state.creative_format} onChange={e => update({ creative_format: e.target.value })}>
+                <option value="IMAGE">广告图片</option>
+                <option value="COPY">广告文案</option>
+                <option value="VIDEO_SCRIPT">短视频脚本</option>
+                <option value="LANDING_PAGE">落地页</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-neutral-400 tracking-wide">主要渠道</label>
+              <select className="input-lazzor" value={state.channel} onChange={e => update({ channel: e.target.value })}>
+                <option value="META">Facebook / Instagram</option>
+                <option value="TIKTOK">TikTok</option>
+                <option value="LINE">LINE</option>
+                <option value="MARKETPLACE">Shopee / Lazada</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {isOffline && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="门店 / 项目名称"
+                required
+                placeholder="例：Nimman 新概念咖啡馆"
+                value={state.product_name}
+                onChange={e => update({ product_name: e.target.value })}
+              />
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-neutral-400 tracking-wide">业态</label>
+                <select className="input-lazzor" value={state.venue_type} onChange={e => update({ venue_type: e.target.value })}>
+                  <option value="RESTAURANT">餐厅</option>
+                  <option value="CAFE">咖啡馆</option>
+                  <option value="BAR">酒吧 / Pub</option>
+                  <option value="RETAIL">零售门店</option>
+                </select>
+              </div>
+            </div>
+            <Input
+              label={state.study_type === "SITE_COMPARISON" ? "候选区域 / 点位（用分号或换行分隔）" : "城市、商圈或具体位置"}
+              required
+              placeholder="例：Chiang Mai, Nimman Soi 9"
+              value={state.location_text}
+              onChange={e => update({ location_text: e.target.value })}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Input
+                label="平均客单价 (THB)"
+                type="number"
+                required
+                placeholder="例：350"
+                value={state.average_check}
+                onChange={e => update({ average_check: e.target.value, price: e.target.value })}
+              />
+              <Input
+                label="容量 / 座位数"
+                type="number"
+                placeholder="例：60"
+                value={state.capacity}
+                onChange={e => update({ capacity: e.target.value })}
+              />
+              <Input
+                label="营业时间"
+                placeholder="例：10:00–22:00"
+                value={state.opening_hours}
+                onChange={e => update({ opening_hours: e.target.value })}
+              />
+            </div>
+          </>
         )}
 
         {/* Selling points */}
@@ -461,11 +604,18 @@ function Step3({ state, onNext, onBack }: {
   onBack: () => void;
 }) {
   const meta = state.study_type ? STUDY_TYPE_META[state.study_type] : null;
+  const isOffline = Boolean(state.study_type && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type));
+  const isCreative = state.study_type === "CREATIVE_TEST";
 
   const facts = [
-    state.product_name && { label: "产品名称", value: state.product_name },
-    state.price && { label: "售价", value: `THB ${state.price}` },
-    { label: "产品品类", value: state.category === "PET_WATER_FOUNTAIN" ? "宠物智能饮水机" : "其他消费品" },
+    state.product_name && { label: isOffline ? "门店 / 项目" : isCreative ? "推广产品 / 品牌" : "产品名称", value: state.product_name },
+    (isOffline ? state.average_check : state.price) && {
+      label: isOffline ? "平均客单价" : "售价",
+      value: `THB ${isOffline ? state.average_check : state.price}`,
+    },
+    isOffline
+      ? { label: "位置与业态", value: `${state.location_text} · ${state.venue_type}` }
+      : { label: "产品品类", value: state.category === "PET_WATER_FOUNTAIN" ? "宠物智能饮水机" : "其他消费品" },
   ].filter(Boolean) as { label: string; value: string }[];
 
   const isPetWater = state.category === "PET_WATER_FOUNTAIN";
@@ -476,13 +626,17 @@ function Step3({ state, onNext, onBack }: {
     { label: "模拟市场", value: "泰国全国 77 府人口权重", grade: "B" },
     { label: "人口与收入", value: "NSO 官方聚合统计校准", grade: "B" },
     {
-      label: "价格参照",
-      value: isPetWater ? `${pricePosition}（公开样本 ฿435–฿3,290）` : "尚无该品类实证价格面板",
+      label: isOffline ? "地理与客流参照" : isCreative ? "广告效果参照" : "价格参照",
+      value: isOffline
+        ? "当前使用区域与出行阻力先验，尚未接入实时客流"
+        : isCreative
+          ? "当前使用结构化反应先验，尚未接入真实曝光与点击"
+          : isPetWater ? `${pricePosition}（公开样本 ฿435–฿3,290）` : "尚无该品类实证价格面板",
       grade: isPetWater ? "B" : "D",
     },
     {
       label: "竞品选择集",
-      value: isPetWater ? "15 个泰国公开零售报价，模拟时压缩为代表性选择集" : "用户输入竞品 + 不购买选项",
+      value: isPetWater ? "15 个泰国公开零售报价，模拟时压缩为代表性选择集" : isOffline ? "用户输入周边竞品 + 不到店选项" : "用户输入竞品 + 不购买选项",
       grade: isPetWater ? "B" : "D",
     },
   ];
@@ -490,7 +644,15 @@ function Step3({ state, onNext, onBack }: {
   const defaults = [
     { label: "品牌认知与信任", value: "无客户历史数据，使用保守先验并纳入敏感性分析", grade: "D" },
     { label: "品类渗透与购买频率", value: isPetWater ? "宠物家庭资格率为工程先验，非官方实测" : "未校准，结果仅作方向性比较", grade: "D" },
-    { label: "转化基准", value: "无真实销售或 A/B 数据，不宣称为可验证销量预测", grade: "D" },
+    {
+      label: "转化基准",
+      value: isOffline
+        ? "无真实到店、订单或试营业数据，不宣称为可验证客流预测"
+        : isCreative
+          ? "无真实曝光、点击或 A/B 数据，不宣称为可验证广告转化率"
+          : "无真实销售或 A/B 数据，不宣称为可验证销量预测",
+      grade: "D",
+    },
   ];
 
   return (

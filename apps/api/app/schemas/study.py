@@ -30,13 +30,31 @@ class CreateStudyRequest(BaseModel):
     average_check: Optional[float] = Field(default=None, gt=0)
     capacity: Optional[int] = Field(default=None, gt=0)
     location: Optional[Dict[str, Any]] = None
+    venue_type: Optional[str] = Field(default=None, max_length=40)
+    opening_hours: Optional[str] = Field(default=None, max_length=200)
+    parking: Optional[str] = Field(default=None, max_length=500)
+    distance_km: Optional[float] = Field(default=None, ge=0, le=500)
+    creative_format: Optional[str] = Field(default=None, max_length=80)
+    channel: Optional[str] = Field(default=None, max_length=120)
+    campaign_budget: Optional[float] = Field(default=None, ge=0)
+    candidate_locations: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        max_length=10,
+    )
 
     @field_validator("study_type")
     @classmethod
     def validate_study_type(cls, value: str) -> str:
         normalized = value.strip().upper()
-        if normalized not in {"PRODUCT_VALIDATION", "PRICING_STUDY"}:
-            raise ValueError("当前自助产品仅支持消费品验证与消费品定价")
+        if normalized not in {
+            "PRODUCT_VALIDATION",
+            "PRICING_STUDY",
+            "VENUE_STUDY",
+            "SITE_COMPARISON",
+            "CREATIVE_TEST",
+            "OPERATING_SCENARIO",
+        }:
+            raise ValueError("不支持的研究类型")
         return normalized
 
     @field_validator("selling_points", "competitors", "business_questions")

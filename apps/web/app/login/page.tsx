@@ -7,6 +7,7 @@ import { Building, Eye, EyeOff } from "lucide-react";
 import { loginApi, registerApi } from "@/lib/api-client";
 import { saveAuthSession } from "@/lib/auth-session";
 import { Input } from "@/components/ui";
+import { BrandMark } from "@/components/brand-mark";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,11 +46,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-base py-10">
       <div className="w-full max-w-sm mx-4 animate-fade-in-up">
         <Link href="/" className="block text-center mb-8">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 mb-4">
-            <span className="text-sm font-semibold text-white">MT</span>
-          </div>
+          <BrandMark full className="w-48 h-auto mx-auto mb-5" priority />
           <h1 className="text-xl font-semibold text-white tracking-tight">
-            Thailand Market Twin
+            CMAI Thailand Market Twin
           </h1>
           <p className="text-sm text-neutral-400 mt-1">泰国消费品决策平台</p>
         </Link>

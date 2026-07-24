@@ -64,6 +64,36 @@ class SimulationEngineTests(unittest.TestCase):
             places=4,
         )
 
+    def test_all_first_release_study_models_execute(self):
+        expected_funnel_labels = {
+            "PRODUCT_VALIDATION": "Purchased",
+            "PRICING_STUDY": "Purchased",
+            "CREATIVE_TEST": "Action Intended",
+            "VENUE_STUDY": "Visited",
+            "SITE_COMPARISON": "Visited",
+            "OPERATING_SCENARIO": "Visited",
+            "RESTAURANT": "Visited",
+            "CAFE": "Visited",
+            "BAR": "Visited",
+            "RETAIL": "Visited",
+        }
+        model_keys = set()
+        for study_type, final_label in expected_funnel_labels.items():
+            with self.subTest(study_type=study_type):
+                result = self.run_engine(
+                    study_type=study_type,
+                    mc_rounds=20,
+                )
+                model_keys.add(result["study_model_key"])
+                purchased_stage = next(
+                    item for item in result["funnel"]
+                    if item["stage"] == "purchased"
+                )
+                self.assertEqual(purchased_stage["label"], final_label)
+                self.assertGreaterEqual(result["mean_purchase_rate"], 0)
+                self.assertLessEqual(result["mean_purchase_rate"], 1)
+        self.assertGreaterEqual(len(model_keys), 6)
+
     def test_llm_signal_is_bounded_and_disclosed(self):
         result = self.run_engine(
             plan_code="PROFESSIONAL",

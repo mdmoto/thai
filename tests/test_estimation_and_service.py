@@ -129,6 +129,52 @@ class StudyServiceTests(unittest.TestCase):
         self.assertIn("model_lineage", report)
         self.assertGreater(len(report["price_elasticity"]), 3)
 
+    def test_venue_uses_subtype_model_and_visit_language(self):
+        previous_key = os.environ.get("GEMINI_API_KEY")
+        os.environ["GEMINI_API_KEY"] = ""
+        try:
+            service = StudyService()
+            study = service.create_study(
+                {
+                    "name": "Nimman cafe",
+                    "study_type": "VENUE_STUDY",
+                    "plan_code": "PREVIEW",
+                    "product_name": "CMAI Cafe",
+                    "venue_type": "CAFE",
+                    "average_check": 220,
+                    "capacity": 45,
+                    "location": {"label": "Chiang Mai, Nimman"},
+                }
+            )
+            service.confirm_study(study["id"], {})
+            report = asyncio.run(
+                service.execute_run(
+                    study["id"],
+                    pop_size=200,
+                    mc_rounds=20,
+                    seed=17,
+                )
+            )
+        finally:
+            if previous_key is None:
+                os.environ.pop("GEMINI_API_KEY", None)
+            else:
+                os.environ["GEMINI_API_KEY"] = previous_key
+
+        self.assertEqual(report["study_type"], "VENUE_STUDY")
+        self.assertEqual(
+            report["model_lineage"]["effective_model_type"],
+            "CAFE",
+        )
+        self.assertEqual(
+            report["executive_summary"]["key_metrics"][0]["label"],
+            "总体到店概率",
+        )
+        visited = next(
+            item for item in report["funnel"] if item["stage"] == "purchased"
+        )
+        self.assertEqual(visited["label"], "Visited")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -134,6 +134,14 @@ class StudyService:
             "average_check",
             "capacity",
             "location",
+            "venue_type",
+            "opening_hours",
+            "parking",
+            "distance_km",
+            "creative_format",
+            "channel",
+            "campaign_budget",
+            "candidate_locations",
             "product_attributes",
             "competitor_data",
             "scenarios",
@@ -278,6 +286,21 @@ class StudyService:
                 if source.get(field) is not None:
                     attributes[field] = source[field]
         return attributes
+
+    def _effective_model_type(self, study: Mapping[str, Any]) -> str:
+        """Select a venue-specific prior while preserving the public study type."""
+        study_type = str(study["study_type"]).upper()
+        if study_type not in {"VENUE_STUDY", "OPERATING_SCENARIO"}:
+            return study_type
+        venue_type = str(
+            study["facts"].get("venue_type")
+            or study["inputs"].get("venue_type")
+            or study["facts"].get("category")
+            or ""
+        ).upper()
+        if venue_type in {"RESTAURANT", "CAFE", "BAR", "RETAIL"}:
+            return venue_type
+        return study_type
 
     def _representative_records(
         self,
@@ -425,6 +448,36 @@ class StudyService:
         awareness = metrics["awareness_rate"]
         consideration = metrics["consideration_rate"]
         repeat = metrics["repeat_rate"]
+        is_venue = study["study_type"] in {
+            "VENUE_STUDY",
+            "SITE_COMPARISON",
+            "OPERATING_SCENARIO",
+        }
+        is_creative = study["study_type"] == "CREATIVE_TEST"
+        if is_venue:
+            metric_labels = (
+                "总体到店概率",
+                "门店认知概率",
+                "进入到店考虑概率",
+                "到店后复访倾向",
+            )
+            audience_rate_label = "模型到店率"
+        elif is_creative:
+            metric_labels = (
+                "总体行动倾向",
+                "广告触达认知概率",
+                "进入考虑概率",
+                "后续转化倾向",
+            )
+            audience_rate_label = "模型行动率"
+        else:
+            metric_labels = (
+                "总体购买概率",
+                "品牌认知概率",
+                "进入考虑概率",
+                "购买后复购倾向",
+            )
+            audience_rate_label = "模型购买率"
 
         recommendation = (
             f"当前{population_calibration_label}、{choice_calibration_label}的 "
@@ -464,7 +517,7 @@ class StudyService:
             "executive_summary": {
                 "recommendation": recommendation,
                 "best_audience": (
-                    f"{best_segment['name']}（模型购买率 "
+                    f"{best_segment['name']}（{audience_rate_label} "
                     f"{best_segment['purchase_rate']:.1%}）"
                     if best_segment
                     else "暂无可识别人群"
@@ -476,19 +529,19 @@ class StudyService:
                 "best_scenario": best_scenario["name"],
                 "key_metrics": [
                     {
-                        "label": "总体购买概率",
+                        "label": metric_labels[0],
                         "value": purchase["mean"],
                         "ci": [purchase["p10"], purchase["p90"]],
                         "interval_type": "prior_predictive",
                     },
                     {
-                        "label": "品牌认知概率",
+                        "label": metric_labels[1],
                         "value": awareness["mean"],
                         "ci": [awareness["p10"], awareness["p90"]],
                         "interval_type": "prior_predictive",
                     },
                     {
-                        "label": "进入考虑概率",
+                        "label": metric_labels[2],
                         "value": consideration["mean"],
                         "ci": [
                             consideration["p10"],
@@ -497,7 +550,7 @@ class StudyService:
                         "interval_type": "prior_predictive",
                     },
                     {
-                        "label": "购买后复购倾向",
+                        "label": metric_labels[3],
                         "value": repeat["mean"],
                         "ci": [repeat["p10"], repeat["p90"]],
                         "interval_type": "prior_predictive",
@@ -573,13 +626,14 @@ class StudyService:
             overrides = study["inputs"].get("calibration_overrides")
             use_overrides = overrides if plan.customer_calibration else None
             profile = load_calibration_profile(overrides=use_overrides)
+            model_study_type = self._effective_model_type(study)
             generator = PopulationGenerator(
                 seed=seed,
                 calibration_profile=profile,
             )
             population_df = generator.generate(
                 size=execution["population_size"],
-                study_type=study["study_type"],
+                study_type=model_study_type,
                 category=study["facts"].get("category"),
             )
 
@@ -595,6 +649,7 @@ class StudyService:
             product_context = {
                 **study["facts"],
                 "study_type": study["study_type"],
+                "model_study_type": model_study_type,
                 "brand_awareness": study["facts"].get(
                     "brand_awareness",
                     profile["defaults"]["brand_awareness"],
@@ -624,7 +679,7 @@ class StudyService:
             )
             sim_results = engine.run_simulation(
                 population_df=population_df,
-                study_type=study["study_type"],
+                study_type=model_study_type,
                 price=price,
                 ref_price=study["facts"].get("reference_price"),
                 brand_awareness=study["facts"].get("brand_awareness"),
@@ -642,6 +697,12 @@ class StudyService:
                     f"{plan.code} does not apply customer calibration overrides; "
                     "the bundled prior profile was used."
                 )
+            sim_results["model_lineage"]["requested_study_type"] = study[
+                "study_type"
+            ]
+            sim_results["model_lineage"]["effective_model_type"] = (
+                model_study_type
+            )
             study["status"] = "GENERATING_REPORT"
             self.runs_db[run_id]["status"] = "GENERATING_REPORT"
             report = self._report(
