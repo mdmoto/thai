@@ -1,25 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { TEMPLATES, STUDY_TYPE_META, PLAN_META } from "@/lib/mock-data";
+import { TEMPLATES, STUDY_TYPE_META, PLAN_META } from "@/lib/product-catalog";
 import { Card } from "@/components/ui";
-
-const TEMPLATE_LABELS: Record<string, string> = {
-  new_product: "新消费品测试",
-  ecommerce: "泰国电商产品测试",
-  restaurant: "餐厅开店评估",
-  bar: "酒吧经营方案",
-  cafe: "咖啡馆店址与客群",
-  ab_test: "广告 A/B 测试",
-  pricing: "价格测试",
-  site: "店址比较",
-};
-
-const COLOR_TO_ACCENT: Record<string, "jade" | "gold" | "clay"> = {
-  "#2F9E74": "jade",
-  "#D4A853": "gold",
-  "#B8503D": "clay",
-};
 
 export function TemplatesClient() {
   return (
@@ -33,10 +16,12 @@ export function TemplatesClient() {
         {TEMPLATES.map(t => {
           const meta = STUDY_TYPE_META[t.study_type];
           const plan = PLAN_META[t.recommended_plan as keyof typeof PLAN_META];
-          const accent = meta?.color ? COLOR_TO_ACCENT[meta.color] : undefined;
           return (
-            <Link key={t.id} href={`/studies/new?template=${t.id}&type=${t.study_type}`}>
-              <Card hover accent={accent} className="h-full group">
+            <Link
+              key={t.id}
+              href={`/studies/new?template=${t.id}&type=${t.study_type}&category=${t.category}`}
+            >
+              <Card hover className="h-full group">
                 <div className="flex items-start gap-3 mb-3">
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 transition-smooth group-hover:scale-110"
@@ -46,7 +31,7 @@ export function TemplatesClient() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary text-sm group-hover:text-white transition-smooth">
-                      {TEMPLATE_LABELS[t.key]}
+                      {t.label}
                     </h3>
                     <p className="text-xs text-muted mt-0.5">{meta?.label}</p>
                   </div>
@@ -57,7 +42,7 @@ export function TemplatesClient() {
                   <div className="flex gap-3">
                     <span>{t.scenarios} 个情景</span>
                     <span>·</span>
-                    <span>推荐 {plan?.label}</span>
+                    <span>推荐 {plan.label}</span>
                   </div>
                   <span>⏱ {t.est_time}</span>
                 </div>

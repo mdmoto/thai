@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, ChevronRight, Upload, Plus, X, MapPin, Link as LinkIcon } from "lucide-react";
-import { STUDY_TYPE_META, PLAN_META } from "@/lib/mock-data";
+import { Check, ChevronRight, Plus, X, Link as LinkIcon } from "lucide-react";
+import { STUDY_TYPE_META, PLAN_META } from "@/lib/product-catalog";
+import { getStoredToken } from "@/lib/auth-session";
 import { Card, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -15,15 +17,11 @@ interface WizardState {
   name: string;
   description: string;
   product_name: string;
+  category: string;
   price: string;
   selling_points: string[];
   competitors: string[];
   url: string;
-  location_address: string;
-  operating_hours_open: string;
-  operating_hours_close: string;
-  capacity: string;
-  average_check: string;
   plan_code: PlanCode;
   business_questions: string[];
 }
@@ -33,16 +31,12 @@ const INIT_STATE: WizardState = {
   name: "",
   description: "",
   product_name: "",
+  category: "GENERIC_CONSUMER_PRODUCT",
   price: "",
   selling_points: [""],
   competitors: [""],
   url: "",
-  location_address: "",
-  operating_hours_open: "09:00",
-  operating_hours_close: "22:00",
-  capacity: "",
-  average_check: "",
-  plan_code: "PROFESSIONAL",
+  plan_code: "STANDARD",
   business_questions: [],
 };
 
@@ -59,27 +53,6 @@ const BUSINESS_QUESTIONS = {
     "哪个价格毛利最大化？",
     "价格敏感人群占比多少？",
     "提价对转化率影响多少？",
-  ],
-  RESTAURANT: [
-    "哪个时段客流最高？",
-    "最优营业时间是什么？",
-    "适合家庭还是商务？",
-    "外卖占比会有多高？",
-    "容量设置是否合理？",
-  ],
-  CAFE: [
-    "目标客群是哪些人？",
-    "预计日均客流？",
-    "高峰时段容量够吗？",
-    "远程工作用户占比？",
-    "复购率预期如何？",
-  ],
-  BAR: [
-    "最佳营业时间区间？",
-    "Happy Hour 效果如何？",
-    "游客占比多少？",
-    "活动对客流有多大提升？",
-    "高峰时段容量是否充足？",
   ],
   DEFAULT: [
     "最适合的目标人群是谁？",
@@ -98,12 +71,15 @@ function getQuestions(type: StudyType | null) {
 export function NewStudyWizard() {
   const router = useRouter();
   const params = useSearchParams();
-  const initialType = params.get("type") as StudyType | null;
+  const typeParam = params.get("type");
+  const initialType = typeParam && typeParam in STUDY_TYPE_META ? typeParam as StudyType : null;
+  const initialCategory = params.get("category");
 
   const [step, setStep] = useState(initialType ? 2 : 1);
   const [state, setState] = useState<WizardState>({
     ...INIT_STATE,
     study_type: initialType,
+    category: initialCategory || INIT_STATE.category,
   });
 
   const update = useCallback((updates: Partial<WizardState>) => {
@@ -111,10 +87,19 @@ export function NewStudyWizard() {
   }, []);
 
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState<boolean | null>(null);
+  const [returnPath, setReturnPath] = useState("/studies/new");
+
+  useEffect(() => {
+    setAuthReady(Boolean(getStoredToken()));
+    setReturnPath(`${window.location.pathname}${window.location.search}`);
+  }, []);
 
   const handleSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       // 1. Call real FastAPI backend to create study
       const { createStudyApi, confirmStudyApi } = await import("@/lib/api-client");
@@ -123,7 +108,8 @@ export function NewStudyWizard() {
         study_type: state.study_type || "PRODUCT_VALIDATION",
         plan_code: state.plan_code,
         product_name: state.product_name,
-        price: state.price ? parseFloat(state.price) : 299.0,
+        category: state.category,
+        price: parseFloat(state.price),
         url: state.url,
         description: state.description,
         selling_points: state.selling_points.filter(Boolean),
@@ -135,11 +121,12 @@ export function NewStudyWizard() {
       await confirmStudyApi(study.id);
 
       // 3. Redirect to real-time run execution page
-      router.push(`/studies/${study.id}/run?plan=${state.plan_code}`);
+      router.push(`/studies/run?id=${encodeURIComponent(study.id)}&plan=${encodeURIComponent(state.plan_code)}`);
     } catch (err) {
       console.error("API submission error:", err);
-      const mockId = `study_${Date.now()}`;
-      router.push(`/studies/${mockId}/run?plan=${state.plan_code}`);
+      setSubmitError(
+        err instanceof Error ? err.message : "研究提交失败，请检查后重试。",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -152,6 +139,30 @@ export function NewStudyWizard() {
     { label: "商业问题" },
     { label: "模拟规模" },
   ];
+
+  if (authReady === null) {
+    return <div className="p-8 text-xs text-neutral-400">正在检查工作区登录状态…</div>;
+  }
+
+  if (!authReady) {
+    return (
+      <div className="max-w-xl mx-auto p-8">
+        <Card>
+          <div className="eyebrow mb-2">Workspace required</div>
+          <h2 className="text-lg font-semibold text-white">登录后创建研究</h2>
+          <p className="text-sm text-neutral-400 mt-2">
+            项目输入、报告和积分都会保存在您的独立工作区中。
+          </p>
+          <Link
+            href={`/login?next=${encodeURIComponent(returnPath)}`}
+            className="btn-cmai-primary mt-5"
+          >
+            登录 / 注册
+          </Link>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-8">
@@ -196,8 +207,21 @@ export function NewStudyWizard() {
         {step === 2 && <Step2 state={state} update={update} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
         {step === 3 && <Step3 state={state} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
         {step === 4 && <Step4 state={state} update={update} onNext={() => setStep(5)} onBack={() => setStep(3)} />}
-        {step === 5 && <Step5 state={state} update={update} onBack={() => setStep(4)} onSubmit={handleSubmit} />}
+        {step === 5 && (
+          <Step5
+            state={state}
+            update={update}
+            onBack={() => setStep(4)}
+            onSubmit={handleSubmit}
+            submitting={submitting}
+          />
+        )}
       </div>
+      {submitError && (
+        <div className="p-3 rounded-lg border border-rose-900 bg-rose-950/30 text-xs text-rose-300">
+          {submitError}
+        </div>
+      )}
     </div>
   );
 }
@@ -275,8 +299,7 @@ function Step2({ state, update, onNext, onBack }: {
   onBack: () => void;
 }) {
   const meta = state.study_type ? STUDY_TYPE_META[state.study_type] : null;
-  const isOnline = !state.study_type || ["PRODUCT_VALIDATION", "PRICING_STUDY", "CREATIVE_TEST"].includes(state.study_type);
-  const isVenue = ["RESTAURANT", "CAFE", "BAR", "VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO", "RETAIL"].includes(state.study_type ?? "");
+  const isOnline = !state.study_type || ["PRODUCT_VALIDATION", "PRICING_STUDY"].includes(state.study_type);
 
   const addListItem = (field: "selling_points" | "competitors") => {
     update({ [field]: [...state[field], ""] });
@@ -293,7 +316,10 @@ function Step2({ state, update, onNext, onBack }: {
     update({ [field]: arr.length ? arr : [""] });
   };
 
-  const canProceed = state.name.trim().length > 0;
+  const canProceed =
+    state.name.trim().length > 0
+    && state.product_name.trim().length > 0
+    && Number(state.price) > 0;
 
   return (
     <div className="space-y-6">
@@ -310,29 +336,19 @@ function Step2({ state, update, onNext, onBack }: {
         <Input
           label="项目名称"
           required
-          placeholder="例：清迈中餐厅开业方案评估"
+          placeholder="例：泰国宠物饮水机上市验证"
           value={state.name}
           onChange={e => update({ name: e.target.value })}
         />
 
-        {/* Upload area */}
-        <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-neutral-400 tracking-wide">上传文件</label>
-          <div className="border border-dashed border-neutral-800 rounded-xl p-8 text-center hover:border-neutral-600 transition-colors cursor-pointer bg-neutral-950">
-            <Upload size={20} className="text-neutral-500 mx-auto mb-2" />
-            <p className="text-xs text-neutral-300 font-light">点击或拖放上传资料包</p>
-            <p className="text-[11px] text-neutral-500 mt-1">支持：图片、PDF、Excel、菜单、广告素材</p>
-          </div>
-        </div>
-
         {/* URL input */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-neutral-400 tracking-wide">或输入网址</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">参考网址（选填）</label>
           <div className="relative">
             <LinkIcon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
               className="input-lazzor pl-9"
-              placeholder="https:// 官网、产品页或 Google Maps 链接"
+              placeholder="https:// 官网或产品页；将作为研究资料保存"
               value={state.url}
               onChange={e => update({ url: e.target.value })}
             />
@@ -341,13 +357,30 @@ function Step2({ state, update, onNext, onBack }: {
 
         {/* Product info */}
         {(isOnline || !state.study_type) && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input
               label="产品名称"
               placeholder="例：BKK宠物零食"
               value={state.product_name}
               onChange={e => update({ product_name: e.target.value })}
             />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-neutral-400 tracking-wide">
+                产品品类
+              </label>
+              <select
+                className="input-lazzor"
+                value={state.category}
+                onChange={event => update({ category: event.target.value })}
+              >
+                <option value="PET_WATER_FOUNTAIN">
+                  宠物智能饮水机（已连接竞品面板）
+                </option>
+                <option value="GENERIC_CONSUMER_PRODUCT">
+                  其他消费品（通用品类先验）
+                </option>
+              </select>
+            </div>
             <Input
               label="售价 (THB)"
               type="number"
@@ -356,52 +389,6 @@ function Step2({ state, update, onNext, onBack }: {
               onChange={e => update({ price: e.target.value })}
             />
           </div>
-        )}
-
-        {/* Venue info */}
-        {isVenue && (
-          <>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-neutral-400 tracking-wide">地址</label>
-              <div className="relative">
-                <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
-                <input
-                  className="input-lazzor pl-9"
-                  placeholder="输入地址或 Google Maps 链接"
-                  value={state.location_address}
-                  onChange={e => update({ location_address: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <Input
-                label="营业开始"
-                type="time"
-                value={state.operating_hours_open}
-                onChange={e => update({ operating_hours_open: e.target.value })}
-              />
-              <Input
-                label="营业结束"
-                type="time"
-                value={state.operating_hours_close}
-                onChange={e => update({ operating_hours_close: e.target.value })}
-              />
-              <Input
-                label="座位数"
-                type="number"
-                placeholder="例：50"
-                value={state.capacity}
-                onChange={e => update({ capacity: e.target.value })}
-              />
-            </div>
-            <Input
-              label="平均客单价 (THB)"
-              type="number"
-              placeholder="例：350"
-              value={state.average_check}
-              onChange={e => update({ average_check: e.target.value })}
-            />
-          </>
         )}
 
         {/* Selling points */}
@@ -478,21 +465,32 @@ function Step3({ state, onNext, onBack }: {
   const facts = [
     state.product_name && { label: "产品名称", value: state.product_name },
     state.price && { label: "售价", value: `THB ${state.price}` },
-    state.location_address && { label: "地址", value: state.location_address },
-    state.capacity && { label: "容量", value: `${state.capacity} 座` },
-    state.average_check && { label: "客单价", value: `THB ${state.average_check}` },
+    { label: "产品品类", value: state.category === "PET_WATER_FOUNTAIN" ? "宠物智能饮水机" : "其他消费品" },
   ].filter(Boolean) as { label: string; value: string }[];
 
+  const isPetWater = state.category === "PET_WATER_FOUNTAIN";
+  const price = Number(state.price);
+  const pricePosition = price < 1_200 ? "低于公开面板中位区间" : price > 2_500 ? "高于公开面板中位区间" : "位于公开面板主要区间";
+
   const inferences = [
-    { label: "目标市场", value: "泰国曼谷/清迈城市消费者", grade: "B" },
-    { label: "价格定位", value: state.price && Number(state.price) > 500 ? "中高端" : "大众市场", grade: "B" },
-    { label: "目标人群", value: "25-40岁有收入成年人", grade: "C" },
+    { label: "模拟市场", value: "泰国全国 77 府人口权重", grade: "B" },
+    { label: "人口与收入", value: "NSO 官方聚合统计校准", grade: "B" },
+    {
+      label: "价格参照",
+      value: isPetWater ? `${pricePosition}（公开样本 ฿435–฿3,290）` : "尚无该品类实证价格面板",
+      grade: isPetWater ? "B" : "D",
+    },
+    {
+      label: "竞品选择集",
+      value: isPetWater ? "15 个泰国公开零售报价，模拟时压缩为代表性选择集" : "用户输入竞品 + 不购买选项",
+      grade: isPetWater ? "B" : "D",
+    },
   ];
 
   const defaults = [
-    { label: "广告曝光预算", value: "未提供，使用行业中位数估算", grade: "D" },
-    { label: "竞争强度", value: "未提供，使用地区平均水平", grade: "D" },
-    { label: "复购周期", value: "未提供，使用类别默认值", grade: "D" },
+    { label: "品牌认知与信任", value: "无客户历史数据，使用保守先验并纳入敏感性分析", grade: "D" },
+    { label: "品类渗透与购买频率", value: isPetWater ? "宠物家庭资格率为工程先验，非官方实测" : "未校准，结果仅作方向性比较", grade: "D" },
+    { label: "转化基准", value: "无真实销售或 A/B 数据，不宣称为可验证销量预测", grade: "D" },
   ];
 
   return (
@@ -552,7 +550,7 @@ function Step3({ state, onNext, onBack }: {
           ))}
         </div>
         <p className="text-[11px] text-neutral-400 font-light mt-3 p-3 bg-black rounded-lg border border-neutral-900">
-          * D 级假设基于专家与历史数据估估算。模拟报告中将暴露对应的敏感性与不确定性范围。
+          * B 级表示公开统计或可追溯市场样本；D 级表示工程先验。报告会披露来源、版本与不确定性，不把 D 级结果包装成实测购买率。
         </p>
       </Card>
 
@@ -633,11 +631,12 @@ function Step4({ state, update, onNext, onBack }: {
 // ─────────────────────────────────────────
 // Step 5: Scale Selection
 // ─────────────────────────────────────────
-function Step5({ state, update, onBack, onSubmit }: {
+function Step5({ state, update, onBack, onSubmit, submitting }: {
   state: WizardState;
   update: (u: Partial<WizardState>) => void;
   onBack: () => void;
   onSubmit: () => void;
+  submitting: boolean;
 }) {
   const selected = PLAN_META[state.plan_code];
 
@@ -671,7 +670,7 @@ function Step5({ state, update, onBack, onSubmit }: {
                 ) : code === "PREVIEW" ? (
                   <span className="text-xs font-mono text-accent">Free</span>
                 ) : (
-                  <span className="text-xs text-neutral-500 font-mono">Custom</span>
+                  <span className="text-xs text-neutral-400 font-mono">{plan.credits} 积分</span>
                 )}
               </div>
               <p className="text-[11px] text-neutral-400 font-light mt-1">{plan.desc}</p>
@@ -680,7 +679,7 @@ function Step5({ state, update, onBack, onSubmit }: {
                 <span>·</span>
                 <span>{plan.scenarios} 个情景</span>
                 <span>·</span>
-                <span>消耗 {plan.credits} 额度</span>
+                <span>消耗 {plan.credits} 积分</span>
               </div>
             </button>
           );
@@ -693,14 +692,14 @@ function Step5({ state, update, onBack, onSubmit }: {
           <div className="flex justify-between"><span className="text-neutral-400">项目名称</span><span className="text-white">{state.name || "（未填写）"}</span></div>
           <div className="flex justify-between"><span className="text-neutral-400">研究类型</span><span className="text-white">{state.study_type ? STUDY_TYPE_META[state.study_type].label : "—"}</span></div>
           <div className="flex justify-between"><span className="text-neutral-400">选择规模</span><span className="text-white font-mono">{selected.label} ({selected.population.toLocaleString()}人)</span></div>
-          <div className="flex justify-between"><span className="text-neutral-400">消耗额度</span><span className="text-white font-mono">{selected.credits} 次</span></div>
+          <div className="flex justify-between"><span className="text-neutral-400">消耗积分</span><span className="text-white font-mono">{selected.credits}</span></div>
         </div>
       </Card>
 
       <div className="flex justify-between pt-4">
         <button onClick={onBack} className="btn-lazzor-ghost">← 返回</button>
-        <button onClick={onSubmit} className="btn-lazzor-primary">
-          提交并立即运行 →
+        <button onClick={onSubmit} disabled={submitting} className={cn("btn-lazzor-primary", submitting && "opacity-60 cursor-wait")}>
+          {submitting ? "正在创建研究…" : "提交并立即运行 →"}
         </button>
       </div>
     </div>

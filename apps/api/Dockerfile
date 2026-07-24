@@ -15,8 +15,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code and shared packages
 COPY apps/api/app ./app
 COPY packages /packages
+COPY data_catalog /data_catalog
 
-ENV PYTHONPATH="/app:/packages"
+ENV PYTHONPATH="/app:/packages" \
+    DATA_CATALOG_ROOT="/data_catalog"
 EXPOSE 8080
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -6,116 +6,105 @@ import {
   CartesianGrid, LineChart, Line,
 } from "recharts";
 import { AlertTriangle, Download, Share2, MapPin, ShoppingBag } from "lucide-react";
-import { Card, CountUp } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { cn, formatPercent } from "@/lib/utils";
 
-// ── Mock report data ──────────────────────
-const MOCK_REPORT = {
-  study_name: "清迈 BKK 品牌宠物零食泰国市场测试",
-  run_id: "run_20260720_001",
-  world_model_version: "TH-WORLD-2026.07.1",
-  simulation_model_version: "SIM-1.2.0",
-  population_size: 30000,
-  mc_rounds: 50,
-  generated_at: "2026-07-20T11:30:00Z",
+interface ReportData {
+  study_name: string;
+  run_id: string;
+  world_model_version: string;
+  simulation_model_version: string;
+  category_key?: string;
+  population_size: number;
+  category_eligible_population?: number;
+  model_sample_size?: number;
+  mc_rounds: number;
+  generated_at: string;
+  calibration_status?: string;
   executive_summary: {
-    recommendation: "方案值得推进。建议售价调整至 THB 249，并优先在 Shopee/Lazada 旗舰店主推，可获得最佳投资回报率与市场份额。",
-    best_audience: "25-35岁大曼谷/清迈区域中高收入女性群体，养宠物，月收入 3-6 万泰铢",
-    main_barrier: "品牌初始知名度较低（72%受访人口未听说过），对在线支付与跨境物流时效存有顾虑",
-    best_scenario: "方案B：售价下调 10% + Lazada/Shopee 官方旗舰店首发",
-    next_steps: [
-      "优先在 Shopee 泰国与 Lazada 开启官方店铺，建立品类口碑页面",
-      "将首发促销价格设置为 THB 249（比标准定价 299 优惠 16%），吸引早期尝鲜人群",
-      "合作 10-15 名清迈/曼谷本土生活方式 KOL 制作开箱与实际体验短视频",
-      "建立本地仓发货（Bangkok Warehousing），将物流履约时间缩短至 48 小时以内"
-    ],
-    key_metrics: [
-      { label: "总体购买意向率", value: 0.287, ci: [0.241, 0.334] },
-      { label: "目标触达认知率", value: 0.43, ci: [0.38, 0.49] },
-      { label: "价格区间接受度", value: 0.61, ci: [0.54, 0.68] },
-      { label: "预测 90 天复购率", value: 0.52, ci: [0.44, 0.61] },
-    ],
+    recommendation: string;
+    best_audience: string;
+    main_barrier: string;
+    best_scenario: string;
+    next_steps: string[];
+    key_metrics: { label: string; value: number; ci: number[]; interval_type?: string }[];
+  };
+  funnel: { stage: string; label: string; value: number; rate?: number }[];
+  segments: {
+    segment_id?: string;
+    name: string;
+    size: number;
+    purchase_rate: number;
+    drivers: string[];
+    barriers: string[];
+    preferred_channel?: string;
+  }[];
+  price_elasticity: { price: number; purchase_rate: number; revenue_idx: number; purchase_p10?: number; purchase_p90?: number }[];
+  scenarios: { name: string; purchase_rate: number; revenue_idx: number; margin_idx: number; purchase_p10?: number; purchase_p90?: number }[];
+  regional_breakdown: { region: string; share: string; purchase_rate: number; readiness: string }[];
+  channels: {
+    channel: string;
+    fit_score: number;
+    relative_purchase_index?: number;
+    conversion?: string;
+    recommendation: string;
+    method?: string;
+  }[];
+  consumer_voices: {
+    persona: string;
+    segment: string;
+    sentiment: string;
+    quote: string;
+    reasoning: string;
+    price_reaction?: string;
+    preferred_channel?: string;
+  }[];
+  implied_wtp?: { attribute: string; score_increase: number; implied_wtp_thb: number; status: string }[];
+  warnings?: string[];
+  model_lineage?: {
+    model_family?: string;
+    calibration?: {
+      profile_version?: string;
+      status?: string;
+      claim?: string;
+      limitations?: string[];
+      sources?: { source_id?: string; observed?: boolean }[];
+    };
+    uncertainty?: { interval_type?: string; components?: string[]; validated_forecast_error?: number | null };
+    agent_signal?: { status?: string; effective_weight?: number; sample_size?: number };
+    category?: {
+      category_key?: string;
+      profile_version?: string;
+      eligibility_status?: string;
+      eligible_population_share?: number;
+    };
+  };
+}
+
+const EMPTY_REPORT: ReportData = {
+  study_name: "正在加载报告",
+  run_id: "—",
+  world_model_version: "—",
+  simulation_model_version: "—",
+  population_size: 0,
+  mc_rounds: 0,
+  generated_at: "",
+  calibration_status: "unknown",
+  executive_summary: {
+    recommendation: "",
+    best_audience: "",
+    main_barrier: "",
+    best_scenario: "",
+    next_steps: [],
+    key_metrics: [],
   },
-  funnel: [
-    { stage: "目标人群总数", label: "Eligible Population", value: 30000 },
-    { stage: "广告曝光触达", label: "Exposed", value: 12900 },
-    { stage: "引起注意关注", label: "Noticed", value: 7224 },
-    { stage: "理解产品价值", label: "Understood", value: 5779 },
-    { stage: "产生购买兴趣", label: "Interested", value: 3668 },
-    { stage: "建立品牌信任", label: "Trusted", value: 2057 },
-    { stage: "加入考虑清单", label: "Considered", value: 1131 },
-    { stage: "完成首单购买", label: "Purchased", value: 860 },
-  ],
-  segments: [
-    { name: "都市白领消费人群", size: 0.35, purchase_rate: 0.38, drivers: ["品质感", "设计精美"], barriers: ["品牌陌生"], preferred_channel: "Lazada / Shopee" },
-    { name: "年轻单身潮流受众", size: 0.28, purchase_rate: 0.31, drivers: ["新奇有趣", "社交推荐"], barriers: ["价格敏感"], preferred_channel: "TikTok Shop" },
-    { name: "宠物专属主妇", size: 0.22, purchase_rate: 0.42, drivers: ["方便购买", "成分安全"], barriers: ["价格略高"], preferred_channel: "Shopee Mall" },
-    { name: "区域外省家庭人口", size: 0.15, purchase_rate: 0.12, drivers: ["促销折扣"], barriers: ["运费高", "网购习惯弱"], preferred_channel: "线下连锁" },
-  ],
-  price_elasticity: [
-    { price: 209, purchase_rate: 0.396, revenue_idx: 96.6 },
-    { price: 254, purchase_rate: 0.339, revenue_idx: 100.3 },
-    { price: 299, purchase_rate: 0.287, revenue_idx: 100.0 },
-    { price: 344, purchase_rate: 0.235, revenue_idx: 94.3 },
-    { price: 389, purchase_rate: 0.186, revenue_idx: 84.5 },
-  ],
-  scenarios: [
-    { name: "基准方案 A\nTHB 299 / 全渠道", purchase_rate: 0.287, revenue_idx: 100, margin_idx: 100 },
-    { name: "方案 B\nTHB 249 / Lazada 主推", purchase_rate: 0.341, revenue_idx: 97, margin_idx: 88 },
-    { name: "方案 C\nTHB 339 / 高端定位", purchase_rate: 0.198, revenue_idx: 96, margin_idx: 118 },
-    { name: "方案 D\nTHB 299 / 全渠道 + KOL", purchase_rate: 0.318, revenue_idx: 108, margin_idx: 102 },
-  ],
-  regional_breakdown: [
-    { region: "大曼谷都市圈 (BKK)", share: "45%", purchase_rate: 0.358, readiness: "高" },
-    { region: "清迈及北部大区", share: "20%", purchase_rate: 0.315, readiness: "中高" },
-    { region: "普吉及南部沿海", share: "15%", purchase_rate: 0.272, readiness: "中" },
-    { region: "春武里/东部走廊(EEC)", share: "10%", purchase_rate: 0.243, readiness: "中" },
-    { region: "东北部其他省份", share: "10%", purchase_rate: 0.115, readiness: "低" },
-  ],
-  channels: [
-    { channel: "Shopee 泰国", fit_score: 88, conversion: "4.2%", recommendation: "首选主流销售主阵地" },
-    { channel: "TikTok Shop", fit_score: 84, conversion: "3.8%", recommendation: "适合年轻客群短视频爆款冲动购买" },
-    { channel: "Lazada 泰国", fit_score: 81, conversion: "3.5%", recommendation: "高客单价与白领客群主力渠道" },
-    { channel: "线下精品连锁/连锁超市", fit_score: 65, conversion: "1.8%", recommendation: "适合后期铺货建立品牌信任度" },
-  ],
-  consumer_voices: [
-    {
-      persona: "28岁曼谷金融外企白领，月收入6.5万铢",
-      segment: "都市白领消费人群",
-      sentiment: "positive",
-      quote: "对包装和定位很感兴趣，如果品质确实好，THB 299 的价格完全在我的预算范围内。",
-      reasoning: "注重个人生活品质与品牌美誉度，价格敏感度较低，优先看重产品功效与用户口碑。",
-      price_reaction: "价格合理，符合高品质定位",
-      preferred_channel: "Lazada Flagship Store"
-    },
-    {
-      persona: "25岁清迈大学研究助理，月收入2.8万铢",
-      segment: "年轻单身潮流受众",
-      sentiment: "neutral",
-      quote: "外观很吸引人，但THB 299 对我来说稍微贵了一点，我会等优惠活动或先看看 TikTok 上 KOL 的评测。",
-      reasoning: "社群驱动型消费者，对新颖创意感兴趣，但收入中等，容易受到促销折扣与社群推荐影响。",
-      price_reaction: "略高于预期，需折扣拉动",
-      preferred_channel: "TikTok Shop"
-    },
-    {
-      persona: "35岁曼谷主妇，养有2只宠物，月收入4.2万铢",
-      segment: "宠物专属主妇",
-      sentiment: "positive",
-      quote: "成分表看起来很安全专业，如果狗狗喜欢吃，我会选择按月长期订购。",
-      reasoning: "高粘性买家，最关注成分安全性与方便程度，一旦形成信任将带来极高复购价值。",
-      price_reaction: "若效果好愿意支付溢价",
-      preferred_channel: "Shopee Mall"
-    },
-    {
-      persona: "42岁暖武里公务员，家庭月收入8万铢",
-      segment: "区域外省家庭人口",
-      sentiment: "negative",
-      quote: "对新品牌缺乏信任，本地实体店有大品牌替代品，暂时不会考虑在线购买未知品牌。",
-      reasoning: "传统保守型买家，品牌信任门槛高，高度依赖线下实体渠道或熟人推荐。",
-      price_reaction: "偏高，替代品丰富",
-      preferred_channel: "Big C / 线下连锁"
-    }
-  ],
+  funnel: [],
+  segments: [],
+  price_elasticity: [],
+  scenarios: [],
+  regional_breakdown: [],
+  channels: [],
+  consumer_voices: [],
 };
 
 const SECTIONS = [
@@ -143,29 +132,88 @@ const SENTIMENT_STYLE: Record<string, { tagClass: string; label: string }> = {
   negative: { tagClass: "tag-negative", label: "消极" },
 };
 
-export function ReportClient({ studyId }: { studyId: string }) {
+const CALIBRATION_LABELS: Record<string, string> = {
+  prior_only: "仅工程先验",
+  official_macro_calibrated_choice_prior: "泰国官方宏观校准；选择系数待验证",
+  customer_override_unvalidated: "客户数据覆盖；尚未回测",
+  observed_choice_fit_unvalidated: "真实选择数据拟合；尚未回测",
+  validated: "已完成历史回测",
+  unknown: "未知",
+};
+
+function calibrationLabel(status?: string) {
+  const value = status ?? "unknown";
+  return CALIBRATION_LABELS[value] ?? value;
+}
+
+export function ReportClient({ reportId }: { reportId: string }) {
   const [activeSection, setActiveSection] = useState<typeof SECTIONS[number]>("executive_summary");
-  const [reportData, setReportData] = useState<typeof MOCK_REPORT>(MOCK_REPORT);
+  const [reportData, setReportData] = useState<ReportData>(EMPTY_REPORT);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
+
+  const shareReport = async () => {
+    try {
+      const url = window.location.href;
+      if (navigator.share) {
+        await navigator.share({ title: reportData.study_name, url });
+        setShareStatus("分享面板已打开");
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareStatus("链接已复制");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setShareStatus("无法分享，请复制浏览器地址");
+    }
+  };
 
   useEffect(() => {
-    if (studyId && (studyId.startsWith("rpt_") || studyId.startsWith("study_"))) {
+    if (reportId && (reportId.startsWith("rpt_") || reportId.startsWith("study_"))) {
       (async () => {
         try {
           const { getReportApi } = await import("@/lib/api-client");
-          const data = await getReportApi(studyId);
+          const data = await getReportApi<ReportData>(reportId);
           if (data && data.executive_summary) {
-            setReportData(prev => ({
-              ...prev,
-              ...data,
-              study_name: data.study_name || prev.study_name,
-            }));
+            setReportData(data);
+          } else {
+            throw new Error("报告数据结构不完整");
           }
-        } catch (e) {
-          console.log("Using default cached report data:", e);
+        } catch (error) {
+          setLoadError(error instanceof Error ? error.message : "报告加载失败");
+        } finally {
+          setLoading(false);
         }
       })();
+    } else {
+      setLoadError("缺少有效的报告编号");
+      setLoading(false);
     }
-  }, [studyId]);
+  }, [reportId]);
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <Card>
+          <div className="eyebrow mb-2">Loading Verified Report</div>
+          <p className="text-sm text-neutral-300">正在从后端读取本次运行的真实报告数据…</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="p-8">
+        <Card>
+          <div className="eyebrow mb-2">Report Unavailable</div>
+          <h2 className="text-base font-semibold text-white">报告读取失败</h2>
+          <p className="text-xs text-neutral-400 mt-2">{loadError}</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full">
@@ -217,18 +265,22 @@ export function ReportClient({ studyId }: { studyId: string }) {
             <div className="eyebrow mb-1">Thailand Digital Market Twin Report</div>
             <h1 className="text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
             <p className="text-xs text-neutral-400 font-light mt-1">
-              基于 {reportData.population_size.toLocaleString()} 泰国真实合成人口样本 · {reportData.mc_rounds} 轮 Monte Carlo 模拟
+              基于 {reportData.population_size.toLocaleString()} 泰国合成人口 · 模型样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} · {reportData.mc_rounds} 轮 Monte Carlo
+            </p>
+            <p className="text-[10px] text-neutral-500 font-mono mt-1">
+              校准：{calibrationLabel(reportData.calibration_status)} · {reportData.simulation_model_version}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button className="btn-cmai-secondary text-xs py-1.5 px-3">
+            <button onClick={shareReport} className="btn-cmai-secondary text-xs py-1.5 px-3">
               <Share2 size={13} /> 分享
             </button>
-            <button className="btn-cmai-primary text-xs py-1.5 px-3">
-              <Download size={13} /> 导出 PDF
+            <button onClick={() => window.print()} className="btn-cmai-primary text-xs py-1.5 px-3">
+              <Download size={13} /> 打印 / 存 PDF
             </button>
           </div>
         </div>
+        {shareStatus && <p className="text-[11px] text-neutral-400 -mt-6">{shareStatus}</p>}
 
         {/* Sections */}
         {activeSection === "executive_summary" && <ExecutiveSummarySection data={reportData} />}
@@ -249,7 +301,7 @@ export function ReportClient({ studyId }: { studyId: string }) {
 // ─────────────────────────────────────────
 // Section Components
 // ─────────────────────────────────────────
-function ExecutiveSummarySection({ data }: { data: typeof MOCK_REPORT }) {
+function ExecutiveSummarySection({ data }: { data: ReportData }) {
   const { executive_summary } = data;
   return (
     <div className="space-y-6">
@@ -272,8 +324,7 @@ function ExecutiveSummarySection({ data }: { data: typeof MOCK_REPORT }) {
         {executive_summary.key_metrics.map((m, i) => (
           <Card key={i} className="text-center">
             <div className="text-3xl font-semibold text-white tracking-tight">
-              <CountUp value={Math.round(m.value * 1000)} />
-              <span className="text-lg align-top">‰</span>
+              {formatPercent(m.value)}
             </div>
             <div className="text-xs text-neutral-400 font-light mt-1">{m.label}</div>
             <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
@@ -309,7 +360,7 @@ function ExecutiveSummarySection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function MarketResponseSection({ data }: { data: typeof MOCK_REPORT }) {
+function MarketResponseSection({ data }: { data: ReportData }) {
   const { funnel } = data;
   const max = funnel[0].value;
 
@@ -347,7 +398,7 @@ function MarketResponseSection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function SegmentsSection({ data }: { data: typeof MOCK_REPORT }) {
+function SegmentsSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
@@ -382,7 +433,7 @@ function SegmentsSection({ data }: { data: typeof MOCK_REPORT }) {
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
-                <span className="text-xs text-neutral-400 font-light">意向购买率</span>
+                <span className="text-xs text-neutral-400 font-light">模型购买概率</span>
                 <span className="text-lg font-semibold text-white tabular-nums">{formatPercent(seg.purchase_rate)}</span>
               </div>
             </div>
@@ -393,7 +444,7 @@ function SegmentsSection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function PriceElasticitySection({ data }: { data: typeof MOCK_REPORT }) {
+function PriceElasticitySection({ data }: { data: ReportData }) {
   const elasticity = data.price_elasticity || [];
   return (
     <div className="space-y-6">
@@ -429,12 +480,12 @@ function PriceElasticitySection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function ScenariosSection({ data }: { data: typeof MOCK_REPORT }) {
+function ScenariosSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Scenario Benchmarking</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">经营与定价情景对比</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">产品与定价情景对比</h2>
       </div>
 
       <Card>
@@ -455,11 +506,11 @@ function ScenariosSection({ data }: { data: typeof MOCK_REPORT }) {
           {data.scenarios.map((s, i) => (
             <div key={i} className={cn(
               "p-3 rounded-xl border text-center transition-colors",
-              i === 1 ? "bg-neutral-900 border-neutral-700 text-white" : "bg-black border-neutral-800 text-neutral-400"
+              s.name === data.executive_summary.best_scenario ? "bg-neutral-900 border-neutral-700 text-white" : "bg-black border-neutral-800 text-neutral-400"
             )}>
               <div className="text-[11px] font-medium leading-tight mb-1 whitespace-pre-line">{s.name}</div>
               <div className="text-sm font-semibold text-white">{formatPercent(s.purchase_rate)}</div>
-              {i === 1 && <div className="tag-label tag-positive mt-0.5">Recommended</div>}
+              {s.name === data.executive_summary.best_scenario && <div className="tag-label tag-positive mt-0.5">Recommended</div>}
             </div>
           ))}
         </div>
@@ -468,7 +519,7 @@ function ScenariosSection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function RegionalSection({ data }: { data: typeof MOCK_REPORT }) {
+function RegionalSection({ data }: { data: ReportData }) {
   const regions = data.regional_breakdown || [];
   return (
     <div className="space-y-6">
@@ -489,7 +540,7 @@ function RegionalSection({ data }: { data: typeof MOCK_REPORT }) {
               <div className="flex items-center gap-4">
                 <span className="text-neutral-400 font-light">意向率: <strong className="text-white font-mono">{formatPercent(r.purchase_rate)}</strong></span>
                 <span className={cn("text-[10px] px-2 py-0.5 rounded font-mono bg-neutral-900", r.readiness === "高" ? "text-neutral-100" : "text-neutral-400")}>
-                  成熟度: {r.readiness}
+                  模型相对倾向: {r.readiness}
                 </span>
               </div>
             </div>
@@ -500,7 +551,7 @@ function RegionalSection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function ChannelsSection({ data }: { data: typeof MOCK_REPORT }) {
+function ChannelsSection({ data }: { data: ReportData }) {
   const channels = data.channels || [];
   return (
     <div className="space-y-6">
@@ -520,7 +571,11 @@ function ChannelsSection({ data }: { data: typeof MOCK_REPORT }) {
                   <span className="text-xs font-mono text-neutral-300">匹配度 {c.fit_score}/100</span>
                 </div>
                 <p className="text-xs text-neutral-400 font-light leading-relaxed">{c.recommendation}</p>
-                <div className="mt-2 text-[10px] text-neutral-500 font-mono">预估平均转化率: {c.conversion}</div>
+                <div className="mt-2 text-[10px] text-neutral-500 font-mono">
+                  {c.relative_purchase_index !== undefined
+                    ? `相对购买指数: ${c.relative_purchase_index}（总体基准 = 100）`
+                    : `模型渠道值: ${c.conversion ?? "未记录"}`}
+                </div>
               </div>
             </div>
           </Card>
@@ -530,22 +585,29 @@ function ChannelsSection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function ConsumerVoicesSection({ data }: { data: typeof MOCK_REPORT }) {
+function ConsumerVoicesSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Qualitative Feedback Panel</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">代表性 AI 消费者原声</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">LLM 结构化解释样本</h2>
       </div>
 
       <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-900 flex items-start gap-3">
         <AlertTriangle size={15} className="text-neutral-500 shrink-0 mt-0.5" />
         <p className="text-xs text-neutral-300 font-light leading-relaxed">
-          声明：以下内容由代表性合成消费者结合 Gemini LLM 产生，用于解释群体行为模式与买家心理，不是真人访谈记录。
+          声明：以下内容由代表性合成记录结合 Gemini 生成，只用于提出可验证的理由与阻碍假设，不是真人访谈记录，也不直接决定购买率。
         </p>
       </div>
 
       <div className="space-y-4">
+        {data.consumer_voices.length === 0 && (
+          <Card>
+            <p className="text-xs text-neutral-400">
+              本次运行没有可验证的 LLM 代表样本输出，因此未展示虚构 Persona，且定量结果未受到 LLM 影响。
+            </p>
+          </Card>
+        )}
         {data.consumer_voices.map((v, i) => {
           const s = SENTIMENT_STYLE[v.sentiment] ?? SENTIMENT_STYLE.neutral;
           return (
@@ -581,13 +643,22 @@ function ConsumerVoicesSection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function SensitivitySection({ data }: { data: typeof MOCK_REPORT }) {
-  const params = [
-    { name: "售价 Sensitive", impact: 0.72, desc: "售价降低10% → 购买意向率 +18%" },
-    { name: "品牌信任", impact: 0.68, desc: "信任分 +0.1 → 购买意向率 +12%" },
-    { name: "曝光触达", impact: 0.55, desc: "曝光率 +20% → 考虑率 +15%" },
-    { name: "社群口碑评分", impact: 0.41, desc: "评分从 4.5 提升至 5.0 → 转化率 +8%" },
-  ];
+function SensitivitySection({ data }: { data: ReportData }) {
+  const elasticity = data.price_elasticity || [];
+  const midpoint = elasticity.length > 0 ? elasticity[Math.floor(elasticity.length / 2)] : null;
+  const params = (data.implied_wtp || []).map(item => ({
+    name: item.attribute,
+    impact: Math.min(1, Math.abs(item.implied_wtp_thb) / Math.max(1, midpoint?.price ?? 1)),
+    desc: `属性评分 +${item.score_increase.toFixed(1)} 的先验隐含 WTP：THB ${item.implied_wtp_thb.toFixed(2)}`,
+  }));
+  if (midpoint && elasticity.length >= 3) {
+    const lower = elasticity[Math.max(0, Math.floor(elasticity.length / 2) - 1)];
+    params.unshift({
+      name: "售价",
+      impact: Math.min(1, Math.abs(lower.purchase_rate - midpoint.purchase_rate) / Math.max(0.01, midpoint.purchase_rate)),
+      desc: `THB ${midpoint.price} → THB ${lower.price}，模型购买概率 ${formatPercent(midpoint.purchase_rate)} → ${formatPercent(lower.purchase_rate)}`,
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -598,6 +669,9 @@ function SensitivitySection({ data }: { data: typeof MOCK_REPORT }) {
 
       <Card>
         <div className="space-y-4">
+          {params.length === 0 && (
+            <p className="text-xs text-neutral-400">本套餐未生成敏感性或 WTP 结果。</p>
+          )}
           {params.map((p, i) => (
             <div key={i} className="space-y-1">
               <div className="flex justify-between text-xs font-light">
@@ -618,7 +692,11 @@ function SensitivitySection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function MethodologySection({ data }: { data: typeof MOCK_REPORT }) {
+function MethodologySection({ data }: { data: ReportData }) {
+  const calibration = data.model_lineage?.calibration;
+  const uncertainty = data.model_lineage?.uncertainty;
+  const agentSignal = data.model_lineage?.agent_signal;
+  const category = data.model_lineage?.category;
   return (
     <div className="space-y-6">
       <div>
@@ -628,10 +706,15 @@ function MethodologySection({ data }: { data: typeof MOCK_REPORT }) {
 
       <Card>
         <div className="space-y-4 text-xs text-neutral-300 font-light leading-relaxed">
-          <p><strong className="text-white font-semibold">1. 合成人口：</strong> 使用 TH-WORLD-2026.07.1 数据集，生成 30,000 名泰国合成居民与游客。变量之间关联，与官方统计边际分布一致。</p>
-          <p><strong className="text-white font-semibold">2. 代表消费者：</strong> 群体聚类后提取代表 Agent（Centroid / High Affinity / Skeptical），由 Gemini LLM 产生结构化反应。</p>
-          <p><strong className="text-white font-semibold">3. Monte Carlo 模拟：</strong> 进行了 50 轮随机采样模拟，涵盖曝光、选择效用与传播分布。</p>
-          <p><strong className="text-white font-semibold">4. 数据可追溯：</strong> 本报告数据来自 Run ID <code className="text-white font-mono bg-neutral-900 px-1 py-0.5 rounded">{data.run_id}</code>。</p>
+          <p><strong className="text-white font-semibold">1. 校准状态：</strong> {calibrationLabel(calibration?.status ?? data.calibration_status)}。{calibration?.claim ?? "未提供校准声明。"}</p>
+          <p><strong className="text-white font-semibold">2. 选择模型：</strong> {data.model_lineage?.model_family ?? "未记录"}；包含焦点方案、竞品方案与不购买选项，不以 LLM 投票直接计算市场规模。</p>
+          <p><strong className="text-white font-semibold">3. 不确定性：</strong> {uncertainty?.interval_type ?? "未记录"}；组成包括 {(uncertainty?.components ?? []).join("、") || "未记录"}。历史回测误差：{uncertainty?.validated_forecast_error ?? "尚未建立"}。</p>
+          <p><strong className="text-white font-semibold">4. LLM 信号：</strong> 状态 {agentSignal?.status ?? "not_used"}，有效权重 {agentSignal?.effective_weight ?? 0}，完成代表样本 {agentSignal?.sample_size ?? 0}。不可用时不会替换为固定 Persona。</p>
+          <p><strong className="text-white font-semibold">5. 品类人群：</strong> {category?.category_key ?? data.category_key ?? "通用消费品"}；目标人群占总体 {formatPercent(category?.eligible_population_share ?? 1)}，资格口径为 {category?.eligibility_status ?? "通用人群假设"}。</p>
+          <p><strong className="text-white font-semibold">6. 数据可追溯：</strong> 已记录 {(calibration?.sources ?? []).filter(source => source.observed).length} 个观测数据源；本报告来自 Run ID <code className="text-white font-mono bg-neutral-900 px-1 py-0.5 rounded">{data.run_id}</code>。</p>
+          {(data.warnings || []).map((warning, index) => (
+            <p key={index} className="text-neutral-500">限制 {index + 1}：{warning}</p>
+          ))}
         </div>
       </Card>
     </div>

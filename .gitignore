@@ -1,10 +1,15 @@
 # dependencies
 node_modules
 .pnpm-store
+venv/
+.venv/
+__pycache__/
+*.py[cod]
 
 # next.js
 .next/
 out/
+apps/api/output/
 
 # production
 build

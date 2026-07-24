@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { X, Lock, Mail, User, Building, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { loginApi, registerApi, UserProfile } from "@/lib/api-client";
+import { saveAuthSession } from "@/lib/auth-session";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: any, token: string) => void;
+  onSuccess: (user: UserProfile, token: string) => void;
 }
 
 export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
@@ -26,27 +27,15 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setError("");
     setLoading(true);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://ai-100282158973.asia-southeast1.run.app";
-    const endpoint = isLogin ? `${API_BASE}/v1/auth/login` : `${API_BASE}/v1/auth/register`;
-
     try {
-      const resp = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(isLogin ? { email, password } : { email, password, name, company }),
-      });
-
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.detail || "操作失败，请重试");
-      }
-
-      localStorage.setItem("market_twin_token", data.access_token);
-      localStorage.setItem("market_twin_user", JSON.stringify(data.user));
+      const data = isLogin
+        ? await loginApi({ email, password })
+        : await registerApi({ email, password, name, company });
+      saveAuthSession(data.user, data.access_token);
       onSuccess(data.user, data.access_token);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "登录/注册失败");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "登录/注册失败");
     } finally {
       setLoading(false);
     }
@@ -65,10 +54,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         <div className="text-center space-y-1">
           <span className="eyebrow">Thailand Market Twin Account</span>
           <h2 className="text-xl font-light text-white tracking-tight">
-            {isLogin ? "登录您的商业账号" : "注册新账号 (送 50 初始积分)"}
+            {isLogin ? "登录您的商业账号" : "注册新账号"}
           </h2>
           <p className="text-xs text-neutral-400 font-light">
-            {isLogin ? "登录后可保存报告与管理积分额度" : "注册即赠送 50 体验积分，可直接运行 2 次高精度模拟"}
+            {isLogin ? "登录后可保存项目、报告和订单" : "注册赠送 5 积分，可完成一次 Standard 体验"}
           </p>
         </div>
 
@@ -102,7 +91,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   <Building size={15} className="absolute left-3 top-3 text-neutral-500" />
                   <input
                     type="text"
-                    placeholder="曼谷餐饮管理有限公司"
+                    placeholder="您的公司名称"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     className="input-cmai pl-9"
@@ -131,9 +120,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             <label className="text-[11px] text-neutral-400 font-mono">密码</label>
             <div className="relative">
               <Lock size={15} className="absolute left-3 top-3 text-neutral-500" />
-              <input
-                type="password"
-                required
+                  <input
+                    type="password"
+                    required
+                    minLength={isLogin ? 1 : 10}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -147,7 +137,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             disabled={loading}
             className="w-full btn-cmai-primary py-2.5 text-xs font-semibold mt-2"
           >
-            {loading ? "处理中..." : isLogin ? "立即登录" : "注册并领取 50 积分"}
+            {loading ? "处理中..." : isLogin ? "立即登录" : "注册并领取体验额度"}
             <ArrowRight size={14} className="ml-1" />
           </button>
         </form>
