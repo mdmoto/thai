@@ -2,7 +2,7 @@
 
 ## Code and data
 
-- [ ] `python3 -m unittest discover -s tests -v` passes.
+- [ ] `python -m unittest discover -s tests -v` passes in the project venv.
 - [ ] `npm audit` reports zero known vulnerabilities.
 - [ ] `npm run build` produces all static routes.
 - [ ] API image includes `/data_catalog`.

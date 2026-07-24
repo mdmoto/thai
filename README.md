@@ -50,6 +50,10 @@ docker compose up --build
 或分别运行：
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r apps/api/requirements.txt
+
 PYTHONPATH=apps/api:packages \
   DATABASE_URL=sqlite:////tmp/market_twin.db \
   JWT_SECRET_KEY=local-development-secret \
@@ -72,7 +76,8 @@ API：http://localhost:8080
 ## 验证
 
 ```bash
-PYTHONPATH=apps/api:packages python3 -m unittest discover -s tests -v
+source .venv/bin/activate
+PYTHONPATH=apps/api:packages python -m unittest discover -s tests -v
 cd apps/web && npm audit && npm run build
 ```
 

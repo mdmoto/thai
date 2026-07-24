@@ -67,16 +67,18 @@ curl -fsS https://YOUR_CLOUD_RUN_URL/healthz
 curl -fsS https://YOUR_CLOUD_RUN_URL/v1/catalog
 ```
 
-Then create a dedicated smoke-test account and complete this path:
+Run the checked-in acceptance script. It creates isolated `example.invalid`
+accounts and does not expose their access tokens:
 
-1. register and receive exactly 5 credits;
-2. create and confirm a Preview study;
-3. run it once;
-4. read the report while logged in;
-5. confirm a second account receives 404 for that report;
-6. create an order and verify balance does not change;
-7. complete the order through the protected admin command;
-8. verify credits are granted exactly once.
+```bash
+MARKET_TWIN_API_URL=https://YOUR_CLOUD_RUN_URL \
+MARKET_TWIN_ADMIN_API_KEY=YOUR_ADMIN_KEY \
+python3 scripts/smoke_test.py
+```
+
+The script verifies health and database connectivity, signup credits, Preview,
+Standard charging, run idempotency, report ownership isolation, pending-order
+behavior, protected payment completion and one-time credit granting.
 
 ## Monitoring
 
