@@ -2,8 +2,22 @@
 
 import { clearAuthSession, getStoredToken } from "@/lib/auth-session";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080";
+const PROD_API_URL = "https://ai-100282158973.asia-southeast1.run.app";
+
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") {
+      return PROD_API_URL;
+    }
+  }
+  return "http://127.0.0.1:8080";
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 function requestHeaders(authenticated = true): Record<string, string> {
   const headers: Record<string, string> = {
@@ -37,7 +51,8 @@ async function apiJson<T>(
   init: RequestInit = {},
   authenticated = true,
 ): Promise<T> {
-  const resp = await fetch(`${API_BASE_URL}${path}`, {
+  const baseUrl = getApiBaseUrl();
+  const resp = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       ...requestHeaders(authenticated),
