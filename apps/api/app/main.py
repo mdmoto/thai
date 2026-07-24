@@ -266,6 +266,7 @@ def root():
 
 
 @app.get("/healthz")
+@app.get("/v1/health")
 def healthz():
     if not database_is_healthy():
         raise HTTPException(status_code=503, detail="database unavailable")

@@ -170,7 +170,7 @@ def main() -> int:
     if not api_url.startswith("https://"):
         parser.error("--api-url must be a production HTTPS URL")
 
-    status, health = request_json(api_url, "GET", "/healthz")
+    status, health = request_json(api_url, "GET", "/v1/health")
     expect(status, 200, "health check failed")
     expect(health.get("database"), "connected", "database is not connected")
     status, catalog = request_json(api_url, "GET", "/v1/catalog")

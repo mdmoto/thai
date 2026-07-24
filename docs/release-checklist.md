@@ -18,7 +18,7 @@
 - [ ] Database, JWT and admin secrets come from Secret Manager.
 - [ ] CORS lists only the actual production frontend origin.
 - [ ] Frontend build points at the v2 API.
-- [ ] `/healthz` returns database connected.
+- [ ] `/v1/health` returns database connected.
 - [ ] TLS, security headers and rate limits are active.
 
 ## Business flow

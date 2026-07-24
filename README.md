@@ -71,7 +71,7 @@ npm run dev
 
 API：http://localhost:8080
 
-健康检查：http://localhost:8080/healthz
+健康检查：http://localhost:8080/v1/health
 
 ## 验证
 

@@ -50,6 +50,14 @@ class ApiProductFlowTests(unittest.TestCase):
         body = response.json()
         return body, {"Authorization": f"Bearer {body['access_token']}"}
 
+    def test_public_health_reports_database_connectivity(self):
+        response = self.client.get("/v1/health")
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(
+            response.json(),
+            {"status": "healthy", "database": "connected"},
+        )
+
     def test_authenticated_product_flow_is_private_and_idempotent(self):
         first_user, first_headers = self._register("owner@example.com")
         _, second_headers = self._register("other@example.com")

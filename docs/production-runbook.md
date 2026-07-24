@@ -67,7 +67,7 @@ whose API URL is localhost or the retired v1 service.
 ## Release verification
 
 ```bash
-curl -fsS https://YOUR_CLOUD_RUN_URL/healthz
+curl -fsS https://YOUR_CLOUD_RUN_URL/v1/health
 curl -fsS https://YOUR_CLOUD_RUN_URL/v1/catalog
 ```
 
@@ -86,7 +86,7 @@ behavior, protected payment completion and one-time credit granting.
 
 ## Monitoring
 
-- Alert on `/healthz` non-200 for two consecutive checks.
+- Alert on `/v1/health` non-200 for two consecutive checks.
 - Alert on Cloud Run 5xx rate and latency.
 - Alert on PostgreSQL storage, connection saturation and backup failure.
 - Review `FAILED_RECOVERABLE` studies and refund transactions daily.
