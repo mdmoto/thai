@@ -7,7 +7,6 @@ import {
 import { MOCK_STUDIES, MOCK_ORG, MOCK_USAGE, PLAN_META, STUDY_TYPE_META } from "@/lib/mock-data";
 import { StatusBadge, PlanBadge, Card, EmptyState, CountUp } from "@/components/ui";
 import { formatRelativeTime, isRunning, needsAction } from "@/lib/utils";
-import { PopulationField } from "@/components/population-field";
 
 const running = MOCK_STUDIES.filter(s => isRunning(s.status));
 const completed = MOCK_STUDIES.filter(s => s.status === "COMPLETED");
@@ -24,55 +23,27 @@ const QUICK_TEMPLATES = [
 
 export function DashboardClient() {
   const plan = PLAN_META[MOCK_ORG.plan_code as keyof typeof PLAN_META];
-  const totalSimulated = MOCK_STUDIES.length * 30000;
 
   return (
     <div className="p-8 space-y-10 max-w-7xl mx-auto">
-      {/* ── Hero: Population Field ───────────────────── */}
-      <div className="hero-panel">
-        <PopulationField
-          className="absolute inset-0 w-full h-full opacity-90"
-          density={110}
-        />
-        <div className="relative z-10 p-8 sm:p-12 min-h-[280px] flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-            <div className="max-w-xl">
-              <span className="eyebrow mb-3">Thailand Digital Market Twin</span>
-              <h1 className="font-display text-3xl sm:text-[2.75rem] leading-[1.05] font-semibold text-white tracking-tight">
-                把决策放进<span className="text-gold-light">泰国真实市场</span>里，
-                先看结果，再花预算。
-              </h1>
-              <p className="text-sm text-neutral-400 font-light mt-4 leading-relaxed">
-                每一个光点，都是一位有价格敏感度、品牌偏好与购买习惯的合成泰国消费者。
-              </p>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <Link href="/studies/new" className="btn-cmai-primary">
-                <Plus size={15} /> 新建研究项目
-              </Link>
-              <Link href="/templates" className="btn-cmai-secondary">
-                浏览模板
-              </Link>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6 font-mono text-[11px] text-neutral-400 mt-6">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4CC191] shadow-[0_0_6px_rgba(76,193,145,0.8)]" />
-              购买意向
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E8C879]" />
-              犹豫观望
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D07257]" />
-              拒绝购买
-            </span>
-            <span className="ml-auto tabular-nums">
-              累计模拟 <CountUp value={totalSimulated} /> 人次
-            </span>
-          </div>
+      {/* Hero */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-8 border-b border-neutral-900">
+        <div className="max-w-xl">
+          <span className="eyebrow mb-3">Thailand Digital Market Twin</span>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
+            把决策放进泰国真实市场里，先看结果，再花预算
+          </h1>
+          <p className="text-sm text-neutral-400 font-light mt-3 leading-relaxed">
+            基于合成泰国消费者人口，模拟产品、门店与定价方案的市场反应。
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href="/studies/new" className="btn-cmai-primary">
+            <Plus size={15} /> 新建研究项目
+          </Link>
+          <Link href="/templates" className="btn-cmai-secondary">
+            浏览模板
+          </Link>
         </div>
       </div>
 
@@ -105,7 +76,6 @@ export function DashboardClient() {
           value={MOCK_ORG.credits_balance}
           href="/billing"
           badge={plan?.label}
-          accent="gold"
         />
       </div>
 
@@ -151,12 +121,12 @@ export function DashboardClient() {
                 <Link
                   key={t.label}
                   href={t.href}
-                  className="card-lazzor p-4 flex flex-col items-start gap-2 hover:bg-[#151820] transition-colors group"
+                  className="card-lazzor p-4 flex flex-col items-start gap-2 hover:bg-[#171717] transition-colors group"
                 >
                   <span className="text-xl">{t.icon}</span>
                   <div className="flex items-center justify-between w-full">
                     <span className="text-xs font-medium text-neutral-200 group-hover:text-white">{t.label}</span>
-                    <ArrowUpRight size={12} className="text-neutral-500 group-hover:text-gold-light transition-colors" />
+                    <ArrowUpRight size={12} className="text-neutral-500 group-hover:text-neutral-300 transition-colors" />
                   </div>
                 </Link>
               ))}
@@ -174,13 +144,10 @@ export function DashboardClient() {
                 {MOCK_USAGE.map((d, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                     <div
-                      className="w-full rounded-t transition-all"
+                      className="w-full rounded-t bg-neutral-200 transition-all"
                       style={{
                         height: `${d.runs > 0 ? (d.runs / 3) * 100 : 8}%`,
-                        opacity: d.runs > 0 ? 1 : 0.15,
-                        background: d.runs > 0
-                          ? "linear-gradient(180deg, var(--color-gold-light), var(--color-gold-dark))"
-                          : "#3a3a3d",
+                        opacity: d.runs > 0 ? 0.85 : 0.12,
                       }}
                     />
                     <span className="text-[10px] text-neutral-500 font-mono">{d.date.slice(3)}</span>
@@ -191,7 +158,7 @@ export function DashboardClient() {
           </Card>
 
           {/* Platform Standards */}
-          <Card accent="jade">
+          <Card>
             <div className="space-y-3">
               <span className="eyebrow">Platform Assurance</span>
               <h3 className="text-xs font-semibold text-white">严谨的数据与模型约束</h3>
@@ -222,13 +189,13 @@ function StatCard({
 }) {
   return (
     <Link href={href}>
-      <Card hover accent={accent} className="relative group">
+      <Card hover accent={accent} className="group">
         <div className="flex items-center justify-between mb-3">
           <span className="eyebrow">{eyebrow}</span>
-          {alert && <span className="w-2 h-2 rounded-full bg-[#D07257] animate-pulse" />}
+          {alert && <span className="w-1.5 h-1.5 rounded-full bg-[#C15C4A]" />}
           {badge && <span className="text-[10px] font-mono text-neutral-400">{badge}</span>}
         </div>
-        <div className="font-display text-3xl sm:text-4xl font-semibold text-white tracking-tight">
+        <div className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
           <CountUp value={value} />
         </div>
         <div className="text-xs text-neutral-400 font-light mt-1 flex items-center justify-between">

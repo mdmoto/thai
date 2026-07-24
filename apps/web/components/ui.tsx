@@ -114,19 +114,22 @@ export function Card({
   className?: string;
   onClick?: () => void;
   hover?: boolean;
-  /** Semantic accent — use only where the color carries real meaning. */
+  /** Optional quiet signal — a single small dot, nothing more. */
   accent?: "jade" | "gold" | "clay";
 }) {
+  const dotColor = accent === "jade" ? "var(--color-positive)" : accent === "clay" ? "var(--color-negative)" : accent === "gold" ? "var(--color-accent)" : undefined;
   return (
     <div
       className={clsx(
-        "cmai-card p-6",
-        accent && `card-accent-${accent}`,
-        hover && "cursor-pointer hover:bg-[#151820]",
+        "cmai-card p-6 relative",
+        hover && "cursor-pointer hover:bg-[#171717]",
         className
       )}
       onClick={onClick}
     >
+      {dotColor && (
+        <span className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full" style={{ background: dotColor }} />
+      )}
       {children}
     </div>
   );

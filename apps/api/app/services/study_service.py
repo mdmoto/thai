@@ -8,7 +8,7 @@ import sys
 import os
 import uuid
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 # Add packages to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../packages")))

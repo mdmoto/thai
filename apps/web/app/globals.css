@@ -1,43 +1,40 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────
-   Design Tokens — Thailand Digital Market Twin
-   Palette drawn from Thai temple roof tiles:
-   gold / jade / clay, set against a cool near-black.
+   Design Tokens — restrained, monochrome-first.
+   One quiet accent used only for small labels
+   and functional data encoding — never decoration.
    ───────────────────────────────────────── */
 :root {
-  --background: #08090b;
-  --foreground: #f5f3ee;
-  --font-sans: var(--font-geist-sans), Inter, sans-serif;
+  --background: #0a0a0a;
+  --foreground: #f5f5f7;
+  --font-sans: var(--font-geist-sans), -apple-system, "PingFang SC", Inter, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  --font-display: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
 
-  /* Brand */
-  --color-gold: #D4A853;
-  --color-gold-light: #E8C879;
-  --color-gold-dark: #B8902E;
+  /* The one accent — a quiet sage green, used sparingly for tags/links */
+  --color-accent: #4CAE8A;
+  --color-accent-dim: #3A8267;
 
-  /* Signal colors — buy / hesitant / reject */
-  --color-jade: #2F9E74;
-  --color-jade-light: #4CC191;
-  --color-clay: #B8503D;
-  --color-clay-light: #D07257;
+  /* Data-encoding colors, used only inside charts/badges where the
+     color is carrying real meaning (positive / neutral / negative) —
+     never as page decoration, glows, or gradients. */
+  --color-positive: #4CAE8A;
+  --color-neutral-signal: #a3a3a6;
+  --color-negative: #C15C4A;
 
-  /* Surfaces */
-  --color-surface: #101216;
-  --color-surface-2: #171a20;
+  --color-surface: #131313;
+  --color-surface-2: #1a1a1a;
   --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
 
-  /* Text */
-  --color-text-primary: #f5f3ee;
-  --color-text-secondary: #a3a3ab;
-  --color-text-muted: #6e6e76;
+  --color-text-primary: #f5f5f7;
+  --color-text-secondary: #9a9a9e;
+  --color-text-muted: #6e6e73;
 }
 
 .dark, :root[class~="dark"] {
-  --background: #08090b;
-  --foreground: #f5f3ee;
+  --background: #0a0a0a;
+  --foreground: #f5f5f7;
 }
 
 * {
@@ -51,25 +48,26 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.font-display {
-  font-family: var(--font-display);
-  font-feature-settings: "ss01" on;
-}
-
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
+/* Kept as an alias: numbers/headlines use the same one typeface as
+   everything else — no separate display face. */
+.font-display {
+  font-family: var(--font-sans);
+}
+
 /* ─────────────────────────────────────────
-   Typography utilities
+   Typography — one typeface, weight does the work.
+   Bold + tight tracking for headlines, light for body.
    ───────────────────────────────────────── */
 .eyebrow,
 .eyebrow-label {
   font-size: 11px;
-  font-family: var(--font-mono);
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text-muted);
   display: block;
 }
@@ -77,16 +75,12 @@ body {
 .text-primary { color: var(--color-text-primary); }
 .text-secondary { color: var(--color-text-secondary); }
 .text-muted { color: var(--color-text-muted); }
-.text-gold { color: var(--color-gold); }
-.text-gold-light { color: var(--color-gold-light); }
-.text-jade { color: var(--color-jade-light); }
-.text-clay { color: var(--color-clay-light); }
+.text-gold,
+.text-accent { color: var(--color-accent); }
+.text-gold-light { color: var(--color-accent); }
 
 .text-gradient-gold {
-  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--color-accent);
 }
 
 .bg-base { background: var(--background); }
@@ -98,8 +92,21 @@ body {
   border: none;
 }
 
+/* Small tag label — the ONE decorative device this app uses,
+   modeled directly on the reference: an uppercase mono label,
+   colored, sitting quietly above a title. Nothing else glows. */
+.tag-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.tag-positive { color: var(--color-positive); }
+.tag-neutral { color: var(--color-text-secondary); }
+.tag-negative { color: var(--color-negative); }
+
 /* ─────────────────────────────────────────
-   Cards — with semantic accent variants
+   Cards — flat, quiet, no glow, no gradient border.
    ───────────────────────────────────────── */
 .cmai-card,
 .card-lazzor {
@@ -107,7 +114,7 @@ body {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 1rem;
-  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .cmai-card:hover,
@@ -115,51 +122,14 @@ body {
   border-color: var(--color-border-strong);
 }
 
-/* Accent variants: colored left rule + soft ambient glow on hover.
-   Use sparingly — only where the accent carries real meaning
-   (completed = jade, credits/plan = gold, action needed = clay). */
-.card-accent-jade { border-left: 2px solid var(--color-jade); }
-.card-accent-jade:hover { box-shadow: -1px 0 24px -8px rgba(47, 158, 116, 0.35); }
-
-.card-accent-gold { border-left: 2px solid var(--color-gold); }
-.card-accent-gold:hover { box-shadow: -1px 0 24px -8px rgba(212, 168, 83, 0.35); }
-
-.card-accent-clay { border-left: 2px solid var(--color-clay); }
-.card-accent-clay:hover { box-shadow: -1px 0 24px -8px rgba(184, 80, 61, 0.35); }
-
 .glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 1.25rem;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
-}
-
-/* Hero panel — quiet dot-grid ambiance behind the Population Field canvas */
-.hero-panel {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.5rem;
-  border: 1px solid var(--color-border);
-  background:
-    radial-gradient(ellipse 80% 60% at 15% 0%, rgba(212, 168, 83, 0.10), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 100% 100%, rgba(47, 158, 116, 0.08), transparent 60%),
-    #0a0b0e;
-}
-
-.hero-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 40%, transparent 90%);
-  pointer-events: none;
 }
 
 /* ─────────────────────────────────────────
-   Buttons
+   Buttons — flat pills, no gradient, no glow.
    ───────────────────────────────────────── */
 .btn-cmai-primary,
 .btn-lazzor-primary,
@@ -176,17 +146,15 @@ body {
   color: #1d1d1f;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-cmai-primary:hover,
 .btn-lazzor-primary:hover,
 .btn-primary:hover {
   background-color: #ffffff;
-  transform: translateY(-1px);
 }
 
 .btn-cmai-secondary,
@@ -200,11 +168,11 @@ body {
   border-radius: 9999px;
   font-size: 13px;
   font-weight: 500;
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -212,8 +180,7 @@ body {
 .btn-cmai-secondary:hover,
 .btn-lazzor-secondary:hover,
 .btn-secondary:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .btn-cmai-ghost,
@@ -230,14 +197,13 @@ body {
   color: var(--color-text-muted);
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease;
   text-decoration: none;
 }
 
 .btn-cmai-ghost:hover,
 .btn-lazzor-ghost:hover {
   color: var(--color-text-primary);
-  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .btn-gold {
@@ -248,20 +214,18 @@ body {
   padding: 0.625rem 1.5rem;
   border-radius: 9999px;
   font-size: 13px;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
-  color: #1d1508;
+  font-weight: 500;
+  background-color: var(--color-accent);
+  color: #06231a;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(212, 168, 83, 0.25);
 }
 
 .btn-gold:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 18px rgba(212, 168, 83, 0.35);
+  background-color: var(--color-accent-dim);
 }
 
 /* ─────────────────────────────────────────
@@ -278,13 +242,13 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text-primary);
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 
 .input-cmai::placeholder,
 .input-lazzor::placeholder,
 .input-field::placeholder {
-  color: #515154;
+  color: #55555a;
 }
 
 .input-cmai:focus,
@@ -294,7 +258,7 @@ body {
 }
 
 /* ─────────────────────────────────────────
-   Motion utilities
+   Motion — a single, quiet fade. Nothing else.
    ───────────────────────────────────────── */
 @keyframes fade-in {
   from { opacity: 0; }
@@ -302,53 +266,36 @@ body {
 }
 
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
 .animate-fade-in {
-  animation: fade-in 0.4s ease both;
+  animation: fade-in 0.3s ease both;
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-in-up 0.35s ease both;
 }
 
 .transition-smooth {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
 }
 
 .stagger-children > * {
-  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-in-up 0.35s ease both;
 }
-.stagger-children > *:nth-child(1) { animation-delay: 0.02s; }
-.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
-.stagger-children > *:nth-child(3) { animation-delay: 0.1s; }
-.stagger-children > *:nth-child(4) { animation-delay: 0.14s; }
-.stagger-children > *:nth-child(5) { animation-delay: 0.18s; }
-.stagger-children > *:nth-child(6) { animation-delay: 0.22s; }
-
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 32s linear infinite;
-}
+.stagger-children > *:nth-child(1) { animation-delay: 0.01s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.03s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.07s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.09s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.11s; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-fade-in-up,
-  .stagger-children > *,
-  .marquee-track {
+  .stagger-children > * {
     animation: none !important;
   }
 }
@@ -364,14 +311,14 @@ body {
   background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: #2a2a2a;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #404040;
+  background: #3d3d3d;
 }
 
 ::selection {
-  background: rgba(212, 168, 83, 0.3);
+  background: rgba(76, 174, 138, 0.25);
   color: #ffffff;
 }
