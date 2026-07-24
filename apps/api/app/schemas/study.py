@@ -10,6 +10,7 @@ class CreateStudyRequest(BaseModel):
     study_type: str = Field(min_length=2, max_length=40)
     language: str = Field(default="zh", max_length=10)
     plan_code: str = Field(default="PROFESSIONAL", max_length=32)
+    template_key: Optional[str] = Field(default=None, max_length=80)
     product_name: Optional[str] = Field(default=None, max_length=200)
     category: Optional[str] = Field(default=None, max_length=120)
     price: Optional[float] = Field(default=None, gt=0, le=1_000_000_000)
@@ -37,6 +38,11 @@ class CreateStudyRequest(BaseModel):
     creative_format: Optional[str] = Field(default=None, max_length=80)
     channel: Optional[str] = Field(default=None, max_length=120)
     campaign_budget: Optional[float] = Field(default=None, ge=0)
+    marketplaces: List[str] = Field(default_factory=list, max_length=10)
+    shipping_fee: Optional[float] = Field(default=None, ge=0)
+    delivery_days: Optional[float] = Field(default=None, gt=0, le=90)
+    cod_available: Optional[bool] = None
+    official_store: Optional[bool] = None
     candidate_locations: List[Dict[str, Any]] = Field(
         default_factory=list,
         max_length=10,

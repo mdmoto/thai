@@ -174,6 +174,32 @@ class StudyServiceTests(unittest.TestCase):
             item for item in report["funnel"] if item["stage"] == "purchased"
         )
         self.assertEqual(visited["label"], "Visited")
+        self.assertEqual(report["geo_analysis"]["venue_type"], "CAFE")
+        self.assertTrue(report["geo_analysis"]["heatmap"])
+        self.assertEqual(
+            report["geo_analysis"]["locations"][0]["observed_poi_status"],
+            "public_snapshot",
+        )
+
+    def test_ecommerce_template_has_distinct_checkout_analysis(self):
+        service = StudyService()
+        study = service.create_study(
+            {
+                "name": "Thailand ecommerce launch",
+                "study_type": "PRODUCT_VALIDATION",
+                "template_key": "ECOMMERCE",
+                "price": 890,
+                "marketplaces": ["Shopee", "Lazada", "TikTok Shop"],
+                "shipping_fee": 80,
+                "delivery_days": 7,
+                "cod_available": False,
+                "official_store": False,
+            }
+        )
+        analysis = service._commerce_analysis(study)
+        self.assertIsNotNone(analysis)
+        self.assertLess(analysis["checkout_trust_index"], 50)
+        self.assertGreaterEqual(len(analysis["frictions"]), 3)
 
 
 if __name__ == "__main__":

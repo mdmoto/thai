@@ -25,6 +25,7 @@ from simulation_core.config import (
     resolve_execution_config,
 )
 from simulation_core.engine import SIMULATION_MODEL_VERSION, SimulationEngine
+from simulation_core.geo import build_geo_analysis
 from world_model.generator import PopulationGenerator, WORLD_MODEL_VERSION
 from world_model.category_profiles import load_category_profile
 
@@ -126,6 +127,7 @@ class StudyService:
 
         fact_fields = (
             "url",
+            "template_key",
             "description",
             "category",
             "brand_awareness",
@@ -141,6 +143,11 @@ class StudyService:
             "creative_format",
             "channel",
             "campaign_budget",
+            "marketplaces",
+            "shipping_fee",
+            "delivery_days",
+            "cod_available",
+            "official_store",
             "candidate_locations",
             "product_attributes",
             "competitor_data",
@@ -301,6 +308,46 @@ class StudyService:
         if venue_type in {"RESTAURANT", "CAFE", "BAR", "RETAIL"}:
             return venue_type
         return study_type
+
+    def _commerce_analysis(
+        self,
+        study: Mapping[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        facts = study["facts"]
+        if str(facts.get("template_key") or "").upper() != "ECOMMERCE":
+            return None
+        marketplaces = facts.get("marketplaces") or ["Shopee", "Lazada"]
+        delivery_days = float(facts.get("delivery_days") or 4.0)
+        shipping_fee = float(facts.get("shipping_fee") or 0.0)
+        cod_available = bool(
+            True if facts.get("cod_available") is None
+            else facts.get("cod_available")
+        )
+        official_store = bool(facts.get("official_store") or False)
+        trust_score = 45.0
+        trust_score += 18.0 if official_store else 0.0
+        trust_score += 10.0 if cod_available else 0.0
+        trust_score += max(-18.0, 12.0 - delivery_days * 3.0)
+        trust_score += max(-12.0, 8.0 - shipping_fee / 20.0)
+        return {
+            "marketplaces": marketplaces,
+            "delivery_days": delivery_days,
+            "shipping_fee_thb": shipping_fee,
+            "cod_available": cod_available,
+            "official_store": official_store,
+            "checkout_trust_index": round(max(0.0, min(100.0, trust_score)), 1),
+            "frictions": [
+                message
+                for condition, message in (
+                    (delivery_days > 5, "配送时间超过 5 天"),
+                    (shipping_fee > 60, "运费高于低客单商品常见容忍区间"),
+                    (not cod_available, "未提供货到付款"),
+                    (not official_store, "缺少官方店信任标记"),
+                )
+                if condition
+            ],
+            "status": "structured_ecommerce_prior_not_transaction_data",
+        }
 
     def _representative_records(
         self,
@@ -569,6 +616,8 @@ class StudyService:
                 representatives,
             ),
             "market_dynamics": sim_results["market_dynamics"],
+            "geo_analysis": sim_results.get("geo_analysis"),
+            "commerce_analysis": self._commerce_analysis(study),
             "implied_wtp": sim_results["implied_wtp"],
             "metric_intervals": sim_results["metric_intervals"],
             "model_lineage": sim_results["model_lineage"],
@@ -692,6 +741,60 @@ class StudyService:
                 agent_signals=agent_research,
                 variable_cost=study["facts"].get("variable_cost"),
             )
+            geo_analysis = build_geo_analysis(
+                study_type=study["study_type"],
+                venue_type=study["facts"].get("venue_type") or model_study_type,
+                inputs={**study["inputs"], **study["facts"]},
+                capacity=study["facts"].get("capacity"),
+                average_check=study["facts"].get("average_check") or price,
+            )
+            if geo_analysis:
+                sim_results["geo_analysis"] = geo_analysis
+                sim_results["warnings"].extend(geo_analysis["warnings"])
+                sim_results["model_lineage"]["geo"] = {
+                    "dataset_id": geo_analysis["dataset_id"],
+                    "observed_source_count": len(geo_analysis["sources"]),
+                    "heatmap_status": "model_inference_not_measured_footfall",
+                    "catchment_status": "walking_radial_proxy",
+                }
+                if study["study_type"] == "SITE_COMPARISON" and geo_analysis[
+                    "locations"
+                ]:
+                    baseline_rate = float(sim_results["mean_purchase_rate"])
+                    baseline_interval = sim_results["metric_intervals"][
+                        "purchase_rate"
+                    ]
+                    top_score = max(
+                        float(item["site_score"])
+                        for item in geo_analysis["locations"]
+                    )
+                    site_scenarios = []
+                    for item in geo_analysis["locations"]:
+                        score = float(item["site_score"])
+                        multiplier = 0.65 + score / 100.0 * 0.55
+                        rate = min(1.0, baseline_rate * multiplier)
+                        relative_index = score / max(1.0, top_score) * 100.0
+                        site_scenarios.append(
+                            {
+                                "scenario_id": item["id"],
+                                "name": item["name"],
+                                "price": price,
+                                "purchase_rate": round(rate, 6),
+                                "purchase_p10": round(
+                                    min(1.0, float(baseline_interval["p10"]) * multiplier),
+                                    6,
+                                ),
+                                "purchase_p90": round(
+                                    min(1.0, float(baseline_interval["p90"]) * multiplier),
+                                    6,
+                                ),
+                                "revenue_idx": round(relative_index, 2),
+                                "margin_idx": round(relative_index, 2),
+                                "geo_site_score": score,
+                                "data_class": "model_inference",
+                            }
+                        )
+                    sim_results["scenarios"] = site_scenarios
             if overrides and not plan.customer_calibration:
                 sim_results["warnings"].append(
                     f"{plan.code} does not apply customer calibration overrides; "
