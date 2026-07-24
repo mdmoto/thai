@@ -2,19 +2,11 @@
 
 import { clearAuthSession, getStoredToken } from "@/lib/auth-session";
 
-const PROD_API_URL = "https://ai-100282158973.asia-southeast1.run.app";
+const PROD_API_URL =
+  "https://market-twin-api-100282158973.asia-southeast1.run.app";
 
 export function getApiBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host !== "localhost" && host !== "127.0.0.1") {
-      return PROD_API_URL;
-    }
-  }
-  return "http://127.0.0.1:8080";
+  return (process.env.NEXT_PUBLIC_API_URL || PROD_API_URL).replace(/\/$/, "");
 }
 
 export const API_BASE_URL = getApiBaseUrl();
