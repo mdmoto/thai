@@ -26,7 +26,7 @@ gcloud artifacts repositories create market-twin \
 
 gcloud builds submit \
   --config cloudbuild.yaml \
-  --substitutions=_CORS_ORIGIN=https://ai.lazzor.com
+  --substitutions='^|^_CORS_ORIGINS=https://ai.lazzor.com,https://YOUR-PREVIEW-DOMAIN'
 ```
 
 The database secret must use the Cloud SQL Unix socket form:

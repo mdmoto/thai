@@ -3,7 +3,7 @@ substitutions:
   _REPOSITORY: market-twin
   _CLOUD_SQL_INSTANCE: market-twin-db
   _SERVICE_ACCOUNT: market-twin-api
-  _CORS_ORIGIN: https://ai.lazzor.com
+  _CORS_ORIGINS: https://ai.lazzor.com,https://thailand-market-twin-lazzor.mdmoto.chatgpt.site
 
 steps:
   - name: gcr.io/cloud-builders/docker
@@ -37,7 +37,7 @@ steps:
       - --concurrency=10
       - --timeout=900
       - --max-instances=5
-      - --set-env-vars=APP_ENV=production,DATA_CATALOG_ROOT=/data_catalog,CORS_ALLOWED_ORIGINS=${_CORS_ORIGIN},FREE_PREVIEW_LIMIT=1
+      - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|CORS_ALLOWED_ORIGINS=${_CORS_ORIGINS}|FREE_PREVIEW_LIMIT=1
       - --set-secrets=DATABASE_URL=market-twin-database-url:latest,JWT_SECRET_KEY=market-twin-jwt-secret:latest,ADMIN_API_KEY=market-twin-admin-api-key:latest
 
 images:
