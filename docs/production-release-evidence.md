@@ -29,7 +29,7 @@ Release verification date: 2026-07-24 (Asia/Bangkok)
 - Run idempotency, cross-account isolation, pending-payment behavior and
   one-time verified credit granting passed.
 
-Acceptance report IDs:
+Acceptance report IDs generated during verification:
 
 - Product Validation Preview: `rpt_5da4d180`
 - Product Validation Standard: `rpt_e72fbc99`
@@ -38,9 +38,16 @@ Acceptance report IDs:
 - Pricing Study Standard: `rpt_bc72aaa6`
 - Pricing Study Professional: `rpt_949e6885`
 
+These QA reports and all other `example.invalid` acceptance records were
+removed after verification. The cleanup deleted 13 test users, 26 studies, 25
+reports, 26 simulation-run records, 9 test orders and 38 test credit
+transactions. A read-only recount confirmed zero matching records.
+
 ## Recovery verification
 
 - Automated Cloud SQL backup `1784901647730` completed successfully.
+- Clean post-QA on-demand baseline backup `1784905259894` completed
+  successfully.
 - Point-in-time clone operation
   `0cdca17b-1826-42fe-9d1b-144a00000031` completed successfully.
 - The restored copy contained the production `market_twin` database, database
