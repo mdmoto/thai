@@ -233,6 +233,102 @@ class ApiProductFlowTests(unittest.TestCase):
             ["FAILED_RUN_REFUND", "RUN_RESERVATION"],
         )
 
+    def test_standard_and_professional_charge_real_catalog_costs(self):
+        _, headers = self._register("plan-charges@example.com")
+
+        async def fake_report(
+            study_id,
+            pop_size=None,
+            mc_rounds=None,
+            seed=None,
+            plan_code=None,
+        ):
+            population = 10_000 if plan_code == "STANDARD" else 30_000
+            rounds = 80 if plan_code == "STANDARD" else 150
+            return {
+                "report_id": f"rpt_charge_{plan_code.lower()}",
+                "run_id": f"run_charge_{plan_code.lower()}",
+                "study_id": study_id,
+                "plan_code": plan_code,
+                "population_size": population,
+                "mc_rounds": rounds,
+            }
+
+        with patch.object(
+            service,
+            "execute_run",
+            new=AsyncMock(side_effect=fake_report),
+        ):
+            for plan_code, expected_balance in (
+                ("STANDARD", 0),
+                ("PROFESSIONAL", 0),
+            ):
+                if plan_code == "PROFESSIONAL":
+                    order = self.client.post(
+                        "/v1/billing/orders",
+                        headers=headers,
+                        json={"package_code": "STARTER"},
+                    ).json()
+                    completed = self.client.post(
+                        f"/v1/admin/billing/orders/{order['id']}/complete",
+                        headers={"X-Admin-Key": "test-admin-key"},
+                        json={
+                            "payment_reference": (
+                                "catalog-charge-professional-test"
+                            )
+                        },
+                    )
+                    self.assertEqual(completed.status_code, 200, completed.text)
+
+                created = self.client.post(
+                    "/v1/studies",
+                    headers=headers,
+                    json={
+                        "name": f"{plan_code} 收费验证",
+                        "study_type": "PRODUCT_VALIDATION",
+                        "plan_code": plan_code,
+                        "product_name": "Test Product",
+                        "category": "PET_WATER_FOUNTAIN",
+                        "price": 1290,
+                    },
+                ).json()
+                self.client.post(
+                    f"/v1/studies/{created['id']}/confirm",
+                    headers=headers,
+                    json={"overrides": {}},
+                )
+                run = self.client.post(
+                    f"/v1/studies/{created['id']}/runs",
+                    headers=headers,
+                    json={
+                        "study_id": created["id"],
+                        "plan_code": plan_code,
+                        "idempotency_key": (
+                            f"catalog-charge-{plan_code.lower()}"
+                        ),
+                    },
+                )
+                self.assertEqual(run.status_code, 200, run.text)
+                account = self.client.get(
+                    "/v1/auth/me",
+                    headers=headers,
+                ).json()
+                self.assertEqual(
+                    account["credits_balance"],
+                    expected_balance,
+                )
+
+        transactions = self.client.get(
+            "/v1/billing/transactions",
+            headers=headers,
+        ).json()
+        reservations = [
+            item["amount"]
+            for item in transactions
+            if item["type"] == "RUN_RESERVATION"
+        ]
+        self.assertEqual(reservations, [-20, -5])
+
 
 if __name__ == "__main__":
     unittest.main()
