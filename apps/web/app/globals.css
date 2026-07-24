@@ -322,3 +322,41 @@ body {
   background: rgba(76, 174, 138, 0.25);
   color: #ffffff;
 }
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  aside,
+  header,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  main {
+    display: block !important;
+    max-width: none !important;
+    overflow: visible !important;
+    padding: 16px !important;
+  }
+
+  main * {
+    color: #111111 !important;
+  }
+
+  .cmai-card,
+  .card-lazzor {
+    break-inside: avoid;
+    border-color: #d4d4d4 !important;
+    background: #ffffff !important;
+  }
+
+  .bg-neutral-900,
+  .bg-neutral-950,
+  .bg-black {
+    background: #ffffff !important;
+  }
+}

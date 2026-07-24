@@ -1,205 +1,173 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, ArrowRight } from "lucide-react";
-import { Card, ProgressBar } from "@/components/ui";
+import { AlertTriangle, ArrowRight, Loader2, RotateCcw } from "lucide-react";
+import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-interface Stage {
-  id: string;
-  label: string;
-  sublabel: string;
-  durationMs: number;
-}
+type RunStatus = "running" | "completed" | "failed";
 
-const STAGES: Stage[] = [
-  { id: "parsing",    label: "资料解析",       sublabel: "分析上传资料，提取结构化信息与假定事实",   durationMs: 4000 },
-  { id: "population", label: "目标人口构建",   sublabel: "从 Thailand World Model 中筛选 30,000 目标人口", durationMs: 6000 },
-  { id: "agents",     label: "代表消费者推理", sublabel: "AI 消费者 Agent 对方案生成结构化反应",   durationMs: 8000 },
-  { id: "simulation", label: "群体模拟",       sublabel: "Monte Carlo 80 轮向量化行为模拟",         durationMs: 12000 },
-  { id: "scenarios",  label: "情景对比",       sublabel: "比较 4 个对比方案的结果差异与收益变化",   durationMs: 6000 },
-  { id: "report",     label: "报告生成",       sublabel: "聚合指标，生成可追溯商业分析报告",        durationMs: 4000 },
+const SERVER_STAGES = [
+  { label: "合成人口准备", detail: "读取校准版本并生成本次研究人口" },
+  { label: "代表样本研究", detail: "生成结构化弱信号；不可用时不会使用 mock Persona" },
+  { label: "离散选择模拟", detail: "运行行业模型、竞品选择集与不购买选项" },
+  { label: "不确定性与情景", detail: "计算先验预测区间、价格弹性和动态扩散" },
+  { label: "报告与血缘", detail: "保存数据版本、模型版本、假设和限制" },
 ];
 
-type StageStatus = "waiting" | "running" | "done";
-
-interface StageState {
-  status: StageStatus;
-  progress: number;
-  detail: string;
-}
-
-export function RunProgressClient({ studyId }: { studyId: string }) {
-  const [stages, setStages] = useState<StageState[]>(
-    STAGES.map(() => ({ status: "waiting", progress: 0, detail: "" }))
-  );
-  const [currentStage, setCurrentStage] = useState(0);
-  const [done, setDone] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    if (done) return;
-    const timer = setInterval(() => {
-      setElapsed(e => e + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [done]);
-
+export function RunProgressClient({
+  studyId,
+  planCode,
+}: {
+  studyId: string;
+  planCode?: string | null;
+}) {
+  const [status, setStatus] = useState<RunStatus>("running");
   const [reportId, setReportId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [attempt, setAttempt] = useState(0);
+  const sessionNonce = useRef(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
+  const requestRef = useRef<{ key: string; promise: Promise<{ report_id?: string }> } | null>(null);
 
   useEffect(() => {
-    if (done) return;
-    if (currentStage >= STAGES.length) {
-      setDone(true);
-      return;
-    }
+    if (status !== "running") return;
+    const timer = window.setInterval(() => setElapsed(value => value + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [status, attempt]);
 
-    const stage = STAGES[currentStage];
-    const startTime = Date.now();
+  useEffect(() => {
+    let active = true;
+    setStatus("running");
+    setReportId(null);
+    setErrorMessage(null);
+    setElapsed(0);
 
-    // Trigger real backend run at simulation stage
-    if (stage.id === "simulation" && !reportId) {
-      (async () => {
-        try {
+    const requestKey = `${studyId}:${planCode || "stored-plan"}:${attempt}`;
+    if (!requestRef.current || requestRef.current.key !== requestKey) {
+      requestRef.current = {
+        key: requestKey,
+        promise: (async () => {
           const { runSimulationApi } = await import("@/lib/api-client");
-          const popSize = studyId.includes("study_") ? 30000 : 10000;
-          const report = await runSimulationApi({
+          return runSimulationApi({
             study_id: studyId,
-            population_size: popSize,
-            mc_rounds: 50,
+            plan_code: planCode || undefined,
+            idempotency_key: `web-${sessionNonce.current}-${attempt}`,
           });
-          if (report && report.report_id) {
-            setReportId(report.report_id);
-          }
-        } catch (err) {
-          console.log("Backend simulation call fallback:", err);
-        }
-      })();
+        })(),
+      };
     }
 
-    const interval = setInterval(() => {
-      const elapsedMs = Date.now() - startTime;
-      const pct = Math.min(99, (elapsedMs / stage.durationMs) * 100);
-
-      setStages(prev => {
-        const next = [...prev];
-        next[currentStage] = {
-          status: "running",
-          progress: pct,
-          detail: getStageDetail(currentStage, pct),
-        };
-        return next;
+    requestRef.current.promise
+      .then(report => {
+        if (!report?.report_id) {
+          throw new Error("后端完成了请求，但没有返回报告编号");
+        }
+        if (active) {
+          setReportId(report.report_id);
+          setStatus("completed");
+        }
+      })
+      .catch(error => {
+        if (active) {
+          setErrorMessage(error instanceof Error ? error.message : "模拟执行失败");
+          setStatus("failed");
+        }
       });
 
-      if (elapsedMs >= stage.durationMs) {
-        clearInterval(interval);
-        setStages(prev => {
-          const next = [...prev];
-          next[currentStage] = { status: "done", progress: 100, detail: "已完成" };
-          return next;
-        });
-        setCurrentStage(s => s + 1);
-      }
-    }, 100);
+    return () => {
+      active = false;
+    };
+  }, [studyId, planCode, attempt]);
 
-    return () => clearInterval(interval);
-  }, [currentStage, done, reportId, studyId]);
-
-  function getStageDetail(stageIdx: number, pct: number): string {
-    switch (stageIdx) {
-      case 0: return pct < 50 ? "解析输入文件与描述..." : "结构化事实参数...";
-      case 1: return pct < 50 ? "加载曼谷与清迈区域人口..." : "构建 30,000 合成样本...";
-      case 2: return `推理代表 Agent ${Math.floor(pct / 10) + 1}/10 ...`;
-      case 3: return `Monte Carlo 模拟 ${Math.floor(pct * 0.8)} / 80 轮...`;
-      case 4: return `计算方案对比 ${Math.ceil(pct / 25)}/4 ...`;
-      case 5: return "汇总生成分析报告...";
-      default: return "";
-    }
-  }
-
-  const totalProgress = stages.reduce((sum, s) => sum + s.progress, 0) / STAGES.length;
-  const formatElapsed = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+  const formatElapsed = (seconds: number) =>
+    `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 
   return (
     <div className="max-w-3xl mx-auto p-8 space-y-8">
-      {/* Top Banner */}
       <Card className="text-center py-10">
-        {done ? (
+        {status === "completed" && reportId ? (
           <div className="space-y-3">
             <div className="w-10 h-10 rounded-full bg-white text-black font-bold flex items-center justify-center mx-auto text-lg">
               ✓
             </div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">模拟完成</h2>
-            <p className="text-xs text-neutral-400 font-light">共耗时 {formatElapsed(elapsed)} · 报告已被验证并生成</p>
-            <Link href={`/studies/${studyId}/report`} className="btn-cmai-primary inline-flex mt-2">
+            <h2 className="text-xl font-semibold text-white tracking-tight">真实模拟已完成</h2>
+            <p className="text-xs text-neutral-400 font-light">
+              后端耗时 {formatElapsed(elapsed)} · Report ID {reportId}
+            </p>
+            <Link
+              href={`/studies/report?id=${encodeURIComponent(reportId)}`}
+              className="btn-cmai-primary inline-flex mt-2"
+            >
               查看报告结果 <ArrowRight size={14} />
             </Link>
+          </div>
+        ) : status === "failed" ? (
+          <div className="space-y-3">
+            <AlertTriangle size={24} className="text-red-400 mx-auto" />
+            <h2 className="text-xl font-semibold text-white tracking-tight">模拟没有完成</h2>
+            <p className="text-xs text-red-300/80 max-w-lg mx-auto">{errorMessage}</p>
+            <button
+              onClick={() => setAttempt(value => value + 1)}
+              className="btn-cmai-secondary inline-flex mt-2"
+            >
+              <RotateCcw size={14} /> 重试真实任务
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
             <Loader2 size={22} className="animate-spin text-white mx-auto" />
-            <div className="eyebrow">Simulation Executing</div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">正在泰国数字市场中运行模拟...</h2>
-            <p className="text-xs text-neutral-400 font-mono tabular-nums">已用时 {formatElapsed(elapsed)} · 总体进度 {totalProgress.toFixed(0)}%</p>
-            <div className="max-w-xs mx-auto pt-2">
-              <ProgressBar value={totalProgress} max={100} />
-            </div>
+            <div className="eyebrow">Backend Simulation Running</div>
+            <h2 className="text-xl font-semibold text-white tracking-tight">
+              正在运行真实选择模型与情景模拟…
+            </h2>
+            <p className="text-xs text-neutral-400 font-mono tabular-nums">
+              已等待 {formatElapsed(elapsed)} · 完成时间取决于套餐、人口和轮数
+            </p>
+            <p className="text-[10px] text-neutral-500">
+              当前 API 尚未返回分阶段事件，因此这里不显示虚构百分比。
+            </p>
           </div>
         )}
       </Card>
 
-      {/* Stages List */}
       <div className="space-y-3">
-        <span className="eyebrow">Execution Stages</span>
+        <span className="eyebrow">Server Execution Contract</span>
         <div className="space-y-2">
-          {STAGES.map((stage, i) => {
-            const s = stages[i];
-            return (
-              <Card key={stage.id} className={cn(
-                "!p-4 transition-colors",
-                s.status === "running" && "bg-neutral-900 border-white",
-                s.status === "done" && "border-neutral-800"
-              )}>
-                <div className="flex items-center gap-4">
-                  <div className={cn(
+          {SERVER_STAGES.map((stage, index) => (
+            <Card
+              key={stage.label}
+              className={cn(
+                "!p-4",
+                status === "completed" && "border-neutral-700",
+                status === "failed" && "border-red-950",
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className={cn(
                     "w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-medium shrink-0",
-                    s.status === "done" ? "bg-white text-black" :
-                    s.status === "running" ? "bg-neutral-800 text-white border border-neutral-600" :
-                    "bg-neutral-950 text-neutral-600 border border-neutral-900"
-                  )}>
-                    {s.status === "done" ? "✓" : i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className={cn(
-                        "text-xs font-semibold tracking-tight",
-                        s.status === "done" ? "text-neutral-300" :
-                        s.status === "running" ? "text-white" :
-                        "text-neutral-500"
-                      )}>
-                        {stage.label}
-                      </span>
-                      {s.status === "running" && (
-                        <span className="text-[11px] font-mono text-white">{s.progress.toFixed(0)}%</span>
-                      )}
-                      {s.status === "done" && (
-                        <span className="text-[11px] font-mono text-neutral-400">Done</span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-neutral-400 font-light mt-0.5">
-                      {s.status === "running" ? s.detail : stage.sublabel}
-                    </p>
-                    {s.status === "running" && (
-                      <div className="mt-2">
-                        <ProgressBar value={s.progress} max={100} />
-                      </div>
-                    )}
-                  </div>
+                    status === "completed"
+                      ? "bg-white text-black"
+                      : status === "failed"
+                        ? "bg-red-950 text-red-300 border border-red-900"
+                        : "bg-neutral-900 text-neutral-400 border border-neutral-800",
+                  )}
+                >
+                  {status === "completed" ? "✓" : index + 1}
                 </div>
-              </Card>
-            );
-          })}
+                <div>
+                  <div className="text-xs font-semibold text-white">{stage.label}</div>
+                  <p className="text-[11px] text-neutral-400 font-light mt-0.5">{stage.detail}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
     </div>

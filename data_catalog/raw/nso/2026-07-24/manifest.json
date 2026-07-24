@@ -1,0 +1,63 @@
+{
+  "schema_version": "1",
+  "pipeline": "nso_consumer_products_macro",
+  "generated_at": "2026-07-24T10:05:12.251136+00:00",
+  "sources": {
+    "registered_population": {
+      "source_id": "NSO_REGISTERED_POPULATION",
+      "dataset_id": "0405_01_0005",
+      "dataset_page": "https://catalog.nso.go.th/dataset/0405_01_0005",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=OS_0405_01_0005_01&format=json",
+      "title": "Registered population by sex, district and province",
+      "license": "Creative Commons Attribution",
+      "retrieval_method": "official_public_api",
+      "observed": true,
+      "fetched_at": "2026-07-24T10:05:10.638022+00:00",
+      "record_count": 15090,
+      "sha256": "655d596dfd9bb4a1f78baf25a4c7c62a8c42f5f3d9a5de9ea86ac9200283acf1",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/OS_0405_01_0005_01.json.gz"
+    },
+    "household_income_distribution": {
+      "source_id": "NSO_SES_HOUSEHOLD_INCOME_DISTRIBUTION",
+      "dataset_id": "ns_08_20241",
+      "dataset_page": "https://catalog.nso.go.th/dataset/ns_08_20241",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_41_03&format=json",
+      "title": "Household monthly income distribution by region",
+      "license": "Creative Commons Attribution",
+      "retrieval_method": "official_public_api",
+      "observed": true,
+      "fetched_at": "2026-07-24T10:05:10.872120+00:00",
+      "record_count": 42,
+      "sha256": "4928161da72d549f72d68cbc14a867b3e4ea88104c4b9479c9bd5499f99f1f96",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_41_03.json.gz"
+    },
+    "province_income_expense": {
+      "source_id": "NSO_SES_PROVINCE_INCOME_EXPENSE",
+      "dataset_id": "0705_08_0031",
+      "dataset_page": "https://catalog.nso.go.th/dataset/0705_08_0031",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=SFD_SPB0801&format=json",
+      "title": "Monthly household income, expenditure and debt by province",
+      "license": "Creative Commons Attribution",
+      "retrieval_method": "official_public_api",
+      "observed": true,
+      "fetched_at": "2026-07-24T10:05:11.817719+00:00",
+      "record_count": 3388,
+      "sha256": "883be00883b73d0b5f65127e54a5abf5a0144741e3fc6bd09524522a98e67f87",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/SFD_SPB0801.json.gz"
+    },
+    "household_size": {
+      "source_id": "NSO_SES_HOUSEHOLD_SIZE",
+      "dataset_id": "0705_08_0017",
+      "dataset_page": "https://catalog.nso.go.th/dataset/0705_08_0017",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_0705_08_0049_01&format=json",
+      "title": "Average household size by province",
+      "license": "Creative Commons Attribution",
+      "retrieval_method": "official_public_api",
+      "observed": true,
+      "fetched_at": "2026-07-24T10:05:12.239233+00:00",
+      "record_count": 1161,
+      "sha256": "f193d50a66fefa280c0780298189256ba36f0127c86e67609a8f028bc753d0ad",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_0705_08_0049_01.json.gz"
+    }
+  }
+}

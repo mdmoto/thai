@@ -37,7 +37,7 @@ const STATUS_CONFIG: Record<StatusType, { label: string; dot: string; text: stri
 export function StatusBadge({ status }: { status: StatusType }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.DRAFT;
   return (
-    <span className={clsx("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border border-neutral-800 bg-[#070707]", cfg.text)}>
+    <span className={clsx("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-neutral-800 bg-[#070707]", cfg.text)}>
       <span className={clsx("w-1.5 h-1.5 rounded-full shrink-0", cfg.dot)} />
       {cfg.label}
     </span>
@@ -59,7 +59,7 @@ const PLAN_LABELS: Record<PlanCode, string> = {
 
 export function PlanBadge({ plan }: { plan: PlanCode }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium font-mono border border-neutral-800 bg-[#070707] text-neutral-300">
+    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium font-mono border border-neutral-800 bg-[#070707] text-neutral-300">
       {PLAN_LABELS[plan]}
     </span>
   );

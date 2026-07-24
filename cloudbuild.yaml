@@ -1,37 +1,49 @@
+substitutions:
+  _REGION: asia-southeast1
+  _REPOSITORY: market-twin
+  _CLOUD_SQL_INSTANCE: market-twin-db
+  _SERVICE_ACCOUNT: market-twin-api
+  _CORS_ORIGINS: https://ai.lazzor.com
+
 steps:
-  # Build the container image using root Dockerfile
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: gcr.io/cloud-builders/docker
     args:
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/market-twin-api:$COMMIT_SHA'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/market-twin-api:latest'
-      - '-f'
-      - 'Dockerfile'
-      - '.'
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID
+      - -f
+      - Dockerfile
+      - .
 
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: gcr.io/cloud-builders/docker
     args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/market-twin-api:$COMMIT_SHA'
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID
 
-  # Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: gcloud
     args:
-      - 'run'
-      - 'deploy'
-      - 'market-twin-api'
-      - '--image'
-      - 'gcr.io/$PROJECT_ID/market-twin-api:$COMMIT_SHA'
-      - '--region'
-      - 'asia-southeast1'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
+      - run
+      - deploy
+      - market-twin-api
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --service-account=${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com
+      - --add-cloudsql-instances=$PROJECT_ID:${_REGION}:${_CLOUD_SQL_INSTANCE}
+      - --cpu=2
+      - --memory=4Gi
+      - --execution-environment=gen2
+      - --cpu-boost
+      - --concurrency=10
+      - --timeout=900
+      - --min-instances=1
+      - --max-instances=5
+      - --startup-probe=httpGet.path=/v1/health,initialDelaySeconds=2,timeoutSeconds=3,periodSeconds=5,failureThreshold=24
+      - --liveness-probe=httpGet.path=/v1/health,initialDelaySeconds=30,timeoutSeconds=3,periodSeconds=30,failureThreshold=3
+      - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|CORS_ALLOWED_ORIGINS=${_CORS_ORIGINS}|FREE_PREVIEW_LIMIT=1
+      - --set-secrets=DATABASE_URL=market-twin-database-url:latest,JWT_SECRET_KEY=market-twin-jwt-secret:latest,ADMIN_API_KEY=market-twin-admin-api-key:latest
 
 images:
-  - 'gcr.io/$PROJECT_ID/market-twin-api:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/market-twin-api:latest'
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID

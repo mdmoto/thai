@@ -3,10 +3,13 @@ Authentication & Token Utilities for User Login, Registration, and Verification.
 """
 
 import os
-import json
 import base64
+import binascii
+import hmac
 import time
 import hashlib
+import json
+import secrets
 from typing import Optional, Dict, Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -14,58 +17,105 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import User
 
-try:
-    import jwt
-    HAS_JWT = True
-except ImportError:
-    HAS_JWT = False
-
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "market-twin-secret-key-2026")
+APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if APP_ENV == "production" and not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY is required when APP_ENV=production")
+SECRET_KEY = SECRET_KEY or "development-only-secret-change-before-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
+TOKEN_ISSUER = "thailand-market-twin"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/login", auto_error=False)
+
+
+def _b64url_encode(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+
+def _b64url_decode(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode((value + padding).encode("ascii"))
 
 def hash_password(password: str) -> str:
-    """Hashes a password securely using PBKDF2-HMAC-SHA256."""
-    salt = b"thailand_market_twin_salt_2026"
-    return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000).hex()
+    """Hash a password with a unique salt and PBKDF2-HMAC-SHA256."""
+    salt = secrets.token_bytes(16)
+    iterations = 600_000
+    digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt,
+        iterations,
+        dklen=32,
+    )
+    return (
+        f"pbkdf2_sha256${iterations}$"
+        f"{_b64url_encode(salt)}${_b64url_encode(digest)}"
+    )
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return hash_password(plain_password) == hashed_password
+    try:
+        scheme, iterations, salt, expected = hashed_password.split("$", 3)
+        if scheme != "pbkdf2_sha256":
+            return False
+        actual = hashlib.pbkdf2_hmac(
+            "sha256",
+            plain_password.encode("utf-8"),
+            _b64url_decode(salt),
+            int(iterations),
+            dklen=32,
+        )
+        return hmac.compare_digest(actual, _b64url_decode(expected))
+    except (ValueError, TypeError, binascii.Error):
+        return False
 
 def create_access_token(user_id: str, email: str) -> str:
     expire = int(time.time()) + (ACCESS_TOKEN_EXPIRE_DAYS * 86400)
-    payload = {"sub": user_id, "email": email, "exp": expire}
-
-    if HAS_JWT:
-        return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-
-    # Lightweight fallback token
-    raw = json.dumps(payload).encode("utf-8")
-    sig = hashlib.sha256(raw + SECRET_KEY.encode("utf-8")).hexdigest()[:16]
-    return base64.urlsafe_b64encode(raw).decode("utf-8") + "." + sig
+    header = {"alg": ALGORITHM, "typ": "JWT"}
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "exp": expire,
+        "iat": int(time.time()),
+        "iss": TOKEN_ISSUER,
+    }
+    encoded_header = _b64url_encode(
+        json.dumps(header, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    )
+    encoded_payload = _b64url_encode(
+        json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    )
+    signing_input = f"{encoded_header}.{encoded_payload}".encode("ascii")
+    signature = hmac.new(
+        SECRET_KEY.encode("utf-8"),
+        signing_input,
+        hashlib.sha256,
+    ).digest()
+    return f"{encoded_header}.{encoded_payload}.{_b64url_encode(signature)}"
 
 def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
-    if HAS_JWT:
-        try:
-            return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        except Exception:
-            return None
-
     try:
         parts = token.split(".")
-        if len(parts) != 2:
+        if len(parts) != 3:
             return None
-        raw = base64.urlsafe_b64decode(parts[0].encode("utf-8"))
-        sig = hashlib.sha256(raw + SECRET_KEY.encode("utf-8")).hexdigest()[:16]
-        if sig != parts[1]:
+        signing_input = f"{parts[0]}.{parts[1]}".encode("ascii")
+        expected = hmac.new(
+            SECRET_KEY.encode("utf-8"),
+            signing_input,
+            hashlib.sha256,
+        ).digest()
+        if not hmac.compare_digest(expected, _b64url_decode(parts[2])):
             return None
-        data = json.loads(raw.decode("utf-8"))
-        if data.get("exp") and time.time() > data["exp"]:
+        header = json.loads(_b64url_decode(parts[0]).decode("utf-8"))
+        data = json.loads(_b64url_decode(parts[1]).decode("utf-8"))
+        if header.get("alg") != ALGORITHM:
+            return None
+        if data.get("iss") != TOKEN_ISSUER:
+            return None
+        if not data.get("exp") or time.time() > float(data["exp"]):
             return None
         return data
-    except Exception:
+    except (ValueError, TypeError, binascii.Error, json.JSONDecodeError):
         return None
 
 def get_current_user_optional(

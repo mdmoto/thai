@@ -5,7 +5,17 @@ __pycache__
 node_modules
 .next
 .git
+.github
+.openai
 .DS_Store
 out
 build
 dist
+apps/web
+tests
+docs
+scripts
+infra
+docker-compose.yml
+cloudbuild.yaml
+README.md
