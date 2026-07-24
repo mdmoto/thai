@@ -1,12 +1,13 @@
 /** Typed browser client for the Market Twin API. */
 
 import { clearAuthSession, getStoredToken } from "@/lib/auth-session";
-
-const PROD_API_URL =
-  "https://market-twin-api-100282158973.asia-southeast1.run.app";
+import production from "@/deployment/production.json";
 
 export function getApiBaseUrl(): string {
-  return (process.env.NEXT_PUBLIC_API_URL || PROD_API_URL).replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_API_URL || production.apiOrigin).replace(
+    /\/$/,
+    "",
+  );
 }
 
 export const API_BASE_URL = getApiBaseUrl();

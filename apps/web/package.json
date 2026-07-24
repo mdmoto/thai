@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/verify-production-config.mjs",
     "build": "next build",
+    "prebuild:sites": "node scripts/verify-production-config.mjs",
     "build:sites": "SITES_BUILD=1 vinext build",
     "start": "next start",
     "lint": "next lint",

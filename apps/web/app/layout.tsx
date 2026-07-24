@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import production from "@/deployment/production.json";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,7 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ai.lazzor.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || production.siteOrigin,
+  ),
   title: "Thailand Market Twin | 泰国消费品市场决策平台",
   description:
     "面向进入泰国市场的消费品牌，比较产品、价格、竞品和目标人群情景，并披露数据来源、模型版本与可信度边界。",
