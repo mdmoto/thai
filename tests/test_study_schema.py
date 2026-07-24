@@ -34,6 +34,21 @@ class StudySchemaTests(unittest.TestCase):
         self.assertEqual(request.capacity, 48)
         self.assertEqual(request.location["label"], "Chiang Mai, Nimman")
 
+    def test_ecommerce_context_is_preserved(self):
+        request = CreateStudyRequest(
+            name="电商测试",
+            study_type="PRODUCT_VALIDATION",
+            template_key="ECOMMERCE",
+            marketplaces=["Shopee", "Lazada"],
+            shipping_fee=45,
+            delivery_days=3,
+            cod_available=True,
+            official_store=False,
+        )
+        self.assertEqual(request.template_key, "ECOMMERCE")
+        self.assertEqual(request.marketplaces, ["Shopee", "Lazada"])
+        self.assertTrue(request.cod_available)
+
 
 if __name__ == "__main__":
     unittest.main()

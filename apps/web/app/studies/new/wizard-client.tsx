@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronRight, Plus, X, Link as LinkIcon } from "lucide-react";
-import { STUDY_TYPE_META, PLAN_META } from "@/lib/product-catalog";
+import { STUDY_TYPE_META, PLAN_META, TEMPLATES } from "@/lib/product-catalog";
 import { getStoredToken } from "@/lib/auth-session";
 import { Card, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,15 @@ interface WizardState {
   opening_hours: string;
   creative_format: string;
   channel: string;
+  latitude: string;
+  longitude: string;
+  preset_scenarios: Array<Record<string, unknown>>;
+  template_key: string;
+  marketplaces: string[];
+  shipping_fee: string;
+  delivery_days: string;
+  cod_available: boolean;
+  official_store: boolean;
 }
 
 const INIT_STATE: WizardState = {
@@ -52,6 +61,15 @@ const INIT_STATE: WizardState = {
   opening_hours: "",
   creative_format: "IMAGE",
   channel: "META",
+  latitude: "",
+  longitude: "",
+  preset_scenarios: [],
+  template_key: "",
+  marketplaces: ["Shopee", "Lazada", "TikTok Shop"],
+  shipping_fee: "0",
+  delivery_days: "4",
+  cod_available: true,
+  official_store: false,
 };
 
 const BUSINESS_QUESTIONS = {
@@ -109,15 +127,25 @@ export function NewStudyWizard() {
   const typeParam = params.get("type");
   const initialType = typeParam && typeParam in STUDY_TYPE_META ? typeParam as StudyType : null;
   const initialCategory = params.get("category");
+  const initialTemplate = TEMPLATES.find(item => item.id === params.get("template"));
+  const templateDefaults = (initialTemplate?.defaults || {}) as Partial<WizardState> & {
+    scenarios?: Array<Record<string, unknown>>;
+  };
 
   const [step, setStep] = useState(initialType ? 2 : 1);
   const [state, setState] = useState<WizardState>({
     ...INIT_STATE,
+    ...templateDefaults,
     study_type: initialType,
     category: initialType && ["PRODUCT_VALIDATION", "PRICING_STUDY", "CREATIVE_TEST"].includes(initialType)
       ? initialCategory || INIT_STATE.category
       : INIT_STATE.category,
-    venue_type: initialCategory || INIT_STATE.venue_type,
+    venue_type: templateDefaults.venue_type || initialCategory || INIT_STATE.venue_type,
+    selling_points: templateDefaults.selling_points || INIT_STATE.selling_points,
+    preset_scenarios: templateDefaults.scenarios || INIT_STATE.preset_scenarios,
+    template_key: initialTemplate?.key === "ecommerce"
+      ? "ECOMMERCE"
+      : initialTemplate?.key?.toUpperCase() || "",
   });
 
   const update = useCallback((updates: Partial<WizardState>) => {
@@ -152,6 +180,7 @@ export function NewStudyWizard() {
         name: state.name || "未命名研究项目",
         study_type: state.study_type || "PRODUCT_VALIDATION",
         plan_code: state.plan_code,
+        template_key: state.template_key || undefined,
         product_name: state.product_name,
         category: state.category,
         price: state.price ? Number(state.price) : undefined,
@@ -167,13 +196,24 @@ export function NewStudyWizard() {
         creative_format: state.study_type === "CREATIVE_TEST" ? state.creative_format : undefined,
         channel: state.study_type === "CREATIVE_TEST" ? state.channel : undefined,
         location: state.location_text
-          ? { label: state.location_text }
+          ? {
+              label: state.location_text,
+              latitude: state.latitude ? Number(state.latitude) : undefined,
+              longitude: state.longitude ? Number(state.longitude) : undefined,
+            }
           : undefined,
         candidate_locations: candidateLocations.map(label => ({ label })),
-        scenarios: candidateLocations.map(label => ({
-          name: label,
-          price: Number(state.average_check),
-        })),
+        scenarios: candidateLocations.length
+          ? candidateLocations.map(label => ({
+              name: label,
+              price: Number(state.average_check),
+            }))
+          : state.preset_scenarios,
+        marketplaces: state.template_key === "ECOMMERCE" ? state.marketplaces : undefined,
+        shipping_fee: state.template_key === "ECOMMERCE" ? Number(state.shipping_fee) : undefined,
+        delivery_days: state.template_key === "ECOMMERCE" ? Number(state.delivery_days) : undefined,
+        cod_available: state.template_key === "ECOMMERCE" ? state.cod_available : undefined,
+        official_store: state.template_key === "ECOMMERCE" ? state.official_store : undefined,
       });
 
       // 2. Confirm study facts
@@ -431,6 +471,24 @@ function Step2({ state, update, onNext, onBack }: {
               value={state.product_name}
               onChange={e => update({ product_name: e.target.value })}
             />
+            {state.study_type !== "SITE_COMPARISON" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="纬度（推荐）"
+                  type="number"
+                  placeholder="例：18.7966"
+                  value={state.latitude}
+                  onChange={e => update({ latitude: e.target.value })}
+                />
+                <Input
+                  label="经度（推荐）"
+                  type="number"
+                  placeholder="例：98.9677"
+                  value={state.longitude}
+                  onChange={e => update({ longitude: e.target.value })}
+                />
+              </div>
+            )}
             <div className="space-y-1.5">
               <label className="block text-xs font-medium text-neutral-400 tracking-wide">
                 产品品类
@@ -478,6 +536,40 @@ function Step2({ state, update, onNext, onBack }: {
                 <option value="MARKETPLACE">Shopee / Lazada</option>
               </select>
             </div>
+          </div>
+        )}
+
+        {state.template_key === "ECOMMERCE" && (
+          <div className="cmai-card p-5 space-y-4">
+            <div>
+              <span className="eyebrow text-blue-300">Thailand ecommerce context</span>
+              <h3 className="text-sm font-semibold text-white mt-1">电商履约与平台信任</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="预计运费 (THB)"
+                type="number"
+                value={state.shipping_fee}
+                onChange={e => update({ shipping_fee: e.target.value })}
+              />
+              <Input
+                label="预计送达天数"
+                type="number"
+                value={state.delivery_days}
+                onChange={e => update({ delivery_days: e.target.value })}
+              />
+            </div>
+            <div className="flex flex-wrap gap-5 text-xs text-neutral-300">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={state.cod_available} onChange={e => update({ cod_available: e.target.checked })} />
+                支持货到付款 COD
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={state.official_store} onChange={e => update({ official_store: e.target.checked })} />
+                官方店 / Mall 标记
+              </label>
+            </div>
+            <p className="text-[10px] text-neutral-500">默认比较 Shopee、Lazada 与 TikTok Shop；公开页面数据只作为报价和商品声明证据，不冒充成交量。</p>
           </div>
         )}
 

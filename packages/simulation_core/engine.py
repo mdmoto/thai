@@ -47,6 +47,7 @@ VENUE_STUDY_TYPES = {
     "RESTAURANT",
     "CAFE",
     "BAR",
+    "RETAIL",
 }
 
 SEGMENT_LABELS = {
@@ -293,47 +294,112 @@ class SimulationEngine:
         price: float,
         attributes: Mapping[str, float],
         plan: PlanConfig,
+        study_type: str,
     ) -> List[Dict[str, Any]]:
-        scenarios = [
-            {
-                "scenario_id": "baseline",
-                "name": "基准方案",
-                "price": price,
-            },
-            {
-                "scenario_id": "value_launch",
-                "name": "首发降价 12%",
-                "price": price * 0.88,
-                "awareness": min(0.98, attributes["awareness"] * 1.08),
-            },
-            {
-                "scenario_id": "premium_quality",
-                "name": "品质增强与溢价 12%",
-                "price": price * 1.12,
-                "quality_score": min(1.0, attributes["quality_score"] + 0.12),
-                "review_score": min(1.0, attributes["review_score"] + 0.08),
-            },
-            {
-                "scenario_id": "social_launch",
-                "name": "KOL 与口碑强化",
-                "price": price,
-                "awareness": min(0.98, attributes["awareness"] * 1.3),
-                "social_proof_score": min(
-                    1.0,
-                    attributes["social_proof_score"] + 0.2,
-                ),
-            },
-            {
-                "scenario_id": "localized_trust",
-                "name": "泰国本地化与信任增强",
-                "price": price,
-                "localization_score": min(
-                    1.0,
-                    attributes["localization_score"] + 0.22,
-                ),
-                "brand_strength": min(1.0, attributes["brand_strength"] + 0.12),
-            },
-        ]
+        if study_type == "CREATIVE_TEST":
+            scenarios = [
+                {
+                    "scenario_id": "baseline",
+                    "name": "素材 A · 基准表达",
+                    "price": price,
+                },
+                {
+                    "scenario_id": "clarity_localized",
+                    "name": "素材 B · 信息清晰与泰文化",
+                    "price": price,
+                    "clarity_score": min(1.0, attributes["clarity_score"] + 0.18),
+                    "localization_score": min(1.0, attributes["localization_score"] + 0.16),
+                },
+                {
+                    "scenario_id": "social_proof",
+                    "name": "素材 C · 评价与信任证据",
+                    "price": price,
+                    "social_proof_score": min(1.0, attributes["social_proof_score"] + 0.2),
+                    "brand_strength": min(1.0, attributes["brand_strength"] + 0.12),
+                },
+                {
+                    "scenario_id": "visual_novelty",
+                    "name": "素材 D · 视觉与新颖度强化",
+                    "price": price,
+                    "design_score": min(1.0, attributes["design_score"] + 0.18),
+                    "quality_score": min(1.0, attributes["quality_score"] + 0.08),
+                },
+            ]
+        elif study_type in VENUE_STUDY_TYPES:
+            scenarios = [
+                {
+                    "scenario_id": "baseline",
+                    "name": "基准经营方案",
+                    "price": price,
+                },
+                {
+                    "scenario_id": "value_offer",
+                    "name": "客单价下调 10%",
+                    "price": price * 0.9,
+                },
+                {
+                    "scenario_id": "access_upgrade",
+                    "name": "交通、停车与到店便利强化",
+                    "price": price,
+                    "convenience_score": min(1.0, attributes["convenience_score"] + 0.16),
+                    "distance_km": max(0.1, attributes["distance_km"] * 0.82),
+                },
+                {
+                    "scenario_id": "service_quality",
+                    "name": "服务品质与评价强化",
+                    "price": price,
+                    "quality_score": min(1.0, attributes["quality_score"] + 0.13),
+                    "review_score": min(1.0, attributes["review_score"] + 0.12),
+                },
+                {
+                    "scenario_id": "event_social",
+                    "name": "活动与本地口碑引流",
+                    "price": price,
+                    "awareness": min(0.98, attributes["awareness"] * 1.28),
+                    "social_proof_score": min(1.0, attributes["social_proof_score"] + 0.18),
+                },
+            ]
+        else:
+            scenarios = [
+                {
+                    "scenario_id": "baseline",
+                    "name": "基准方案",
+                    "price": price,
+                },
+                {
+                    "scenario_id": "value_launch",
+                    "name": "首发降价 12%",
+                    "price": price * 0.88,
+                    "awareness": min(0.98, attributes["awareness"] * 1.08),
+                },
+                {
+                    "scenario_id": "premium_quality",
+                    "name": "品质增强与溢价 12%",
+                    "price": price * 1.12,
+                    "quality_score": min(1.0, attributes["quality_score"] + 0.12),
+                    "review_score": min(1.0, attributes["review_score"] + 0.08),
+                },
+                {
+                    "scenario_id": "social_launch",
+                    "name": "KOL 与口碑强化",
+                    "price": price,
+                    "awareness": min(0.98, attributes["awareness"] * 1.3),
+                    "social_proof_score": min(
+                        1.0,
+                        attributes["social_proof_score"] + 0.2,
+                    ),
+                },
+                {
+                    "scenario_id": "localized_trust",
+                    "name": "泰国本地化与信任增强",
+                    "price": price,
+                    "localization_score": min(
+                        1.0,
+                        attributes["localization_score"] + 0.22,
+                    ),
+                    "brand_strength": min(1.0, attributes["brand_strength"] + 0.12),
+                },
+            ]
         if plan.code == "PREVIEW":
             return scenarios[:2]
         if plan.code == "STANDARD":
@@ -346,8 +412,14 @@ class SimulationEngine:
         price: float,
         attributes: Mapping[str, float],
         plan: PlanConfig,
+        study_type: str,
     ) -> List[Dict[str, Any]]:
-        source = scenarios or self._default_scenarios(price, attributes, plan)
+        source = scenarios or self._default_scenarios(
+            price,
+            attributes,
+            plan,
+            study_type,
+        )
         normalized: List[Dict[str, Any]] = []
         for index, scenario in enumerate(source):
             changes = scenario.get("changes", {})
@@ -999,6 +1071,7 @@ class SimulationEngine:
             base_price,
             attributes,
             plan,
+            normalized_study_type,
         )
         adjustments = self._agent_adjustments(agent_signals, plan)
 

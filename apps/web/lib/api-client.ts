@@ -86,6 +86,7 @@ export interface CreateStudyPayload {
   study_type: string;
   language?: string;
   plan_code?: string;
+  template_key?: string;
   product_name?: string;
   category?: string;
   price?: number;
@@ -105,6 +106,11 @@ export interface CreateStudyPayload {
   location?: Record<string, unknown>;
   candidate_locations?: Array<Record<string, unknown>>;
   scenarios?: Array<Record<string, unknown>>;
+  marketplaces?: string[];
+  shipping_fee?: number;
+  delivery_days?: number;
+  cod_available?: boolean;
+  official_store?: boolean;
 }
 
 export interface RunSimulationPayload {

@@ -73,7 +73,7 @@ export const PLAN_META = {
   },
 } as const;
 
-export const TEMPLATES = [
+export const DEMO_CASES = [
   {
     id: "tpl_pet_water",
     key: "pet_water",
@@ -86,6 +86,9 @@ export const TEMPLATES = [
     est_time: "立即查看",
     result_href: "/demo/pet-water",
   },
+] as const;
+
+export const TEMPLATES = [
   {
     id: "tpl_new_product",
     key: "new_product",
@@ -96,6 +99,26 @@ export const TEMPLATES = [
     recommended_plan: "STANDARD",
     scenarios: 3,
     est_time: "约 5–15 分钟",
+    group: "产品与电商",
+    summary: "测试目标客群、竞品替代、渠道和购买阻力。",
+    defaults: {},
+  },
+  {
+    id: "tpl_ecommerce",
+    key: "ecommerce",
+    label: "泰国电商产品测试",
+    study_type: "PRODUCT_VALIDATION",
+    category: "GENERIC_CONSUMER_PRODUCT",
+    icon: "🛒",
+    recommended_plan: "PROFESSIONAL",
+    scenarios: 5,
+    est_time: "约 10–20 分钟",
+    group: "产品与电商",
+    summary: "加入 Shopee、Lazada、TikTok Shop、包邮、COD 与平台信任变量。",
+    defaults: {
+      channel: "MARKETPLACE",
+      selling_points: ["本地配送或包邮", "支持泰国常用支付方式"],
+    },
   },
   {
     id: "tpl_pricing",
@@ -107,6 +130,18 @@ export const TEMPLATES = [
     recommended_plan: "PROFESSIONAL",
     scenarios: 5,
     est_time: "约 10–20 分钟",
+    group: "产品与电商",
+    summary: "比较 WTP、转化、相对收入和毛利最优价格。",
+    defaults: {
+      product_name: "蓝牙耳机",
+      price: "1890",
+      selling_points: ["稳定连接", "主动降噪", "本地保修"],
+      scenarios: [
+        { name: "入门价格", price: 1490 },
+        { name: "基准价格", price: 1890 },
+        { name: "高端价格", price: 2290 },
+      ],
+    },
   },
   {
     id: "tpl_restaurant",
@@ -118,6 +153,15 @@ export const TEMPLATES = [
     recommended_plan: "PROFESSIONAL",
     scenarios: 5,
     est_time: "约 15–30 分钟",
+    group: "开店与选址",
+    summary: "按午晚餐时段、客单价、座位、翻台和周边餐饮竞争评估。",
+    defaults: {
+      venue_type: "RESTAURANT",
+      location_text: "Chiang Mai Old City",
+      average_check: "350",
+      capacity: "60",
+      opening_hours: "10:30–22:00",
+    },
   },
   {
     id: "tpl_cafe",
@@ -129,6 +173,17 @@ export const TEMPLATES = [
     recommended_plan: "PROFESSIONAL",
     scenarios: 5,
     est_time: "约 15–30 分钟",
+    group: "开店与选址",
+    summary: "按停留时长、学生办公、游客、座位占用和早晚时段评估。",
+    defaults: {
+      venue_type: "CAFE",
+      location_text: "Chiang Mai, Nimman Road",
+      latitude: "18.7966",
+      longitude: "98.9677",
+      average_check: "220",
+      capacity: "48",
+      opening_hours: "07:30–20:00",
+    },
   },
   {
     id: "tpl_bar",
@@ -140,6 +195,17 @@ export const TEMPLATES = [
     recommended_plan: "PROFESSIONAL",
     scenarios: 5,
     est_time: "约 15–30 分钟",
+    group: "开店与选址",
+    summary: "按夜间客流、游客、本地客、周末和活动情景评估。",
+    defaults: {
+      venue_type: "BAR",
+      location_text: "Chiang Mai Night Bazaar",
+      latitude: "18.7879",
+      longitude: "99.0004",
+      average_check: "650",
+      capacity: "90",
+      opening_hours: "18:00–02:00",
+    },
   },
   {
     id: "tpl_site",
@@ -151,6 +217,14 @@ export const TEMPLATES = [
     recommended_plan: "PROFESSIONAL",
     scenarios: 5,
     est_time: "约 15–30 分钟",
+    group: "开店与选址",
+    summary: "比较目标客群覆盖、竞争、交通和模型需求热区。",
+    defaults: {
+      venue_type: "RETAIL",
+      location_text: "Nimman Road；Chiang Mai Old City；Chiang Mai Night Bazaar",
+      average_check: "420",
+      capacity: "80",
+    },
   },
   {
     id: "tpl_creative",
@@ -162,6 +236,12 @@ export const TEMPLATES = [
     recommended_plan: "STANDARD",
     scenarios: 3,
     est_time: "约 10–20 分钟",
+    group: "定价与广告",
+    summary: "比较图片、文案、短视频脚本和落地页的理解与行动倾向。",
+    defaults: {
+      creative_format: "IMAGE",
+      channel: "META",
+    },
   },
   {
     id: "tpl_retail",
@@ -173,6 +253,17 @@ export const TEMPLATES = [
     recommended_plan: "PROFESSIONAL",
     scenarios: 5,
     est_time: "约 15–30 分钟",
+    group: "开店与选址",
+    summary: "按社区覆盖、商品篮、复购、竞品密度和便利度评估。",
+    defaults: {
+      venue_type: "RETAIL",
+      location_text: "Santitham, Chiang Mai",
+      latitude: "18.8037",
+      longitude: "98.9818",
+      average_check: "280",
+      capacity: "70",
+      opening_hours: "09:00–21:00",
+    },
   },
   {
     id: "tpl_operations",
@@ -184,5 +275,14 @@ export const TEMPLATES = [
     recommended_plan: "PROFESSIONAL",
     scenarios: 5,
     est_time: "约 15–30 分钟",
+    group: "经营优化",
+    summary: "比较营业时间、座位、客单价、活动与服务容量。",
+    defaults: {
+      venue_type: "RESTAURANT",
+      location_text: "Chiang Mai Old City",
+      average_check: "380",
+      capacity: "64",
+      opening_hours: "10:30–22:30",
+    },
   },
 ] as const;

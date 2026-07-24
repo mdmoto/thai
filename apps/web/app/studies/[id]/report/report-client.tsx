@@ -61,6 +61,66 @@ interface ReportData {
     preferred_channel?: string;
   }[];
   implied_wtp?: { attribute: string; score_increase: number; implied_wtp_thb: number; status: string }[];
+  geo_analysis?: {
+    dataset_id?: string;
+    venue_type: string;
+    locations: Array<{
+      id: string;
+      name: string;
+      matched_zone?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      coordinate_status: string;
+      observed_poi: Record<string, number>;
+      observed_poi_status: string;
+      target_audience_index: number;
+      tourism_index: number;
+      access_index: number;
+      parking_index: number;
+      market_activity_index: number;
+      competition_saturation_index: number;
+      site_score: number;
+      rank: number;
+    }>;
+    heatmap: Array<{
+      latitude: number;
+      longitude: number;
+      intensity: number;
+      data_class: string;
+    }>;
+    catchments: Array<{
+      minutes: number;
+      radius_km: number;
+      mode: string;
+      data_class: string;
+    }>;
+    operations: {
+      daily_visit_prior: number;
+      daily_revenue_index_thb: number;
+      peak_capacity_utilization: number;
+      queue_risk: string;
+      service_minutes_prior: number;
+      status: string;
+      hourly_demand: Array<{
+        hour: string;
+        visits: number;
+        capacity_utilization: number;
+        data_class: string;
+      }>;
+    };
+    legend: Array<{ key: string; label: string; color: string }>;
+    warnings: string[];
+  } | null;
+  commerce_analysis?: {
+    marketplaces: string[];
+    delivery_days: number;
+    shipping_fee_thb: number;
+    cod_available: boolean;
+    official_store: boolean;
+    checkout_trust_index: number;
+    frictions: string[];
+    status: string;
+  } | null;
   warnings?: string[];
   model_lineage?: {
     model_family?: string;
@@ -110,7 +170,7 @@ const EMPTY_REPORT: ReportData = {
 
 const SECTIONS = [
   "executive_summary", "market_response", "segments",
-  "price_elasticity", "scenarios", "regional", "channels",
+  "price_elasticity", "scenarios", "geo", "regional", "channels",
   "consumer_voices", "sensitivity", "methodology"
 ] as const;
 
@@ -120,6 +180,7 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
   segments: "人群分析",
   price_elasticity: "价格 / 客单价弹性",
   scenarios: "情景对比",
+  geo: "地图与经营",
   regional: "区域表现",
   channels: "渠道适配",
   consumer_voices: "消费者声浪",
@@ -171,6 +232,9 @@ export function ReportClient({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const visibleSections = reportData.geo_analysis
+    ? SECTIONS
+    : SECTIONS.filter(section => section !== "geo");
 
   const shareReport = async () => {
     try {
@@ -258,7 +322,7 @@ export function ReportClient({
           <span className="eyebrow">Report Sections</span>
         </div>
         <nav className="space-y-1 px-2">
-          {SECTIONS.map(sec => (
+          {visibleSections.map(sec => (
             <button
               key={sec}
               onClick={() => setActiveSection(sec)}
@@ -323,6 +387,7 @@ export function ReportClient({
         {activeSection === "segments" && <SegmentsSection data={reportData} />}
         {activeSection === "price_elasticity" && <PriceElasticitySection data={reportData} />}
         {activeSection === "scenarios" && <ScenariosSection data={reportData} />}
+        {activeSection === "geo" && <GeoAnalysisSection data={reportData} />}
         {activeSection === "regional" && <RegionalSection data={reportData} />}
         {activeSection === "channels" && <ChannelsSection data={reportData} />}
         {activeSection === "consumer_voices" && <ConsumerVoicesSection data={reportData} />}
@@ -557,6 +622,154 @@ function ScenariosSection({ data }: { data: ReportData }) {
   );
 }
 
+function GeoAnalysisSection({ data }: { data: ReportData }) {
+  const geo = data.geo_analysis;
+  if (!geo) {
+    return (
+      <Card>
+        <p className="text-xs text-neutral-400">本研究不包含地理分析。</p>
+      </Card>
+    );
+  }
+  const points = geo.heatmap;
+  const latitudes = points.map(point => point.latitude);
+  const longitudes = points.map(point => point.longitude);
+  const minLat = Math.min(...latitudes);
+  const maxLat = Math.max(...latitudes);
+  const minLng = Math.min(...longitudes);
+  const maxLng = Math.max(...longitudes);
+  const projectX = (longitude: number) => 35 + ((longitude - minLng) / Math.max(0.0001, maxLng - minLng)) * 630;
+  const projectY = (latitude: number) => 345 - ((latitude - minLat) / Math.max(0.0001, maxLat - minLat)) * 310;
+  const queueLabel = {
+    high: "高",
+    medium: "中",
+    low: "低",
+  }[geo.operations.queue_risk] ?? geo.operations.queue_risk;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="eyebrow mb-1">Geo Demand & Venue Operations</div>
+        <h2 className="text-base font-semibold text-white tracking-tight">地理需求热力图与小时经营模型</h2>
+        <p className="text-xs text-neutral-400 mt-2">
+          蓝色 POI 为公开观测记录；橙色热区和小时访问量为模型推算，不代表真实手机信令或门店客流。
+        </p>
+      </div>
+
+      <div className="grid lg:grid-cols-[1.55fr_.75fr] gap-4">
+        <Card className="overflow-hidden !p-0">
+          <div className="px-5 py-4 border-b border-blue-400/10 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold text-white">候选点与模型需求热区</div>
+              <div className="text-[10px] text-neutral-500 font-mono mt-1">{geo.dataset_id ?? "unversioned"}</div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {geo.legend.map(item => (
+                <span key={item.key} className="flex items-center gap-1.5 text-[10px] text-neutral-400">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
+          {points.length > 0 ? (
+            <svg viewBox="0 0 700 380" className="w-full h-auto bg-[#050a13]" role="img" aria-label="模型需求热力图">
+              <defs>
+                <pattern id="geo-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                  <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#17243a" strokeWidth="1" />
+                </pattern>
+                <filter id="heat-blur"><feGaussianBlur stdDeviation="13" /></filter>
+              </defs>
+              <rect width="700" height="380" fill="url(#geo-grid)" />
+              {points.map((point, index) => (
+                <circle
+                  key={index}
+                  cx={projectX(point.longitude)}
+                  cy={projectY(point.latitude)}
+                  r={8 + point.intensity * 0.18}
+                  fill="#ff9f43"
+                  opacity={0.04 + point.intensity / 180}
+                  filter="url(#heat-blur)"
+                />
+              ))}
+              {geo.locations.filter(location => location.latitude != null && location.longitude != null).map(location => (
+                <g key={location.id} transform={`translate(${projectX(Number(location.longitude))},${projectY(Number(location.latitude))})`}>
+                  <circle r="13" fill="#07101f" stroke="#6ba0ff" strokeWidth="2" />
+                  <circle r="4" fill="#6ba0ff" />
+                  <text y="-19" textAnchor="middle" fill="#f8fafc" fontSize="10">{location.rank}. {location.matched_zone || location.name}</text>
+                </g>
+              ))}
+            </svg>
+          ) : (
+            <div className="h-72 flex items-center justify-center text-xs text-neutral-500">
+              缺少可解析坐标，无法绘制热力图；请补充经纬度。
+            </div>
+          )}
+          <div className="px-5 py-3 border-t border-blue-400/10 flex flex-wrap gap-2">
+            {geo.catchments.map(item => (
+              <span key={item.minutes} className="text-[10px] px-2.5 py-1 rounded-full bg-orange-400/10 text-orange-200 border border-orange-300/10">
+                步行 {item.minutes} 分钟 ≈ {item.radius_km} km · 半径代理
+              </span>
+            ))}
+          </div>
+        </Card>
+
+        <div className="space-y-3">
+          {geo.locations.map(location => (
+            <Card key={location.id} className={location.rank === 1 ? "border-blue-400/30" : ""}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="eyebrow">Rank 0{location.rank}</span>
+                  <h3 className="text-sm font-semibold text-white mt-1">{location.name}</h3>
+                  <p className="text-[10px] text-neutral-500 mt-1">
+                    {location.coordinate_status === "resolved" ? `${location.latitude}, ${location.longitude}` : "坐标缺失"}
+                  </p>
+                </div>
+                <div className="text-2xl font-semibold text-blue-200">{location.site_score}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-4 text-[10px]">
+                <div className="rounded-lg bg-black/40 p-2 text-neutral-400">目标客群 <strong className="block text-white text-xs mt-0.5">{location.target_audience_index}</strong></div>
+                <div className="rounded-lg bg-black/40 p-2 text-neutral-400">交通便利 <strong className="block text-white text-xs mt-0.5">{location.access_index}</strong></div>
+                <div className="rounded-lg bg-black/40 p-2 text-neutral-400">市场活跃 <strong className="block text-white text-xs mt-0.5">{location.market_activity_index}</strong></div>
+                <div className="rounded-lg bg-black/40 p-2 text-neutral-400">竞争饱和 <strong className="block text-white text-xs mt-0.5">{location.competition_saturation_index}</strong></div>
+              </div>
+              <div className="mt-3 text-[10px] text-neutral-500">
+                POI：{location.observed_poi_status === "public_snapshot"
+                  ? Object.entries(location.observed_poi).map(([key, value]) => `${key} ${value}`).join(" · ")
+                  : "未观测，当前使用行业先验"}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-[1.5fr_.5fr] gap-4">
+        <Card>
+          <div className="eyebrow mb-1">Hourly demand prior</div>
+          <h3 className="text-sm font-semibold text-white">小时访问与容量占用</h3>
+          <div className="h-64 mt-5">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={geo.operations.hourly_demand}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#17243a" />
+                <XAxis dataKey="hour" tick={{ fill: "#8793a8", fontSize: 10 }} />
+                <YAxis tick={{ fill: "#8793a8", fontSize: 10 }} />
+                <Tooltip contentStyle={{ background: "#091120", border: "1px solid #213456", borderRadius: 8, fontSize: 12 }} />
+                <Bar dataKey="visits" name="模型访问量" fill="#6ba0ff" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+          <Card><span className="eyebrow">日访问先验</span><div className="text-2xl font-semibold text-white mt-2">{geo.operations.daily_visit_prior}</div></Card>
+          <Card><span className="eyebrow">相对日收入</span><div className="text-2xl font-semibold text-white mt-2">฿{geo.operations.daily_revenue_index_thb.toLocaleString()}</div></Card>
+          <Card><span className="eyebrow">峰值容量</span><div className="text-2xl font-semibold text-white mt-2">{formatPercent(geo.operations.peak_capacity_utilization)}</div></Card>
+          <Card><span className="eyebrow">排队风险</span><div className="text-2xl font-semibold text-white mt-2">{queueLabel}</div></Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RegionalSection({ data }: { data: ReportData }) {
   const regions = data.regional_breakdown || [];
   return (
@@ -598,6 +811,37 @@ function ChannelsSection({ data }: { data: ReportData }) {
         <div className="eyebrow mb-1">Distribution Fit</div>
         <h2 className="text-base font-semibold text-white tracking-tight">{terms.channel}</h2>
       </div>
+
+      {data.commerce_analysis && (
+        <Card className="border-blue-400/20">
+          <div className="grid sm:grid-cols-[1fr_auto] gap-5">
+            <div>
+              <span className="eyebrow text-blue-300">Ecommerce checkout context</span>
+              <h3 className="text-sm font-semibold text-white mt-1">泰国电商履约与信任诊断</h3>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {data.commerce_analysis.marketplaces.map(item => (
+                  <span key={item} className="text-[10px] px-2 py-1 rounded-full bg-blue-400/10 text-blue-200">{item}</span>
+                ))}
+              </div>
+              <p className="text-xs text-neutral-400 mt-3">
+                运费 ฿{data.commerce_analysis.shipping_fee_thb} · 约 {data.commerce_analysis.delivery_days} 天送达 ·
+                COD {data.commerce_analysis.cod_available ? "支持" : "不支持"} ·
+                官方店 {data.commerce_analysis.official_store ? "有" : "无"}
+              </p>
+              <p className="text-[10px] text-neutral-500 mt-2">
+                {data.commerce_analysis.frictions.length
+                  ? `主要阻力：${data.commerce_analysis.frictions.join("；")}`
+                  : "当前未识别明显结账与履约阻力。"}
+              </p>
+            </div>
+            <div className="sm:text-right">
+              <span className="eyebrow">结账信任指数</span>
+              <div className="text-4xl font-semibold text-blue-200 mt-2">{data.commerce_analysis.checkout_trust_index}</div>
+              <div className="text-[10px] text-neutral-500 mt-1">结构化先验 / 100</div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {channels.map((c, i) => (
