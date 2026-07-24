@@ -96,6 +96,15 @@ export interface CreateStudyPayload {
   competitors?: string[];
   competitor_data?: Array<Record<string, unknown>>;
   business_questions?: string[];
+  venue_type?: string;
+  average_check?: number;
+  capacity?: number;
+  opening_hours?: string;
+  creative_format?: string;
+  channel?: string;
+  location?: Record<string, unknown>;
+  candidate_locations?: Array<Record<string, unknown>>;
+  scenarios?: Array<Record<string, unknown>>;
 }
 
 export interface RunSimulationPayload {

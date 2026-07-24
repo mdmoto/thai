@@ -19,7 +19,9 @@ export function TemplatesClient() {
           return (
             <Link
               key={t.id}
-              href={`/studies/new?template=${t.id}&type=${t.study_type}&category=${t.category}`}
+              href={"result_href" in t
+                ? t.result_href
+                : `/studies/new?template=${t.id}&type=${t.study_type}&category=${t.category}`}
             >
               <Card hover className="h-full group">
                 <div className="flex items-start gap-3 mb-3">
@@ -40,7 +42,7 @@ export function TemplatesClient() {
                 <div className="divider mb-3" />
                 <div className="flex items-center justify-between text-xs text-muted">
                   <div className="flex gap-3">
-                    <span>{t.scenarios} 个情景</span>
+                    <span>{"result_href" in t ? "完整样例报告" : `${t.scenarios} 个情景`}</span>
                     <span>·</span>
                     <span>推荐 {plan.label}</span>
                   </div>

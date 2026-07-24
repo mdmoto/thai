@@ -25,6 +25,7 @@ import {
   updateStoredUser,
 } from "@/lib/auth-session";
 import { getMeApi } from "@/lib/api-client";
+import { BrandMark } from "@/components/brand-mark";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "控制台", icon: LayoutDashboard },
@@ -78,13 +79,11 @@ export function Sidebar() {
           )}
         >
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center font-bold text-xs tracking-tighter shrink-0 text-white">
-              MT
-            </div>
+            <BrandMark className="w-8 h-8 shrink-0" />
             {!collapsed && (
               <div>
                 <div className="text-[13px] font-semibold text-white leading-tight tracking-tight">
-                  Market Twin
+                  CMAI Market Twin
                 </div>
                 <div className="text-[10px] text-neutral-400 font-light">
                   Thailand Consumer Lab

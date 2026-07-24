@@ -1208,14 +1208,36 @@ class SimulationEngine:
             "repeated": purchase_rate * repeat_rate,
             "referred": purchase_rate * referral_rate,
         }
-        funnel = [
-            {
-                "stage": stage,
-                "label": label,
-                "rate": round(funnel_rates[stage], 6),
-                "value": int(round(total_population * funnel_rates[stage])),
-            }
-            for stage, label in (
+        if normalized_study_type in {
+            "VENUE_STUDY",
+            "SITE_COMPARISON",
+            "RESTAURANT",
+            "CAFE",
+            "BAR",
+            "RETAIL",
+            "OPERATING_SCENARIO",
+        }:
+            funnel_labels = (
+                ("eligible", "Target Audience"),
+                ("aware", "Venue Aware"),
+                ("understood", "Occasion Fit"),
+                ("considered", "Visit Considered"),
+                ("purchased", "Visited"),
+                ("repeated", "Revisited"),
+                ("referred", "Referred"),
+            )
+        elif normalized_study_type == "CREATIVE_TEST":
+            funnel_labels = (
+                ("eligible", "Target Audience"),
+                ("aware", "Ad Reached"),
+                ("understood", "Message Understood"),
+                ("considered", "Offer Considered"),
+                ("purchased", "Action Intended"),
+                ("repeated", "Follow-up Intended"),
+                ("referred", "Shared"),
+            )
+        else:
+            funnel_labels = (
                 ("eligible", "Eligible Population"),
                 ("aware", "Aware"),
                 ("understood", "Understood"),
@@ -1224,6 +1246,14 @@ class SimulationEngine:
                 ("repeated", "Repeated"),
                 ("referred", "Referred"),
             )
+        funnel = [
+            {
+                "stage": stage,
+                "label": label,
+                "rate": round(funnel_rates[stage], 6),
+                "value": int(round(total_population * funnel_rates[stage])),
+            }
+            for stage, label in funnel_labels
         ]
 
         coefficient_output = {
@@ -1266,6 +1296,22 @@ class SimulationEngine:
         if adjustments["effective_weight"] == 0:
             warnings.append(
                 "LLM weak signals were unavailable or disabled and had zero effect on quantitative outputs."
+            )
+        if normalized_study_type in {
+            "VENUE_STUDY",
+            "SITE_COMPARISON",
+            "RESTAURANT",
+            "CAFE",
+            "BAR",
+            "RETAIL",
+            "OPERATING_SCENARIO",
+        }:
+            warnings.append(
+                "Offline results use geographic, travel-friction and venue-choice priors; no live footfall, mobility, queue or point-of-sale data were observed."
+            )
+        if normalized_study_type == "CREATIVE_TEST":
+            warnings.append(
+                "Creative-test action probability is a structured response prior, not an observed impression, click-through or conversion rate."
             )
 
         return {

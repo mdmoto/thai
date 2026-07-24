@@ -11,6 +11,7 @@ import { cn, formatPercent } from "@/lib/utils";
 
 interface ReportData {
   study_name: string;
+  study_type?: string;
   run_id: string;
   world_model_version: string;
   simulation_model_version: string;
@@ -117,7 +118,7 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
   executive_summary: "执行摘要",
   market_response: "转化漏斗",
   segments: "人群分析",
-  price_elasticity: "价格弹性曲线",
+  price_elasticity: "价格 / 客单价弹性",
   scenarios: "情景对比",
   regional: "区域表现",
   channels: "渠道适配",
@@ -125,6 +126,18 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
   sensitivity: "敏感性分析",
   methodology: "数据血缘与附录",
 };
+
+function reportTerms(data: ReportData) {
+  const venue = ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(data.study_type ?? "");
+  const creative = data.study_type === "CREATIVE_TEST";
+  return {
+    intent: venue ? "到店意向率" : creative ? "行动倾向率" : "购买意向率",
+    probability: venue ? "模型到店概率" : creative ? "模型行动概率" : "模型购买概率",
+    scenario: venue ? "门店与经营情景对比" : creative ? "广告素材情景对比" : "产品与定价情景对比",
+    channel: venue ? "获客渠道适配度评级" : creative ? "投放渠道适配度评级" : "销售渠道适配度评级",
+    relative: venue ? "相对到店指数" : creative ? "相对行动指数" : "相对购买指数",
+  };
+}
 
 const SENTIMENT_STYLE: Record<string, { tagClass: string; label: string }> = {
   positive: { tagClass: "tag-positive", label: "积极" },
@@ -146,7 +159,13 @@ function calibrationLabel(status?: string) {
   return CALIBRATION_LABELS[value] ?? value;
 }
 
-export function ReportClient({ reportId }: { reportId: string }) {
+export function ReportClient({
+  reportId,
+  publicReportUrl,
+}: {
+  reportId?: string;
+  publicReportUrl?: string;
+}) {
   const [activeSection, setActiveSection] = useState<typeof SECTIONS[number]>("executive_summary");
   const [reportData, setReportData] = useState<ReportData>(EMPTY_REPORT);
   const [loading, setLoading] = useState(true);
@@ -170,6 +189,22 @@ export function ReportClient({ reportId }: { reportId: string }) {
   };
 
   useEffect(() => {
+    if (publicReportUrl) {
+      (async () => {
+        try {
+          const response = await fetch(publicReportUrl);
+          if (!response.ok) throw new Error("样例报告文件不可用");
+          const data = await response.json() as ReportData;
+          if (!data.executive_summary) throw new Error("样例报告数据结构不完整");
+          setReportData(data);
+        } catch (error) {
+          setLoadError(error instanceof Error ? error.message : "样例报告加载失败");
+        } finally {
+          setLoading(false);
+        }
+      })();
+      return;
+    }
     if (reportId && (reportId.startsWith("rpt_") || reportId.startsWith("study_"))) {
       (async () => {
         try {
@@ -190,7 +225,7 @@ export function ReportClient({ reportId }: { reportId: string }) {
       setLoadError("缺少有效的报告编号");
       setLoading(false);
     }
-  }, [reportId]);
+  }, [reportId, publicReportUrl]);
 
   if (loading) {
     return (
@@ -399,6 +434,7 @@ function MarketResponseSection({ data }: { data: ReportData }) {
 }
 
 function SegmentsSection({ data }: { data: ReportData }) {
+  const terms = reportTerms(data);
   return (
     <div className="space-y-6">
       <div>
@@ -433,7 +469,7 @@ function SegmentsSection({ data }: { data: ReportData }) {
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
-                <span className="text-xs text-neutral-400 font-light">模型购买概率</span>
+                <span className="text-xs text-neutral-400 font-light">{terms.probability}</span>
                 <span className="text-lg font-semibold text-white tabular-nums">{formatPercent(seg.purchase_rate)}</span>
               </div>
             </div>
@@ -446,11 +482,12 @@ function SegmentsSection({ data }: { data: ReportData }) {
 
 function PriceElasticitySection({ data }: { data: ReportData }) {
   const elasticity = data.price_elasticity || [];
+  const terms = reportTerms(data);
   return (
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Demand Curve & Pricing</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">价格需求弹性曲线</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">价格 / 客单价响应曲线</h2>
       </div>
 
       <Card>
@@ -461,8 +498,8 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
               <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: "售价 (THB)", position: "insideBottom", offset: -5, fill: "#86868b", fontSize: 10 }} />
               <YAxis tick={{ fill: "#86868b", fontSize: 11 }} />
               <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} />
-              <Line type="monotone" dataKey="purchase_rate" name="购买意向率" stroke="#f5f5f7" strokeWidth={2} dot={{ r: 3, fill: "#f5f5f7" }} />
-              <Line type="monotone" dataKey="revenue_idx" name="预估营收指数" stroke="#4CAE8A" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3, fill: "#4CAE8A" }} />
+              <Line type="monotone" dataKey="purchase_rate" name={terms.intent} stroke="#6ba0ff" strokeWidth={2} dot={{ r: 3, fill: "#6ba0ff" }} />
+              <Line type="monotone" dataKey="revenue_idx" name="相对收入指数" stroke="#5dd8c1" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3, fill: "#5dd8c1" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -481,11 +518,12 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
 }
 
 function ScenariosSection({ data }: { data: ReportData }) {
+  const terms = reportTerms(data);
   return (
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Scenario Benchmarking</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">产品与定价情景对比</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">{terms.scenario}</h2>
       </div>
 
       <Card>
@@ -496,8 +534,8 @@ function ScenariosSection({ data }: { data: ReportData }) {
               <XAxis dataKey="name" tick={{ fill: "#86868b", fontSize: 10 }} />
               <YAxis tick={{ fill: "#86868b", fontSize: 10 }} />
               <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} />
-              <Bar dataKey="purchase_rate" name="购买意向率" fill="#f5f5f7" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="revenue_idx" name="预估收入指数" fill="#4CAE8A" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="purchase_rate" name={terms.intent} fill="#6ba0ff" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue_idx" name="相对收入指数" fill="#5dd8c1" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -553,11 +591,12 @@ function RegionalSection({ data }: { data: ReportData }) {
 
 function ChannelsSection({ data }: { data: ReportData }) {
   const channels = data.channels || [];
+  const terms = reportTerms(data);
   return (
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Distribution Fit</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">销售渠道适配度评级</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">{terms.channel}</h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -573,7 +612,7 @@ function ChannelsSection({ data }: { data: ReportData }) {
                 <p className="text-xs text-neutral-400 font-light leading-relaxed">{c.recommendation}</p>
                 <div className="mt-2 text-[10px] text-neutral-500 font-mono">
                   {c.relative_purchase_index !== undefined
-                    ? `相对购买指数: ${c.relative_purchase_index}（总体基准 = 100）`
+                    ? `${terms.relative}: ${c.relative_purchase_index}（总体基准 = 100）`
                     : `模型渠道值: ${c.conversion ?? "未记录"}`}
                 </div>
               </div>
@@ -586,6 +625,7 @@ function ChannelsSection({ data }: { data: ReportData }) {
 }
 
 function ConsumerVoicesSection({ data }: { data: ReportData }) {
+  const terms = reportTerms(data);
   return (
     <div className="space-y-6">
       <div>
@@ -596,7 +636,7 @@ function ConsumerVoicesSection({ data }: { data: ReportData }) {
       <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-900 flex items-start gap-3">
         <AlertTriangle size={15} className="text-neutral-500 shrink-0 mt-0.5" />
         <p className="text-xs text-neutral-300 font-light leading-relaxed">
-          声明：以下内容由代表性合成记录结合 Gemini 生成，只用于提出可验证的理由与阻碍假设，不是真人访谈记录，也不直接决定购买率。
+          声明：以下内容由代表性合成记录结合 Gemini 生成，只用于提出可验证的理由与阻碍假设，不是真人访谈记录，也不直接决定{terms.probability}。
         </p>
       </div>
 

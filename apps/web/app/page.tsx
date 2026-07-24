@@ -7,6 +7,8 @@ import {
   GitCompareArrows,
   ShieldCheck,
 } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
+import { STUDY_TYPE_META } from "@/lib/product-catalog";
 
 const SALES_URL =
   process.env.NEXT_PUBLIC_SALES_URL || "https://wa.me/66623458238";
@@ -32,12 +34,10 @@ const WORKFLOW = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-base">
-      <header className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between border-b border-neutral-900">
+      <header className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between border-b border-blue-400/10">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xs font-semibold">
-            MT
-          </span>
-          <span className="text-sm font-semibold">Thailand Market Twin</span>
+          <BrandMark className="w-10 h-10" priority />
+          <span className="hidden sm:block text-sm font-semibold">CMAI Market Twin</span>
         </Link>
         <nav className="flex items-center gap-2">
           <Link href="/methodology" className="btn-cmai-ghost hidden sm:inline-flex">
@@ -50,21 +50,21 @@ export default function HomePage() {
         </nav>
       </header>
 
-      <section className="max-w-7xl mx-auto px-5 sm:px-8 pt-20 pb-16">
+      <section className="hero-grid max-w-7xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-20 grid lg:grid-cols-[1.2fr_.8fr] gap-14 items-center">
         <div className="max-w-4xl">
-          <span className="eyebrow">Thailand consumer decision platform</span>
+          <span className="eyebrow text-blue-300">Thailand market decision infrastructure</span>
           <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05] text-white mt-5">
             进入泰国市场前，
             <br />
             先比较产品、价格与竞品情景
           </h1>
           <p className="text-base sm:text-lg text-neutral-400 leading-relaxed max-w-2xl mt-6">
-            面向进入泰国市场的消费品牌。用版本化人口、竞品报价、选择模型和情景模拟，
-            快速筛选更值得验证的商业方案。
+            面向进入泰国市场的品牌与线下商业。用版本化人口、选择模型和情景模拟，
+            比较消费品、定价、广告、选址和门店经营方案。
           </p>
           <div className="flex flex-wrap gap-3 mt-8">
-            <Link href="/studies/new?type=PRODUCT_VALIDATION&category=PET_WATER_FOUNTAIN" className="btn-cmai-primary">
-              体验宠物饮水机模板 <ArrowRight size={14} />
+            <Link href="/demo/pet-water" className="btn-cmai-primary">
+              查看宠物饮水机完整报告 <ArrowRight size={14} />
             </Link>
             <Link href="/methodology" className="btn-cmai-secondary">
               查看可信度边界
@@ -75,6 +75,15 @@ export default function HomePage() {
             <span className="flex items-center gap-1.5"><Check size={13} /> 竞品与不购买选项</span>
             <span className="flex items-center gap-1.5"><Check size={13} /> 不把 LLM 投票当销量</span>
             <span className="flex items-center gap-1.5"><Check size={13} /> 报告记录假设和版本</span>
+          </div>
+        </div>
+        <div className="hidden lg:flex relative min-h-[430px] items-center justify-center">
+          <div className="absolute inset-10 rounded-full bg-blue-500/15 blur-3xl" />
+          <BrandMark full className="relative w-full max-w-[500px] drop-shadow-[0_30px_80px_rgba(29,78,216,.35)]" priority />
+          <div className="absolute bottom-1 left-8 right-8 cmai-card p-4 grid grid-cols-3 gap-3 backdrop-blur">
+            <Metric value="6" label="研究类型" />
+            <Metric value="77" label="泰国府级覆盖" />
+            <Metric value="P10–P90" label="先验区间" />
           </div>
         </div>
       </section>
@@ -103,6 +112,26 @@ export default function HomePage() {
               <h3 className="text-base font-semibold text-white mt-8">{item.title}</h3>
               <p className="text-sm text-neutral-400 leading-relaxed mt-2">{item.text}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-5 sm:px-8 pb-20">
+        <div className="max-w-2xl mb-10">
+          <span className="eyebrow">Study catalog</span>
+          <h2 className="text-3xl font-semibold text-white mt-3">第一版研究类型已统一进入同一工作流</h2>
+          <p className="text-sm text-neutral-400 mt-3">每种研究使用对应的模型先验与报告措辞，不再把线下到店或广告行动写成普通商品购买。</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(STUDY_TYPE_META).map(([key, item]) => (
+            <Link key={key} href={`/studies/new?type=${key}`} className="cmai-card p-5 group">
+              <div className="flex items-start justify-between">
+                <span className="text-2xl">{item.icon}</span>
+                <ArrowRight size={15} className="text-neutral-600 group-hover:text-blue-300 transition-colors" />
+              </div>
+              <h3 className="text-sm font-semibold text-white mt-5">{item.label}</h3>
+              <p className="text-xs text-neutral-400 leading-relaxed mt-2">{item.desc}</p>
+            </Link>
           ))}
         </div>
       </section>
@@ -183,7 +212,7 @@ export default function HomePage() {
 
       <footer className="border-t border-neutral-900">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row justify-between gap-4 text-xs text-neutral-500">
-          <span>Thailand Market Twin · A decision-support product by Lazzor</span>
+          <span>CMAI Thailand Market Twin · Chiang Mai AI Center</span>
           <div className="flex gap-4">
             <Link href="/methodology">方法</Link>
             <Link href="/terms">条款</Link>

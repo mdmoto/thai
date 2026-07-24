@@ -16,8 +16,8 @@ import { formatRelativeTime, isRunning, needsAction } from "@/lib/utils";
 const QUICK_TEMPLATES = [
   {
     icon: "🐈",
-    label: "宠物饮水机",
-    href: "/studies/new?type=PRODUCT_VALIDATION&category=PET_WATER_FOUNTAIN",
+    label: "宠物饮水机样例报告",
+    href: "/demo/pet-water",
   },
   {
     icon: "📦",
@@ -86,7 +86,7 @@ export function DashboardClient() {
             先比较泰国市场方案，再决定投入哪一个
           </h1>
           <p className="text-sm text-neutral-400 font-light mt-3 leading-relaxed">
-            当前产品聚焦消费品验证、定价和竞品选择；结果用于决策筛选，并明确披露未回测部分。
+            现已覆盖消费品、定价、线下门店、商圈选址、广告素材与经营情景；结果用于决策筛选，并明确披露未回测部分。
           </p>
         </div>
         <Link href="/studies/new" className="btn-cmai-primary shrink-0">
