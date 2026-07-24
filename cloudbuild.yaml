@@ -3,7 +3,7 @@ substitutions:
   _REPOSITORY: market-twin
   _CLOUD_SQL_INSTANCE: market-twin-db
   _SERVICE_ACCOUNT: market-twin-api
-  _CORS_ORIGINS: https://ai.lazzor.com,https://thailand-market-twin-lazzor.mdmoto.chatgpt.site
+  _CORS_ORIGINS: https://ai.lazzor.com
 
 steps:
   - name: gcr.io/cloud-builders/docker

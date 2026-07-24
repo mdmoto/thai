@@ -113,4 +113,4 @@ data_catalog/               版本化快照、来源、面板与档案
 tests/                      模型、数据与业务链路测试
 ```
 
-生产域名目标：https://ai.lazzor.com
+生产域名：https://ai.lazzor.com

@@ -91,14 +91,17 @@ def create_and_run(
     token: str,
     plan_code: str,
     suffix: str,
+    study_type: str = "PRODUCT_VALIDATION",
 ) -> Dict[str, Any]:
     status, study = request_json(
         api_url,
         "POST",
         "/v1/studies",
         {
-            "name": f"Production smoke {plan_code} {suffix}",
-            "study_type": "PRODUCT_VALIDATION",
+            "name": (
+                f"Production smoke {study_type} {plan_code} {suffix}"
+            ),
+            "study_type": study_type,
             "plan_code": plan_code,
             "product_name": "QuietFlow Smoke Fixture",
             "category": "PET_WATER_FOUNTAIN",
@@ -121,7 +124,10 @@ def create_and_run(
     run_payload = {
         "study_id": study["id"],
         "plan_code": plan_code,
-        "idempotency_key": f"production-smoke-{plan_code.lower()}-{suffix}",
+        "idempotency_key": (
+            f"production-smoke-{study_type.lower()}-"
+            f"{plan_code.lower()}-{suffix}"
+        ),
     }
     status, report = request_json(
         api_url,
@@ -132,6 +138,11 @@ def create_and_run(
     )
     expect(status, 200, f"{plan_code} run failed")
     expect(report["plan_code"], plan_code, f"{plan_code} report mismatch")
+    expect(
+        report["study_type"],
+        study_type,
+        f"{plan_code} study type mismatch",
+    )
     expect(
         report["category_key"],
         "PET_WATER_FOUNTAIN",
@@ -225,6 +236,21 @@ def main() -> int:
     expect(order["status"], "PENDING_PAYMENT", "new order status mismatch")
 
     professional = None
+    pricing_preview = create_and_run(
+        api_url,
+        other_token,
+        "PREVIEW",
+        suffix,
+        "PRICING_STUDY",
+    )
+    pricing_standard = create_and_run(
+        api_url,
+        other_token,
+        "STANDARD",
+        suffix,
+        "PRICING_STUDY",
+    )
+    pricing_professional = None
     if args.admin_key:
         payment_reference = f"SMOKE-{suffix}"
         for _ in range(2):
@@ -269,6 +295,37 @@ def main() -> int:
             "Professional credit charge mismatch",
         )
 
+        status, pricing_order = request_json(
+            api_url,
+            "POST",
+            "/v1/billing/orders",
+            {"package_code": "STARTER"},
+            token=other_token,
+        )
+        expect(status, 201, "pricing order creation failed")
+        pricing_reference = f"SMOKE-PRICING-{suffix}"
+        status, completed = request_json(
+            api_url,
+            "POST",
+            f"/v1/admin/billing/orders/{pricing_order['id']}/complete",
+            {"payment_reference": pricing_reference},
+            admin_key=args.admin_key,
+        )
+        expect(status, 200, "pricing order completion failed")
+        expect(completed["status"], "PAID", "pricing order status mismatch")
+        pricing_professional = create_and_run(
+            api_url,
+            other_token,
+            "PROFESSIONAL",
+            suffix,
+            "PRICING_STUDY",
+        )
+        expect(
+            pricing_professional["population_size"],
+            30_000,
+            "Pricing Professional sample mismatch",
+        )
+
     print(
         json.dumps(
             {
@@ -280,6 +337,13 @@ def main() -> int:
                 "professional_report_id": (
                     professional["report_id"]
                     if professional
+                    else None
+                ),
+                "pricing_preview_report_id": pricing_preview["report_id"],
+                "pricing_standard_report_id": pricing_standard["report_id"],
+                "pricing_professional_report_id": (
+                    pricing_professional["report_id"]
+                    if pricing_professional
                     else None
                 ),
                 "cross_account_isolation": "passed",

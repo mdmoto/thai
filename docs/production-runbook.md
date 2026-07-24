@@ -26,7 +26,7 @@ gcloud artifacts repositories create market-twin \
 
 gcloud builds submit \
   --config cloudbuild.yaml \
-  --substitutions='^|^_CORS_ORIGINS=https://ai.lazzor.com,https://YOUR-PREVIEW-DOMAIN'
+  --substitutions='_CORS_ORIGINS=https://ai.lazzor.com'
 ```
 
 The database secret must use the Cloud SQL Unix socket form:
@@ -42,7 +42,7 @@ runtime service account and read the image repository. Do not grant those
 roles to public users or to the frontend.
 
 The checked-in deployment keeps one warm API instance, uses second-generation
-Cloud Run execution, applies startup and liveness checks against `/healthz`,
+Cloud Run execution, applies startup and liveness checks against `/v1/health`,
 and caps scale-out at five instances to protect the database.
 
 `Base.metadata.create_all` creates a new schema. Startup also performs the
@@ -57,7 +57,7 @@ Set before the static build:
 ```bash
 NEXT_PUBLIC_API_URL=https://YOUR_CLOUD_RUN_URL \
 NEXT_PUBLIC_SITE_URL=https://ai.lazzor.com \
-NEXT_PUBLIC_SALES_URL=https://lazzor.com \
+NEXT_PUBLIC_SALES_URL=https://wa.me/66623458238 \
 npm --prefix apps/web run build
 ```
 
@@ -82,14 +82,17 @@ python3 scripts/smoke_test.py
 
 The script verifies health and database connectivity, signup credits, Preview,
 Standard and Professional charging, run idempotency, report ownership
-isolation, pending-order behavior, protected payment completion and one-time
-credit granting.
+isolation, pending-order behavior, protected payment completion, one-time
+credit granting, and both public study types across every public plan.
 
 ## Monitoring
 
 - Alert on `/v1/health` non-200 for two consecutive checks.
 - Alert on Cloud Run 5xx rate and latency.
-- Alert on PostgreSQL storage, connection saturation and backup failure.
+- Alert on PostgreSQL availability, storage, connection saturation and
+  transaction-log archive failures.
+- Verify the scheduled backup list daily and repeat a point-in-time restore
+  drill after material database changes.
 - Review `FAILED_RECOVERABLE` studies and refund transactions daily.
 - Retain request IDs in application logs; never log tokens or full project
   inputs.
@@ -100,7 +103,7 @@ credit granting.
 2. Keep the database online; application rollback does not delete data.
 3. If a schema problem is suspected, stop writes and restore a verified backup
    to a new database rather than editing the only production copy.
-4. Point the frontend back only after `/healthz`, auth and one report read pass.
+4. Point the frontend back only after `/v1/health`, auth and one report read pass.
 
 ## Key rotation
 
