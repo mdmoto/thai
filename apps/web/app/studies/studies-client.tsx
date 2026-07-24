@@ -60,10 +60,9 @@ export function StudiesClient() {
                 onClick={() => setStatusFilter(f.value)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   statusFilter === f.value
-                    ? "font-semibold text-[#1d1508]"
+                    ? "bg-white text-black font-semibold"
                     : "text-neutral-400 hover:text-white"
                 }`}
-                style={statusFilter === f.value ? { background: "linear-gradient(135deg, #E8C879, #B8902E)" } : undefined}
               >
                 {f.label}
               </button>

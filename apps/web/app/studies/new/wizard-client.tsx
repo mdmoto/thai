@@ -166,11 +166,10 @@ export function NewStudyWizard() {
               <div
                 className={cn(
                   "w-6 h-6 rounded-full text-xs font-mono font-semibold flex items-center justify-center shrink-0 transition-colors",
-                  done ? "text-[#1d1508]" :
-                  active ? "bg-neutral-800 text-white border border-[#D4A853]/60" :
+                  done ? "bg-white text-black" :
+                  active ? "bg-neutral-800 text-white border border-neutral-600" :
                   "bg-neutral-950 text-neutral-600 border border-neutral-900"
                 )}
-                style={done ? { background: "linear-gradient(135deg, #E8C879, #B8902E)" } : undefined}
               >
                 {done ? "✓" : num}
               </div>
@@ -183,7 +182,7 @@ export function NewStudyWizard() {
               {i < STEPS.length - 1 && (
                 <div className={cn(
                   "flex-1 h-px mx-1 transition-colors",
-                  done ? "bg-[#D4A853]/50" : "bg-neutral-900"
+                  done ? "bg-neutral-500" : "bg-neutral-900"
                 )} />
               )}
             </div>
@@ -228,14 +227,13 @@ function Step1({ state, update, onNext }: {
               onClick={() => update({ study_type: key as StudyType })}
               className={cn(
                 "card-lazzor p-5 text-left transition-colors relative group",
-                active ? "bg-neutral-900" : "hover:bg-[#151820]"
+                active ? "bg-neutral-900 border-neutral-600" : "hover:bg-[#171717]"
               )}
-              style={active ? { borderColor: meta.color } : undefined}
             >
               <div className="flex items-start gap-4">
                 <div
-                  className="w-10 h-10 rounded-xl bg-neutral-900 border flex items-center justify-center text-xl shrink-0"
-                  style={{ borderColor: `${meta.color}55` }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  style={{ background: `${meta.color}18` }}
                 >
                   {meta.icon}
                 </div>
@@ -244,7 +242,7 @@ function Step1({ state, update, onNext }: {
                     <span className={cn("text-xs font-semibold tracking-tight", active ? "text-white" : "text-neutral-200")}>
                       {meta.label}
                     </span>
-                    {active && <Check size={14} style={{ color: meta.color }} />}
+                    {active && <Check size={14} className="text-white" />}
                   </div>
                   <p className="text-[11px] text-neutral-400 font-light mt-1 line-clamp-2 leading-relaxed">{meta.desc}</p>
                 </div>
@@ -320,7 +318,7 @@ function Step2({ state, update, onNext, onBack }: {
         {/* Upload area */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-neutral-400 tracking-wide">上传文件</label>
-          <div className="border border-dashed border-neutral-800 rounded-xl p-8 text-center hover:border-[#D4A853]/50 transition-colors cursor-pointer bg-neutral-950">
+          <div className="border border-dashed border-neutral-800 rounded-xl p-8 text-center hover:border-neutral-600 transition-colors cursor-pointer bg-neutral-950">
             <Upload size={20} className="text-neutral-500 mx-auto mb-2" />
             <p className="text-xs text-neutral-300 font-light">点击或拖放上传资料包</p>
             <p className="text-[11px] text-neutral-500 mt-1">支持：图片、PDF、Excel、菜单、广告素材</p>
@@ -418,13 +416,13 @@ function Step2({ state, update, onNext, onBack }: {
                 onChange={e => updateListItem("selling_points", i, e.target.value)}
               />
               {state.selling_points.length > 1 && (
-                <button onClick={() => removeListItem("selling_points", i)} className="text-neutral-500 hover:text-[#D07257] p-2">
+                <button onClick={() => removeListItem("selling_points", i)} className="text-neutral-500 hover:text-neutral-300 p-2">
                   <X size={14} />
                 </button>
               )}
             </div>
           ))}
-          <button onClick={() => addListItem("selling_points")} className="text-xs text-neutral-300 hover:text-[#E8C879] flex items-center gap-1">
+          <button onClick={() => addListItem("selling_points")} className="text-xs text-neutral-300 hover:text-white flex items-center gap-1">
             <Plus size={13} /> 添加卖点
           </button>
         </div>
@@ -441,13 +439,13 @@ function Step2({ state, update, onNext, onBack }: {
                 onChange={e => updateListItem("competitors", i, e.target.value)}
               />
               {state.competitors.length > 1 && (
-                <button onClick={() => removeListItem("competitors", i)} className="text-neutral-500 hover:text-[#D07257] p-2">
+                <button onClick={() => removeListItem("competitors", i)} className="text-neutral-500 hover:text-neutral-300 p-2">
                   <X size={14} />
                 </button>
               )}
             </div>
           ))}
-          <button onClick={() => addListItem("competitors")} className="text-xs text-neutral-300 hover:text-[#E8C879] flex items-center gap-1">
+          <button onClick={() => addListItem("competitors")} className="text-xs text-neutral-300 hover:text-white flex items-center gap-1">
             <Plus size={13} /> 添加竞品
           </button>
         </div>
@@ -505,7 +503,7 @@ function Step3({ state, onNext, onBack }: {
         <p className="text-xs text-neutral-400 font-light mt-1">请检查以下内容，平台将基于此运行模拟</p>
       </div>
 
-      <Card accent="jade">
+      <Card>
         <div className="eyebrow mb-3">01. 已识别事实 (Identified Facts)</div>
         <div className="space-y-2 text-xs">
           <div className="flex justify-between py-1.5 border-b border-neutral-900">
@@ -525,7 +523,7 @@ function Step3({ state, onNext, onBack }: {
         </div>
       </Card>
 
-      <Card accent="gold">
+      <Card>
         <div className="eyebrow mb-3">02. 系统推断 (System Inferences)</div>
         <div className="space-y-2 text-xs">
           {inferences.map((inf, i) => (
@@ -540,7 +538,7 @@ function Step3({ state, onNext, onBack }: {
         </div>
       </Card>
 
-      <Card accent="clay">
+      <Card>
         <div className="eyebrow mb-3">03. 缺失假设 (Missing Defaults)</div>
         <div className="space-y-2 text-xs">
           {defaults.map((d, i) => (
@@ -548,7 +546,7 @@ function Step3({ state, onNext, onBack }: {
               <span className="text-neutral-400">{d.label}</span>
               <div className="flex items-center gap-2">
                 <span className="text-neutral-300 font-light">{d.value}</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#B8503D]/10 text-[#D07257] border border-[#B8503D]/25">{d.grade}级</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-900 text-neutral-400">{d.grade}级</span>
               </div>
             </div>
           ))}
@@ -605,16 +603,13 @@ function Step4({ state, update, onNext, onBack }: {
               onClick={() => toggle(q)}
               className={cn(
                 "w-full card-lazzor p-4 text-left flex items-center gap-3 transition-colors",
-                selected ? "bg-neutral-900" : "hover:bg-[#151820]"
+                selected ? "bg-neutral-900 border-neutral-600" : "hover:bg-[#171717]"
               )}
-              style={selected ? { borderColor: "#D4A853" } : undefined}
             >
               <div className={cn(
                 "w-4 h-4 rounded border flex items-center justify-center text-[10px] shrink-0 transition-colors",
-                selected ? "text-[#1d1508] font-bold border-transparent" : "border-neutral-700"
-              )}
-                style={selected ? { background: "linear-gradient(135deg, #E8C879, #B8902E)" } : undefined}
-              >
+                selected ? "bg-white text-black font-bold border-transparent" : "border-neutral-700"
+              )}>
                 {selected && "✓"}
               </div>
               <span className={cn("text-xs font-medium", selected ? "text-white" : "text-neutral-300")}>
@@ -663,9 +658,8 @@ function Step5({ state, update, onBack, onSubmit }: {
               onClick={() => update({ plan_code: code })}
               className={cn(
                 "w-full card-lazzor p-5 text-left transition-colors relative",
-                active ? "bg-neutral-900" : "hover:bg-[#151820]"
+                active ? "bg-neutral-900 border-neutral-600" : "hover:bg-[#171717]"
               )}
-              style={active ? { borderColor: "#D4A853" } : undefined}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -673,9 +667,9 @@ function Step5({ state, update, onBack, onSubmit }: {
                   <span className="text-xs font-mono text-neutral-400">{plan.population.toLocaleString()} 人</span>
                 </div>
                 {plan.price_thb > 0 ? (
-                  <span className="font-display text-xs font-bold text-white">฿{plan.price_thb.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-white">฿{plan.price_thb.toLocaleString()}</span>
                 ) : code === "PREVIEW" ? (
-                  <span className="text-xs font-mono text-[#4CC191]">Free</span>
+                  <span className="text-xs font-mono text-accent">Free</span>
                 ) : (
                   <span className="text-xs text-neutral-500 font-mono">Custom</span>
                 )}
@@ -693,7 +687,7 @@ function Step5({ state, update, onBack, onSubmit }: {
         })}
       </div>
 
-      <Card className="bg-black" accent="gold">
+      <Card className="bg-black">
         <div className="eyebrow mb-2">Order Summary</div>
         <div className="space-y-1.5 text-xs font-light">
           <div className="flex justify-between"><span className="text-neutral-400">项目名称</span><span className="text-white">{state.name || "（未填写）"}</span></div>

@@ -45,7 +45,7 @@ export function TemplatesClient() {
                     {t.icon}
                   </div>
                   <div>
-                    <h3 className="font-display font-semibold text-primary text-sm group-hover:text-gold transition-smooth">
+                    <h3 className="font-semibold text-primary text-sm group-hover:text-white transition-smooth">
                       {TEMPLATE_LABELS[t.key]}
                     </h3>
                     <p className="text-xs text-muted mt-0.5">{meta?.label}</p>

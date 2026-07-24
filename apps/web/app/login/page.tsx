@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui";
-import { PopulationField } from "@/components/population-field";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,30 +18,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <PopulationField className="absolute inset-0 w-full h-full opacity-25" density={45} />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl opacity-10"
-          style={{ background: "radial-gradient(circle, #D4A853, transparent)" }} />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-3xl opacity-10"
-          style={{ background: "radial-gradient(circle, #2F9E74, transparent)" }} />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center bg-base">
       <div className="relative w-full max-w-sm mx-4 animate-fade-in-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4"
-            style={{ background: "linear-gradient(135deg, #D4A853, #B8902E)" }}>
-            <Zap size={22} className="text-[#0A1628]" />
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 mb-4">
+            <span className="text-sm font-semibold text-white">MT</span>
           </div>
-          <h1 className="font-display text-2xl font-bold text-gradient-gold">Thailand Market Twin</h1>
-          <p className="text-sm text-muted mt-1">泰国数字市场孪生平台</p>
+          <h1 className="text-xl font-semibold text-white tracking-tight">Thailand Market Twin</h1>
+          <p className="text-sm text-neutral-400 mt-1">泰国数字市场孪生平台</p>
         </div>
 
         {/* Card */}
-        <div className="glass-card p-6">
-          <h2 className="font-display text-base font-semibold text-primary mb-6">登录账户</h2>
+        <div className="cmai-card p-6">
+          <h2 className="text-base font-semibold text-white mb-6">登录账户</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="邮箱"
@@ -53,9 +42,7 @@ export default function LoginPage() {
               onChange={e => setEmail(e.target.value)}
             />
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-secondary">
-                密码 <span className="text-[var(--color-gold)] ml-1">*</span>
-              </label>
+              <label className="block text-sm font-medium text-neutral-300">密码</label>
               <div className="relative">
                 <input
                   type={showPass ? "text" : "password"}
@@ -68,7 +55,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-secondary"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
                 >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -76,7 +63,7 @@ export default function LoginPage() {
             </div>
 
             <div className="flex justify-end">
-              <Link href="#" className="text-xs text-gold hover:text-gold-light">忘记密码？</Link>
+              <Link href="#" className="text-xs text-neutral-400 hover:text-white">忘记密码？</Link>
             </div>
 
             <button type="submit" className="btn-primary w-full justify-center py-3">
@@ -86,7 +73,7 @@ export default function LoginPage() {
 
           <div className="flex items-center gap-3 my-4">
             <div className="divider flex-1" />
-            <span className="text-xs text-muted">或</span>
+            <span className="text-xs text-neutral-500">或</span>
             <div className="divider flex-1" />
           </div>
 
@@ -100,20 +87,20 @@ export default function LoginPage() {
             使用 Google 登录
           </button>
 
-          <p className="text-xs text-center text-muted mt-5">
+          <p className="text-xs text-center text-neutral-500 mt-5">
             还没有账号？{" "}
-            <Link href="/signup" className="text-gold hover:text-gold-light font-medium">
+            <Link href="/signup" className="text-white font-medium hover:underline">
               立即注册
             </Link>
           </p>
         </div>
 
         {/* Trust note */}
-        <p className="text-[10px] text-center text-muted mt-4 px-4">
+        <p className="text-[10px] text-center text-neutral-500 mt-4 px-4">
           本平台使用合成人口模拟，不保证真实市场预测结果。
-          <Link href="#" className="text-gold ml-1">服务条款</Link>
+          <Link href="#" className="text-neutral-400 ml-1 hover:text-white">服务条款</Link>
           <span className="mx-1">·</span>
-          <Link href="#" className="text-gold">隐私政策</Link>
+          <Link href="#" className="text-neutral-400 hover:text-white">隐私政策</Link>
         </p>
       </div>
     </div>

@@ -7,7 +7,6 @@ import {
 } from "recharts";
 import { AlertTriangle, Download, Share2, MapPin, ShoppingBag } from "lucide-react";
 import { Card, CountUp } from "@/components/ui";
-import { PopulationField } from "@/components/population-field";
 import { cn, formatPercent } from "@/lib/utils";
 
 // ── Mock report data ──────────────────────
@@ -20,7 +19,7 @@ const MOCK_REPORT = {
   mc_rounds: 50,
   generated_at: "2026-07-20T11:30:00Z",
   executive_summary: {
-    recommendation: "✅ 方案值得推进。建议售价调整至 THB 249，并优先在 Shopee/Lazada 旗舰店主推，可获得最佳投资回报率与市场份额。",
+    recommendation: "方案值得推进。建议售价调整至 THB 249，并优先在 Shopee/Lazada 旗舰店主推，可获得最佳投资回报率与市场份额。",
     best_audience: "25-35岁大曼谷/清迈区域中高收入女性群体，养宠物，月收入 3-6 万泰铢",
     main_barrier: "品牌初始知名度较低（72%受访人口未听说过），对在线支付与跨境物流时效存有顾虑",
     best_scenario: "方案B：售价下调 10% + Lazada/Shopee 官方旗舰店首发",
@@ -138,10 +137,10 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
   methodology: "数据血缘与附录",
 };
 
-const SENTIMENT_STYLE: Record<string, { accent: "jade" | "gold" | "clay"; badge: string; label: string }> = {
-  positive: { accent: "jade", badge: "bg-[#2F9E74]/10 text-[#4CC191] border-[#2F9E74]/25", label: "积极" },
-  neutral: { accent: "gold", badge: "bg-[#D4A853]/10 text-[#E8C879] border-[#D4A853]/25", label: "中立" },
-  negative: { accent: "clay", badge: "bg-[#B8503D]/10 text-[#D07257] border-[#B8503D]/25", label: "消极" },
+const SENTIMENT_STYLE: Record<string, { tagClass: string; label: string }> = {
+  positive: { tagClass: "tag-positive", label: "积极" },
+  neutral: { tagClass: "tag-neutral", label: "中立" },
+  negative: { tagClass: "tag-negative", label: "消极" },
 };
 
 export function ReportClient({ studyId }: { studyId: string }) {
@@ -187,7 +186,7 @@ export function ReportClient({ studyId }: { studyId: string }) {
                   : "text-neutral-400 hover:text-white hover:bg-neutral-900/40"
               )}
             >
-              {activeSection === sec && <span className="w-1 h-1 rounded-full bg-[#D4A853] shrink-0" />}
+              {activeSection === sec && <span className="w-1 h-1 rounded-full bg-white shrink-0" />}
               {SECTION_LABELS[sec]}
             </button>
           ))}
@@ -216,7 +215,7 @@ export function ReportClient({ studyId }: { studyId: string }) {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-neutral-900">
           <div>
             <div className="eyebrow mb-1">Thailand Digital Market Twin Report</div>
-            <h1 className="font-display text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
+            <h1 className="text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
             <p className="text-xs text-neutral-400 font-light mt-1">
               基于 {reportData.population_size.toLocaleString()} 泰国真实合成人口样本 · {reportData.mc_rounds} 轮 Monte Carlo 模拟
             </p>
@@ -254,26 +253,25 @@ function ExecutiveSummarySection({ data }: { data: typeof MOCK_REPORT }) {
   const { executive_summary } = data;
   return (
     <div className="space-y-6">
-      {/* Verdict Banner — Population Field as ambient proof-of-simulation */}
-      <div className="hero-panel">
-        <PopulationField className="absolute inset-0 w-full h-full opacity-70" density={70} progress={100} />
-        <div className="relative z-10 p-6 flex items-start gap-4">
-          <div className="w-8 h-8 rounded-full bg-[#2F9E74]/15 border border-[#2F9E74]/40 flex items-center justify-center text-[#4CC191] font-bold text-xs shrink-0 mt-0.5">
+      {/* Verdict Banner */}
+      <Card>
+        <div className="flex items-start gap-4">
+          <div className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-300 font-bold text-xs shrink-0 mt-0.5">
             ✓
           </div>
           <div>
             <div className="eyebrow mb-1">Strategic Conclusion</div>
-            <h2 className="font-display text-base font-semibold text-white tracking-tight mb-1">战略落地结论</h2>
-            <p className="text-xs text-neutral-200 font-light leading-relaxed max-w-2xl">{executive_summary.recommendation}</p>
+            <h2 className="text-base font-semibold text-white tracking-tight mb-1">战略落地结论</h2>
+            <p className="text-xs text-neutral-300 font-light leading-relaxed max-w-2xl">{executive_summary.recommendation}</p>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {executive_summary.key_metrics.map((m, i) => (
           <Card key={i} className="text-center">
-            <div className="font-display text-3xl font-semibold text-white tracking-tight">
+            <div className="text-3xl font-semibold text-white tracking-tight">
               <CountUp value={Math.round(m.value * 1000)} />
               <span className="text-lg align-top">‰</span>
             </div>
@@ -287,19 +285,19 @@ function ExecutiveSummarySection({ data }: { data: typeof MOCK_REPORT }) {
 
       {/* 3 Key Insights */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <InsightCard title="最佳目标人群" content={executive_summary.best_audience} accent="jade" />
-        <InsightCard title="主要阻力与风险" content={executive_summary.main_barrier} accent="clay" />
-        <InsightCard title="推荐最优方案" content={executive_summary.best_scenario} accent="gold" />
+        <InsightCard title="最佳目标人群" tagClass="tag-positive" content={executive_summary.best_audience} />
+        <InsightCard title="主要阻力与风险" tagClass="tag-negative" content={executive_summary.main_barrier} />
+        <InsightCard title="推荐最优方案" tagClass="tag-neutral" content={executive_summary.best_scenario} />
       </div>
 
       {/* Action Plan */}
       <Card>
         <div className="eyebrow mb-3">Priority Action Plan</div>
-        <h3 className="font-display text-sm font-semibold text-white mb-4">下一步优先落地路线图</h3>
+        <h3 className="text-sm font-semibold text-white mb-4">下一步优先落地路线图</h3>
         <div className="space-y-3">
           {executive_summary.next_steps.map((step, i) => (
             <div key={i} className="flex items-start gap-3 text-xs text-neutral-300 font-light">
-              <span className="w-5 h-5 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-[10px] font-mono font-medium text-[#E8C879] shrink-0">
+              <span className="w-5 h-5 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-[10px] font-mono font-medium text-neutral-300 shrink-0">
                 0{i + 1}
               </span>
               <span className="pt-0.5 leading-relaxed">{step}</span>
@@ -319,7 +317,7 @@ function MarketResponseSection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Conversion Funnel</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">市场反应与层级转化漏斗</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">市场反应与层级转化漏斗</h2>
       </div>
 
       <Card>
@@ -332,13 +330,12 @@ function MarketResponseSection({ data }: { data: typeof MOCK_REPORT }) {
                   {f.value.toLocaleString()} ({formatPercent(f.value / max)})
                 </span>
               </div>
-              <div className="h-4 rounded bg-neutral-900 overflow-hidden p-0.5">
+              <div className="h-3 rounded bg-neutral-900 overflow-hidden">
                 <div
-                  className="h-full rounded-sm transition-all duration-700"
+                  className="h-full rounded-sm bg-neutral-200 transition-all duration-500"
                   style={{
                     width: `${(f.value / max) * 100}%`,
-                    background: "linear-gradient(90deg, var(--color-gold-dark), var(--color-jade-light))",
-                    opacity: 0.35 + (i / funnel.length) * 0.65,
+                    opacity: 0.3 + (i / funnel.length) * 0.7,
                   }}
                 />
               </div>
@@ -355,12 +352,12 @@ function SegmentsSection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Micro-Segmentation</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">细分人群画像与转化表现</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">细分人群画像与转化表现</h2>
       </div>
 
       <div className="space-y-3">
         {data.segments.map((seg, i) => (
-          <Card key={i} accent={seg.purchase_rate >= 0.3 ? "jade" : seg.purchase_rate >= 0.2 ? "gold" : "clay"}>
+          <Card key={i}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-1">
@@ -373,16 +370,12 @@ function SegmentsSection({ data }: { data: typeof MOCK_REPORT }) {
                   )}
                 </div>
                 {seg.drivers.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 tag-label">
                     {seg.drivers.map(d => (
-                      <span key={d} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-[#2F9E74]/10 text-[#4CC191] border border-[#2F9E74]/25">
-                        + {d}
-                      </span>
+                      <span key={d} className="tag-positive">+ {d}</span>
                     ))}
                     {seg.barriers.map(b => (
-                      <span key={b} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-[#B8503D]/10 text-[#D07257] border border-[#B8503D]/25">
-                        - {b}
-                      </span>
+                      <span key={b} className="tag-negative">− {b}</span>
                     ))}
                   </div>
                 )}
@@ -390,7 +383,7 @@ function SegmentsSection({ data }: { data: typeof MOCK_REPORT }) {
 
               <div className="flex items-center gap-3 shrink-0">
                 <span className="text-xs text-neutral-400 font-light">意向购买率</span>
-                <span className="font-display text-lg font-semibold text-white tabular-nums">{formatPercent(seg.purchase_rate)}</span>
+                <span className="text-lg font-semibold text-white tabular-nums">{formatPercent(seg.purchase_rate)}</span>
               </div>
             </div>
           </Card>
@@ -406,19 +399,19 @@ function PriceElasticitySection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Demand Curve & Pricing</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">价格需求弹性曲线</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">价格需求弹性曲线</h2>
       </div>
 
       <Card>
         <div className="h-64 pt-4">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={elasticity} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#242730" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#242424" />
               <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: "售价 (THB)", position: "insideBottom", offset: -5, fill: "#86868b", fontSize: 10 }} />
               <YAxis tick={{ fill: "#86868b", fontSize: 11 }} />
-              <Tooltip contentStyle={{ background: "#111318", border: "1px solid #242730", borderRadius: 8, color: "#f5f3ee", fontSize: 12 }} />
-              <Line type="monotone" dataKey="purchase_rate" name="购买意向率" stroke="#4CC191" strokeWidth={2.5} dot={{ r: 4, fill: "#4CC191" }} />
-              <Line type="monotone" dataKey="revenue_idx" name="预估营收指数" stroke="#E8C879" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3, fill: "#E8C879" }} />
+              <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} />
+              <Line type="monotone" dataKey="purchase_rate" name="购买意向率" stroke="#f5f5f7" strokeWidth={2} dot={{ r: 3, fill: "#f5f5f7" }} />
+              <Line type="monotone" dataKey="revenue_idx" name="预估营收指数" stroke="#4CAE8A" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3, fill: "#4CAE8A" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -427,7 +420,7 @@ function PriceElasticitySection({ data }: { data: typeof MOCK_REPORT }) {
           {elasticity.map((e, i) => (
             <div key={i} className="p-2.5 rounded-lg bg-black border border-neutral-900">
               <div className="text-[10px] text-neutral-500 font-mono">THB {e.price}</div>
-              <div className="font-display text-xs font-semibold text-white mt-0.5">{formatPercent(e.purchase_rate)}</div>
+              <div className="text-xs font-semibold text-white mt-0.5">{formatPercent(e.purchase_rate)}</div>
             </div>
           ))}
         </div>
@@ -441,19 +434,19 @@ function ScenariosSection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Scenario Benchmarking</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">经营与定价情景对比</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">经营与定价情景对比</h2>
       </div>
 
       <Card>
         <div className="h-64 pt-4">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data.scenarios} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#242730" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#242424" />
               <XAxis dataKey="name" tick={{ fill: "#86868b", fontSize: 10 }} />
               <YAxis tick={{ fill: "#86868b", fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: "#111318", border: "1px solid #242730", borderRadius: 8, color: "#f5f3ee", fontSize: 12 }} />
-              <Bar dataKey="purchase_rate" name="购买意向率" fill="#4CC191" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="revenue_idx" name="预估收入指数" fill="#D4A853" radius={[4, 4, 0, 0]} />
+              <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} />
+              <Bar dataKey="purchase_rate" name="购买意向率" fill="#f5f5f7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue_idx" name="预估收入指数" fill="#4CAE8A" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -462,11 +455,11 @@ function ScenariosSection({ data }: { data: typeof MOCK_REPORT }) {
           {data.scenarios.map((s, i) => (
             <div key={i} className={cn(
               "p-3 rounded-xl border text-center transition-colors",
-              i === 1 ? "bg-[#2F9E74]/10 border-[#2F9E74]/40 text-white" : "bg-black border-neutral-800 text-neutral-400"
+              i === 1 ? "bg-neutral-900 border-neutral-700 text-white" : "bg-black border-neutral-800 text-neutral-400"
             )}>
               <div className="text-[11px] font-medium leading-tight mb-1 whitespace-pre-line">{s.name}</div>
-              <div className="font-display text-sm font-semibold text-white">{formatPercent(s.purchase_rate)}</div>
-              {i === 1 && <div className="text-[10px] text-[#4CC191] font-mono mt-0.5">Recommended</div>}
+              <div className="text-sm font-semibold text-white">{formatPercent(s.purchase_rate)}</div>
+              {i === 1 && <div className="tag-label tag-positive mt-0.5">Recommended</div>}
             </div>
           ))}
         </div>
@@ -481,7 +474,7 @@ function RegionalSection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Geographic Readiness</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">泰国各主要大区表现</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">泰国各主要大区表现</h2>
       </div>
 
       <Card>
@@ -489,13 +482,13 @@ function RegionalSection({ data }: { data: typeof MOCK_REPORT }) {
           {regions.map((r, i) => (
             <div key={i} className="flex items-center justify-between py-2 border-b border-neutral-900 last:border-0 text-xs">
               <div className="flex items-center gap-2">
-                <MapPin size={14} className="text-[#D4A853]" />
+                <MapPin size={14} className="text-neutral-500" />
                 <span className="font-medium text-white">{r.region}</span>
                 <span className="text-[10px] text-neutral-500 font-mono">占比 {r.share}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-neutral-400 font-light">意向率: <strong className="text-white font-mono">{formatPercent(r.purchase_rate)}</strong></span>
-                <span className={cn("text-[10px] px-2 py-0.5 rounded font-mono", r.readiness === "高" ? "bg-[#2F9E74]/10 text-[#4CC191]" : "bg-neutral-900 text-neutral-400")}>
+                <span className={cn("text-[10px] px-2 py-0.5 rounded font-mono bg-neutral-900", r.readiness === "高" ? "text-neutral-100" : "text-neutral-400")}>
                   成熟度: {r.readiness}
                 </span>
               </div>
@@ -513,18 +506,18 @@ function ChannelsSection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Distribution Fit</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">销售渠道适配度评级</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">销售渠道适配度评级</h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {channels.map((c, i) => (
-          <Card key={i} accent="gold">
+          <Card key={i}>
             <div className="flex items-start gap-3">
-              <ShoppingBag size={18} className="text-[#E8C879] shrink-0 mt-0.5" />
+              <ShoppingBag size={18} className="text-neutral-500 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold text-xs text-white">{c.channel}</span>
-                  <span className="text-xs font-mono text-[#4CC191]">匹配度 {c.fit_score}/100</span>
+                  <span className="text-xs font-mono text-neutral-300">匹配度 {c.fit_score}/100</span>
                 </div>
                 <p className="text-xs text-neutral-400 font-light leading-relaxed">{c.recommendation}</p>
                 <div className="mt-2 text-[10px] text-neutral-500 font-mono">预估平均转化率: {c.conversion}</div>
@@ -542,11 +535,11 @@ function ConsumerVoicesSection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Qualitative Feedback Panel</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">代表性 AI 消费者原声</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">代表性 AI 消费者原声</h2>
       </div>
 
       <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-900 flex items-start gap-3">
-        <AlertTriangle size={15} className="text-[#E8C879] shrink-0 mt-0.5" />
+        <AlertTriangle size={15} className="text-neutral-500 shrink-0 mt-0.5" />
         <p className="text-xs text-neutral-300 font-light leading-relaxed">
           声明：以下内容由代表性合成消费者结合 Gemini LLM 产生，用于解释群体行为模式与买家心理，不是真人访谈记录。
         </p>
@@ -556,12 +549,12 @@ function ConsumerVoicesSection({ data }: { data: typeof MOCK_REPORT }) {
         {data.consumer_voices.map((v, i) => {
           const s = SENTIMENT_STYLE[v.sentiment] ?? SENTIMENT_STYLE.neutral;
           return (
-            <Card key={i} accent={s.accent}>
+            <Card key={i}>
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
                   <span className="font-medium text-white">{v.persona}</span>
-                  <div className="flex items-center gap-2">
-                    <span className={cn("text-[10px] font-mono px-2 py-0.5 rounded-full border", s.badge)}>{s.label}</span>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("tag-label", s.tagClass)}>{s.label}</span>
                     <span className="font-mono text-neutral-500">{v.segment}</span>
                     {v.preferred_channel && (
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 border border-neutral-800">
@@ -570,10 +563,7 @@ function ConsumerVoicesSection({ data }: { data: typeof MOCK_REPORT }) {
                     )}
                   </div>
                 </div>
-                <blockquote
-                  className="text-sm text-white font-light italic pl-3 py-1"
-                  style={{ borderLeft: `2px solid ${s.accent === "jade" ? "#2F9E74" : s.accent === "clay" ? "#B8503D" : "#D4A853"}` }}
-                >
+                <blockquote className="text-sm text-white font-light italic pl-3 py-1 border-l border-neutral-700">
                   &ldquo;{v.quote}&rdquo;
                 </blockquote>
                 <div className="p-3 rounded-lg bg-black border border-neutral-900 text-xs text-neutral-400 font-light space-y-1">
@@ -603,7 +593,7 @@ function SensitivitySection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Sensitivity Analysis</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">关键参数敏感性说明</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">关键参数敏感性说明</h2>
       </div>
 
       <Card>
@@ -616,8 +606,8 @@ function SensitivitySection({ data }: { data: typeof MOCK_REPORT }) {
               </div>
               <div className="h-1.5 bg-neutral-900 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full"
-                  style={{ width: `${p.impact * 100}%`, background: "linear-gradient(90deg, var(--color-gold-dark), var(--color-gold-light))" }}
+                  className="h-full rounded-full bg-neutral-200"
+                  style={{ width: `${p.impact * 100}%` }}
                 />
               </div>
             </div>
@@ -633,7 +623,7 @@ function MethodologySection({ data }: { data: typeof MOCK_REPORT }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Methodology & Lineage</div>
-        <h2 className="font-display text-base font-semibold text-white tracking-tight">数据血缘与方法附录</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">数据血缘与方法附录</h2>
       </div>
 
       <Card>
@@ -648,11 +638,12 @@ function MethodologySection({ data }: { data: typeof MOCK_REPORT }) {
   );
 }
 
-function InsightCard({ title, content, accent }: { title: string; content: string; accent?: "jade" | "gold" | "clay" }) {
+function InsightCard({ title, content, tagClass }: { title: string; content: string; tagClass?: string }) {
   return (
-    <Card accent={accent}>
+    <Card>
       <div className="eyebrow mb-1">{title}</div>
       <p className="text-xs text-neutral-200 font-light leading-relaxed">{content}</p>
+      {tagClass && <span className={cn("tag-label mt-2 inline-block", tagClass)}>●</span>}
     </Card>
   );
 }

@@ -65,10 +65,7 @@ export function Sidebar() {
           collapsed && "justify-center px-0"
         )}>
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs tracking-tighter shrink-0 transition-transform group-hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #E8C879, #B8902E)", color: "#1d1508" }}
-            >
+            <div className="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center font-bold text-xs tracking-tighter shrink-0 text-white">
               MT
             </div>
             {!collapsed && (
@@ -104,7 +101,7 @@ export function Sidebar() {
                 <Icon size={16} className={clsx("shrink-0", active ? "text-white" : "text-neutral-400 group-hover:text-white")} />
                 {!collapsed && <span>{label}</span>}
                 {active && !collapsed && (
-                  <span className="ml-auto w-1 h-1 rounded-full bg-[#D4A853]" />
+                  <span className="ml-auto w-1 h-1 rounded-full bg-white" />
                 )}
               </Link>
             );
@@ -145,13 +142,13 @@ export function Sidebar() {
             <div className={clsx("p-2 rounded-xl bg-neutral-950 border border-neutral-900 space-y-2", collapsed && "text-center")}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-6 h-6 rounded-full bg-amber-400 text-black text-[10px] font-bold flex items-center justify-center shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-neutral-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                     {user.name ? user.name[0].toUpperCase() : "U"}
                   </div>
                   {!collapsed && (
                     <div className="min-w-0">
                       <div className="text-xs font-semibold text-white truncate">{user.name || "用户"}</div>
-                      <div className="text-[10px] text-amber-400 font-mono flex items-center gap-1">
+                      <div className="text-[10px] text-neutral-400 font-mono flex items-center gap-1">
                         <Zap size={10} /> {user.credits_balance ?? 50} 积分
                       </div>
                     </div>
@@ -166,7 +163,7 @@ export function Sidebar() {
               {!collapsed && (
                 <button
                   onClick={() => setShowRechargeModal(true)}
-                  className="w-full btn-gold text-[10px] py-1 px-2 rounded-lg justify-center font-mono"
+                  className="w-full btn-cmai-secondary text-[10px] py-1 px-2 rounded-lg justify-center font-mono"
                 >
                   <PlusCircle size={12} /> 充值积分 / 升级套餐
                 </button>
@@ -224,7 +221,7 @@ export function TopBar({ title, actions }: { title?: string; actions?: React.Rea
         {actions}
         <button className="relative p-2 rounded-full border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors">
           <Bell size={15} />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-neutral-400" />
         </button>
       </div>
     </header>

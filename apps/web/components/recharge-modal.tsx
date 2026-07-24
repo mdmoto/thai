@@ -102,7 +102,7 @@ export function RechargeModal({ isOpen, onClose, user, onRechargeSuccess }: Rech
             购买积分与算力额度
           </h2>
           <p className="text-xs text-neutral-400 font-light">
-            当前账号: <strong className="text-white">{user?.email || "未登录"}</strong> · 余额: <strong className="text-amber-400 font-mono">{user?.credits_balance || 0} 积分</strong>
+            当前账号: <strong className="text-white">{user?.email || "未登录"}</strong> · 余额: <strong className="text-white font-mono">{user?.credits_balance || 0} 积分</strong>
           </p>
         </div>
 
@@ -121,14 +121,14 @@ export function RechargeModal({ isOpen, onClose, user, onRechargeSuccess }: Rech
                   )}
                 >
                   {pkg.popular && (
-                    <span className="absolute -top-2.5 right-3 text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-400 text-black font-semibold">
+                    <span className="absolute -top-2.5 right-3 text-[10px] font-mono px-2 py-0.5 rounded-full bg-white text-black font-semibold">
                       最受欢迎
                     </span>
                   )}
                   <div>
                     <div className="text-xs font-semibold text-white">{pkg.name}</div>
                     <div className="text-xl font-light text-white font-mono mt-1">{pkg.price}</div>
-                    <div className="text-[10px] text-amber-400 font-mono mt-0.5">
+                    <div className="text-[10px] text-neutral-400 font-mono mt-0.5">
                       到账 {pkg.credits + pkg.bonus} 积分
                       {pkg.bonus > 0 && ` (含赠送 ${pkg.bonus})`}
                     </div>
@@ -139,7 +139,7 @@ export function RechargeModal({ isOpen, onClose, user, onRechargeSuccess }: Rech
                   <div className="space-y-1.5 pt-2 border-t border-neutral-800 text-[10px]">
                     {pkg.features.map((f, i) => (
                       <div key={i} className="flex items-center gap-1.5 text-neutral-300">
-                        <Check size={11} className="text-emerald-400 shrink-0" />
+                        <Check size={11} className="text-neutral-400 shrink-0" />
                         <span>{f}</span>
                       </div>
                     ))}
@@ -166,7 +166,7 @@ export function RechargeModal({ isOpen, onClose, user, onRechargeSuccess }: Rech
 
             <div className="space-y-1">
               <div className="text-sm font-semibold text-white">微信 / 支付宝扫码支付</div>
-              <div className="text-2xl font-light text-amber-400 font-mono">{selectedPkg.price}</div>
+              <div className="text-2xl font-light text-white font-mono">{selectedPkg.price}</div>
               <div className="text-xs text-neutral-400">支付成功后积分自动实时到账</div>
             </div>
 
