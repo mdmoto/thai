@@ -38,7 +38,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8080
-        NEXT_PUBLIC_SALES_URL: ${NEXT_PUBLIC_SALES_URL:-https://lazzor.com}
+        NEXT_PUBLIC_SALES_URL: ${NEXT_PUBLIC_SALES_URL:-https://wa.me/66623458238}
         NEXT_PUBLIC_SITE_URL: http://localhost:3000
     ports:
       - "3000:80"

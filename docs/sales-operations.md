@@ -15,7 +15,8 @@ project scope and must not be described as self-service platform features.
 ## Payment flow
 
 1. Customer creates an order in the billing page.
-2. Customer sends the order ID through the official Lazzor sales channel.
+2. The order page opens the official Lazzor WhatsApp contact
+   (`+66 62 345 8238`) with the order ID, package and amount prefilled.
 3. Sales verifies funds outside the application.
 4. An authorized operator records the bank/payment reference with:
 

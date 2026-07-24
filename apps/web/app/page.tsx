@@ -8,6 +8,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+const SALES_URL =
+  process.env.NEXT_PUBLIC_SALES_URL || "https://wa.me/66623458238";
+
 const WORKFLOW = [
   {
     icon: Database,
@@ -185,6 +188,9 @@ export default function HomePage() {
             <Link href="/methodology">方法</Link>
             <Link href="/terms">条款</Link>
             <Link href="/privacy">隐私</Link>
+            <a href={SALES_URL} target="_blank" rel="noopener noreferrer">
+              销售联系
+            </a>
           </div>
         </div>
       </footer>

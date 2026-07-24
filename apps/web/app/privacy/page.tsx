@@ -18,7 +18,18 @@ export default function PrivacyPage() {
         <h2 className="text-white font-semibold mt-8">第三方处理</h2>
         <p>基础设施和模型供应商可能仅为提供服务而处理必要数据。企业客户可另行签署数据处理协议。</p>
         <h2 className="text-white font-semibold mt-8">保存与删除</h2>
-        <p>数据按提供服务和履行合同所需期限保存。删除、导出或企业隐私请求可通过 Lazzor 官方联系渠道提交。</p>
+        <p>
+          数据按提供服务和履行合同所需期限保存。删除、导出或企业隐私请求可通过{" "}
+          <a
+            href="https://wa.me/66623458238"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white underline underline-offset-4"
+          >
+            Lazzor 官方 WhatsApp（+66 62 345 8238）
+          </a>
+          {" "}提交。
+        </p>
         <h2 className="text-white font-semibold mt-8">安全</h2>
         <p>平台使用账号隔离、哈希密码、签名令牌、受保护管理接口和服务端订单核验；任何互联网服务仍无法承诺绝对安全。</p>
       </article>

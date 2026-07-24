@@ -25,7 +25,18 @@ type Transaction = {
 };
 
 const SALES_URL =
-  process.env.NEXT_PUBLIC_SALES_URL || "https://lazzor.com";
+  process.env.NEXT_PUBLIC_SALES_URL || "https://wa.me/66623458238";
+
+function salesUrlForOrder(order: PurchaseOrder): string {
+  const separator = SALES_URL.includes("?") ? "&" : "?";
+  const message = [
+    "Thailand Market Twin 付款咨询",
+    `订单编号：${order.id}`,
+    `套餐：${order.package_code}`,
+    `金额：THB ${(order.amount_minor / 100).toLocaleString()}`,
+  ].join("\n");
+  return `${SALES_URL}${separator}text=${encodeURIComponent(message)}`;
+}
 
 export function BillingClient() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -114,12 +125,12 @@ export function BillingClient() {
                 联系销售时请附上该编号，到账核验后系统自动记入积分。
               </p>
               <a
-                href={SALES_URL}
+                href={salesUrlForOrder(createdOrder)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-cmai-primary mt-4"
               >
-                联系官方销售 <ArrowUpRight size={14} />
+                通过 WhatsApp 联系官方销售 <ArrowUpRight size={14} />
               </a>
             </div>
           </div>

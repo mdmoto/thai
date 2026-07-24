@@ -20,7 +20,19 @@ export default function TermsPage() {
         <h2 className="text-white font-semibold mt-8">5. 合理使用</h2>
         <p>不得绕过访问控制、滥用计算资源、逆向攻击服务或利用结果实施歧视、欺诈和违法行为。</p>
         <h2 className="text-white font-semibold mt-8">6. 联系与企业合同</h2>
-        <p>企业采购、数据处理条款、服务级别与定制交付以双方签署的订单或合同为准。</p>
+        <p>
+          企业采购、数据处理条款、服务级别与定制交付以双方签署的订单或合同为准。
+          付款和企业采购请通过{" "}
+          <a
+            href="https://wa.me/66623458238"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white underline underline-offset-4"
+          >
+            Lazzor 官方 WhatsApp（+66 62 345 8238）
+          </a>
+          {" "}联系。
+        </p>
       </article>
     </main>
   );
