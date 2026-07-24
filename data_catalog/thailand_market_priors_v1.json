@@ -1,0 +1,296 @@
+{
+  "version": "TH-PRIORS-2026.07.1",
+  "status": "prior_only",
+  "claim": "Versioned engineering priors for model development. These values have not yet been fitted to NSO SES, customer sales, survey, ecommerce, or A/B-test microdata.",
+  "sources": [
+    {
+      "source_id": "PROJECT_ENGINEERING_PRIOR",
+      "source_type": "assumption",
+      "observed": false,
+      "note": "Migrated from the prototype into an explicit replaceable profile; it must not be presented as empirical calibration."
+    }
+  ],
+  "limitations": [
+    "Population margins are development priors rather than official Thailand estimates.",
+    "Choice coefficients are prior distributions and require estimation against observed choices.",
+    "Forecast intervals are prior-predictive scenario intervals, not validated frequentist confidence intervals.",
+    "Competitor attributes remain assumptions unless supplied by a customer or licensed data source."
+  ],
+  "population": {
+    "age_group": {
+      "18-24": 0.2,
+      "25-34": 0.35,
+      "35-44": 0.25,
+      "45-54": 0.12,
+      "55+": 0.08
+    },
+    "gender": {
+      "Female": 0.52,
+      "Male": 0.47,
+      "Non-binary": 0.01
+    },
+    "region": {
+      "Bangkok Metro": 0.38,
+      "Central": 0.16,
+      "North": 0.14,
+      "Northeast": 0.17,
+      "East / EEC": 0.08,
+      "South": 0.07
+    },
+    "income_tier": {
+      "LOW": 0.25,
+      "MID_LOW": 0.35,
+      "MID_HIGH": 0.25,
+      "HIGH": 0.1,
+      "LUXURY": 0.05
+    },
+    "income_monthly_thb": {
+      "LOW": 12000,
+      "MID_LOW": 22500,
+      "MID_HIGH": 45000,
+      "HIGH": 85000,
+      "LUXURY": 150000
+    },
+    "region_income_multiplier": {
+      "Bangkok Metro": 1.22,
+      "Central": 1.02,
+      "North": 0.9,
+      "Northeast": 0.78,
+      "East / EEC": 1.12,
+      "South": 0.98
+    },
+    "tourist_share_by_region": {
+      "Bangkok Metro": 0.12,
+      "Central": 0.04,
+      "North": 0.08,
+      "Northeast": 0.02,
+      "East / EEC": 0.06,
+      "South": 0.18
+    }
+  },
+  "behavior": {
+    "disposable_income_share": {
+      "mean": 0.34,
+      "sd": 0.08
+    },
+    "online_affinity_beta": [2.6, 1.8],
+    "review_sensitivity_beta": [3.0, 1.6],
+    "novelty_seeking_beta": [2.1, 2.3],
+    "social_influence_beta": [2.0, 2.8],
+    "local_brand_trust_beta": [2.8, 2.0],
+    "pet_ownership_probability": 0.34,
+    "coffee_visits_weekly_lambda": 2.8,
+    "dining_out_weekly_lambda": 2.4,
+    "nightlife_monthly_lambda": 1.2
+  },
+  "defaults": {
+    "brand_awareness": 0.12,
+    "quality_score": 0.6,
+    "review_score": 0.5,
+    "design_score": 0.55,
+    "convenience_score": 0.55,
+    "localization_score": 0.45,
+    "clarity_score": 0.6,
+    "variable_cost_share": 0.5,
+    "distance_km": 3.0
+  },
+  "study_models": {
+    "PRODUCT_VALIDATION": {
+      "model_key": "product_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.9, "sd": 0.35},
+        "price_log_ratio": {"mean": -1.35, "sd": 0.28},
+        "affordability": {"mean": 0.48, "sd": 0.12},
+        "quality_fit": {"mean": 1.05, "sd": 0.2},
+        "brand_trust": {"mean": 0.72, "sd": 0.16},
+        "review_proof": {"mean": 0.62, "sd": 0.14},
+        "novelty": {"mean": 0.42, "sd": 0.12},
+        "convenience": {"mean": 0.38, "sd": 0.1},
+        "social_influence": {"mean": 0.3, "sd": 0.1},
+        "category_engagement": {"mean": 0.52, "sd": 0.14},
+        "localization": {"mean": 0.58, "sd": 0.14},
+        "distance_friction": {"mean": 0.0, "sd": 0.0}
+      },
+      "repeat_intercept": -0.9,
+      "referral_intercept": -1.5
+    },
+    "PRICING_STUDY": {
+      "model_key": "pricing_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.75, "sd": 0.32},
+        "price_log_ratio": {"mean": -1.9, "sd": 0.34},
+        "affordability": {"mean": 0.68, "sd": 0.16},
+        "quality_fit": {"mean": 0.9, "sd": 0.18},
+        "brand_trust": {"mean": 0.58, "sd": 0.14},
+        "review_proof": {"mean": 0.52, "sd": 0.12},
+        "novelty": {"mean": 0.26, "sd": 0.1},
+        "convenience": {"mean": 0.3, "sd": 0.1},
+        "social_influence": {"mean": 0.2, "sd": 0.08},
+        "category_engagement": {"mean": 0.46, "sd": 0.12},
+        "localization": {"mean": 0.42, "sd": 0.12},
+        "distance_friction": {"mean": 0.0, "sd": 0.0}
+      },
+      "repeat_intercept": -1.0,
+      "referral_intercept": -1.7
+    },
+    "CREATIVE_TEST": {
+      "model_key": "creative_response_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -2.0, "sd": 0.38},
+        "price_log_ratio": {"mean": -1.05, "sd": 0.25},
+        "affordability": {"mean": 0.35, "sd": 0.1},
+        "quality_fit": {"mean": 0.72, "sd": 0.16},
+        "brand_trust": {"mean": 0.52, "sd": 0.14},
+        "review_proof": {"mean": 0.45, "sd": 0.12},
+        "novelty": {"mean": 0.78, "sd": 0.18},
+        "convenience": {"mean": 0.2, "sd": 0.08},
+        "social_influence": {"mean": 0.7, "sd": 0.17},
+        "category_engagement": {"mean": 0.42, "sd": 0.12},
+        "localization": {"mean": 0.82, "sd": 0.18},
+        "distance_friction": {"mean": 0.0, "sd": 0.0}
+      },
+      "repeat_intercept": -1.1,
+      "referral_intercept": -1.2
+    },
+    "VENUE_STUDY": {
+      "model_key": "venue_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.8, "sd": 0.35},
+        "price_log_ratio": {"mean": -0.9, "sd": 0.22},
+        "affordability": {"mean": 0.42, "sd": 0.12},
+        "quality_fit": {"mean": 0.88, "sd": 0.18},
+        "brand_trust": {"mean": 0.45, "sd": 0.12},
+        "review_proof": {"mean": 0.72, "sd": 0.16},
+        "novelty": {"mean": 0.32, "sd": 0.1},
+        "convenience": {"mean": 0.92, "sd": 0.2},
+        "social_influence": {"mean": 0.38, "sd": 0.1},
+        "category_engagement": {"mean": 0.95, "sd": 0.2},
+        "localization": {"mean": 0.5, "sd": 0.12},
+        "distance_friction": {"mean": -1.15, "sd": 0.25}
+      },
+      "repeat_intercept": -0.65,
+      "referral_intercept": -1.3
+    },
+    "SITE_COMPARISON": {
+      "inherits": "VENUE_STUDY",
+      "model_key": "site_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.85, "sd": 0.36},
+        "price_log_ratio": {"mean": -0.75, "sd": 0.2},
+        "affordability": {"mean": 0.36, "sd": 0.1},
+        "quality_fit": {"mean": 0.7, "sd": 0.15},
+        "brand_trust": {"mean": 0.4, "sd": 0.1},
+        "review_proof": {"mean": 0.55, "sd": 0.12},
+        "novelty": {"mean": 0.22, "sd": 0.08},
+        "convenience": {"mean": 1.05, "sd": 0.22},
+        "social_influence": {"mean": 0.25, "sd": 0.08},
+        "category_engagement": {"mean": 0.82, "sd": 0.18},
+        "localization": {"mean": 0.42, "sd": 0.1},
+        "distance_friction": {"mean": -1.45, "sd": 0.3}
+      },
+      "repeat_intercept": -0.8,
+      "referral_intercept": -1.5
+    },
+    "RESTAURANT": {
+      "model_key": "restaurant_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.6, "sd": 0.34},
+        "price_log_ratio": {"mean": -1.0, "sd": 0.24},
+        "affordability": {"mean": 0.5, "sd": 0.13},
+        "quality_fit": {"mean": 1.08, "sd": 0.22},
+        "brand_trust": {"mean": 0.36, "sd": 0.1},
+        "review_proof": {"mean": 0.82, "sd": 0.18},
+        "novelty": {"mean": 0.34, "sd": 0.1},
+        "convenience": {"mean": 0.68, "sd": 0.16},
+        "social_influence": {"mean": 0.44, "sd": 0.12},
+        "category_engagement": {"mean": 1.02, "sd": 0.22},
+        "localization": {"mean": 0.62, "sd": 0.15},
+        "distance_friction": {"mean": -1.2, "sd": 0.26}
+      },
+      "repeat_intercept": -0.45,
+      "referral_intercept": -1.15
+    },
+    "CAFE": {
+      "model_key": "cafe_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.7, "sd": 0.35},
+        "price_log_ratio": {"mean": -0.82, "sd": 0.2},
+        "affordability": {"mean": 0.38, "sd": 0.1},
+        "quality_fit": {"mean": 0.9, "sd": 0.2},
+        "brand_trust": {"mean": 0.3, "sd": 0.09},
+        "review_proof": {"mean": 0.62, "sd": 0.15},
+        "novelty": {"mean": 0.58, "sd": 0.14},
+        "convenience": {"mean": 0.72, "sd": 0.17},
+        "social_influence": {"mean": 0.58, "sd": 0.15},
+        "category_engagement": {"mean": 1.05, "sd": 0.22},
+        "localization": {"mean": 0.52, "sd": 0.13},
+        "distance_friction": {"mean": -1.0, "sd": 0.23}
+      },
+      "repeat_intercept": -0.35,
+      "referral_intercept": -1.0
+    },
+    "BAR": {
+      "model_key": "bar_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -2.0, "sd": 0.4},
+        "price_log_ratio": {"mean": -0.88, "sd": 0.22},
+        "affordability": {"mean": 0.4, "sd": 0.11},
+        "quality_fit": {"mean": 0.72, "sd": 0.17},
+        "brand_trust": {"mean": 0.22, "sd": 0.08},
+        "review_proof": {"mean": 0.46, "sd": 0.12},
+        "novelty": {"mean": 0.72, "sd": 0.17},
+        "convenience": {"mean": 0.52, "sd": 0.14},
+        "social_influence": {"mean": 0.95, "sd": 0.22},
+        "category_engagement": {"mean": 1.12, "sd": 0.25},
+        "localization": {"mean": 0.38, "sd": 0.1},
+        "distance_friction": {"mean": -0.92, "sd": 0.22}
+      },
+      "repeat_intercept": -0.75,
+      "referral_intercept": -0.8
+    },
+    "RETAIL": {
+      "model_key": "retail_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.75, "sd": 0.34},
+        "price_log_ratio": {"mean": -1.25, "sd": 0.28},
+        "affordability": {"mean": 0.52, "sd": 0.13},
+        "quality_fit": {"mean": 0.82, "sd": 0.18},
+        "brand_trust": {"mean": 0.55, "sd": 0.13},
+        "review_proof": {"mean": 0.5, "sd": 0.12},
+        "novelty": {"mean": 0.28, "sd": 0.09},
+        "convenience": {"mean": 0.86, "sd": 0.18},
+        "social_influence": {"mean": 0.28, "sd": 0.09},
+        "category_engagement": {"mean": 0.72, "sd": 0.17},
+        "localization": {"mean": 0.46, "sd": 0.11},
+        "distance_friction": {"mean": -0.72, "sd": 0.18}
+      },
+      "repeat_intercept": -0.55,
+      "referral_intercept": -1.4
+    },
+    "OPERATING_SCENARIO": {
+      "model_key": "venue_operations_choice_prior_v1",
+      "coefficients": {
+        "intercept": {"mean": -1.85, "sd": 0.36},
+        "price_log_ratio": {"mean": -0.85, "sd": 0.21},
+        "affordability": {"mean": 0.4, "sd": 0.11},
+        "quality_fit": {"mean": 0.8, "sd": 0.18},
+        "brand_trust": {"mean": 0.38, "sd": 0.1},
+        "review_proof": {"mean": 0.58, "sd": 0.14},
+        "novelty": {"mean": 0.3, "sd": 0.09},
+        "convenience": {"mean": 0.96, "sd": 0.2},
+        "social_influence": {"mean": 0.35, "sd": 0.1},
+        "category_engagement": {"mean": 0.9, "sd": 0.2},
+        "localization": {"mean": 0.48, "sd": 0.12},
+        "distance_friction": {"mean": -1.05, "sd": 0.24}
+      },
+      "repeat_intercept": -0.6,
+      "referral_intercept": -1.25
+    }
+  },
+  "dynamics": {
+    "innovation_rate": {"mean": 0.025, "sd": 0.008},
+    "word_of_mouth_rate": {"mean": 0.28, "sd": 0.06},
+    "repeat_quality_effect": 1.1,
+    "referral_social_effect": 0.9
+  }
+}

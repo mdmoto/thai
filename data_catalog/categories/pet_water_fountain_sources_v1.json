@@ -1,0 +1,38 @@
+{
+  "version": "TH-PET-WATER-SOURCES-2026.07.1",
+  "category_key": "PET_WATER_FOUNTAIN",
+  "market": "Thailand",
+  "panel_urls": [
+    "https://www.homepro.co.th/p/1316708",
+    "https://www.homepro.co.th/p/1265671",
+    "https://www.homepro.co.th/p/888171800048",
+    "https://www.homepro.co.th/p/1296227",
+    "https://www.homepro.co.th/p/888207800021",
+    "https://www.homepro.co.th/p/888115900086",
+    "https://www.homepro.co.th/p/888133200002",
+    "https://www.homepro.co.th/p/1296244",
+    "https://www.homepro.co.th/p/1237614",
+    "https://www.homepro.co.th/p/888125100309",
+    "https://ipetshop.co.th/product/catit-pixi-smart-drinking-fountain/",
+    "https://ipetshop.co.th/product/catit-pixi-drinking-fountain/",
+    "https://ipetshop.co.th/product/catit-drinking-fountain-stainless-steel-%E0%B9%81%E0%B8%84%E0%B8%97%E0%B8%AD%E0%B8%B4%E0%B8%97-%E0%B8%99%E0%B9%89%E0%B8%B3%E0%B8%9E%E0%B8%B8%E0%B9%81%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%B3%E0%B8%88/",
+    "https://www.mercular.com/petkit-solo-smart-drinking-fountain?sku=2168003000002",
+    "https://www.mercular.com/pando-pet-cats-dogs-smart-water-fountain-uv-sterilizer"
+  ],
+  "reference_only_urls": [
+    "https://www.mi.com/th/product/xiaomi-smart-pet-fountain/",
+    "https://www.mi.com/th/product/xiaomi-smart-pet-fountain2/"
+  ],
+  "collection_policy": {
+    "scope": "Public product pages permitted by robots.txt",
+    "excluded": [
+      "login-only content",
+      "robots-disallowed pages",
+      "anti-bot bypass",
+      "review text bodies",
+      "inferred sales from review counts"
+    ],
+    "reference_only_reason": "Official brand pages are retained for feature taxonomy but do not expose a verified Thailand offer price.",
+    "refresh_note": "Prices and availability are point-in-time public offers and must be refreshed before commercial use."
+  }
+}

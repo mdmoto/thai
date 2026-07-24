@@ -1,0 +1,86 @@
+export const STUDY_TYPE_META = {
+  PRODUCT_VALIDATION: {
+    label: "消费品验证",
+    desc: "比较新品的购买概率、目标人群、价格弹性与竞品替代。",
+    icon: "📦",
+    color: "#4CAE8A",
+  },
+  PRICING_STUDY: {
+    label: "消费品定价",
+    desc: "比较不同价格对选择概率、相对收入和利润的影响。",
+    icon: "฿",
+    color: "#a3a3a6",
+  },
+} as const;
+
+export const PLAN_META = {
+  PREVIEW: {
+    label: "预览版",
+    population: 100,
+    mc_rounds: 40,
+    scenarios: 2,
+    competitors: 1,
+    credits: 0,
+    price_thb: 0,
+    availability: "self_service",
+    desc: "每个账号 1 次，用于检查输入和方向，不作为正式决策依据。",
+  },
+  STANDARD: {
+    label: "标准版",
+    population: 10_000,
+    mc_rounds: 80,
+    scenarios: 3,
+    competitors: 3,
+    credits: 5,
+    price_thb: 0,
+    availability: "self_service",
+    desc: "适合初筛一个产品与基础价格方案。",
+  },
+  PROFESSIONAL: {
+    label: "专业版",
+    population: 30_000,
+    mc_rounds: 150,
+    scenarios: 5,
+    competitors: 5,
+    credits: 20,
+    price_thb: 7_900,
+    availability: "self_service",
+    desc: "完整竞品选择集、价格弹性、细分和情景分析。",
+  },
+} as const;
+
+export const TEMPLATES = [
+  {
+    id: "tpl_pet_water",
+    key: "pet_water",
+    label: "泰国宠物智能饮水机",
+    study_type: "PRODUCT_VALIDATION",
+    category: "PET_WATER_FOUNTAIN",
+    icon: "🐈",
+    recommended_plan: "PROFESSIONAL",
+    scenarios: 5,
+    est_time: "约 10–20 分钟",
+  },
+  {
+    id: "tpl_new_product",
+    key: "new_product",
+    label: "通用消费新品",
+    study_type: "PRODUCT_VALIDATION",
+    category: "GENERIC_CONSUMER_PRODUCT",
+    icon: "📦",
+    recommended_plan: "STANDARD",
+    scenarios: 3,
+    est_time: "约 5–15 分钟",
+  },
+  {
+    id: "tpl_pricing",
+    key: "pricing",
+    label: "消费品价格测试",
+    study_type: "PRICING_STUDY",
+    category: "GENERIC_CONSUMER_PRODUCT",
+    icon: "฿",
+    recommended_plan: "PROFESSIONAL",
+    scenarios: 5,
+    est_time: "约 10–20 分钟",
+  },
+] as const;

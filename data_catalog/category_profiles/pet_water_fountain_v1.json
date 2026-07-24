@@ -1,0 +1,32 @@
+{
+  "schema_version": "1",
+  "version": "TH-CATEGORY-PET-WATER-2026.07.1",
+  "category_key": "PET_WATER_FOUNTAIN",
+  "aliases": [
+    "PET_WATER_FOUNTAIN",
+    "PET WATER FOUNTAIN",
+    "SMART PET WATER FOUNTAIN",
+    "CAT WATER FOUNTAIN",
+    "宠物智能饮水机",
+    "宠物饮水机",
+    "猫饮水机",
+    "น้ำพุสัตว์เลี้ยงอัตโนมัติ",
+    "น้ำพุแมว"
+  ],
+  "eligibility": {
+    "field": "has_pets",
+    "eligible_value": true,
+    "status": "behavioral_prior_not_officially_calibrated",
+    "interpretation": "Pet-owning households are the initial addressable population proxy. Cat or dog ownership and gift purchases are not separately observed."
+  },
+  "engagement": {
+    "online_purchase_weight": 0.45,
+    "pet_spend_weight": 0.55,
+    "status": "engineering_prior_not_choice_calibrated"
+  },
+  "limitations": [
+    "The bundled pet-ownership probability is an engineering prior, not an observed Thailand category margin.",
+    "The profile does not distinguish cats, dogs, multi-pet households, or non-owner gift purchasers.",
+    "Category penetration, purchase frequency, and installed-base replacement cycles are unobserved."
+  ]
+}
