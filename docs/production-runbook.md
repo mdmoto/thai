@@ -81,8 +81,9 @@ python3 scripts/smoke_test.py
 ```
 
 The script verifies health and database connectivity, signup credits, Preview,
-Standard charging, run idempotency, report ownership isolation, pending-order
-behavior, protected payment completion and one-time credit granting.
+Standard and Professional charging, run idempotency, report ownership
+isolation, pending-order behavior, protected payment completion and one-time
+credit granting.
 
 ## Monitoring
 

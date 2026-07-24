@@ -224,6 +224,7 @@ def main() -> int:
     expect(status, 201, "order creation failed")
     expect(order["status"], "PENDING_PAYMENT", "new order status mismatch")
 
+    professional = None
     if args.admin_key:
         payment_reference = f"SMOKE-{suffix}"
         for _ in range(2):
@@ -244,6 +245,29 @@ def main() -> int:
         )
         expect(status, 200, "credited profile read failed")
         expect(profile["credits_balance"], 20, "order credit mismatch")
+        professional = create_and_run(
+            api_url,
+            owner_token,
+            "PROFESSIONAL",
+            suffix,
+        )
+        expect(
+            professional["population_size"],
+            30_000,
+            "Professional sample mismatch",
+        )
+        status, profile = request_json(
+            api_url,
+            "GET",
+            "/v1/auth/me",
+            token=owner_token,
+        )
+        expect(status, 200, "post-Professional profile read failed")
+        expect(
+            profile["credits_balance"],
+            0,
+            "Professional credit charge mismatch",
+        )
 
     print(
         json.dumps(
@@ -253,10 +277,15 @@ def main() -> int:
                 "database": health.get("database"),
                 "preview_report_id": preview["report_id"],
                 "standard_report_id": standard["report_id"],
+                "professional_report_id": (
+                    professional["report_id"]
+                    if professional
+                    else None
+                ),
                 "cross_account_isolation": "passed",
                 "idempotency": "passed",
                 "order_status": (
-                    "paid_once"
+                    "paid_once_and_professional_charged"
                     if args.admin_key
                     else "pending_without_credit"
                 ),
