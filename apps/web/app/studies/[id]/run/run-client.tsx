@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, Clock, Loader2, ArrowRight } from "lucide-react";
 import { Card, ProgressBar } from "@/components/ui";
+import { PopulationField } from "@/components/population-field";
 import { cn } from "@/lib/utils";
 
 interface Stage {
@@ -123,31 +124,38 @@ export function RunProgressClient({ studyId }: { studyId: string }) {
 
   return (
     <div className="max-w-3xl mx-auto p-8 space-y-8">
-      {/* Top Banner */}
-      <Card className="text-center py-8">
-        {done ? (
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-full bg-white text-black font-bold flex items-center justify-center mx-auto text-lg">
-              ✓
+      {/* Top Banner: Population Field resolving in step with progress */}
+      <div className="hero-panel">
+        <PopulationField
+          className="absolute inset-0 w-full h-full opacity-90"
+          density={100}
+          progress={done ? 100 : totalProgress}
+        />
+        <div className="relative z-10 text-center py-10 px-6">
+          {done ? (
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-full bg-white text-black font-bold flex items-center justify-center mx-auto text-lg">
+                ✓
+              </div>
+              <h2 className="font-display text-xl font-semibold text-white tracking-tight">模拟完成</h2>
+              <p className="text-xs text-neutral-400 font-light">共耗时 {formatElapsed(elapsed)} · 报告已被验证并生成</p>
+              <Link href={`/studies/${studyId}/report`} className="btn-cmai-primary inline-flex mt-2">
+                查看报告结果 <ArrowRight size={14} />
+              </Link>
             </div>
-            <h2 className="text-xl font-light text-white tracking-tight">模拟完成</h2>
-            <p className="text-xs text-neutral-400 font-light">共耗时 {formatElapsed(elapsed)} · 报告已被验证并生成</p>
-            <Link href={`/studies/${studyId}/report`} className="btn-lazzor-primary inline-flex mt-2">
-              查看报告结果 <ArrowRight size={14} />
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <Loader2 size={24} className="animate-spin text-white mx-auto" />
-            <div className="eyebrow">Simulation Executing</div>
-            <h2 className="text-xl font-light text-white tracking-tight">正在在泰国数字市场中运行模拟...</h2>
-            <p className="text-xs text-neutral-400 font-mono">已用时 {formatElapsed(elapsed)} · 总体进度 {totalProgress.toFixed(0)}%</p>
-            <div className="max-w-xs mx-auto pt-2">
-              <ProgressBar value={totalProgress} max={100} />
+          ) : (
+            <div className="space-y-3">
+              <Loader2 size={24} className="animate-spin text-white mx-auto" />
+              <div className="eyebrow">Simulation Executing</div>
+              <h2 className="font-display text-xl font-semibold text-white tracking-tight">正在泰国数字市场中运行模拟...</h2>
+              <p className="text-xs text-neutral-400 font-mono tabular-nums">已用时 {formatElapsed(elapsed)} · 总体进度 {totalProgress.toFixed(0)}%</p>
+              <div className="max-w-xs mx-auto pt-2">
+                <ProgressBar value={totalProgress} max={100} />
+              </div>
             </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </div>
+      </div>
 
       {/* Stages List */}
       <div className="space-y-3">

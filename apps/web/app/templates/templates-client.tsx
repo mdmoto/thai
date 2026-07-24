@@ -15,11 +15,17 @@ const TEMPLATE_LABELS: Record<string, string> = {
   site: "店址比较",
 };
 
+const COLOR_TO_ACCENT: Record<string, "jade" | "gold" | "clay"> = {
+  "#2F9E74": "jade",
+  "#D4A853": "gold",
+  "#B8503D": "clay",
+};
+
 export function TemplatesClient() {
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-base font-semibold text-primary">选择模板快速开始</h2>
+        <h2 className="font-display text-base font-semibold text-primary">选择模板快速开始</h2>
         <p className="text-sm text-muted mt-1">模板预设了常用字段和默认假设，帮助您快速提交第一个项目</p>
       </div>
 
@@ -27,9 +33,10 @@ export function TemplatesClient() {
         {TEMPLATES.map(t => {
           const meta = STUDY_TYPE_META[t.study_type];
           const plan = PLAN_META[t.recommended_plan as keyof typeof PLAN_META];
+          const accent = meta?.color ? COLOR_TO_ACCENT[meta.color] : undefined;
           return (
             <Link key={t.id} href={`/studies/new?template=${t.id}&type=${t.study_type}`}>
-              <Card hover className="h-full group">
+              <Card hover accent={accent} className="h-full group">
                 <div className="flex items-start gap-3 mb-3">
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 transition-smooth group-hover:scale-110"
@@ -38,7 +45,7 @@ export function TemplatesClient() {
                     {t.icon}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary text-sm group-hover:text-gold transition-smooth">
+                    <h3 className="font-display font-semibold text-primary text-sm group-hover:text-gold transition-smooth">
                       {TEMPLATE_LABELS[t.key]}
                     </h3>
                     <p className="text-xs text-muted mt-0.5">{meta?.label}</p>

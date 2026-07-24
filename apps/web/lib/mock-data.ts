@@ -104,7 +104,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "📦",
     inputs: ["产品名称", "价格", "图片", "卖点", "竞品"],
     outputs: ["购买意向", "价格接受度", "人群画像", "改进建议"],
-    color: "#3B82F6",
+    color: "#D4A853",
   },
   VENUE_STUDY: {
     label: "门店研究",
@@ -112,7 +112,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "🏪",
     inputs: ["门店类型", "位置", "营业时间", "容量", "菜单/服务"],
     outputs: ["分时客流", "到店概率", "容量利用", "复购率"],
-    color: "#8B5CF6",
+    color: "#2F9E74",
   },
   SITE_COMPARISON: {
     label: "选址对比",
@@ -120,7 +120,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "📍",
     inputs: ["2-10个候选地址"],
     outputs: ["人群覆盖", "距离阻力", "竞争强度", "相对排名"],
-    color: "#10B981",
+    color: "#2F9E74",
   },
   PRICING_STUDY: {
     label: "定价测试",
@@ -128,7 +128,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "💰",
     inputs: ["产品信息", "多个价格/套餐"],
     outputs: ["转化率对比", "收入预测", "最优定价建议"],
-    color: "#F59E0B",
+    color: "#D4A853",
   },
   CREATIVE_TEST: {
     label: "广告测试",
@@ -136,7 +136,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "🎯",
     inputs: ["广告图/文案/视频脚本"],
     outputs: ["理解度", "相关性", "点击倾向", "渠道适配度"],
-    color: "#EF4444",
+    color: "#B8503D",
   },
   OPERATING_SCENARIO: {
     label: "经营方案",
@@ -144,7 +144,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "⚙️",
     inputs: ["营业时间", "座位数", "活动方案", "菜单/外卖"],
     outputs: ["客流预测", "容量利用", "收入区间", "运营风险"],
-    color: "#06B6D4",
+    color: "#2F9E74",
   },
   RESTAURANT: {
     label: "餐厅评估",
@@ -152,7 +152,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "🍜",
     inputs: ["菜系", "菜单", "客单价", "座位数", "配送"],
     outputs: ["各时段客流", "翻台率", "外卖占比", "复购率"],
-    color: "#F97316",
+    color: "#D4A853",
   },
   CAFE: {
     label: "咖啡馆评估",
@@ -160,7 +160,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "☕",
     inputs: ["位置", "座位数", "WiFi/电源", "价格", "风格"],
     outputs: ["目标人群", "峰值客流", "停留时长", "回头率"],
-    color: "#92400E",
+    color: "#B8503D",
   },
   BAR: {
     label: "酒吧评估",
@@ -168,7 +168,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "🍺",
     inputs: ["位置", "容量", "酒水单", "活动计划"],
     outputs: ["分时客流", "高峰容量", "活动增量", "带朋友率"],
-    color: "#7C3AED",
+    color: "#B8503D",
   },
   RETAIL: {
     label: "零售门店",
@@ -176,7 +176,7 @@ export const STUDY_TYPE_META: Record<string, {
     icon: "🛍️",
     inputs: ["商品品类", "位置", "定价", "装修风格"],
     outputs: ["客流预测", "转化率", "客单价", "竞争分析"],
-    color: "#059669",
+    color: "#2F9E74",
   },
 };
 

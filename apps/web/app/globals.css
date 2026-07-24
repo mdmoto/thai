@@ -1,32 +1,43 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────
-   Design Tokens — Lazzor / Chiang Mai AI Center
-   Dark, Apple-style base with a warm gold accent
+   Design Tokens — Thailand Digital Market Twin
+   Palette drawn from Thai temple roof tiles:
+   gold / jade / clay, set against a cool near-black.
    ───────────────────────────────────────── */
 :root {
-  --background: #000000;
-  --foreground: #f5f5f7;
+  --background: #08090b;
+  --foreground: #f5f3ee;
   --font-sans: var(--font-geist-sans), Inter, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+  --font-display: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
 
+  /* Brand */
   --color-gold: #D4A853;
   --color-gold-light: #E8C879;
   --color-gold-dark: #B8902E;
 
-  --color-surface: #070707;
-  --color-surface-hover: #0f0f0f;
+  /* Signal colors — buy / hesitant / reject */
+  --color-jade: #2F9E74;
+  --color-jade-light: #4CC191;
+  --color-clay: #B8503D;
+  --color-clay-light: #D07257;
+
+  /* Surfaces */
+  --color-surface: #101216;
+  --color-surface-2: #171a20;
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-strong: rgba(255, 255, 255, 0.18);
 
-  --color-text-primary: #f5f5f7;
-  --color-text-secondary: #a1a1a6;
-  --color-text-muted: #86868b;
+  /* Text */
+  --color-text-primary: #f5f3ee;
+  --color-text-secondary: #a3a3ab;
+  --color-text-muted: #6e6e76;
 }
 
 .dark, :root[class~="dark"] {
-  --background: #000000;
-  --foreground: #f5f5f7;
+  --background: #08090b;
+  --foreground: #f5f3ee;
 }
 
 * {
@@ -40,14 +51,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.font-display {
+  font-family: var(--font-display);
+  font-feature-settings: "ss01" on;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 /* ─────────────────────────────────────────
    Typography utilities
    ───────────────────────────────────────── */
 .eyebrow,
 .eyebrow-label {
   font-size: 11px;
-  font-family: var(--font-sans);
-  letter-spacing: 0.2em;
+  font-family: var(--font-mono);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 600;
   color: var(--color-text-muted);
@@ -59,6 +79,8 @@ body {
 .text-muted { color: var(--color-text-muted); }
 .text-gold { color: var(--color-gold); }
 .text-gold-light { color: var(--color-gold-light); }
+.text-jade { color: var(--color-jade-light); }
+.text-clay { color: var(--color-clay-light); }
 
 .text-gradient-gold {
   background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
@@ -77,20 +99,33 @@ body {
 }
 
 /* ─────────────────────────────────────────
-   Cards
+   Cards — with semantic accent variants
    ───────────────────────────────────────── */
 .cmai-card,
 .card-lazzor {
+  position: relative;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 1rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cmai-card:hover,
 .card-lazzor:hover {
   border-color: var(--color-border-strong);
 }
+
+/* Accent variants: colored left rule + soft ambient glow on hover.
+   Use sparingly — only where the accent carries real meaning
+   (completed = jade, credits/plan = gold, action needed = clay). */
+.card-accent-jade { border-left: 2px solid var(--color-jade); }
+.card-accent-jade:hover { box-shadow: -1px 0 24px -8px rgba(47, 158, 116, 0.35); }
+
+.card-accent-gold { border-left: 2px solid var(--color-gold); }
+.card-accent-gold:hover { box-shadow: -1px 0 24px -8px rgba(212, 168, 83, 0.35); }
+
+.card-accent-clay { border-left: 2px solid var(--color-clay); }
+.card-accent-clay:hover { box-shadow: -1px 0 24px -8px rgba(184, 80, 61, 0.35); }
 
 .glass-card {
   background: rgba(255, 255, 255, 0.04);
@@ -101,9 +136,30 @@ body {
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
 }
 
+/* Hero panel — quiet dot-grid ambiance behind the Population Field canvas */
+.hero-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 0%, rgba(212, 168, 83, 0.10), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, rgba(47, 158, 116, 0.08), transparent 60%),
+    #0a0b0e;
+}
+
+.hero-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 40%, transparent 90%);
+  pointer-events: none;
+}
+
 /* ─────────────────────────────────────────
-   Buttons — one shared visual language
-   across every naming variant used in the app
+   Buttons
    ───────────────────────────────────────── */
 .btn-cmai-primary,
 .btn-lazzor-primary,
@@ -184,8 +240,6 @@ body {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Gold CTA — reserved for rare, high-emphasis moments
-   (e.g. upgrade prompts), not everyday buttons */
 .btn-gold {
   display: inline-flex;
   align-items: center;
@@ -252,6 +306,16 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 .animate-fade-in {
   animation: fade-in 0.4s ease both;
 }
@@ -273,6 +337,21 @@ body {
 .stagger-children > *:nth-child(4) { animation-delay: 0.14s; }
 .stagger-children > *:nth-child(5) { animation-delay: 0.18s; }
 .stagger-children > *:nth-child(6) { animation-delay: 0.22s; }
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .stagger-children > *,
+  .marquee-track {
+    animation: none !important;
+  }
+}
 
 /* ─────────────────────────────────────────
    Custom Scrollbar

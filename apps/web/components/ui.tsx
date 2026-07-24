@@ -1,6 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
+import { useState, useEffect } from "react";
 
 // ─────────────────────────────────────────
 // Status Badge (CMAI / Lazzor pill style)
@@ -107,17 +108,21 @@ export function Card({
   className,
   onClick,
   hover = false,
+  accent,
 }: {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
   hover?: boolean;
+  /** Semantic accent — use only where the color carries real meaning. */
+  accent?: "jade" | "gold" | "clay";
 }) {
   return (
     <div
       className={clsx(
         "cmai-card p-6",
-        hover && "cursor-pointer hover:bg-[#0c0c0c]",
+        accent && `card-accent-${accent}`,
+        hover && "cursor-pointer hover:bg-[#151820]",
         className
       )}
       onClick={onClick}
@@ -125,6 +130,29 @@ export function Card({
       {children}
     </div>
   );
+}
+
+// ─────────────────────────────────────────
+// CountUp — animates a number from 0 to value
+// ─────────────────────────────────────────
+export function CountUp({ value, duration = 700 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const from = 0;
+    function tick(now: number) {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(from + (value - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+
+  return <span className="tabular-nums">{display}</span>;
 }
 
 // ─────────────────────────────────────────

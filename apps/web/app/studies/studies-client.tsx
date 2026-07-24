@@ -60,9 +60,10 @@ export function StudiesClient() {
                 onClick={() => setStatusFilter(f.value)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   statusFilter === f.value
-                    ? "bg-white text-black font-semibold"
+                    ? "font-semibold text-[#1d1508]"
                     : "text-neutral-400 hover:text-white"
                 }`}
+                style={statusFilter === f.value ? { background: "linear-gradient(135deg, #E8C879, #B8902E)" } : undefined}
               >
                 {f.label}
               </button>
@@ -121,7 +122,7 @@ function StudyListItem({ study }: { study: typeof MOCK_STUDIES[0] }) {
     <Link href={`/studies/${study.id}`}>
       <Card hover className="!p-4">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-lg shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-lg shrink-0" style={{ boxShadow: meta?.color ? `inset 0 0 0 1px ${meta.color}22` : undefined }}>
             {meta?.icon}
           </div>
           <div className="flex-1 min-w-0">

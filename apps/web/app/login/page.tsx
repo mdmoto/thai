@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Zap, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui";
+import { PopulationField } from "@/components/population-field";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,10 +22,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-base relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
+        <PopulationField className="absolute inset-0 w-full h-full opacity-25" density={45} />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl opacity-10"
           style={{ background: "radial-gradient(circle, #D4A853, transparent)" }} />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-3xl opacity-5"
-          style={{ background: "radial-gradient(circle, #3B82F6, transparent)" }} />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-3xl opacity-10"
+          style={{ background: "radial-gradient(circle, #2F9E74, transparent)" }} />
       </div>
 
       <div className="relative w-full max-w-sm mx-4 animate-fade-in-up">
@@ -34,13 +36,13 @@ export default function LoginPage() {
             style={{ background: "linear-gradient(135deg, #D4A853, #B8902E)" }}>
             <Zap size={22} className="text-[#0A1628]" />
           </div>
-          <h1 className="text-2xl font-bold text-gradient-gold">Thailand Market Twin</h1>
+          <h1 className="font-display text-2xl font-bold text-gradient-gold">Thailand Market Twin</h1>
           <p className="text-sm text-muted mt-1">泰国数字市场孪生平台</p>
         </div>
 
         {/* Card */}
         <div className="glass-card p-6">
-          <h2 className="text-base font-semibold text-primary mb-6">登录账户</h2>
+          <h2 className="font-display text-base font-semibold text-primary mb-6">登录账户</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="邮箱"

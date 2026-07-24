@@ -40,7 +40,7 @@ export function Sidebar() {
     <aside
       className={clsx(
         "flex flex-col h-screen sticky top-0 transition-all duration-300 shrink-0",
-        "border-r border-neutral-900 bg-black",
+        "border-r border-neutral-900 bg-base",
         collapsed ? "w-16" : "w-56"
       )}
     >
@@ -50,7 +50,10 @@ export function Sidebar() {
         collapsed && "justify-center px-0"
       )}>
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center font-bold text-black text-xs tracking-tighter shrink-0 transition-transform group-hover:scale-105">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs tracking-tighter shrink-0 transition-transform group-hover:scale-105"
+            style={{ background: "linear-gradient(135deg, #E8C879, #B8902E)", color: "#1d1508" }}
+          >
             MT
           </div>
           {!collapsed && (
@@ -86,7 +89,7 @@ export function Sidebar() {
               <Icon size={16} className={clsx("shrink-0", active ? "text-white" : "text-neutral-400 group-hover:text-white")} />
               {!collapsed && <span>{label}</span>}
               {active && !collapsed && (
-                <span className="ml-auto w-1 h-1 rounded-full bg-white" />
+                <span className="ml-auto w-1 h-1 rounded-full bg-[#D4A853]" />
               )}
             </Link>
           );
@@ -215,9 +218,9 @@ export function TopBar({ title, actions }: { title?: string; actions?: React.Rea
 // ─────────────────────────────────────────
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-black text-neutral-100">
+    <div className="flex h-screen overflow-hidden bg-base text-neutral-100">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-black">
+      <main className="flex-1 overflow-y-auto bg-base">
         {children}
       </main>
     </div>
