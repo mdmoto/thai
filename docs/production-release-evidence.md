@@ -7,7 +7,7 @@ Release verification date: 2026-07-24 (Asia/Bangkok)
 - Customer site: `https://ai.lazzor.com`
 - Production API:
   `https://market-twin-api-100282158973.asia-southeast1.run.app`
-- Cloud Run revision: `market-twin-api-00004-cbn`, serving 100% of traffic
+- Cloud Run revision: `market-twin-api-00005-tbl`, serving 100% of traffic
 - Cloud SQL instance: `market-twin-db`, PostgreSQL 16, regional high
   availability, deletion protection enabled
 - Secret Manager: database URL, JWT signing key and admin key are injected only
@@ -15,7 +15,7 @@ Release verification date: 2026-07-24 (Asia/Bangkok)
 
 ## Automated verification
 
-- 26 Python tests passed.
+- 27 Python tests passed.
 - Frontend production build generated all 16 static pages.
 - Full `npm audit` reported zero known vulnerabilities.
 - Production browser journey passed: register, receive credits, create and
@@ -24,17 +24,19 @@ Release verification date: 2026-07-24 (Asia/Bangkok)
   payment handoff.
 - Production API acceptance passed for Product Validation and Pricing Study on
   Preview, Standard and Professional.
+- The public catalog exposes only Preview, Standard and Professional; internal
+  Deep and Enterprise configurations are not returned.
 - Run idempotency, cross-account isolation, pending-payment behavior and
   one-time verified credit granting passed.
 
 Acceptance report IDs:
 
-- Product Validation Preview: `rpt_f1bd27d7`
-- Product Validation Standard: `rpt_e2d481ef`
-- Product Validation Professional: `rpt_7facf2ef`
-- Pricing Study Preview: `rpt_a0b2bcdc`
-- Pricing Study Standard: `rpt_8ced5249`
-- Pricing Study Professional: `rpt_bcd56a14`
+- Product Validation Preview: `rpt_5da4d180`
+- Product Validation Standard: `rpt_e72fbc99`
+- Product Validation Professional: `rpt_eae39d6e`
+- Pricing Study Preview: `rpt_69601dfd`
+- Pricing Study Standard: `rpt_bc72aaa6`
+- Pricing Study Professional: `rpt_949e6885`
 
 ## Recovery verification
 
