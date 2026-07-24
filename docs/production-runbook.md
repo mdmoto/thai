@@ -41,6 +41,10 @@ Grant the Cloud Build service account permission to deploy Cloud Run, use the
 runtime service account and read the image repository. Do not grant those
 roles to public users or to the frontend.
 
+The checked-in deployment keeps one warm API instance, uses second-generation
+Cloud Run execution, applies startup and liveness checks against `/healthz`,
+and caps scale-out at five instances to protect the database.
+
 `Base.metadata.create_all` creates a new schema. Startup also performs the
 limited pre-v2 compatibility migration needed for existing users,
 transactions and reports. Back up an existing production database before the

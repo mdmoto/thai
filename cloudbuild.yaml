@@ -34,9 +34,14 @@ steps:
       - --add-cloudsql-instances=$PROJECT_ID:${_REGION}:${_CLOUD_SQL_INSTANCE}
       - --cpu=2
       - --memory=4Gi
+      - --execution-environment=gen2
+      - --cpu-boost
       - --concurrency=10
       - --timeout=900
+      - --min-instances=1
       - --max-instances=5
+      - --startup-probe=httpGet.path=/healthz,initialDelaySeconds=2,timeoutSeconds=3,periodSeconds=5,failureThreshold=24
+      - --liveness-probe=httpGet.path=/healthz,initialDelaySeconds=30,timeoutSeconds=3,periodSeconds=30,failureThreshold=3
       - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|CORS_ALLOWED_ORIGINS=${_CORS_ORIGINS}|FREE_PREVIEW_LIMIT=1
       - --set-secrets=DATABASE_URL=market-twin-database-url:latest,JWT_SECRET_KEY=market-twin-jwt-secret:latest,ADMIN_API_KEY=market-twin-admin-api-key:latest
 
