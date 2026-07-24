@@ -656,18 +656,22 @@ async def run_simulation(
             seed=req.seed,
             plan_code=plan_code,
         )
-        db.add(
-            ReportRecord(
-                id=report["report_id"],
-                user_id=user.id,
-                run_id=report["run_id"],
-                study_id=study_id,
-                request_key=request_key,
-                population_size=report["population_size"],
-                mc_rounds=report["mc_rounds"],
-                report_data=report,
-            )
+        report_record = ReportRecord(
+            id=report["report_id"],
+            user_id=user.id,
+            run_id=report["run_id"],
+            study_id=study_id,
+            request_key=request_key,
+            population_size=report["population_size"],
+            mc_rounds=report["mc_rounds"],
+            report_data=report,
         )
+        db.add(report_record)
+        # PostgreSQL enforces the simulation_runs.report_id foreign key.
+        # Flush the new report before linking the durable run record to it;
+        # assigning only the scalar ID does not give SQLAlchemy an ORM
+        # relationship from which it can infer insert ordering.
+        db.flush()
         run_job = (
             db.query(SimulationRunRecord)
             .filter(SimulationRunRecord.id == run_job.id)

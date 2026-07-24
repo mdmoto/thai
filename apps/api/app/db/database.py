@@ -4,7 +4,7 @@ Supports SQLite (file-based persistence) and PostgreSQL (via DATABASE_URL env va
 """
 
 import os
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
@@ -21,6 +21,14 @@ engine = create_engine(
     connect_args=connect_args,
     pool_pre_ping=True,
 )
+
+if DATABASE_URL.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
