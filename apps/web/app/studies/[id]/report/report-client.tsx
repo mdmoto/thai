@@ -289,6 +289,180 @@ function calibrationLabel(status?: string) {
   return CALIBRATION_LABELS[value] ?? value;
 }
 
+const FUNNEL_COPY: Record<string, Record<string, { label: string; description: string }>> = {
+  product: {
+    eligible: { label: "符合品类条件的目标人群", description: "根据品类资格规则筛出的潜在消费者" },
+    aware: { label: "已注意到产品", description: "在设定曝光条件下知道或注意到该产品" },
+    understood: { label: "已理解产品卖点", description: "能够理解主要功能、价格和核心价值" },
+    considered: { label: "已纳入购买考虑", description: "愿意把该产品与竞品及“不购买”方案一起比较" },
+    purchased: { label: "预计选择购买", description: "选择模型中最终选择本产品的期望人数" },
+    repeated: { label: "购买后预计复购", description: "预计购买者中具有再次购买倾向的人数" },
+    referred: { label: "购买后预计推荐", description: "预计购买者中愿意分享或推荐的人数" },
+  },
+  venue: {
+    eligible: { label: "符合门店条件的目标客群", description: "根据门店类型、区域和消费能力筛出的潜在顾客" },
+    aware: { label: "已注意到门店", description: "在设定获客条件下知道或注意到该门店" },
+    understood: { label: "符合消费场景", description: "门店定位与消费者的用餐、休闲或购物场景相符" },
+    considered: { label: "已纳入到店考虑", description: "愿意把该门店与其他去处及“不出行”方案一起比较" },
+    purchased: { label: "预计到店", description: "选择模型中最终选择到店的期望人数" },
+    repeated: { label: "到店后预计再访", description: "预计到店顾客中具有再次到店倾向的人数" },
+    referred: { label: "到店后预计推荐", description: "预计到店顾客中愿意分享或推荐的人数" },
+  },
+  creative: {
+    eligible: { label: "符合投放条件的目标受众", description: "根据广告目标筛出的潜在受众" },
+    aware: { label: "已触达并注意广告", description: "在设定投放条件下看到并注意到广告" },
+    understood: { label: "已理解广告信息", description: "能够理解广告主张、优惠和行动指引" },
+    considered: { label: "已产生行动考虑", description: "愿意进一步了解、点击或比较广告中的方案" },
+    purchased: { label: "预计采取目标行动", description: "模型中预计点击、咨询或购买的期望人数" },
+    repeated: { label: "预计继续互动", description: "采取行动后仍愿意持续关注或再次互动的人数" },
+    referred: { label: "预计分享广告", description: "采取行动后愿意转发或推荐的人数" },
+  },
+};
+
+function funnelCopy(data: ReportData, stage: string) {
+  const group = ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO", "RESTAURANT", "CAFE", "BAR", "RETAIL"].includes(data.study_type ?? "")
+    ? "venue"
+    : data.study_type === "CREATIVE_TEST"
+      ? "creative"
+      : "product";
+  return FUNNEL_COPY[group][stage] ?? {
+    label: stage,
+    description: "本阶段由模型按当前研究条件估计",
+  };
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  PET_WATER_FOUNTAIN: "宠物智能饮水机",
+  GENERAL_CONSUMER_PRODUCT: "通用消费品",
+};
+
+const MODEL_LABELS: Record<string, string> = {
+  mnl_prior: "多项逻辑选择模型（MNL，当前系数为待验证先验）",
+  mixed_logit: "混合逻辑选择模型（Mixed Logit）",
+  latent_class: "潜在人群分类选择模型（Latent Class）",
+  hierarchical_bayes: "分层贝叶斯联合分析模型",
+};
+
+const UNCERTAINTY_LABELS: Record<string, string> = {
+  prior_predictive_p10_p90: "先验预测区间（第 10–90 百分位）",
+  coefficient_prior_uncertainty: "选择系数尚未实证拟合带来的不确定性",
+  observed_population_heterogeneity: "已纳入模型的人群差异",
+  fixed_taste_mnl: "当前模型假定同类人群偏好结构固定",
+  no_llm_quantitative_effect: "本次大模型信号未参与定量结果",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  available: "可用",
+  unavailable: "不可用",
+  not_used: "未使用",
+  succeeded: "采集成功",
+  not_applicable: "本研究不适用",
+  authorization_required: "需要客户授权",
+  customer_authorization_required: "需要客户授权",
+  customer_authorization_or_provider_required: "需要客户授权或合规数据供应商",
+  paid_api_access_required: "需要付费官方接口",
+  api_key_and_quota_required: "需要官方接口密钥与额度",
+  mixed_public_and_authorized_data: "公开证据与授权数据并用",
+};
+
+const COLLECTOR_LABELS: Record<string, string> = {
+  "Thailand NSO versioned snapshots": "泰国国家统计局（NSO）版本化数据",
+  "Category competitor public evidence": "品类竞品公开证据",
+  "Open geospatial / POI evidence": "开放地理与周边设施数据",
+  "Structured LLM research": "大模型结构化消费者研究",
+  "Social platform evidence": "社交平台传播证据",
+};
+
+const FALLBACK_LABELS: Record<string, string> = {
+  synthetic_region_distribution: "合成区域分布",
+  model_segment_summary: "选择模型人群摘要",
+  disclosed_social_propagation_scenarios: "已披露参数的传播情景",
+};
+
+const PLATFORM_ACCESS_LABELS: Record<string, string> = {
+  restricted_for_commercial_use: "公开市场扫描受平台商业使用规则限制",
+  research_api_not_available_for_general_commercial_market_research: "研究接口不面向一般商业市场研究开放",
+  paid_official_api_required: "需要付费使用官方接口",
+  official_api_with_quota: "可使用官方接口，但受调用额度限制",
+  transaction_and_conversion_not_public: "真实成交量与转化率不是公开数据",
+};
+
+const ATTRIBUTE_LABELS: Record<string, string> = {
+  quality_score: "品质与可靠性",
+  review_score: "用户评价与口碑证据",
+  convenience_score: "购买与使用便利性",
+  localization_score: "泰国本地化适配度",
+};
+
+const EVIDENCE_BASIS_LABELS: Record<string, string> = {
+  behavioral_prior_not_officially_calibrated: "已披露的行为先验，尚未使用官方品类渗透率或真实购买数据校准",
+};
+
+const REGION_LABELS: Record<string, string> = {
+  "Bangkok Metro": "曼谷都市圈",
+  "East / EEC": "东部经济走廊（EEC）",
+  Central: "中部地区",
+  North: "北部地区",
+  South: "南部地区",
+  Northeast: "东北部地区",
+};
+
+function statusLabel(status?: string) {
+  if (!status) return "未记录";
+  return STATUS_LABELS[status] ?? status;
+}
+
+function eligibilityLabel(status?: string) {
+  if (status === "behavioral_prior_not_officially_calibrated") {
+    return "行为先验，尚未用官方品类渗透率或真实购买数据校准";
+  }
+  return status || "通用人群假设";
+}
+
+function calibrationClaim(status?: string, claim?: string) {
+  if (status === "official_macro_calibrated_choice_prior") {
+    return "地区人口、家庭收入区间、各府收入与支出、家庭规模等人口结构已使用泰国国家统计局公开汇总数据校准；年龄细分、消费行为特征和选择系数仍属于待验证先验。";
+  }
+  return claim || "未提供更详细的校准说明。";
+}
+
+function warningLabel(warning: string) {
+  if (warning.includes("aggregate margins") || warning.includes("joint dependencies")) {
+    return "官方输入是汇总统计，而不是逐户微观数据；年龄、收入、地区等变量之间的联合关系由系统合成。";
+  }
+  if (warning.includes("all ages") || warning.includes("decision population starts at age 18")) {
+    return "官方地区人口占比覆盖全部年龄，而本次消费决策模拟仅纳入 18 岁及以上人群，两者统计口径不同。";
+  }
+  if (warning.includes("binary sex") || warning.includes("non-binary")) {
+    return "泰国国家统计局当前公开口径只提供男性和女性；模型保留的 1% 非二元性别比例属于明确披露的工程假设。";
+  }
+  if (warning.includes("households, not individual wages")) {
+    return "收入与支出数据描述的是家庭整体，不是个人工资；报告中的收入坐标均应按家庭月收入理解。";
+  }
+  if (warning.includes("Behavioral traits") || warning.includes("category engagement")) {
+    return "消费行为特征和品类参与度尚无可直接使用的真实调查数据，目前采用可替换、可追溯的开发先验。";
+  }
+  if (warning.includes("Choice coefficients") || warning.includes("WTP and conversion rates")) {
+    return "选择系数、支付意愿和转化率尚未使用真实订单、选择实验或广告测试数据拟合，因此只能用于方案比较，不能作为销量承诺。";
+  }
+  if (warning.includes("Marketplace page prices") || warning.includes("transaction volume")) {
+    return "电商公开页面只能证明展示价格、评价和卖点，不能证明真实成交量、退款率或转化率。";
+  }
+  if (warning.includes("Forecast intervals") || warning.includes("validated forecast intervals")) {
+    return "当前区间反映模型先验和人群差异，不包含历史预测误差，因此不是经过回测验证的销量置信区间。";
+  }
+  if (warning.includes("competitor model fields") || warning.includes("assumed_fields")) {
+    return "部分竞品属性无法从公开页面确认，系统使用了已披露的字段先验；具体字段可在模型血缘记录中追溯。";
+  }
+  if (warning.includes("pet-ownership") || warning.includes("category sales forecast")) {
+    return "品类目标人群使用尚未校准的养宠行为先验，因此购买概率不能直接解释为该品类的真实销量预测。";
+  }
+  if (warning.includes("LLM weak signals") || warning.includes("zero effect")) {
+    return "本次大模型弱信号不可用或未启用，对任何定量结果的权重为 0；系统没有用固定虚拟人物替代。";
+  }
+  return warning;
+}
+
 function limitationReason(warning: string) {
   if (warning.includes("LLM weak signals")) return "运行配置：未启用模型密钥";
   if (warning.includes("microdata") || warning.includes("joint dependencies")) return "数据粒度：只有官方聚合统计";
@@ -374,7 +548,7 @@ export function ReportClient({
     return (
       <div className="p-8">
         <Card>
-          <div className="eyebrow mb-2">Loading Verified Report</div>
+          <div className="eyebrow mb-2">正在读取报告</div>
           <p className="text-sm text-neutral-300">正在从后端读取本次运行的真实报告数据…</p>
         </Card>
       </div>
@@ -385,7 +559,7 @@ export function ReportClient({
     return (
       <div className="p-8">
         <Card>
-          <div className="eyebrow mb-2">Report Unavailable</div>
+          <div className="eyebrow mb-2">报告暂不可用</div>
           <h2 className="text-base font-semibold text-white">报告读取失败</h2>
           <p className="text-xs text-neutral-400 mt-2">{loadError}</p>
         </Card>
@@ -398,7 +572,7 @@ export function ReportClient({
       {/* Section Nav */}
       <aside className="w-56 shrink-0 border-r border-neutral-900 bg-base py-6 sticky top-0 h-screen overflow-y-auto">
         <div className="px-4 mb-4">
-          <span className="eyebrow">Report Sections</span>
+          <span className="eyebrow">报告目录</span>
         </div>
         <nav className="space-y-1 px-2">
           {visibleSections.map(sec => (
@@ -421,15 +595,15 @@ export function ReportClient({
         {/* Metadata info */}
         <div className="mx-3 mt-8 p-3 rounded-xl bg-neutral-950 border border-neutral-900 text-[10px] space-y-2">
           <div>
-            <div className="text-neutral-500 font-mono">Run ID</div>
+            <div className="text-neutral-500">本次运行编号</div>
             <div className="font-mono text-neutral-300 truncate">{reportData.run_id}</div>
           </div>
           <div>
-            <div className="text-neutral-500 font-mono">World Model</div>
+            <div className="text-neutral-500">人口模型版本</div>
             <div className="font-mono text-neutral-300">{reportData.world_model_version}</div>
           </div>
           <div>
-            <div className="text-neutral-500 font-mono">Population</div>
+            <div className="text-neutral-500">模拟规模</div>
             <div className="text-neutral-300">{reportData.population_size.toLocaleString()} 人 ({reportData.mc_rounds} 轮)</div>
           </div>
         </div>
@@ -440,10 +614,10 @@ export function ReportClient({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-neutral-900">
           <div>
-            <div className="eyebrow mb-1">Chiang Mai AI Center · Decision Report</div>
+            <div className="eyebrow mb-1">Chiang Mai AI Center · 商业决策报告</div>
             <h1 className="text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
             <p className="text-xs text-neutral-400 font-light mt-1">
-              基于 {reportData.population_size.toLocaleString()} 泰国合成人口 · 模型样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} · {reportData.mc_rounds} 轮 Monte Carlo
+              基于 {reportData.population_size.toLocaleString()} 名泰国合成消费者 · 实际参与计算的模型样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} 名 · 蒙特卡洛不确定性模拟 {reportData.mc_rounds} 轮
             </p>
             <p className="text-[10px] text-neutral-500 font-mono mt-1">
               校准：{calibrationLabel(reportData.calibration_status)} · {reportData.simulation_model_version}
@@ -493,7 +667,7 @@ function ExecutiveSummarySection({ data }: { data: ReportData }) {
             ✓
           </div>
           <div>
-            <div className="eyebrow mb-1">Strategic Conclusion</div>
+            <div className="eyebrow mb-1">核心决策结论</div>
             <h2 className="text-base font-semibold text-white tracking-tight mb-1">战略落地结论</h2>
             <p className="text-xs text-neutral-300 font-light leading-relaxed max-w-2xl">{executive_summary.recommendation}</p>
           </div>
@@ -524,7 +698,7 @@ function ExecutiveSummarySection({ data }: { data: ReportData }) {
 
       {/* Action Plan */}
       <Card>
-        <div className="eyebrow mb-3">Priority Action Plan</div>
+        <div className="eyebrow mb-3">优先行动建议</div>
         <h3 className="text-sm font-semibold text-white mb-4">下一步优先落地路线图</h3>
         <div className="space-y-3">
           {executive_summary.next_steps.map((step, i) => (
@@ -543,36 +717,111 @@ function ExecutiveSummarySection({ data }: { data: ReportData }) {
 
 function MarketResponseSection({ data }: { data: ReportData }) {
   const { funnel } = data;
-  const max = funnel[0].value;
+  const eligibleStage = funnel.find(item => item.stage === "eligible");
+  const purchaseStage = funnel.find(item => item.stage === "purchased");
+  const eligibleBase = Math.max(1, eligibleStage?.value ?? funnel[0]?.value ?? 1);
+  const purchaseBase = Math.max(1, purchaseStage?.value ?? 1);
+  const mainStages = funnel.filter(item =>
+    ["eligible", "aware", "understood", "considered", "purchased"].includes(item.stage),
+  );
+  const postPurchaseStages = funnel.filter(item =>
+    ["repeated", "referred"].includes(item.stage),
+  );
+  const totalPopulation = Math.max(1, data.population_size);
 
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Conversion Funnel</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">市场反应与层级转化漏斗</h2>
+        <div className="eyebrow mb-1">消费者转化路径</div>
+        <h2 className="text-base font-semibold text-white tracking-tight">从目标人群到购买 / 到店的逐层变化</h2>
+        <p className="text-xs text-neutral-400 mt-2 leading-relaxed">
+          系统先从全部 {data.population_size.toLocaleString()} 名合成消费者中筛出符合本研究条件的目标人群，
+          再估计他们经过注意、理解、考虑和最终选择的过程。人数为模型折算的期望人数，不是真实受访者数量或实际订单。
+        </p>
       </div>
 
       <Card>
-        <div className="space-y-3">
-          {funnel.map((f, i) => (
-            <div key={i} className="space-y-1">
-              <div className="flex justify-between text-xs font-light">
-                <span className="text-neutral-400">{f.label} · <span className="text-white">{f.stage}</span></span>
-                <span className="font-mono text-neutral-200">
-                  {f.value.toLocaleString()} ({formatPercent(f.value / max)})
-                </span>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-4 pb-2 border-b border-neutral-800 text-[10px] text-neutral-500">
+          <span>阶段与含义</span>
+          <span className="text-right">占目标人群</span>
+          <span className="text-right">较上一步</span>
+        </div>
+        <div className="space-y-4 mt-4">
+          {mainStages.map((f, i) => {
+            const copy = funnelCopy(data, f.stage);
+            const previous = i === 0 ? null : mainStages[i - 1];
+            return (
+              <div key={f.stage} className="space-y-1.5">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-4 items-start">
+                  <div>
+                    <div className="text-xs font-medium text-white">{copy.label}</div>
+                    <div className="text-[10px] text-neutral-500 mt-0.5">{copy.description}</div>
+                  </div>
+                  <span className="font-mono text-xs text-neutral-200 text-right whitespace-nowrap">
+                    {f.value.toLocaleString()} 人<br />
+                    <span className="text-[10px] text-neutral-500">{formatPercent(f.value / eligibleBase)}</span>
+                  </span>
+                  <span className="font-mono text-xs text-neutral-300 text-right whitespace-nowrap min-w-14">
+                    {previous ? formatPercent(f.value / Math.max(1, previous.value)) : "起点"}
+                  </span>
+                </div>
+                <div className="h-2.5 rounded bg-neutral-900 overflow-hidden">
+                  <div
+                    className="h-full rounded-sm bg-blue-300 transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, (f.value / eligibleBase) * 100)}%`,
+                      opacity: 0.45 + (i / Math.max(1, mainStages.length - 1)) * 0.55,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="h-3 rounded bg-neutral-900 overflow-hidden">
-                <div
-                  className="h-full rounded-sm bg-neutral-200 transition-all duration-500"
-                  style={{
-                    width: `${(f.value / max) * 100}%`,
-                    opacity: 0.3 + (i / funnel.length) * 0.7,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+        <div className="mt-5 pt-4 border-t border-neutral-800 text-[11px] text-neutral-400 leading-relaxed">
+          目标人群占全部合成人口的 <strong className="text-white">{formatPercent((eligibleStage?.value ?? 0) / totalPopulation)}</strong>；
+          最终选择占全部合成人口的 <strong className="text-white">{formatPercent((purchaseStage?.value ?? 0) / totalPopulation)}</strong>。
+          “占目标人群”始终以目标人群为分母，“较上一步”才表示相邻阶段的转化率。
+        </div>
+      </Card>
+
+      {!!postPurchaseStages.length && (
+        <div>
+          <h3 className="text-sm font-semibold text-white">购买 / 到店后的两种独立结果</h3>
+          <p className="text-xs text-neutral-500 mt-1">
+            复购与推荐都从最终选择者开始计算，二者相互独立，并不是“先复购、再推荐”的连续步骤。
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3 mt-3">
+            {postPurchaseStages.map(f => {
+              const copy = funnelCopy(data, f.stage);
+              return (
+                <Card key={f.stage}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-xs font-semibold text-white">{copy.label}</div>
+                      <p className="text-[10px] text-neutral-500 mt-1 leading-relaxed">{copy.description}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-xl font-semibold text-white">{f.value.toLocaleString()} 人</div>
+                      <div className="text-[10px] text-neutral-500 mt-1">
+                        占最终选择者 {formatPercent(f.value / purchaseBase)}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <Card className="border-amber-300/20">
+        <div className="flex gap-3">
+          <AlertTriangle size={16} className="text-amber-200 shrink-0 mt-0.5" />
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            阅读提示：当前结果适合判断“哪一层流失最大”和比较不同方案。若选择系数尚未使用真实订单、选择实验或 A/B 测试回测，
+            则人数和比例属于先验模型估计，不能直接作为销量或客流承诺。
+          </p>
         </div>
       </Card>
     </div>
@@ -584,7 +833,7 @@ function SegmentsSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Micro-Segmentation</div>
+        <div className="eyebrow mb-1">消费者分群</div>
         <h2 className="text-base font-semibold text-white tracking-tight">细分人群画像与转化表现</h2>
       </div>
 
@@ -632,7 +881,7 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Demand Curve & Pricing</div>
+        <div className="eyebrow mb-1">需求与定价关系</div>
         <h2 className="text-base font-semibold text-white tracking-tight">价格 / 客单价响应曲线</h2>
       </div>
 
@@ -641,7 +890,7 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={elasticity} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#242424" />
-              <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: "售价 (THB)", position: "insideBottom", offset: -5, fill: "#86868b", fontSize: 10 }} />
+              <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: "售价（泰铢）", position: "insideBottom", offset: -5, fill: "#86868b", fontSize: 10 }} />
               <YAxis tick={{ fill: "#86868b", fontSize: 11 }} />
               <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} />
               <Line type="monotone" dataKey="purchase_rate" name={terms.intent} stroke="#6ba0ff" strokeWidth={2} dot={{ r: 3, fill: "#6ba0ff" }} />
@@ -668,7 +917,7 @@ function ScenariosSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Scenario Benchmarking</div>
+        <div className="eyebrow mb-1">备选方案比较</div>
         <h2 className="text-base font-semibold text-white tracking-tight">{terms.scenario}</h2>
       </div>
 
@@ -694,7 +943,7 @@ function ScenariosSection({ data }: { data: ReportData }) {
             )}>
               <div className="text-[11px] font-medium leading-tight mb-1 whitespace-pre-line">{s.name}</div>
               <div className="text-sm font-semibold text-white">{formatPercent(s.purchase_rate)}</div>
-              {s.name === data.executive_summary.best_scenario && <div className="tag-label tag-positive mt-0.5">Recommended</div>}
+              {s.name === data.executive_summary.best_scenario && <div className="tag-label tag-positive mt-0.5">模型推荐</div>}
             </div>
           ))}
         </div>
@@ -730,7 +979,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Geo Demand & Venue Operations</div>
+        <div className="eyebrow mb-1">地理需求与门店经营</div>
         <h2 className="text-base font-semibold text-white tracking-tight">地理需求热力图与小时经营模型</h2>
         <p className="text-xs text-neutral-400 mt-2">
           蓝色 POI 为公开观测记录；橙色热区和小时访问量为模型推算，不代表真实手机信令或门店客流。
@@ -742,7 +991,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
           <div className="px-5 py-4 border-b border-blue-400/10 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-xs font-semibold text-white">候选点与模型需求热区</div>
-              <div className="text-[10px] text-neutral-500 font-mono mt-1">{geo.dataset_id ?? "unversioned"}</div>
+              <div className="text-[10px] text-neutral-500 font-mono mt-1">数据版本：{geo.dataset_id ?? "未记录"}</div>
             </div>
             <div className="flex flex-wrap gap-3">
               {geo.legend.map(item => (
@@ -800,7 +1049,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
             <Card key={location.id} className={location.rank === 1 ? "border-blue-400/30" : ""}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className="eyebrow">Rank 0{location.rank}</span>
+                  <span className="eyebrow">综合排名第 {location.rank} 名</span>
                   <h3 className="text-sm font-semibold text-white mt-1">{location.name}</h3>
                   <p className="text-[10px] text-neutral-500 mt-1">
                     {location.coordinate_status === "resolved" ? `${location.latitude}, ${location.longitude}` : "坐标缺失"}
@@ -815,7 +1064,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
                 <div className="rounded-lg bg-black/40 p-2 text-neutral-400">竞争饱和 <strong className="block text-white text-xs mt-0.5">{location.competition_saturation_index}</strong></div>
               </div>
               <div className="mt-3 text-[10px] text-neutral-500">
-                POI：{location.observed_poi_status === "public_snapshot"
+                周边设施（POI）：{location.observed_poi_status === "public_snapshot"
                   ? Object.entries(location.observed_poi).map(([key, value]) => `${key} ${value}`).join(" · ")
                   : "未观测，当前使用行业先验"}
               </div>
@@ -826,7 +1075,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
 
       <div className="grid lg:grid-cols-[1.5fr_.5fr] gap-4">
         <Card>
-          <div className="eyebrow mb-1">Hourly demand prior</div>
+          <div className="eyebrow mb-1">小时需求先验估计</div>
           <h3 className="text-sm font-semibold text-white">小时访问与容量占用</h3>
           <div className="h-64 mt-5">
             <ResponsiveContainer width="100%" height="100%">
@@ -874,7 +1123,7 @@ function SampleProfileSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Synthetic Sample Distribution</div>
+        <div className="eyebrow mb-1">合成人口抽样分布</div>
         <h2 className="text-base font-semibold text-white tracking-tight">取样年龄、家庭收入与地域分布</h2>
         <p className="text-xs text-neutral-400 mt-2">
           从 {sample.population_size.toLocaleString()} 个合成人口中分层抽取 {sample.display_sample_size.toLocaleString()} 个点用于可视化。
@@ -883,7 +1132,7 @@ function SampleProfileSection({ data }: { data: ReportData }) {
 
       <div className="grid lg:grid-cols-[.78fr_1.22fr] gap-4">
         <Card>
-          <div className="eyebrow mb-1">Thailand sample map</div>
+          <div className="eyebrow mb-1">泰国样本位置分布</div>
           <h3 className="text-sm font-semibold text-white">泰国合成样本点状图</h3>
           <svg viewBox="0 0 360 560" className="w-full h-[440px] mt-4" role="img" aria-label="泰国合成人口抽样点位">
             <defs>
@@ -926,12 +1175,12 @@ function SampleProfileSection({ data }: { data: ReportData }) {
           </div>
           <p className="text-[10px] leading-relaxed text-neutral-500 mt-3">{sample.location_disclosure}</p>
           <p className="text-[9px] leading-relaxed text-neutral-600 mt-2">
-            底图：{THAILAND_BOUNDARY_SOURCE} · {THAILAND_BOUNDARY_VERSION} · 真实 ADM0/ADM1 边界
+            底图：{THAILAND_BOUNDARY_SOURCE} · {THAILAND_BOUNDARY_VERSION} · 泰国国界及一级行政区真实边界
           </p>
         </Card>
 
         <Card>
-          <div className="eyebrow mb-1">Age × household income</div>
+          <div className="eyebrow mb-1">年龄与家庭月收入</div>
           <h3 className="text-sm font-semibold text-white">年龄与家庭月收入坐标图</h3>
           <div className="h-[440px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -990,7 +1239,7 @@ function RegionalSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Geographic Readiness</div>
+        <div className="eyebrow mb-1">区域市场表现</div>
         <h2 className="text-base font-semibold text-white tracking-tight">泰国各主要大区表现</h2>
       </div>
 
@@ -1000,7 +1249,7 @@ function RegionalSection({ data }: { data: ReportData }) {
             <div key={i} className="flex items-center justify-between py-2 border-b border-neutral-900 last:border-0 text-xs">
               <div className="flex items-center gap-2">
                 <MapPin size={14} className="text-neutral-500" />
-                <span className="font-medium text-white">{r.region}</span>
+                <span className="font-medium text-white">{REGION_LABELS[r.region] ?? r.region}</span>
                 <span className="text-[10px] text-neutral-500 font-mono">占比 {r.share}</span>
               </div>
               <div className="flex items-center gap-4">
@@ -1023,7 +1272,7 @@ function ChannelsSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Distribution Fit</div>
+        <div className="eyebrow mb-1">渠道适配分析</div>
         <h2 className="text-base font-semibold text-white tracking-tight">{terms.channel}</h2>
       </div>
 
@@ -1031,7 +1280,7 @@ function ChannelsSection({ data }: { data: ReportData }) {
         <Card className="border-blue-400/20">
           <div className="grid sm:grid-cols-[1fr_auto] gap-5">
             <div>
-              <span className="eyebrow text-blue-300">Ecommerce checkout context</span>
+              <span className="eyebrow text-blue-300">电商下单与履约条件</span>
               <h3 className="text-sm font-semibold text-white mt-1">泰国电商履约与信任诊断</h3>
               <div className="flex flex-wrap gap-2 mt-3">
                 {data.commerce_analysis.marketplaces.map(item => (
@@ -1040,7 +1289,7 @@ function ChannelsSection({ data }: { data: ReportData }) {
               </div>
               <p className="text-xs text-neutral-400 mt-3">
                 运费 ฿{data.commerce_analysis.shipping_fee_thb} · 约 {data.commerce_analysis.delivery_days} 天送达 ·
-                COD {data.commerce_analysis.cod_available ? "支持" : "不支持"} ·
+                货到付款（COD）{data.commerce_analysis.cod_available ? "支持" : "不支持"} ·
                 官方店 {data.commerce_analysis.official_store ? "有" : "无"}
               </p>
               <p className="text-[10px] text-neutral-500 mt-2">
@@ -1113,7 +1362,7 @@ function SocialDynamicsSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">WOM & Social Propagation</div>
+        <div className="eyebrow mb-1">口碑与社交传播</div>
         <h2 className="text-base font-semibold text-white tracking-tight">晒单、推广与评价传播情景</h2>
         <p className="text-xs text-neutral-400 mt-2">
           将客户晒单、持续好评、创作者推广和集中差评作为独立冲击进入动态扩散，而不是把点赞量直接换算为销量。
@@ -1161,7 +1410,7 @@ function SocialDynamicsSection({ data }: { data: ReportData }) {
         <div>
           <div className="flex items-end justify-between gap-3 mb-3">
             <div>
-              <div className="eyebrow">Platform evidence access</div>
+              <div className="eyebrow">平台数据获取条件</div>
               <h3 className="text-sm font-semibold text-white mt-1">社交与电商数据接入状态</h3>
             </div>
             <span className="text-[10px] text-neutral-500 font-mono">{data.social_evidence.version}</span>
@@ -1171,10 +1420,12 @@ function SocialDynamicsSection({ data }: { data: ReportData }) {
               <Card key={platform.platform}>
                 <div className="flex justify-between gap-3">
                   <strong className="text-xs text-white">{platform.platform}</strong>
-                  <span className="text-[9px] text-blue-200 bg-blue-400/10 px-2 py-1 rounded-full h-fit">{platform.status}</span>
+                  <span className="text-[9px] text-blue-200 bg-blue-400/10 px-2 py-1 rounded-full h-fit">{statusLabel(platform.status)}</span>
                 </div>
                 <p className="text-[11px] text-neutral-400 leading-relaxed mt-3">{platform.recommended_path}</p>
-                <p className="text-[10px] text-neutral-600 mt-2">{platform.public_market_scan}</p>
+                <p className="text-[10px] text-neutral-500 mt-2">
+                  公开数据限制：{PLATFORM_ACCESS_LABELS[platform.public_market_scan] ?? platform.public_market_scan}
+                </p>
               </Card>
             ))}
           </div>
@@ -1189,14 +1440,15 @@ function ConsumerVoicesSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Qualitative Feedback Panel</div>
+        <div className="eyebrow mb-1">定性反馈与原因解释</div>
         <h2 className="text-base font-semibold text-white tracking-tight">消费者解释与模型细分</h2>
       </div>
 
       <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-900 flex items-start gap-3">
         <AlertTriangle size={15} className="text-neutral-500 shrink-0 mt-0.5" />
         <p className="text-xs text-neutral-300 font-light leading-relaxed">
-          声明：有可用 LLM 时展示代表样本的结构化弱信号；不可用时展示选择模型细分摘要。两者都不是真人访谈记录，也不直接决定{terms.probability}。
+          说明：大语言模型（LLM）可用时，这里展示代表样本的结构化辅助判断；不可用时展示选择模型的人群摘要。
+          两者都不是真人访谈原话，也不会直接决定{terms.probability}。
         </p>
       </div>
 
@@ -1205,7 +1457,8 @@ function ConsumerVoicesSection({ data }: { data: ReportData }) {
           <>
             <Card>
               <p className="text-xs text-neutral-400">
-                本次没有可验证的 LLM 代表样本输出。以下保留模型细分的驱动因素、阻碍与渠道偏好结果，但明确标记为模型摘要，不作为访谈原话。
+                本次没有可验证的大语言模型代表样本输出。以下内容来自选择模型的人群分群结果，仅用于解释主要驱动因素、
+                阻碍和渠道偏好，不应当作真实消费者访谈原话。
               </p>
             </Card>
             {data.segments.slice(0, 5).map(segment => (
@@ -1263,30 +1516,30 @@ function SensitivitySection({ data }: { data: ReportData }) {
   const elasticity = data.price_elasticity || [];
   const midpoint = elasticity.length > 0 ? elasticity[Math.floor(elasticity.length / 2)] : null;
   const params = (data.implied_wtp || []).map(item => ({
-    name: item.attribute,
+    name: ATTRIBUTE_LABELS[item.attribute] ?? item.attribute,
     impact: Math.min(1, Math.abs(item.implied_wtp_thb) / Math.max(1, midpoint?.price ?? 1)),
-    desc: `属性评分 +${item.score_increase.toFixed(1)} 的先验隐含 WTP：THB ${item.implied_wtp_thb.toFixed(2)}`,
+    desc: `属性评分提高 ${item.score_increase.toFixed(1)} 时，模型推算的先验边际支付意愿约为 ฿${item.implied_wtp_thb.toFixed(2)}`,
   }));
   if (midpoint && elasticity.length >= 3) {
     const lower = elasticity[Math.max(0, Math.floor(elasticity.length / 2) - 1)];
     params.unshift({
       name: "售价",
       impact: Math.min(1, Math.abs(lower.purchase_rate - midpoint.purchase_rate) / Math.max(0.01, midpoint.purchase_rate)),
-      desc: `THB ${midpoint.price} → THB ${lower.price}，模型购买概率 ${formatPercent(midpoint.purchase_rate)} → ${formatPercent(lower.purchase_rate)}`,
+      desc: `售价从 ฿${midpoint.price} 降至 ฿${lower.price} 时，模型购买概率由 ${formatPercent(midpoint.purchase_rate)} 变为 ${formatPercent(lower.purchase_rate)}`,
     });
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Sensitivity Analysis</div>
+        <div className="eyebrow mb-1">结果敏感性</div>
         <h2 className="text-base font-semibold text-white tracking-tight">关键参数敏感性说明</h2>
       </div>
 
       <Card>
         <div className="space-y-4">
           {params.length === 0 && (
-            <p className="text-xs text-neutral-400">本套餐未生成敏感性或 WTP 结果。</p>
+            <p className="text-xs text-neutral-400">本套餐未生成敏感性或支付意愿（WTP）结果。</p>
           )}
           {params.map((p, i) => (
             <div key={i} className="space-y-1">
@@ -1316,21 +1569,51 @@ function MethodologySection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Methodology & Lineage</div>
+        <div className="eyebrow mb-1">方法与数据来源</div>
         <h2 className="text-base font-semibold text-white tracking-tight">数据血缘与方法附录</h2>
       </div>
 
       <Card>
         <div className="space-y-4 text-xs text-neutral-300 font-light leading-relaxed">
-          <p><strong className="text-white font-semibold">1. 校准状态：</strong> {calibrationLabel(calibration?.status ?? data.calibration_status)}。{calibration?.claim ?? "未提供校准声明。"}</p>
-          <p><strong className="text-white font-semibold">2. 选择模型：</strong> {data.model_lineage?.model_family ?? "未记录"}；包含焦点方案、竞品方案与不购买选项，不以 LLM 投票直接计算市场规模。</p>
-          <p><strong className="text-white font-semibold">3. 不确定性：</strong> {uncertainty?.interval_type ?? "未记录"}；组成包括 {(uncertainty?.components ?? []).join("、") || "未记录"}。历史回测误差：{uncertainty?.validated_forecast_error ?? "尚未建立"}。</p>
-          <p><strong className="text-white font-semibold">4. LLM 信号：</strong> 状态 {agentSignal?.status ?? "not_used"}，有效权重 {agentSignal?.effective_weight ?? 0}，完成代表样本 {agentSignal?.sample_size ?? 0}。不可用时不会替换为固定 Persona。</p>
-          <p><strong className="text-white font-semibold">5. 品类人群：</strong> {category?.category_key ?? data.category_key ?? "通用消费品"}；目标人群占总体 {formatPercent(category?.eligible_population_share ?? 1)}，资格口径为 {category?.eligibility_status ?? "通用人群假设"}。</p>
-          <p><strong className="text-white font-semibold">6. 数据可追溯：</strong> 已记录 {(calibration?.sources ?? []).filter(source => source.observed).length} 个观测数据源；本报告来自 Run ID <code className="text-white font-mono bg-neutral-900 px-1 py-0.5 rounded">{data.run_id}</code>。</p>
+          <p>
+            <strong className="text-white font-semibold">1. 人口数据校准：</strong>{" "}
+            {calibrationLabel(calibration?.status ?? data.calibration_status)}。
+            {calibrationClaim(calibration?.status ?? data.calibration_status, calibration?.claim)}
+          </p>
+          <p>
+            <strong className="text-white font-semibold">2. 消费者选择模型：</strong>{" "}
+            {MODEL_LABELS[data.model_lineage?.model_family ?? ""] ?? data.model_lineage?.model_family ?? "未记录"}。
+            模型要求消费者在本项目方案、竞品和“不购买 / 不到店”之间进行选择；大语言模型的回答不会被直接平均成市场规模。
+          </p>
+          <p>
+            <strong className="text-white font-semibold">3. 结果区间与不确定性：</strong>{" "}
+            {UNCERTAINTY_LABELS[uncertainty?.interval_type ?? ""] ?? uncertainty?.interval_type ?? "未记录"}。
+            当前纳入：
+            {(uncertainty?.components ?? []).map(component => UNCERTAINTY_LABELS[component] ?? component).join("；") || "未记录"}。
+            历史回测误差：{uncertainty?.validated_forecast_error ?? "尚未建立，因此区间不是经过验证的销量置信区间"}。
+          </p>
+          <p>
+            <strong className="text-white font-semibold">4. 大语言模型辅助信号：</strong>{" "}
+            本次状态为“{statusLabel(agentSignal?.status ?? "not_used")}”，定量结果中的有效权重为 {formatPercent(agentSignal?.effective_weight ?? 0)}，
+            完成代表样本 {agentSignal?.sample_size ?? 0} 个。不可用时系统不会用固定虚拟人物冒充真实研究结果。
+          </p>
+          <p>
+            <strong className="text-white font-semibold">5. 品类目标人群：</strong>{" "}
+            {CATEGORY_LABELS[category?.category_key ?? data.category_key ?? ""] ?? category?.category_key ?? data.category_key ?? "通用消费品"}；
+            占全部合成人口 {formatPercent(category?.eligible_population_share ?? 1)}。
+            筛选依据：{eligibilityLabel(category?.eligibility_status)}。
+          </p>
+          <p>
+            <strong className="text-white font-semibold">6. 数据追溯：</strong>{" "}
+            已记录 {(calibration?.sources ?? []).filter(source => source.observed).length} 个真实观测数据源；
+            本报告运行编号为 <code className="text-white font-mono bg-neutral-900 px-1 py-0.5 rounded">{data.run_id}</code>，
+            可用于追查数据版本、模型版本和运行条件。
+          </p>
           {(data.warnings || []).map((warning, index) => (
             <div key={index} className="p-3 rounded-lg bg-black/40 border border-neutral-900">
-              <p className="text-neutral-400">限制 {index + 1}：{warning}</p>
+              <p className="text-neutral-300">
+                <strong className="text-white">限制 {index + 1}：</strong>{warningLabel(warning)}
+              </p>
               <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-amber-300/10 text-amber-200">
                 原因：{limitationReason(warning)}
               </span>
@@ -1339,10 +1622,11 @@ function MethodologySection({ data }: { data: ReportData }) {
         </div>
       </Card>
       <div>
-        <div className="eyebrow mb-1">Provisional results under limitations</div>
+        <div className="eyebrow mb-1">证据有限时的保守估计</div>
         <h3 className="text-sm font-semibold text-white">证据不足时仍保留的保守结果</h3>
         <p className="text-xs text-neutral-400 mt-2">
-          抓取、授权数据或 LLM 不可用时，系统不会留空；会降级到可追溯的模型估计，并同时展示证据等级和局限性。
+          当公开抓取、客户授权数据或大语言模型不可用时，系统不会用伪造数据填空，而是保留可追溯的保守模型估计，
+          并同时说明证据等级、计算依据和使用边界。
         </p>
       </div>
       <div className="grid md:grid-cols-2 gap-3">
@@ -1358,15 +1642,21 @@ function MethodologySection({ data }: { data: ReportData }) {
               )}>证据等级 {item.grade}</span>
             </div>
             <p className="text-sm text-white mt-3">{item.result}</p>
-            <p className="text-[10px] text-neutral-500 mt-2">依据：{item.basis}</p>
+            <p className="text-[10px] text-neutral-500 mt-2">
+              依据：{EVIDENCE_BASIS_LABELS[item.basis] ?? item.basis}
+            </p>
             <p className="text-[10px] text-amber-100/70 mt-1">局限：{item.limitation}</p>
           </Card>
         ))}
       </div>
+      <p className="text-[10px] text-neutral-500 leading-relaxed">
+        证据等级说明：B 级表示有可追溯的公开统计或市场证据，但不等于真实成交数据；C 级表示人口结构已有校准，
+        核心行为系数仍待验证；D 级表示主要用于方向判断和压力测试的已披露模型先验。
+      </p>
       {!!data.evidence_acquisition?.collectors?.length && (
         <>
           <div>
-            <div className="eyebrow mb-1">Evidence acquisition status</div>
+            <div className="eyebrow mb-1">证据采集状态</div>
             <h3 className="text-sm font-semibold text-white">独立证据采集与降级状态</h3>
             <p className="text-xs text-neutral-400 mt-2">
               各采集器独立执行；单个平台失败不会阻断整份报告，系统会记录降级结果。
@@ -1376,7 +1666,7 @@ function MethodologySection({ data }: { data: ReportData }) {
             {data.evidence_acquisition.collectors.map(item => (
               <Card key={item.collector}>
                 <div className="flex items-start justify-between gap-3">
-                  <strong className="text-xs text-white">{item.collector}</strong>
+                  <strong className="text-xs text-white">{COLLECTOR_LABELS[item.collector] ?? item.collector}</strong>
                   <span className={cn(
                     "text-[10px] px-2 py-1 rounded-full shrink-0",
                     item.status === "succeeded"
@@ -1385,12 +1675,12 @@ function MethodologySection({ data }: { data: ReportData }) {
                         ? "bg-neutral-700/50 text-neutral-300"
                         : "bg-amber-300/10 text-amber-200"
                   )}>
-                    {item.status}
+                    {statusLabel(item.status)}
                   </span>
                 </div>
                 <p className="text-[10px] text-neutral-500 mt-3">
-                  取得记录 {item.result_count}
-                  {item.fallback_result ? ` · 降级采用 ${item.fallback_result}` : ""}
+                  已取得 {item.result_count} 条记录
+                  {item.fallback_result ? `；数据不足时采用“${FALLBACK_LABELS[item.fallback_result] ?? item.fallback_result}”作为保守替代` : ""}
                 </p>
               </Card>
             ))}

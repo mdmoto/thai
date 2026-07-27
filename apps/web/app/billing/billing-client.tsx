@@ -27,12 +27,39 @@ type Transaction = {
 const SALES_URL =
   process.env.NEXT_PUBLIC_SALES_URL || "https://wa.me/66623458238";
 
+const PACKAGE_LABELS: Record<string, string> = {
+  PREVIEW: "体验版",
+  STANDARD: "标准版",
+  PROFESSIONAL: "专业版",
+  DEEP: "深度版",
+  ENTERPRISE: "企业版",
+};
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  PENDING: "待付款",
+  PAYMENT_PENDING: "等待付款核验",
+  PAID: "已付款",
+  VERIFIED: "已核验并入账",
+  CANCELLED: "已取消",
+  EXPIRED: "已过期",
+  FAILED: "处理失败",
+};
+
+const TRANSACTION_TYPE_LABELS: Record<string, string> = {
+  PURCHASE: "购买积分",
+  RESERVATION: "运行预留积分",
+  CONSUMPTION: "运行消耗积分",
+  REFUND: "退回积分",
+  INVITE_BONUS: "邀请码赠送积分",
+  ADJUSTMENT: "人工调整",
+};
+
 function salesUrlForOrder(order: PurchaseOrder): string {
   const separator = SALES_URL.includes("?") ? "&" : "?";
   const message = [
     "Chiang Mai AI Center 付款咨询",
     `订单编号：${order.id}`,
-    `套餐：${order.package_code}`,
+    `套餐：${PACKAGE_LABELS[order.package_code] ?? order.package_code}`,
     `金额：THB ${(order.amount_minor / 100).toLocaleString()}`,
   ].join("\n");
   return `${SALES_URL}${separator}text=${encodeURIComponent(message)}`;
@@ -95,7 +122,7 @@ export function BillingClient() {
     <div className="p-5 sm:p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <span className="eyebrow">Credits & verified orders</span>
+          <span className="eyebrow">积分与已核验订单</span>
           <h1 className="text-2xl font-semibold text-white mt-2">购买模拟额度</h1>
           <p className="text-sm text-neutral-400 mt-2 max-w-2xl">
             付款由销售团队核验，到账后积分才会入账。平台不会通过前端按钮自行增加余额。
@@ -140,7 +167,7 @@ export function BillingClient() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {packages.map(pkg => (
           <Card key={pkg.code} className="flex flex-col">
-            <span className="eyebrow">{pkg.code}</span>
+            <span className="eyebrow">{PACKAGE_LABELS[pkg.code] ?? pkg.code}</span>
             <h2 className="text-base font-semibold text-white mt-2">{pkg.name}</h2>
             <div className="text-2xl font-semibold text-white mt-4">
               ฿{(pkg.amount_minor / 100).toLocaleString()}
@@ -163,18 +190,18 @@ export function BillingClient() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <span className="eyebrow">Orders</span>
+          <span className="eyebrow">订单记录</span>
           <h2 className="text-sm font-semibold text-white mt-1 mb-4">最近订单</h2>
           <div className="space-y-3">
             {orders.length ? orders.slice(0, 8).map(order => (
               <div key={order.id} className="flex justify-between gap-4 text-xs border-b border-neutral-900 pb-3">
                 <div>
                   <div className="text-white font-mono">{order.id}</div>
-                  <div className="text-neutral-500 mt-1">{order.package_code} · {order.credits} 积分</div>
+                  <div className="text-neutral-500 mt-1">{PACKAGE_LABELS[order.package_code] ?? order.package_code} · {order.credits} 积分</div>
                 </div>
                 <div className="text-right">
                   <div className="text-neutral-300">฿{(order.amount_minor / 100).toLocaleString()}</div>
-                  <div className="text-neutral-500 mt-1">{order.status}</div>
+                  <div className="text-neutral-500 mt-1">{ORDER_STATUS_LABELS[order.status] ?? order.status}</div>
                 </div>
               </div>
             )) : <p className="text-xs text-neutral-500">暂无订单。</p>}
@@ -182,13 +209,13 @@ export function BillingClient() {
         </Card>
 
         <Card>
-          <span className="eyebrow">Ledger</span>
+          <span className="eyebrow">积分流水</span>
           <h2 className="text-sm font-semibold text-white mt-1 mb-4">积分流水</h2>
           <div className="space-y-3">
             {transactions.length ? transactions.slice(0, 8).map(item => (
               <div key={item.id} className="flex justify-between gap-4 text-xs border-b border-neutral-900 pb-3">
                 <div>
-                  <div className="text-neutral-300">{item.description || item.type}</div>
+                  <div className="text-neutral-300">{item.description || TRANSACTION_TYPE_LABELS[item.type] || item.type}</div>
                   <div className="text-neutral-500 mt-1">
                     {new Date(item.created_at).toLocaleString()}
                   </div>

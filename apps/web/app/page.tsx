@@ -53,7 +53,7 @@ export default function HomePage() {
 
       <section className="hero-grid max-w-7xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-20">
         <div className="max-w-4xl">
-          <span className="eyebrow text-blue-300">Thailand market decision infrastructure</span>
+          <span className="eyebrow text-blue-300">泰国市场商业决策平台</span>
           <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05] text-white mt-5">
             进入泰国市场前，
             <br />
@@ -74,7 +74,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-x-6 gap-y-2 mt-8 text-xs text-neutral-500">
             <span className="flex items-center gap-1.5"><Check size={13} /> 泰国 77 府人口覆盖</span>
             <span className="flex items-center gap-1.5"><Check size={13} /> 竞品与不购买选项</span>
-            <span className="flex items-center gap-1.5"><Check size={13} /> 不把 LLM 投票当销量</span>
+            <span className="flex items-center gap-1.5"><Check size={13} /> 不把大模型回答直接当作销量</span>
             <span className="flex items-center gap-1.5"><Check size={13} /> 报告记录假设和版本</span>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function HomePage() {
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
         <div className="max-w-2xl mb-10">
-          <span className="eyebrow">How it works</span>
+          <span className="eyebrow">使用流程</span>
           <h2 className="text-3xl font-semibold text-white mt-3">从输入到决策，不隐藏模型边界</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -110,7 +110,7 @@ export default function HomePage() {
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8 pb-20">
         <div className="max-w-2xl mb-10">
-          <span className="eyebrow">Study catalog</span>
+          <span className="eyebrow">研究类型</span>
           <h2 className="text-3xl font-semibold text-white mt-3">第一版研究类型已统一进入同一工作流</h2>
           <p className="text-sm text-neutral-400 mt-3">每种研究使用对应的模型先验与报告措辞，不再把线下到店或广告行动写成普通商品购买。</p>
         </div>
@@ -135,14 +135,14 @@ export default function HomePage() {
             <h2 className="text-2xl font-semibold text-white mt-5">可以立即使用，但不会伪装成销售预测</h2>
             <p className="text-sm text-neutral-400 leading-relaxed mt-3">
               当前产品适合新品筛选、价格比较和竞品情景分析。未接入真实销售或选择实验时，
-              报告会把购买率、WTP 和品类渗透标为先验结果。
+              报告会把购买率、支付意愿（WTP）和品类渗透率明确标为待验证的先验结果。
             </p>
           </div>
           <div className="space-y-3 text-sm text-neutral-300">
             {[
-              "人口与收入：泰国 NSO 公开宏观数据校准",
-              "选择概率：MNL / 计划对应的异质性模型",
-              "LLM：仅提供有限权重的结构化弱信号",
+              "人口与收入：使用泰国国家统计局（NSO）公开宏观数据校准",
+              "选择概率：使用多项逻辑选择模型（MNL）或套餐对应的异质性模型",
+              "大语言模型（LLM）：只提供权重受限的结构化辅助判断",
               "竞品：公开报价和商家功能声明，不冒充成交数据",
             ].map(item => (
               <div key={item} className="flex items-start gap-2 border-b border-neutral-900 pb-3">
@@ -157,7 +157,7 @@ export default function HomePage() {
       <section className="border-y border-neutral-900 bg-[#0d0d0d]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
           <div className="max-w-2xl mb-10">
-            <span className="eyebrow">Simple pricing</span>
+            <span className="eyebrow">套餐与价格</span>
             <h2 className="text-3xl font-semibold text-white mt-3">从免费检查到正式决策报告</h2>
             <p className="text-sm text-neutral-400 mt-3">
               套餐差异来自样本、竞品数量、模型深度和不确定性轮数，不是简单更换大模型。
@@ -165,22 +165,22 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <PricingCard
-              name="Preview"
+              name="体验版（Preview）"
               price="免费"
               note="每个账号 1 次"
-              items={["100 合成人口", "40 轮 Monte Carlo", "用于检查输入方向"]}
+              items={["100 名合成消费者", "40 轮蒙特卡洛不确定性模拟", "用于检查输入方向"]}
             />
             <PricingCard
-              name="Standard"
+              name="标准版（Standard）"
               price="5 积分"
               note="有效邀请码可赠送一次"
-              items={["10,000 合成人口", "80 轮 Monte Carlo", "3 个竞品选择方案"]}
+              items={["10,000 名合成消费者", "80 轮蒙特卡洛不确定性模拟", "3 个竞品选择方案"]}
             />
             <PricingCard
-              name="Professional"
+              name="专业版（Professional）"
               price="฿7,900"
               note="含 20 积分 / 1 次正式运行"
-              items={["30,000 合成人口", "150 轮 Monte Carlo", "5 个竞品与完整情景分析"]}
+              items={["30,000 名合成消费者", "150 轮蒙特卡洛不确定性模拟", "5 个竞品与完整情景分析"]}
               featured
             />
           </div>
@@ -193,7 +193,7 @@ export default function HomePage() {
       <section className="border-t border-neutral-900">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-16 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <span className="eyebrow">Ready to compare</span>
+            <span className="eyebrow">开始比较方案</span>
             <h2 className="text-2xl font-semibold text-white mt-2">创建第一个泰国消费品研究</h2>
           </div>
           <Link href="/login" className="btn-cmai-primary">

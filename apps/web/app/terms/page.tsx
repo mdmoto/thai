@@ -16,7 +16,7 @@ export default function TermsPage() {
         <h2 className="text-white font-semibold mt-8">3. 额度与订单</h2>
         <p>付费订单在官方销售渠道确认到账后入账。失败运行的预留积分会自动退回；已经完成并生成报告的运行会消耗对应额度。</p>
         <h2 className="text-white font-semibold mt-8">4. 结果解释</h2>
-        <p>报告会区分观测数据、模型先验和 LLM 弱信号。用户应结合实地测试、法律、财务与运营判断作出最终决策。</p>
+        <p>报告会区分真实观测数据、待验证的模型先验和大语言模型（LLM）辅助信号。用户应结合实地测试、法律、财务与运营判断作出最终决策。</p>
         <h2 className="text-white font-semibold mt-8">5. 合理使用</h2>
         <p>不得绕过访问控制、滥用计算资源、逆向攻击服务或利用结果实施歧视、欺诈和违法行为。</p>
         <h2 className="text-white font-semibold mt-8">6. 联系与企业合同</h2>

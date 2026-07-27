@@ -41,7 +41,7 @@ export function StudyViewClient() {
     <div className="p-5 sm:p-8 max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
         <div>
-          <span className="eyebrow">Study</span>
+          <span className="eyebrow">研究项目</span>
           <h1 className="text-2xl font-semibold text-white mt-2">{study.name}</h1>
           <div className="flex items-center gap-2 mt-3">
             <StatusBadge status={study.status as Parameters<typeof StatusBadge>[0]["status"]} />
@@ -70,7 +70,7 @@ export function StudyViewClient() {
       </div>
 
       <Card>
-        <span className="eyebrow">Confirmed inputs</span>
+        <span className="eyebrow">已确认的研究输入</span>
         <div className="mt-4 divide-y divide-neutral-900 text-sm">
           <Fact label="研究类型" value={study.study_type} />
           <Fact label="品类" value={facts.category} />
@@ -83,10 +83,10 @@ export function StudyViewClient() {
       </Card>
 
       <Card>
-        <span className="eyebrow">Interpretation</span>
+        <span className="eyebrow">结果应如何理解</span>
         <p className="text-sm text-neutral-300 mt-3 leading-relaxed">
           本项目输出用于比较方案方向。人口与收入采用泰国公开宏观数据校准；
-          若没有客户销售、选择实验或 A/B 数据，购买率和 WTP 会明确标记为先验预测。
+          若没有客户销售、消费者选择实验或广告对照测试数据，购买率和支付意愿（WTP）会明确标记为待验证的先验预测。
         </p>
       </Card>
     </div>

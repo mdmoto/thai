@@ -50,11 +50,11 @@ export function StatusBadge({ status }: { status: StatusType }) {
 type PlanCode = "PREVIEW" | "STANDARD" | "PROFESSIONAL" | "DEEP" | "ENTERPRISE";
 
 const PLAN_LABELS: Record<PlanCode, string> = {
-  PREVIEW: "Preview",
-  STANDARD: "Standard",
-  PROFESSIONAL: "Professional",
-  DEEP: "Deep",
-  ENTERPRISE: "Enterprise",
+  PREVIEW: "体验版",
+  STANDARD: "标准版",
+  PROFESSIONAL: "专业版",
+  DEEP: "深度版",
+  ENTERPRISE: "企业版",
 };
 
 export function PlanBadge({ plan }: { plan: PlanCode }) {

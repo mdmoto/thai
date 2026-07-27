@@ -61,7 +61,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
         <div className="text-center space-y-1">
           <BrandMark full className="w-48 h-auto mx-auto mb-4" />
-          <span className="eyebrow">Chiang Mai AI Center Account</span>
+          <span className="eyebrow">Chiang Mai AI Center 商业账号</span>
           <h2 className="text-xl font-light text-white tracking-tight">
             {isLogin ? "登录您的商业账号" : "注册新账号"}
           </h2>

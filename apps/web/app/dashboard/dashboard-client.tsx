@@ -64,7 +64,7 @@ export function DashboardClient() {
     return (
       <div className="p-8 max-w-3xl mx-auto">
         <Card>
-          <span className="eyebrow">Account required</span>
+          <span className="eyebrow">需要登录账号</span>
           <h1 className="text-xl font-semibold text-white mt-2">请先登录工作区</h1>
           <p className="text-sm text-neutral-400 mt-2">
             项目、额度和报告均按账号隔离保存。
@@ -81,7 +81,7 @@ export function DashboardClient() {
     <div className="p-5 sm:p-8 space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-8 border-b border-neutral-900">
         <div className="max-w-2xl">
-          <span className="eyebrow mb-3">Thailand Consumer Decision Lab</span>
+          <span className="eyebrow mb-3">泰国消费者决策研究</span>
           <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
             先比较泰国市场方案，再决定投入哪一个
           </h1>
@@ -105,7 +105,7 @@ export function DashboardClient() {
         <Card className="xl:col-span-2">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <span className="eyebrow">Recent studies</span>
+              <span className="eyebrow">最近研究</span>
               <h2 className="text-base font-semibold text-white mt-1">最近项目</h2>
             </div>
             <Link href="/studies" className="text-xs text-neutral-400 hover:text-white">
@@ -127,7 +127,7 @@ export function DashboardClient() {
         </Card>
 
         <Card>
-          <span className="eyebrow">Quick start</span>
+          <span className="eyebrow">快速开始</span>
           <h2 className="text-base font-semibold text-white mt-1 mb-4">快速开始</h2>
           <div className="space-y-2">
             {QUICK_TEMPLATES.map(item => (
