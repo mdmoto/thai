@@ -35,9 +35,8 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-base">
       <header className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between border-b border-blue-400/10">
-        <Link href="/" className="flex items-center gap-2.5">
-          <BrandMark className="w-10 h-10" priority />
-          <span className="hidden sm:block text-sm font-semibold">CMAI Market Twin</span>
+        <Link href="/" className="flex items-center">
+          <BrandMark full className="w-44 sm:w-52 h-auto" priority />
         </Link>
         <nav className="flex items-center gap-2">
           <Link href="/methodology" className="btn-cmai-ghost hidden sm:inline-flex">
@@ -181,7 +180,7 @@ export default function HomePage() {
             <PricingCard
               name="Standard"
               price="5 积分"
-              note="注册即赠送一次"
+              note="有效邀请码可赠送一次"
               items={["10,000 合成人口", "80 轮 Monte Carlo", "3 个竞品选择方案"]}
             />
             <PricingCard
@@ -212,7 +211,7 @@ export default function HomePage() {
 
       <footer className="border-t border-neutral-900">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row justify-between gap-4 text-xs text-neutral-500">
-          <span>CMAI Thailand Market Twin · Chiang Mai AI Center</span>
+          <span>Chiang Mai AI Center · Thailand</span>
           <div className="flex gap-4">
             <Link href="/methodology">方法</Link>
             <Link href="/terms">条款</Link>

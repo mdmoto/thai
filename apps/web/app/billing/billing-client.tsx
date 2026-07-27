@@ -30,7 +30,7 @@ const SALES_URL =
 function salesUrlForOrder(order: PurchaseOrder): string {
   const separator = SALES_URL.includes("?") ? "&" : "?";
   const message = [
-    "Thailand Market Twin 付款咨询",
+    "Chiang Mai AI Center 付款咨询",
     `订单编号：${order.id}`,
     `套餐：${order.package_code}`,
     `金额：THB ${(order.amount_minor / 100).toLocaleString()}`,

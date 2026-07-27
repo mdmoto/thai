@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "服务条款 — Thailand Market Twin" };
+export const metadata = { title: "服务条款 — Chiang Mai AI Center" };
 
 export default function TermsPage() {
   return (

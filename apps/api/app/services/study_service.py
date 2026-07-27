@@ -563,6 +563,156 @@ class StudyService:
             return "当前基线的主要约束是品牌认知不足；此判断来自选择模型漏斗，不是 LLM 投票。"
         return "当前缺少可验证的竞品与历史转化数据，模型不确定性仍是首要决策约束。"
 
+    def _evidence_estimates(
+        self,
+        sim_results: Mapping[str, Any],
+        agent_research: Mapping[str, Any],
+    ) -> List[Dict[str, Any]]:
+        """Return provisional results even when stronger evidence is absent."""
+        lineage = sim_results["model_lineage"]
+        purchase = sim_results["metric_intervals"]["purchase_rate"]
+        category = lineage.get("category", {})
+        competitors = lineage.get("competitors", [])
+        social = sim_results.get("social_dynamics", [])
+        final_period = max(
+            (int(item["period"]) for item in social),
+            default=0,
+        )
+        final_social = [
+            item for item in social if int(item["period"]) == final_period
+        ]
+        social_low = min(
+            (float(item["relative_sales_index"]) for item in final_social),
+            default=100.0,
+        )
+        social_high = max(
+            (float(item["relative_sales_index"]) for item in final_social),
+            default=100.0,
+        )
+        agent_count = int(agent_research.get("sample_size_completed") or 0)
+        return [
+            {
+                "topic": "购买 / 到店选择",
+                "result": (
+                    f"{float(purchase['mean']):.2%}，先验预测区间 "
+                    f"{float(purchase['p10']):.2%}–"
+                    f"{float(purchase['p90']):.2%}"
+                ),
+                "grade": "C",
+                "basis": "官方宏观校准人口 + 行业选择模型 + 竞品与不选择选项",
+                "limitation": "选择系数尚未由真实订单、选择实验或 A/B 数据拟合。",
+            },
+            {
+                "topic": "品类目标人群",
+                "result": (
+                    f"{float(category.get('eligible_population_share', 1.0)):.1%}"
+                    " 的合成人口符合当前品类资格规则"
+                ),
+                "grade": "C",
+                "basis": str(
+                    category.get(
+                        "eligibility_status",
+                        "通用品类资格先验",
+                    )
+                ),
+                "limitation": "没有官方品类渗透率时使用已披露的行为先验。",
+            },
+            {
+                "topic": "消费者理由与阻碍",
+                "result": (
+                    f"获得 {agent_count} 份结构化 LLM 弱信号"
+                    if agent_count
+                    else "使用五类模型细分的驱动因素、阻碍与渠道偏好摘要"
+                ),
+                "grade": "D" if not agent_count else "C",
+                "basis": (
+                    "代表样本结构化解释"
+                    if agent_count
+                    else "选择模型细分摘要；未虚构访谈原话"
+                ),
+                "limitation": (
+                    "LLM 或真人定性研究不可用时，仍输出模型摘要，"
+                    "但不得称为消费者原话。"
+                ),
+            },
+            {
+                "topic": "竞品证据",
+                "result": f"纳入 {len(competitors)} 个竞品选择项并记录缺失字段",
+                "grade": "B" if competitors else "D",
+                "basis": "公开报价、商家功能声明与显式字段先验",
+                "limitation": "公开页面价格和评价不等于成交量或真实转化率。",
+            },
+            {
+                "topic": "传播影响",
+                "result": (
+                    f"期末相对销售指数范围 {social_low:.1f}–"
+                    f"{social_high:.1f}（自然传播 = 100）"
+                ),
+                "grade": "D",
+                "basis": "晒单、好评、创作者推广与差评冲击的动态传播先验",
+                "limitation": "未接入平台曝光—互动—归因成交前，只用于压力测试。",
+            },
+        ]
+
+    def _evidence_acquisition(
+        self,
+        sim_results: Mapping[str, Any],
+        agent_research: Mapping[str, Any],
+    ) -> Dict[str, Any]:
+        calibration_sources = sim_results["model_lineage"][
+            "calibration"
+        ].get("sources", [])
+        observed_macro = sum(
+            1 for source in calibration_sources if source.get("observed")
+        )
+        competitors = sim_results["model_lineage"].get("competitors", [])
+        geo = sim_results.get("geo_analysis")
+        return {
+            "execution_policy": "independent_collectors_fail_open",
+            "collectors": [
+                {
+                    "collector": "Thailand NSO versioned snapshots",
+                    "status": "succeeded" if observed_macro else "fallback",
+                    "result_count": observed_macro,
+                    "fallback_result": (
+                        None if observed_macro else "versioned_population_prior"
+                    ),
+                },
+                {
+                    "collector": "Category competitor public evidence",
+                    "status": "succeeded" if competitors else "fallback",
+                    "result_count": len(competitors),
+                    "fallback_result": (
+                        None if competitors else "generic_competitor_prior"
+                    ),
+                },
+                {
+                    "collector": "Open geospatial / POI evidence",
+                    "status": "succeeded" if geo else "not_applicable",
+                    "result_count": (
+                        len(geo.get("sources", [])) if geo else 0
+                    ),
+                    "fallback_result": (
+                        None if geo else "synthetic_region_distribution"
+                    ),
+                },
+                {
+                    "collector": "Structured LLM research",
+                    "status": agent_research.get("status", "unavailable"),
+                    "result_count": int(
+                        agent_research.get("sample_size_completed") or 0
+                    ),
+                    "fallback_result": "model_segment_summary",
+                },
+                {
+                    "collector": "Social platform evidence",
+                    "status": "authorization_required",
+                    "result_count": 0,
+                    "fallback_result": "disclosed_social_propagation_scenarios",
+                },
+            ],
+        }
+
     def _report(
         self,
         study: Mapping[str, Any],
@@ -729,6 +879,14 @@ class StudyService:
             "market_dynamics": sim_results["market_dynamics"],
             "social_dynamics": sim_results.get("social_dynamics", []),
             "social_evidence": self._social_evidence_policy(),
+            "evidence_estimates": self._evidence_estimates(
+                sim_results,
+                agent_research,
+            ),
+            "evidence_acquisition": self._evidence_acquisition(
+                sim_results,
+                agent_research,
+            ),
             "geo_analysis": sim_results.get("geo_analysis"),
             "commerce_analysis": self._commerce_analysis(study),
             "implied_wtp": sim_results["implied_wtp"],

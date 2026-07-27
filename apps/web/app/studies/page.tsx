@@ -1,7 +1,7 @@
 import { AppShell, TopBar } from "@/components/layout";
 import { StudiesClient } from "./studies-client";
 
-export const metadata = { title: "研究项目 — Thailand Market Twin" };
+export const metadata = { title: "研究项目 — Chiang Mai AI Center" };
 
 export default function StudiesPage() {
   return (

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X, Lock, Mail, User, Building, ArrowRight } from "lucide-react";
+import { X, Lock, Mail, User, Building, ArrowRight, Ticket } from "lucide-react";
 import { loginApi, registerApi, UserProfile } from "@/lib/api-client";
 import { saveAuthSession } from "@/lib/auth-session";
+import { BrandMark } from "@/components/brand-mark";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     try {
       const data = isLogin
         ? await loginApi({ email, password })
-        : await registerApi({ email, password, name, company });
+        : await registerApi({
+            email,
+            password,
+            name,
+            company,
+            invite_code: inviteCode || undefined,
+          });
       saveAuthSession(data.user, data.access_token);
       onSuccess(data.user, data.access_token);
       onClose();
@@ -52,12 +60,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         </button>
 
         <div className="text-center space-y-1">
-          <span className="eyebrow">Thailand Market Twin Account</span>
+          <BrandMark full className="w-48 h-auto mx-auto mb-4" />
+          <span className="eyebrow">Chiang Mai AI Center Account</span>
           <h2 className="text-xl font-light text-white tracking-tight">
             {isLogin ? "登录您的商业账号" : "注册新账号"}
           </h2>
           <p className="text-xs text-neutral-400 font-light">
-            {isLogin ? "登录后可保存项目、报告和订单" : "注册赠送 5 积分，可完成一次 Standard 体验"}
+            {isLogin ? "登录后可保存项目、报告和订单" : "有效邀请码赠送 5 积分；未填写时初始积分为 0"}
           </p>
         </div>
 
@@ -98,6 +107,22 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   />
                 </div>
               </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] text-neutral-400 font-mono">邀请码（选填）</label>
+                <div className="relative">
+                  <Ticket size={15} className="absolute left-3 top-3 text-neutral-500" />
+                  <input
+                    type="text"
+                    placeholder="用于记录客户来源"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                    className="input-cmai pl-9 uppercase"
+                    maxLength={64}
+                  />
+                </div>
+                <p className="text-[10px] text-neutral-500">只有有效邀请码会获得体验积分。</p>
+              </div>
             </>
           )}
 
@@ -137,7 +162,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             disabled={loading}
             className="w-full btn-cmai-primary py-2.5 text-xs font-semibold mt-2"
           >
-            {loading ? "处理中..." : isLogin ? "立即登录" : "注册并领取体验额度"}
+            {loading ? "处理中..." : isLogin ? "立即登录" : "注册账号"}
             <ArrowRight size={14} className="ml-1" />
           </button>
         </form>

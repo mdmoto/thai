@@ -103,6 +103,22 @@ interface ReportData {
       official_reference?: string | null;
     }>;
   };
+  evidence_estimates?: Array<{
+    topic: string;
+    result: string;
+    grade: string;
+    basis: string;
+    limitation: string;
+  }>;
+  evidence_acquisition?: {
+    execution_policy: string;
+    collectors: Array<{
+      collector: string;
+      status: string;
+      result_count: number;
+      fallback_result?: string | null;
+    }>;
+  };
   implied_wtp?: { attribute: string; score_increase: number; implied_wtp_thb: number; status: string }[];
   geo_analysis?: {
     dataset_id?: string;
@@ -417,7 +433,7 @@ export function ReportClient({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-neutral-900">
           <div>
-            <div className="eyebrow mb-1">Thailand Digital Market Twin Report</div>
+            <div className="eyebrow mb-1">Chiang Mai AI Center · Decision Report</div>
             <h1 className="text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
             <p className="text-xs text-neutral-400 font-light mt-1">
               基于 {reportData.population_size.toLocaleString()} 泰国合成人口 · 模型样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} · {reportData.mc_rounds} 轮 Monte Carlo
@@ -1159,23 +1175,39 @@ function ConsumerVoicesSection({ data }: { data: ReportData }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">Qualitative Feedback Panel</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">LLM 结构化解释样本</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">消费者解释与模型细分</h2>
       </div>
 
       <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-900 flex items-start gap-3">
         <AlertTriangle size={15} className="text-neutral-500 shrink-0 mt-0.5" />
         <p className="text-xs text-neutral-300 font-light leading-relaxed">
-          声明：以下内容由代表性合成记录结合 Gemini 生成，只用于提出可验证的理由与阻碍假设，不是真人访谈记录，也不直接决定{terms.probability}。
+          声明：有可用 LLM 时展示代表样本的结构化弱信号；不可用时展示选择模型细分摘要。两者都不是真人访谈记录，也不直接决定{terms.probability}。
         </p>
       </div>
 
       <div className="space-y-4">
         {data.consumer_voices.length === 0 && (
-          <Card>
-            <p className="text-xs text-neutral-400">
-              本次运行没有可验证的 LLM 代表样本输出，因此未展示虚构 Persona，且定量结果未受到 LLM 影响。
-            </p>
-          </Card>
+          <>
+            <Card>
+              <p className="text-xs text-neutral-400">
+                本次没有可验证的 LLM 代表样本输出。以下保留模型细分的驱动因素、阻碍与渠道偏好结果，但明确标记为模型摘要，不作为访谈原话。
+              </p>
+            </Card>
+            {data.segments.slice(0, 5).map(segment => (
+              <Card key={segment.segment_id ?? segment.name}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong className="text-sm text-white">{segment.name}</strong>
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-amber-300/10 text-amber-200">模型摘要 · 非消费者原话</span>
+                </div>
+                <p className="text-xs text-neutral-300 mt-3">
+                  主要驱动：{segment.drivers.join("、") || "未识别"}；主要阻碍：{segment.barriers.join("、") || "未识别"}。
+                </p>
+                <p className="text-[10px] text-neutral-500 mt-2">
+                  模型选择概率 {formatPercent(segment.purchase_rate)} · 偏好渠道 {segment.preferred_channel || "尚未识别"}
+                </p>
+              </Card>
+            ))}
+          </>
         )}
         {data.consumer_voices.map((v, i) => {
           const s = SENTIMENT_STYLE[v.sentiment] ?? SENTIMENT_STYLE.neutral;
@@ -1291,6 +1323,65 @@ function MethodologySection({ data }: { data: ReportData }) {
           ))}
         </div>
       </Card>
+      <div>
+        <div className="eyebrow mb-1">Provisional results under limitations</div>
+        <h3 className="text-sm font-semibold text-white">证据不足时仍保留的保守结果</h3>
+        <p className="text-xs text-neutral-400 mt-2">
+          抓取、授权数据或 LLM 不可用时，系统不会留空；会降级到可追溯的模型估计，并同时展示证据等级和局限性。
+        </p>
+      </div>
+      <div className="grid md:grid-cols-2 gap-3">
+        {(data.evidence_estimates || []).map(item => (
+          <Card key={item.topic}>
+            <div className="flex items-center justify-between gap-3">
+              <strong className="text-xs text-white">{item.topic}</strong>
+              <span className={cn(
+                "text-[10px] px-2 py-1 rounded-full",
+                item.grade === "B" ? "bg-emerald-400/10 text-emerald-200" :
+                item.grade === "C" ? "bg-blue-400/10 text-blue-200" :
+                "bg-amber-300/10 text-amber-200"
+              )}>证据等级 {item.grade}</span>
+            </div>
+            <p className="text-sm text-white mt-3">{item.result}</p>
+            <p className="text-[10px] text-neutral-500 mt-2">依据：{item.basis}</p>
+            <p className="text-[10px] text-amber-100/70 mt-1">局限：{item.limitation}</p>
+          </Card>
+        ))}
+      </div>
+      {!!data.evidence_acquisition?.collectors?.length && (
+        <>
+          <div>
+            <div className="eyebrow mb-1">Evidence acquisition status</div>
+            <h3 className="text-sm font-semibold text-white">独立证据采集与降级状态</h3>
+            <p className="text-xs text-neutral-400 mt-2">
+              各采集器独立执行；单个平台失败不会阻断整份报告，系统会记录降级结果。
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            {data.evidence_acquisition.collectors.map(item => (
+              <Card key={item.collector}>
+                <div className="flex items-start justify-between gap-3">
+                  <strong className="text-xs text-white">{item.collector}</strong>
+                  <span className={cn(
+                    "text-[10px] px-2 py-1 rounded-full shrink-0",
+                    item.status === "succeeded"
+                      ? "bg-emerald-400/10 text-emerald-200"
+                      : item.status === "not_applicable"
+                        ? "bg-neutral-700/50 text-neutral-300"
+                        : "bg-amber-300/10 text-amber-200"
+                  )}>
+                    {item.status}
+                  </span>
+                </div>
+                <p className="text-[10px] text-neutral-500 mt-3">
+                  取得记录 {item.result_count}
+                  {item.fallback_result ? ` · 降级采用 ${item.fallback_result}` : ""}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

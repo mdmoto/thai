@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building, Eye, EyeOff } from "lucide-react";
+import { Building, Eye, EyeOff, Ticket } from "lucide-react";
 import { loginApi, registerApi } from "@/lib/api-client";
 import { saveAuthSession } from "@/lib/auth-session";
 import { Input } from "@/components/ui";
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +27,13 @@ export default function LoginPage() {
     setError(null);
     try {
       const result = registering
-        ? await registerApi({ email, password, name, company })
+        ? await registerApi({
+            email,
+            password,
+            name,
+            company,
+            invite_code: inviteCode || undefined,
+          })
         : await loginApi({ email, password });
       saveAuthSession(result.user, result.access_token);
       const requested = new URLSearchParams(window.location.search).get("next");
@@ -46,11 +53,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-base py-10">
       <div className="w-full max-w-sm mx-4 animate-fade-in-up">
         <Link href="/" className="block text-center mb-8">
-          <BrandMark full className="w-48 h-auto mx-auto mb-5" priority />
-          <h1 className="text-xl font-semibold text-white tracking-tight">
-            CMAI Thailand Market Twin
-          </h1>
-          <p className="text-sm text-neutral-400 mt-1">泰国消费品决策平台</p>
+          <BrandMark full className="w-64 h-auto mx-auto mb-4" priority />
+          <p className="text-sm text-neutral-400">泰国商业与消费者决策平台</p>
         </Link>
 
         <div className="cmai-card p-6">
@@ -59,7 +63,7 @@ export default function LoginPage() {
           </h2>
           <p className="text-xs text-neutral-500 mb-6">
             {registering
-              ? "注册赠送 5 积分，可运行一次 Standard 体验。"
+              ? "填写有效邀请码赠送 5 积分；未填写或邀请码无效时初始积分为 0。"
               : "继续访问您保存的项目、报告和订单。"}
           </p>
 
@@ -90,6 +94,24 @@ export default function LoginPage() {
                       onChange={event => setCompany(event.target.value)}
                     />
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-neutral-300">
+                    邀请码（选填）
+                  </label>
+                  <div className="relative">
+                    <Ticket size={15} className="absolute left-3 top-3 text-neutral-500" />
+                    <input
+                      className="input-field pl-9 uppercase"
+                      value={inviteCode}
+                      onChange={event => setInviteCode(event.target.value.toUpperCase())}
+                      placeholder="填写后验证赠送积分"
+                      maxLength={64}
+                    />
+                  </div>
+                  <p className="text-[10px] text-neutral-500">
+                    邀请码用于记录客户来源；只有有效邀请码会获得体验积分。
+                  </p>
                 </div>
               </>
             )}

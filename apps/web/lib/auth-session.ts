@@ -5,6 +5,8 @@ export interface StoredUser {
   company?: string;
   plan_tier: string;
   credits_balance: number;
+  invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
+  acquisition_source?: string;
 }
 
 const TOKEN_KEY = "market_twin_token";

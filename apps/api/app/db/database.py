@@ -57,6 +57,20 @@ def _upgrade_legacy_schema() -> None:
             statements.append(
                 "ALTER TABLE credit_transactions ADD COLUMN balance_after INTEGER"
             )
+    if "users" in tables:
+        columns = {item["name"] for item in inspector.get_columns("users")}
+        if "invite_code" not in columns:
+            statements.append("ALTER TABLE users ADD COLUMN invite_code VARCHAR")
+        if "invite_status" not in columns:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN invite_status VARCHAR "
+                "NOT NULL DEFAULT 'NOT_PROVIDED'"
+            )
+        if "acquisition_source" not in columns:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN acquisition_source VARCHAR "
+                "NOT NULL DEFAULT 'ORGANIC'"
+            )
     if "reports" in tables:
         columns = {item["name"] for item in inspector.get_columns("reports")}
         if "user_id" not in columns:
@@ -81,6 +95,12 @@ def _upgrade_legacy_schema() -> None:
                 "CREATE UNIQUE INDEX IF NOT EXISTS "
                 "ix_credit_transactions_reference_id "
                 "ON credit_transactions (reference_id)"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_users_invite_code "
+                "ON users (invite_code)"
             )
         )
         connection.execute(

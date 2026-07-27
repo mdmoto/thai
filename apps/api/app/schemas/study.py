@@ -119,6 +119,8 @@ class ReportResponse(BaseModel):
     sample_profile: Optional[Dict[str, Any]] = None
     social_dynamics: List[Dict[str, Any]] = Field(default_factory=list)
     social_evidence: Optional[Dict[str, Any]] = None
+    evidence_estimates: List[Dict[str, Any]] = Field(default_factory=list)
+    evidence_acquisition: Optional[Dict[str, Any]] = None
     geo_analysis: Optional[Dict[str, Any]] = None
     commerce_analysis: Optional[Dict[str, Any]] = None
     model_lineage: Dict[str, Any]

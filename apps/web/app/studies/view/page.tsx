@@ -3,7 +3,7 @@ import { AppShell, TopBar } from "@/components/layout";
 import { Card } from "@/components/ui";
 import { StudyViewClient } from "./view-client";
 
-export const metadata = { title: "项目详情 — Thailand Market Twin" };
+export const metadata = { title: "项目详情 — Chiang Mai AI Center" };
 
 export default function StudyViewPage() {
   return (

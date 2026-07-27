@@ -3,7 +3,7 @@ import { AppShell, TopBar } from "@/components/layout";
 import { ReportClient } from "@/app/studies/[id]/report/report-client";
 
 export const metadata = {
-  title: "宠物智能饮水机样例报告 — CMAI Market Twin",
+  title: "宠物智能饮水机样例报告 — Chiang Mai AI Center",
   description: "查看泰国宠物智能饮水机 Standard 模拟的完整固定样例报告。",
 };
 
