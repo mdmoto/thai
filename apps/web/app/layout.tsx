@@ -19,22 +19,22 @@ export const metadata: Metadata = {
   ),
   title: "Chiang Mai AI Center | 泰国商业决策平台",
   description:
-    "面向进入泰国市场的品牌与线下商业，比较产品、价格、广告、商圈、门店和经营情景，并披露数据来源、模型版本与可信度边界。",
+    "让30万人的 AI 模拟消费人群先替您试一遍。比较产品、价格、广告、选址和经营方案，再决定钱该花在哪里。",
   keywords: ["CMAI", "Thailand Market Twin", "泰国市场研究", "消费品定价", "门店选址", "广告测试", "Thailand Market Entry"],
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
     title: "Chiang Mai AI Center | 泰国商业决策平台",
-    description: "进入泰国市场前，先比较产品、价格、广告、选址与经营情景。",
+    description: "30万 AI 模拟消费人群：先模拟，再决策。",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Chiang Mai AI Center" }],
+    images: [{ url: "/og-v2.png", width: 1200, height: 630, alt: "30万 AI 模拟消费人群：先模拟，再决策" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Chiang Mai AI Center | 泰国商业决策平台",
-    description: "进入泰国市场前，先比较产品、价格、广告、选址与经营情景。",
-    images: ["/og.png"],
+    description: "30万 AI 模拟消费人群：先模拟，再决策。",
+    images: ["/og-v2.png"],
   },
 };
 

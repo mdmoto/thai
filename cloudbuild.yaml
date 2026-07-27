@@ -36,7 +36,7 @@ steps:
       - --memory=4Gi
       - --execution-environment=gen2
       - --cpu-boost
-      - --concurrency=10
+      - --concurrency=1
       - --timeout=900
       - --min-instances=1
       - --max-instances=5

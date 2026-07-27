@@ -9,11 +9,11 @@ import { cn } from "@/lib/utils";
 type RunStatus = "running" | "completed" | "failed";
 
 const SERVER_STAGES = [
-  { label: "合成人口准备", detail: "读取校准版本并生成本次研究人口" },
-  { label: "代表样本研究", detail: "生成结构化辅助判断；不可用时不会使用固定虚拟人物冒充结果" },
-  { label: "离散选择模拟", detail: "运行行业模型、竞品选择集与不购买选项" },
-  { label: "不确定性与情景", detail: "计算先验预测区间、价格弹性和动态扩散" },
-  { label: "报告与血缘", detail: "保存数据版本、模型版本、假设和限制" },
+  { label: "准备 AI 模拟消费人群", detail: "读取泰国市场数据，生成本次分析所需的 AI 人群" },
+  { label: "分析消费选择", detail: "比较产品卖点、价格、竞品和不购买等选择" },
+  { label: "运行市场模拟", detail: "计算不同人群对各个方案的选择倾向" },
+  { label: "比较方案与风险", detail: "测试价格变化、市场情景和结果波动" },
+  { label: "生成决策报告", detail: "整理结论、依据、数据版本和使用限制" },
 ];
 
 export function RunProgressClient({
@@ -96,7 +96,7 @@ export function RunProgressClient({
             <div className="w-10 h-10 rounded-full bg-white text-black font-bold flex items-center justify-center mx-auto text-lg">
               ✓
             </div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">真实模拟已完成</h2>
+            <h2 className="text-xl font-semibold text-white tracking-tight">AI 市场模拟已完成</h2>
             <p className="text-xs text-neutral-400 font-light">
               后端耗时 {formatElapsed(elapsed)} · 报告编号 {reportId}
             </p>
@@ -116,7 +116,7 @@ export function RunProgressClient({
               onClick={() => setAttempt(value => value + 1)}
               className="btn-cmai-secondary inline-flex mt-2"
             >
-              <RotateCcw size={14} /> 重试真实任务
+              <RotateCcw size={14} /> 重新运行
             </button>
           </div>
         ) : (
@@ -124,7 +124,7 @@ export function RunProgressClient({
             <Loader2 size={22} className="animate-spin text-white mx-auto" />
             <div className="eyebrow">后台模拟正在运行</div>
             <h2 className="text-xl font-semibold text-white tracking-tight">
-              正在运行真实选择模型与情景模拟…
+              正在分析 AI 模拟消费人群与市场方案…
             </h2>
             <p className="text-xs text-neutral-400 font-mono tabular-nums">
               已等待 {formatElapsed(elapsed)} · 完成时间取决于套餐、人口和轮数
@@ -137,7 +137,7 @@ export function RunProgressClient({
       </Card>
 
       <div className="space-y-3">
-        <span className="eyebrow">后台实际执行内容</span>
+        <span className="eyebrow">本次分析内容</span>
         <div className="space-y-2">
           {SERVER_STAGES.map((stage, index) => (
             <Card

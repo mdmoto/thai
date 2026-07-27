@@ -39,7 +39,7 @@ export const STUDY_TYPE_META = {
 
 export const PLAN_META = {
   PREVIEW: {
-    label: "预览版",
+    label: "免费预览",
     population: 100,
     mc_rounds: 40,
     scenarios: 2,
@@ -47,29 +47,29 @@ export const PLAN_META = {
     credits: 0,
     price_thb: 0,
     availability: "self_service",
-    desc: "每个账号 1 次，用于检查输入和方向，不作为正式决策依据。",
+    desc: "每个账号 1 次，快速检查输入是否完整，帮助确认研究方向。",
   },
   STANDARD: {
-    label: "标准版",
-    population: 10_000,
+    label: "基础模拟",
+    population: 5_000,
     mc_rounds: 80,
     scenarios: 3,
     competitors: 3,
     credits: 5,
     price_thb: 0,
     availability: "self_service",
-    desc: "适合初筛一个产品与基础价格方案。",
+    desc: "用 5,000 人的 AI 模拟消费人群，快速比较价格、卖点和方案方向。",
   },
   PROFESSIONAL: {
-    label: "专业版",
-    population: 30_000,
+    label: "深度决策",
+    population: 300_000,
     mc_rounds: 150,
     scenarios: 5,
     competitors: 5,
     credits: 20,
     price_thb: 7_900,
     availability: "self_service",
-    desc: "完整竞品选择集、价格弹性、细分和情景分析。",
+    desc: "用 30 万人的 AI 模拟消费人群，生成完整市场决策报告。",
   },
 } as const;
 

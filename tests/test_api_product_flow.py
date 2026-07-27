@@ -314,7 +314,11 @@ class ApiProductFlowTests(unittest.TestCase):
             seed=None,
             plan_code=None,
         ):
-            population = 10_000 if plan_code == "STANDARD" else 30_000
+            self.assertIsNone(
+                pop_size,
+                "自助套餐必须忽略客户端人口参数并使用固定产品规格",
+            )
+            population = 5_000 if plan_code == "STANDARD" else 300_000
             rounds = 80 if plan_code == "STANDARD" else 150
             return {
                 "report_id": f"rpt_charge_{plan_code.lower()}",
@@ -374,6 +378,7 @@ class ApiProductFlowTests(unittest.TestCase):
                     json={
                         "study_id": created["id"],
                         "plan_code": plan_code,
+                        "population_size": 123,
                         "idempotency_key": (
                             f"catalog-charge-{plan_code.lower()}"
                         ),
