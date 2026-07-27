@@ -44,6 +44,9 @@ def _data_catalog_root() -> Path:
 PET_WATER_PANEL_PATH = (
     _data_catalog_root() / "categories" / "pet_water_fountain_th_v1.json"
 )
+SOCIAL_ACCESS_PATH = (
+    _data_catalog_root() / "social" / "platform_access_v1.json"
+)
 
 
 SEGMENT_COPY = {
@@ -72,6 +75,24 @@ SEGMENT_COPY = {
         "barriers": ["品牌认知", "决策惯性"],
         "preferred_channel": "Shopee / Lazada",
     },
+}
+
+REGION_MAP_CENTERS = {
+    "Bangkok Metro": (13.7563, 100.5018),
+    "Central": (14.7069, 100.3560),
+    "East / EEC": (13.1737, 101.2106),
+    "North": (18.7883, 98.9853),
+    "Northeast": (16.4322, 102.8236),
+    "South": (8.4304, 99.9631),
+}
+
+AGE_GROUP_RANGES = {
+    "18-24": (18, 24),
+    "25-34": (25, 34),
+    "35-44": (35, 44),
+    "45-54": (45, 54),
+    "55-64": (55, 64),
+    "65+": (65, 78),
 }
 
 
@@ -423,6 +444,94 @@ class StudyService:
             )
         return voices
 
+    def _sample_profile(
+        self,
+        generator: PopulationGenerator,
+        population_df: Any,
+        seed: int,
+    ) -> Dict[str, Any]:
+        """Build a bounded visualization sample without exposing real locations."""
+        display_size = min(600, len(population_df))
+        sampled = generator.stratified_sample(
+            population_df,
+            display_size,
+            seed=seed + 1109,
+        )
+        rng = np.random.default_rng(seed + 2203)
+        points = []
+        for row in sampled.to_dict(orient="records"):
+            age_group = str(row.get("age_group") or "35-44")
+            low, high = AGE_GROUP_RANGES.get(age_group, (35, 44))
+            age = int(rng.integers(low, high + 1))
+            region = str(row.get("region") or "Central")
+            latitude, longitude = REGION_MAP_CENTERS.get(
+                region,
+                REGION_MAP_CENTERS["Central"],
+            )
+            # These are display coordinates around a regional centroid, not
+            # inferred or observed household addresses.
+            latitude = float(
+                np.clip(latitude + rng.normal(0.0, 0.62), 5.8, 20.4)
+            )
+            longitude = float(
+                np.clip(longitude + rng.normal(0.0, 0.48), 97.5, 105.4)
+            )
+            points.append(
+                {
+                    "person_id": row.get("person_id"),
+                    "age": age,
+                    "age_group": age_group,
+                    "household_income_thb": round(
+                        float(row.get("household_monthly_income_thb") or 0),
+                        0,
+                    ),
+                    "income_tier": row.get("income_tier"),
+                    "region": region,
+                    "province": row.get("province"),
+                    "latitude": round(latitude, 4),
+                    "longitude": round(longitude, 4),
+                    "category_eligible": bool(
+                        row.get("category_eligible", True)
+                    ),
+                }
+            )
+
+        age_counts = (
+            sampled["age_group"].value_counts(normalize=True).to_dict()
+        )
+        income_counts = (
+            sampled["income_tier"].value_counts(normalize=True).to_dict()
+        )
+        region_counts = (
+            sampled["region"].value_counts(normalize=True).to_dict()
+        )
+        return {
+            "population_size": len(population_df),
+            "display_sample_size": len(points),
+            "points": points,
+            "age_distribution": [
+                {"label": key, "share": round(float(value), 6)}
+                for key, value in age_counts.items()
+            ],
+            "income_distribution": [
+                {"label": key, "share": round(float(value), 6)}
+                for key, value in income_counts.items()
+            ],
+            "region_distribution": [
+                {"label": key, "share": round(float(value), 6)}
+                for key, value in region_counts.items()
+            ],
+            "location_status": "synthetic_region_centroid_jitter",
+            "location_disclosure": (
+                "点位由合成人口所属大区中心加确定性扰动生成，仅展示抽样地域分布；"
+                "不是个人住址、设备定位或实测客流。"
+            ),
+        }
+
+    def _social_evidence_policy(self) -> Dict[str, Any]:
+        with SOCIAL_ACCESS_PATH.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+
     def _enrich_segments(
         self,
         segments: Sequence[Mapping[str, Any]],
@@ -461,6 +570,7 @@ class StudyService:
         sim_results: Mapping[str, Any],
         agent_research: Mapping[str, Any],
         representatives: Sequence[Mapping[str, Any]],
+        sample_profile: Mapping[str, Any],
     ) -> Dict[str, Any]:
         report_id = f"rpt_{uuid.uuid4().hex[:8]}"
         scenarios = list(sim_results["scenarios"])
@@ -615,7 +725,10 @@ class StudyService:
                 agent_research,
                 representatives,
             ),
+            "sample_profile": sample_profile,
             "market_dynamics": sim_results["market_dynamics"],
+            "social_dynamics": sim_results.get("social_dynamics", []),
+            "social_evidence": self._social_evidence_policy(),
             "geo_analysis": sim_results.get("geo_analysis"),
             "commerce_analysis": self._commerce_analysis(study),
             "implied_wtp": sim_results["implied_wtp"],
@@ -692,6 +805,11 @@ class StudyService:
                 generator,
                 population_df,
                 plan.representative_agents,
+                seed,
+            )
+            sample_profile = self._sample_profile(
+                generator,
+                population_df,
                 seed,
             )
             gateway = GeminiAgentGateway()
@@ -814,6 +932,7 @@ class StudyService:
                 sim_results,
                 agent_research,
                 representatives,
+                sample_profile,
             )
 
             study["status"] = "COMPLETED"

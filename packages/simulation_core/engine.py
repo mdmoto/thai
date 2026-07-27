@@ -960,6 +960,145 @@ class SimulationEngine:
             )
         return output
 
+    def _social_dynamics(
+        self,
+        purchase_rate: float,
+        awareness_rate: float,
+        repeat_rate: float,
+        frame: pd.DataFrame,
+        plan: PlanConfig,
+    ) -> List[Dict[str, Any]]:
+        """Compare disclosed social-propagation priors without claiming live data."""
+        weights = frame["model_weight"].to_numpy(dtype=float)
+        social_affinity = _weighted_mean(
+            frame["social_influence"].to_numpy(dtype=float),
+            weights,
+        )
+        base_word_of_mouth = float(
+            self.profile["dynamics"]["word_of_mouth_rate"]["mean"]
+        )
+        innovation = float(
+            self.profile["dynamics"]["innovation_rate"]["mean"]
+        )
+        conditional_choice = purchase_rate / max(awareness_rate, 1e-6)
+        scenarios = (
+            {
+                "scenario_id": "baseline",
+                "name": "自然传播基准",
+                "awareness_lift": 1.0,
+                "word_of_mouth_lift": 1.0,
+                "trust_lift": 1.0,
+                "sentiment_balance": 0.0,
+            },
+            {
+                "scenario_id": "ugc_showcase",
+                "name": "客户晒单扩散",
+                "awareness_lift": 1.12,
+                "word_of_mouth_lift": 1.35,
+                "trust_lift": 1.06,
+                "sentiment_balance": 0.28,
+            },
+            {
+                "scenario_id": "positive_reviews",
+                "name": "持续好评累积",
+                "awareness_lift": 1.05,
+                "word_of_mouth_lift": 1.25,
+                "trust_lift": 1.10,
+                "sentiment_balance": 0.42,
+            },
+            {
+                "scenario_id": "creator_campaign",
+                "name": "Facebook / Instagram 创作者推广",
+                "awareness_lift": 1.35,
+                "word_of_mouth_lift": 1.18,
+                "trust_lift": 1.03,
+                "sentiment_balance": 0.18,
+            },
+            {
+                "scenario_id": "negative_review_shock",
+                "name": "集中差评冲击",
+                "awareness_lift": 1.08,
+                "word_of_mouth_lift": 0.70,
+                "trust_lift": 0.72,
+                "sentiment_balance": -0.55,
+            },
+        )
+
+        trajectories: Dict[str, List[Dict[str, Any]]] = {}
+        for scenario in scenarios:
+            awareness = _clamp(
+                awareness_rate * float(scenario["awareness_lift"]),
+                0.0,
+                0.995,
+            )
+            initial_adoption = _clamp(
+                purchase_rate * float(scenario["trust_lift"]),
+                0.0,
+                awareness,
+            )
+            cumulative = initial_adoption
+            trajectory = []
+            for period in range(plan.dynamic_periods + 1):
+                trajectory.append(
+                    {
+                        "period": period,
+                        "awareness_rate": round(awareness, 6),
+                        "cumulative_adoption_rate": round(cumulative, 6),
+                    }
+                )
+                if period == plan.dynamic_periods:
+                    break
+                imitation = (
+                    base_word_of_mouth
+                    * social_affinity
+                    * float(scenario["word_of_mouth_lift"])
+                )
+                new_awareness = (1.0 - awareness) * (
+                    innovation * float(scenario["awareness_lift"])
+                    + imitation * cumulative
+                )
+                awareness = min(0.995, awareness + new_awareness)
+                new_adoption = min(
+                    1.0 - cumulative,
+                    new_awareness
+                    * conditional_choice
+                    * float(scenario["trust_lift"])
+                    + cumulative
+                    * repeat_rate
+                    * 0.08
+                    * float(scenario["trust_lift"]),
+                )
+                cumulative = min(1.0, cumulative + max(0.0, new_adoption))
+            trajectories[str(scenario["scenario_id"])] = trajectory
+
+        baseline = trajectories["baseline"]
+        output = []
+        for scenario in scenarios:
+            scenario_id = str(scenario["scenario_id"])
+            for point, base_point in zip(
+                trajectories[scenario_id],
+                baseline,
+            ):
+                relative_index = (
+                    float(point["cumulative_adoption_rate"])
+                    / max(
+                        float(base_point["cumulative_adoption_rate"]),
+                        1e-9,
+                    )
+                    * 100.0
+                )
+                output.append(
+                    {
+                        "scenario_id": scenario_id,
+                        "name": scenario["name"],
+                        **point,
+                        "relative_sales_index": round(relative_index, 2),
+                        "sentiment_balance": scenario["sentiment_balance"],
+                        "status": "uncalibrated_social_propagation_prior",
+                    }
+                )
+        return output
+
     def _implied_wtp(
         self,
         coefficient_priors: Mapping[str, Mapping[str, Any]],
@@ -1430,6 +1569,13 @@ class SimulationEngine:
             "scenarios": scenario_results,
             "price_elasticity": elasticity_results,
             "market_dynamics": self._market_dynamics(
+                purchase_rate,
+                awareness_rate,
+                repeat_rate,
+                model_frame,
+                plan,
+            ),
+            "social_dynamics": self._social_dynamics(
                 purchase_rate,
                 awareness_rate,
                 repeat_rate,
