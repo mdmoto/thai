@@ -1430,33 +1430,33 @@ class SimulationEngine:
             "OPERATING_SCENARIO",
         }:
             funnel_labels = (
-                ("eligible", "Target Audience"),
-                ("aware", "Venue Aware"),
-                ("understood", "Occasion Fit"),
-                ("considered", "Visit Considered"),
-                ("purchased", "Visited"),
-                ("repeated", "Revisited"),
-                ("referred", "Referred"),
+                ("eligible", "符合门店条件的目标客群"),
+                ("aware", "已注意到门店"),
+                ("understood", "符合消费场景"),
+                ("considered", "已纳入到店考虑"),
+                ("purchased", "预计到店"),
+                ("repeated", "到店后预计再访"),
+                ("referred", "到店后预计推荐"),
             )
         elif normalized_study_type == "CREATIVE_TEST":
             funnel_labels = (
-                ("eligible", "Target Audience"),
-                ("aware", "Ad Reached"),
-                ("understood", "Message Understood"),
-                ("considered", "Offer Considered"),
-                ("purchased", "Action Intended"),
-                ("repeated", "Follow-up Intended"),
-                ("referred", "Shared"),
+                ("eligible", "符合投放条件的目标受众"),
+                ("aware", "已触达并注意广告"),
+                ("understood", "已理解广告信息"),
+                ("considered", "已产生行动考虑"),
+                ("purchased", "预计采取目标行动"),
+                ("repeated", "预计继续互动"),
+                ("referred", "预计分享广告"),
             )
         else:
             funnel_labels = (
-                ("eligible", "Eligible Population"),
-                ("aware", "Aware"),
-                ("understood", "Understood"),
-                ("considered", "Considered"),
-                ("purchased", "Purchased"),
-                ("repeated", "Repeated"),
-                ("referred", "Referred"),
+                ("eligible", "符合品类条件的目标人群"),
+                ("aware", "已注意到产品"),
+                ("understood", "已理解产品卖点"),
+                ("considered", "已纳入购买考虑"),
+                ("purchased", "预计选择购买"),
+                ("repeated", "购买后预计复购"),
+                ("referred", "购买后预计推荐"),
             )
         funnel = [
             {

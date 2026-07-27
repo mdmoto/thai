@@ -90,7 +90,7 @@ export function Sidebar() {
         <nav className="flex-1 py-4 space-y-0.5 px-3 overflow-y-auto">
           {!collapsed && (
             <div className="px-2 mb-2 text-[10px] uppercase font-mono tracking-widest text-neutral-400 font-semibold">
-              Workspace
+              工作区
             </div>
           )}
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {

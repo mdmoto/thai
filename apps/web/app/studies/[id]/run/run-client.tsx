@@ -10,7 +10,7 @@ type RunStatus = "running" | "completed" | "failed";
 
 const SERVER_STAGES = [
   { label: "合成人口准备", detail: "读取校准版本并生成本次研究人口" },
-  { label: "代表样本研究", detail: "生成结构化弱信号；不可用时不会使用 mock Persona" },
+  { label: "代表样本研究", detail: "生成结构化辅助判断；不可用时不会使用固定虚拟人物冒充结果" },
   { label: "离散选择模拟", detail: "运行行业模型、竞品选择集与不购买选项" },
   { label: "不确定性与情景", detail: "计算先验预测区间、价格弹性和动态扩散" },
   { label: "报告与血缘", detail: "保存数据版本、模型版本、假设和限制" },
@@ -98,7 +98,7 @@ export function RunProgressClient({
             </div>
             <h2 className="text-xl font-semibold text-white tracking-tight">真实模拟已完成</h2>
             <p className="text-xs text-neutral-400 font-light">
-              后端耗时 {formatElapsed(elapsed)} · Report ID {reportId}
+              后端耗时 {formatElapsed(elapsed)} · 报告编号 {reportId}
             </p>
             <Link
               href={`/studies/report?id=${encodeURIComponent(reportId)}`}
@@ -122,7 +122,7 @@ export function RunProgressClient({
         ) : (
           <div className="space-y-3">
             <Loader2 size={22} className="animate-spin text-white mx-auto" />
-            <div className="eyebrow">Backend Simulation Running</div>
+            <div className="eyebrow">后台模拟正在运行</div>
             <h2 className="text-xl font-semibold text-white tracking-tight">
               正在运行真实选择模型与情景模拟…
             </h2>
@@ -130,14 +130,14 @@ export function RunProgressClient({
               已等待 {formatElapsed(elapsed)} · 完成时间取决于套餐、人口和轮数
             </p>
             <p className="text-[10px] text-neutral-500">
-              当前 API 尚未返回分阶段事件，因此这里不显示虚构百分比。
+              当前接口尚未返回分阶段进度，因此这里不会展示推测或虚构的完成百分比。
             </p>
           </div>
         )}
       </Card>
 
       <div className="space-y-3">
-        <span className="eyebrow">Server Execution Contract</span>
+        <span className="eyebrow">后台实际执行内容</span>
         <div className="space-y-2">
           {SERVER_STAGES.map((stage, index) => (
             <Card

@@ -247,7 +247,7 @@ export function NewStudyWizard() {
     return (
       <div className="max-w-xl mx-auto p-8">
         <Card>
-          <div className="eyebrow mb-2">Workspace required</div>
+          <div className="eyebrow mb-2">需要登录工作区</div>
           <h2 className="text-lg font-semibold text-white">登录后创建研究</h2>
           <p className="text-sm text-neutral-400 mt-2">
             项目输入、报告和积分都会保存在您的独立工作区中。
@@ -336,7 +336,7 @@ function Step1({ state, update, onNext }: {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Step 01</div>
+        <div className="eyebrow mb-1">第 1 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择研究类型</h2>
         <p className="text-xs text-neutral-400 font-light mt-1">根据您的商业分析目标选择匹配的研究类型</p>
       </div>
@@ -431,7 +431,7 @@ function Step2({ state, update, onNext, onBack }: {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Step 02</div>
+        <div className="eyebrow mb-1">第 2 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">填写研究资料</h2>
         <p className="text-xs text-neutral-400 font-light mt-1">
           {meta ? `${meta.icon} ${meta.label} — ` : ""}
@@ -507,7 +507,7 @@ function Step2({ state, update, onNext, onBack }: {
               </select>
             </div>
             <Input
-              label={isCreative ? "产品售价 (THB)" : "售价 (THB)"}
+              label={isCreative ? "产品售价（泰铢 THB）" : "售价（泰铢 THB）"}
               type="number"
               placeholder="例：299"
               value={state.price}
@@ -542,12 +542,12 @@ function Step2({ state, update, onNext, onBack }: {
         {state.template_key === "ECOMMERCE" && (
           <div className="cmai-card p-5 space-y-4">
             <div>
-              <span className="eyebrow text-blue-300">Thailand ecommerce context</span>
+              <span className="eyebrow text-blue-300">泰国电商交易条件</span>
               <h3 className="text-sm font-semibold text-white mt-1">电商履约与平台信任</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="预计运费 (THB)"
+                label="预计运费（泰铢 THB）"
                 type="number"
                 value={state.shipping_fee}
                 onChange={e => update({ shipping_fee: e.target.value })}
@@ -562,7 +562,7 @@ function Step2({ state, update, onNext, onBack }: {
             <div className="flex flex-wrap gap-5 text-xs text-neutral-300">
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={state.cod_available} onChange={e => update({ cod_available: e.target.checked })} />
-                支持货到付款 COD
+                支持货到付款（COD）
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={state.official_store} onChange={e => update({ official_store: e.target.checked })} />
@@ -602,7 +602,7 @@ function Step2({ state, update, onNext, onBack }: {
             />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input
-                label="平均客单价 (THB)"
+                label="平均客单价（泰铢 THB）"
                 type="number"
                 required
                 placeholder="例：350"
@@ -703,7 +703,7 @@ function Step3({ state, onNext, onBack }: {
     state.product_name && { label: isOffline ? "门店 / 项目" : isCreative ? "推广产品 / 品牌" : "产品名称", value: state.product_name },
     (isOffline ? state.average_check : state.price) && {
       label: isOffline ? "平均客单价" : "售价",
-      value: `THB ${isOffline ? state.average_check : state.price}`,
+      value: `฿${isOffline ? state.average_check : state.price}（泰铢）`,
     },
     isOffline
       ? { label: "位置与业态", value: `${state.location_text} · ${state.venue_type}` }
@@ -750,13 +750,13 @@ function Step3({ state, onNext, onBack }: {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Step 03</div>
+        <div className="eyebrow mb-1">第 3 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">确认研究假设</h2>
         <p className="text-xs text-neutral-400 font-light mt-1">请检查以下内容，平台将基于此运行模拟</p>
       </div>
 
       <Card>
-        <div className="eyebrow mb-3">01. 已识别事实 (Identified Facts)</div>
+        <div className="eyebrow mb-3">01. 用户已确认的事实</div>
         <div className="space-y-2 text-xs">
           <div className="flex justify-between py-1.5 border-b border-neutral-900">
             <span className="text-neutral-400">项目名称</span>
@@ -776,7 +776,7 @@ function Step3({ state, onNext, onBack }: {
       </Card>
 
       <Card>
-        <div className="eyebrow mb-3">02. 系统推断 (System Inferences)</div>
+        <div className="eyebrow mb-3">02. 系统根据数据作出的推断</div>
         <div className="space-y-2 text-xs">
           {inferences.map((inf, i) => (
             <div key={i} className="flex justify-between items-center py-1.5 border-b border-neutral-900 last:border-0">
@@ -791,7 +791,7 @@ function Step3({ state, onNext, onBack }: {
       </Card>
 
       <Card>
-        <div className="eyebrow mb-3">03. 缺失假设 (Missing Defaults)</div>
+        <div className="eyebrow mb-3">03. 缺少真实数据时采用的默认假设</div>
         <div className="space-y-2 text-xs">
           {defaults.map((d, i) => (
             <div key={i} className="flex justify-between items-center py-1.5 border-b border-neutral-900 last:border-0">
@@ -804,7 +804,8 @@ function Step3({ state, onNext, onBack }: {
           ))}
         </div>
         <p className="text-[11px] text-neutral-400 font-light mt-3 p-3 bg-black rounded-lg border border-neutral-900">
-          * B 级表示公开统计或可追溯市场样本；D 级表示工程先验。报告会披露来源、版本与不确定性，不把 D 级结果包装成实测购买率。
+          * B 级表示来自公开统计或可追溯市场样本；D 级表示尚未实证校准的工程假设。报告会披露来源、
+          版本和不确定性，不会把 D 级结果写成真实消费者的实测购买率。
         </p>
       </Card>
 
@@ -841,7 +842,7 @@ function Step4({ state, update, onNext, onBack }: {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Step 04</div>
+        <div className="eyebrow mb-1">第 4 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择重点商业问题</h2>
         <p className="text-xs text-neutral-400 font-light mt-1">报告将针对选中的核心商业问题重点解答</p>
       </div>
@@ -897,9 +898,11 @@ function Step5({ state, update, onBack, onSubmit, submitting }: {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">Step 05</div>
+        <div className="eyebrow mb-1">第 5 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择模拟规模与配置</h2>
-        <p className="text-xs text-neutral-400 font-light mt-1">控制合成人口数量、Monte Carlo 轮数与情景数量</p>
+        <p className="text-xs text-neutral-400 font-light mt-1">
+          选择参与计算的合成消费者数量、蒙特卡洛不确定性模拟轮数和方案情景数量
+        </p>
       </div>
 
       <div className="space-y-3">
@@ -922,14 +925,14 @@ function Step5({ state, update, onBack, onSubmit, submitting }: {
                 {plan.price_thb > 0 ? (
                   <span className="text-xs font-bold text-white">฿{plan.price_thb.toLocaleString()}</span>
                 ) : code === "PREVIEW" ? (
-                  <span className="text-xs font-mono text-accent">Free</span>
+                  <span className="text-xs font-mono text-accent">免费</span>
                 ) : (
                   <span className="text-xs text-neutral-400 font-mono">{plan.credits} 积分</span>
                 )}
               </div>
               <p className="text-[11px] text-neutral-400 font-light mt-1">{plan.desc}</p>
               <div className="flex items-center gap-3 mt-2 text-[10px] text-neutral-500 font-mono">
-                <span>Monte Carlo {plan.mc_rounds} 轮</span>
+                <span>不确定性模拟 {plan.mc_rounds} 轮</span>
                 <span>·</span>
                 <span>{plan.scenarios} 个情景</span>
                 <span>·</span>
@@ -941,7 +944,7 @@ function Step5({ state, update, onBack, onSubmit, submitting }: {
       </div>
 
       <Card className="bg-black">
-        <div className="eyebrow mb-2">Order Summary</div>
+        <div className="eyebrow mb-2">运行配置确认</div>
         <div className="space-y-1.5 text-xs font-light">
           <div className="flex justify-between"><span className="text-neutral-400">项目名称</span><span className="text-white">{state.name || "（未填写）"}</span></div>
           <div className="flex justify-between"><span className="text-neutral-400">研究类型</span><span className="text-white">{state.study_type ? STUDY_TYPE_META[state.study_type].label : "—"}</span></div>

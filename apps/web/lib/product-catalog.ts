@@ -114,7 +114,7 @@ export const TEMPLATES = [
     scenarios: 5,
     est_time: "约 10–20 分钟",
     group: "产品与电商",
-    summary: "加入 Shopee、Lazada、TikTok Shop、包邮、COD 与平台信任变量。",
+    summary: "加入 Shopee、Lazada、TikTok Shop、包邮、货到付款（COD）与平台信任变量。",
     defaults: {
       channel: "MARKETPLACE",
       selling_points: ["本地配送或包邮", "支持泰国常用支付方式"],
@@ -131,7 +131,7 @@ export const TEMPLATES = [
     scenarios: 5,
     est_time: "约 10–20 分钟",
     group: "产品与电商",
-    summary: "比较 WTP、转化、相对收入和毛利最优价格。",
+    summary: "比较支付意愿（WTP）、转化概率、相对收入和毛利最优价格。",
     defaults: {
       product_name: "蓝牙耳机",
       price: "1890",
