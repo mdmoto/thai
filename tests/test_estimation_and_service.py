@@ -128,6 +128,17 @@ class StudyServiceTests(unittest.TestCase):
         )
         self.assertIn("model_lineage", report)
         self.assertGreater(len(report["price_elasticity"]), 3)
+        self.assertEqual(report["sample_profile"]["display_sample_size"], 200)
+        self.assertEqual(
+            report["sample_profile"]["location_status"],
+            "synthetic_region_centroid_jitter",
+        )
+        self.assertTrue(report["sample_profile"]["points"])
+        self.assertTrue(report["social_dynamics"])
+        self.assertEqual(
+            report["social_evidence"]["policy"],
+            "official_api_authorized_provider_or_customer_export_only",
+        )
 
     def test_venue_uses_subtype_model_and_visit_language(self):
         previous_key = os.environ.get("GEMINI_API_KEY")

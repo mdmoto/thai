@@ -36,6 +36,29 @@ class SimulationEngineTests(unittest.TestCase):
         curve = result["price_elasticity"]
         self.assertGreater(curve[0]["purchase_rate"], curve[-1]["purchase_rate"])
 
+    def test_social_propagation_separates_positive_and_negative_shocks(self):
+        result = self.run_engine()
+        final_period = max(item["period"] for item in result["social_dynamics"])
+        final = {
+            item["scenario_id"]: item
+            for item in result["social_dynamics"]
+            if item["period"] == final_period
+        }
+        self.assertGreater(
+            final["positive_reviews"]["relative_sales_index"],
+            final["baseline"]["relative_sales_index"],
+        )
+        self.assertLess(
+            final["negative_review_shock"]["relative_sales_index"],
+            final["baseline"]["relative_sales_index"],
+        )
+        self.assertTrue(
+            all(
+                item["status"] == "uncalibrated_social_propagation_prior"
+                for item in result["social_dynamics"]
+            )
+        )
+
     def test_competitor_reduces_focal_choice_share(self):
         no_competitor = self.run_engine()
         with_competitor = self.run_engine(

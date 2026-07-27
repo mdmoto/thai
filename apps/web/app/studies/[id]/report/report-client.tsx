@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, LineChart, Line,
+  CartesianGrid, LineChart, Line, ScatterChart, Scatter, ZAxis, Legend,
 } from "recharts";
 import { AlertTriangle, Download, Share2, MapPin, ShoppingBag } from "lucide-react";
 import { Card } from "@/components/ui";
@@ -60,6 +60,49 @@ interface ReportData {
     price_reaction?: string;
     preferred_channel?: string;
   }[];
+  sample_profile?: {
+    population_size: number;
+    display_sample_size: number;
+    location_status: string;
+    location_disclosure: string;
+    points: Array<{
+      person_id: string;
+      age: number;
+      age_group: string;
+      household_income_thb: number;
+      income_tier: string;
+      region: string;
+      province: string;
+      latitude: number;
+      longitude: number;
+      category_eligible: boolean;
+    }>;
+    age_distribution: Array<{ label: string; share: number }>;
+    income_distribution: Array<{ label: string; share: number }>;
+    region_distribution: Array<{ label: string; share: number }>;
+  };
+  social_dynamics?: Array<{
+    scenario_id: string;
+    name: string;
+    period: number;
+    awareness_rate: number;
+    cumulative_adoption_rate: number;
+    relative_sales_index: number;
+    sentiment_balance: number;
+    status: string;
+  }>;
+  social_evidence?: {
+    version: string;
+    effective_date: string;
+    policy: string;
+    platforms: Array<{
+      platform: string;
+      recommended_path: string;
+      public_market_scan: string;
+      status: string;
+      official_reference?: string | null;
+    }>;
+  };
   implied_wtp?: { attribute: string; score_increase: number; implied_wtp_thb: number; status: string }[];
   geo_analysis?: {
     dataset_id?: string;
@@ -170,7 +213,8 @@ const EMPTY_REPORT: ReportData = {
 
 const SECTIONS = [
   "executive_summary", "market_response", "segments",
-  "price_elasticity", "scenarios", "geo", "regional", "channels",
+  "sample_profile", "price_elasticity", "scenarios", "geo", "regional", "channels",
+  "social_dynamics",
   "consumer_voices", "sensitivity", "methodology"
 ] as const;
 
@@ -178,11 +222,13 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
   executive_summary: "执行摘要",
   market_response: "转化漏斗",
   segments: "人群分析",
+  sample_profile: "抽样分布",
   price_elasticity: "价格 / 客单价弹性",
   scenarios: "情景对比",
   geo: "地图与经营",
   regional: "区域表现",
   channels: "渠道适配",
+  social_dynamics: "口碑传播",
   consumer_voices: "消费者声浪",
   sensitivity: "敏感性分析",
   methodology: "数据血缘与附录",
@@ -218,6 +264,16 @@ const CALIBRATION_LABELS: Record<string, string> = {
 function calibrationLabel(status?: string) {
   const value = status ?? "unknown";
   return CALIBRATION_LABELS[value] ?? value;
+}
+
+function limitationReason(warning: string) {
+  if (warning.includes("LLM weak signals")) return "运行配置：未启用模型密钥";
+  if (warning.includes("microdata") || warning.includes("joint dependencies")) return "数据粒度：只有官方聚合统计";
+  if (warning.includes("all ages") || warning.includes("binary sex") || warning.includes("households")) return "统计口径：官方数据定义不同";
+  if (warning.includes("Behavioral traits") || warning.includes("pet-ownership")) return "缺少真实行为或品类渗透调查";
+  if (warning.includes("Choice coefficients") || warning.includes("Forecast intervals")) return "缺少真实选择、销量与历史回测";
+  if (warning.includes("Marketplace page") || warning.includes("competitor model fields")) return "平台公开数据不包含完整成交与转化";
+  return "证据或验证尚未覆盖";
 }
 
 export function ReportClient({
@@ -385,11 +441,13 @@ export function ReportClient({
         {activeSection === "executive_summary" && <ExecutiveSummarySection data={reportData} />}
         {activeSection === "market_response" && <MarketResponseSection data={reportData} />}
         {activeSection === "segments" && <SegmentsSection data={reportData} />}
+        {activeSection === "sample_profile" && <SampleProfileSection data={reportData} />}
         {activeSection === "price_elasticity" && <PriceElasticitySection data={reportData} />}
         {activeSection === "scenarios" && <ScenariosSection data={reportData} />}
         {activeSection === "geo" && <GeoAnalysisSection data={reportData} />}
         {activeSection === "regional" && <RegionalSection data={reportData} />}
         {activeSection === "channels" && <ChannelsSection data={reportData} />}
+        {activeSection === "social_dynamics" && <SocialDynamicsSection data={reportData} />}
         {activeSection === "consumer_voices" && <ConsumerVoicesSection data={reportData} />}
         {activeSection === "sensitivity" && <SensitivitySection data={reportData} />}
         {activeSection === "methodology" && <MethodologySection data={reportData} />}
@@ -770,6 +828,132 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
   );
 }
 
+const THAILAND_OUTLINE: Array<[number, number]> = [
+  [98.3, 20.2], [99.5, 20.4], [100.7, 19.9], [101.1, 18.6],
+  [100.7, 17.5], [101.3, 16.7], [102.4, 16.1], [104.8, 15.8],
+  [105.4, 14.7], [104.5, 14.1], [102.8, 13.5], [101.4, 12.8],
+  [100.5, 11.2], [100.1, 9.8], [100.5, 8.2], [100.1, 6.0],
+  [99.4, 6.1], [99.0, 8.1], [98.5, 9.7], [99.1, 11.8],
+  [100.1, 13.0], [99.5, 14.2], [98.2, 15.3], [97.5, 17.4],
+  [98.2, 18.6],
+];
+
+function mapPoint(longitude: number, latitude: number) {
+  return {
+    x: 24 + ((longitude - 97.0) / 9.0) * 312,
+    y: 18 + ((21.0 - latitude) / 16.0) * 524,
+  };
+}
+
+function SampleProfileSection({ data }: { data: ReportData }) {
+  const sample = data.sample_profile;
+  if (!sample) {
+    return <Card><p className="text-xs text-neutral-400">这份旧报告尚未保存抽样可视化数据，重新运行后会自动生成。</p></Card>;
+  }
+  const eligible = sample.points.filter(point => point.category_eligible);
+  const other = sample.points.filter(point => !point.category_eligible);
+  const incomeValues = sample.points
+    .map(point => point.household_income_thb)
+    .sort((a, b) => a - b);
+  const p95Income = incomeValues[Math.floor(incomeValues.length * 0.95)] ?? 100000;
+  const outline = `${THAILAND_OUTLINE.map(([lng, lat], index) => {
+    const point = mapPoint(lng, lat);
+    return `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+  }).join(" ")} Z`;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="eyebrow mb-1">Synthetic Sample Distribution</div>
+        <h2 className="text-base font-semibold text-white tracking-tight">取样年龄、家庭收入与地域分布</h2>
+        <p className="text-xs text-neutral-400 mt-2">
+          从 {sample.population_size.toLocaleString()} 个合成人口中分层抽取 {sample.display_sample_size.toLocaleString()} 个点用于可视化。
+        </p>
+      </div>
+
+      <div className="grid lg:grid-cols-[.78fr_1.22fr] gap-4">
+        <Card>
+          <div className="eyebrow mb-1">Thailand sample map</div>
+          <h3 className="text-sm font-semibold text-white">泰国合成样本点状图</h3>
+          <svg viewBox="0 0 360 560" className="w-full h-[440px] mt-4" role="img" aria-label="泰国合成人口抽样点位">
+            <defs>
+              <linearGradient id="thai-map-fill" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#12233d" />
+                <stop offset="100%" stopColor="#08111f" />
+              </linearGradient>
+            </defs>
+            <path d={outline} fill="url(#thai-map-fill)" stroke="#355680" strokeWidth="2" />
+            {other.map(point => {
+              const projected = mapPoint(point.longitude, point.latitude);
+              return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.1" fill="#7c8aa1" opacity=".35" />;
+            })}
+            {eligible.map(point => {
+              const projected = mapPoint(point.longitude, point.latitude);
+              return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.4" fill="#67d9c4" opacity=".7" />;
+            })}
+          </svg>
+          <div className="flex flex-wrap gap-3 text-[10px] text-neutral-400">
+            <span><i className="inline-block w-2 h-2 rounded-full bg-teal-300 mr-1" />品类目标样本</span>
+            <span><i className="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1" />其他样本</span>
+          </div>
+          <p className="text-[10px] leading-relaxed text-neutral-500 mt-3">{sample.location_disclosure}</p>
+        </Card>
+
+        <Card>
+          <div className="eyebrow mb-1">Age × household income</div>
+          <h3 className="text-sm font-semibold text-white">年龄与家庭月收入坐标图</h3>
+          <div className="h-[440px] mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 10, right: 18, bottom: 22, left: 18 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#17243a" />
+                <XAxis type="number" dataKey="age" name="年龄" unit="岁" domain={[18, 78]} tick={{ fill: "#8793a8", fontSize: 10 }} label={{ value: "年龄", position: "bottom", fill: "#8793a8", fontSize: 11 }} />
+                <YAxis type="number" dataKey="household_income_thb" name="家庭月收入" unit=" THB" domain={[0, p95Income]} tick={{ fill: "#8793a8", fontSize: 10 }} tickFormatter={value => `${Math.round(Number(value) / 1000)}k`} />
+                <ZAxis range={[18, 18]} />
+                <Tooltip cursor={{ strokeDasharray: "3 3" }} contentStyle={{ background: "#091120", border: "1px solid #213456", borderRadius: 8, fontSize: 11 }} formatter={(value, name) => name === "家庭月收入" ? [`฿${Number(value).toLocaleString()}`, name] : [value, name]} />
+                <Legend />
+                <Scatter name="品类目标样本" data={eligible.filter(point => point.household_income_thb <= p95Income)} fill="#67d9c4" fillOpacity={0.7} />
+                <Scatter name="其他样本" data={other.filter(point => point.household_income_thb <= p95Income)} fill="#718096" fillOpacity={0.35} />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[10px] text-neutral-500">纵轴为家庭月收入，不是个人工资；图形为保证可读性截取至样本第 95 百分位。</p>
+        </Card>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card>
+          <h3 className="text-sm font-semibold text-white">年龄段占比</h3>
+          <div className="h-52 mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={sample.age_distribution}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#17243a" />
+                <XAxis dataKey="label" tick={{ fill: "#8793a8", fontSize: 10 }} />
+                <YAxis tick={{ fill: "#8793a8", fontSize: 10 }} tickFormatter={value => `${Math.round(Number(value) * 100)}%`} />
+                <Tooltip formatter={value => formatPercent(Number(value))} contentStyle={{ background: "#091120", border: "1px solid #213456", borderRadius: 8, fontSize: 11 }} />
+                <Bar dataKey="share" name="样本占比" fill="#6ba0ff" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+        <Card>
+          <h3 className="text-sm font-semibold text-white">家庭收入层占比</h3>
+          <div className="h-52 mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={sample.income_distribution}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#17243a" />
+                <XAxis dataKey="label" tick={{ fill: "#8793a8", fontSize: 10 }} />
+                <YAxis tick={{ fill: "#8793a8", fontSize: 10 }} tickFormatter={value => `${Math.round(Number(value) * 100)}%`} />
+                <Tooltip formatter={value => formatPercent(Number(value))} contentStyle={{ background: "#091120", border: "1px solid #213456", borderRadius: 8, fontSize: 11 }} />
+                <Bar dataKey="share" name="样本占比" fill="#c19bff" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 function RegionalSection({ data }: { data: ReportData }) {
   const regions = data.regional_breakdown || [];
   return (
@@ -864,6 +1048,107 @@ function ChannelsSection({ data }: { data: ReportData }) {
           </Card>
         ))}
       </div>
+    </div>
+  );
+}
+
+const SOCIAL_COLORS: Record<string, string> = {
+  baseline: "#8b98ad",
+  ugc_showcase: "#67d9c4",
+  positive_reviews: "#6ba0ff",
+  creator_campaign: "#c19bff",
+  negative_review_shock: "#ff7d8f",
+};
+
+function SocialDynamicsSection({ data }: { data: ReportData }) {
+  const dynamics = data.social_dynamics || [];
+  if (!dynamics.length) {
+    return <Card><p className="text-xs text-neutral-400">这份旧报告尚未生成口碑传播情景，重新运行后会自动加入。</p></Card>;
+  }
+  const scenarios = Array.from(new Map(dynamics.map(item => [item.scenario_id, item.name])).entries());
+  const periods = Array.from(new Set(dynamics.map(item => item.period))).sort((a, b) => a - b);
+  const chartData = periods.map(period => {
+    const row: Record<string, number> = { period };
+    dynamics.filter(item => item.period === period).forEach(item => {
+      row[item.scenario_id] = item.relative_sales_index;
+    });
+    return row;
+  });
+  const finalPeriod = Math.max(...periods);
+  const finalPoints = dynamics
+    .filter(item => item.period === finalPeriod)
+    .sort((a, b) => b.relative_sales_index - a.relative_sales_index);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="eyebrow mb-1">WOM & Social Propagation</div>
+        <h2 className="text-base font-semibold text-white tracking-tight">晒单、推广与评价传播情景</h2>
+        <p className="text-xs text-neutral-400 mt-2">
+          将客户晒单、持续好评、创作者推广和集中差评作为独立冲击进入动态扩散，而不是把点赞量直接换算为销量。
+        </p>
+      </div>
+      <Card>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#17243a" />
+              <XAxis dataKey="period" tick={{ fill: "#8793a8", fontSize: 10 }} label={{ value: "模拟周期", position: "bottom", fill: "#8793a8", fontSize: 11 }} />
+              <YAxis tick={{ fill: "#8793a8", fontSize: 10 }} domain={["auto", "auto"]} tickFormatter={value => `${Math.round(Number(value))}`} />
+              <Tooltip contentStyle={{ background: "#091120", border: "1px solid #213456", borderRadius: 8, fontSize: 11 }} formatter={value => [`${Number(value).toFixed(1)}`, "相对销售指数"]} />
+              <Legend />
+              {scenarios.map(([id, name]) => (
+                <Line key={id} type="monotone" dataKey={id} name={name} stroke={SOCIAL_COLORS[id] ?? "#ffffff"} strokeWidth={id === "baseline" ? 2 : 2.4} dot={{ r: 2 }} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="text-[10px] text-neutral-500 mt-3">基准自然传播 = 100。当前系数是可替换传播先验，尚未由真实平台曝光—互动—成交链路校准。</p>
+      </Card>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {finalPoints.map(item => (
+          <Card key={item.scenario_id}>
+            <span className="eyebrow">{item.name}</span>
+            <div className="text-2xl font-semibold mt-2" style={{ color: SOCIAL_COLORS[item.scenario_id] }}>
+              {item.relative_sales_index.toFixed(1)}
+            </div>
+            <div className="text-[10px] text-neutral-500 mt-1">
+              期末相对销售指数 · 情绪平衡 {item.sentiment_balance > 0 ? "+" : ""}{item.sentiment_balance}
+            </div>
+          </Card>
+        ))}
+      </div>
+      <Card className="border-amber-300/20">
+        <div className="flex gap-3">
+          <AlertTriangle size={17} className="text-amber-200 shrink-0 mt-0.5" />
+          <p className="text-xs leading-relaxed text-neutral-400">
+            真正接入社交网络后，应使用可验证的曝光、播放、互动、分享、情绪、评价星级、时间衰减和归因成交数据重新估计这些参数；单条爆款或高互动不等于增量销售。
+          </p>
+        </div>
+      </Card>
+      {data.social_evidence && (
+        <div>
+          <div className="flex items-end justify-between gap-3 mb-3">
+            <div>
+              <div className="eyebrow">Platform evidence access</div>
+              <h3 className="text-sm font-semibold text-white mt-1">社交与电商数据接入状态</h3>
+            </div>
+            <span className="text-[10px] text-neutral-500 font-mono">{data.social_evidence.version}</span>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            {data.social_evidence.platforms.map(platform => (
+              <Card key={platform.platform}>
+                <div className="flex justify-between gap-3">
+                  <strong className="text-xs text-white">{platform.platform}</strong>
+                  <span className="text-[9px] text-blue-200 bg-blue-400/10 px-2 py-1 rounded-full h-fit">{platform.status}</span>
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed mt-3">{platform.recommended_path}</p>
+                <p className="text-[10px] text-neutral-600 mt-2">{platform.public_market_scan}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -997,7 +1282,12 @@ function MethodologySection({ data }: { data: ReportData }) {
           <p><strong className="text-white font-semibold">5. 品类人群：</strong> {category?.category_key ?? data.category_key ?? "通用消费品"}；目标人群占总体 {formatPercent(category?.eligible_population_share ?? 1)}，资格口径为 {category?.eligibility_status ?? "通用人群假设"}。</p>
           <p><strong className="text-white font-semibold">6. 数据可追溯：</strong> 已记录 {(calibration?.sources ?? []).filter(source => source.observed).length} 个观测数据源；本报告来自 Run ID <code className="text-white font-mono bg-neutral-900 px-1 py-0.5 rounded">{data.run_id}</code>。</p>
           {(data.warnings || []).map((warning, index) => (
-            <p key={index} className="text-neutral-500">限制 {index + 1}：{warning}</p>
+            <div key={index} className="p-3 rounded-lg bg-black/40 border border-neutral-900">
+              <p className="text-neutral-400">限制 {index + 1}：{warning}</p>
+              <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-amber-300/10 text-amber-200">
+                原因：{limitationReason(warning)}
+              </span>
+            </div>
           ))}
         </div>
       </Card>
