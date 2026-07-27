@@ -16,7 +16,11 @@ COPY packages /packages
 COPY data_catalog /data_catalog
 
 ENV PYTHONPATH="/app:/packages" \
-    DATA_CATALOG_ROOT="/data_catalog"
+    DATA_CATALOG_ROOT="/data_catalog" \
+    HOME="/home/appuser" \
+    XDG_CACHE_HOME="/home/appuser/.cache" \
+    CRAWL4_AI_BASE_DIRECTORY="/tmp/market-twin-crawl4ai" \
+    CRAWL4AI_RUNTIME_DIR="/tmp/market-twin-crawl4ai"
 
 RUN useradd --create-home --uid 10001 appuser
 USER appuser

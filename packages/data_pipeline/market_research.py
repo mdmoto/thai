@@ -18,12 +18,13 @@ import socket
 import urllib.parse
 import urllib.robotparser
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, Iterable, List, Mapping, Optional
 
 import httpx
 
 
-RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.1"
+RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.2"
 USER_AGENT = "ThailandMarketTwin/2.1 (+public-market-research)"
 PLATFORM_HOSTS = {
     "facebook.com": "Facebook",
@@ -33,6 +34,42 @@ PLATFORM_HOSTS = {
     "youtu.be": "YouTube",
     "lazada.co.th": "Lazada",
     "shopee.co.th": "Shopee",
+}
+SOURCE_STRATEGY = [
+    {
+        "priority": 1,
+        "sources": ["Shopee", "Lazada", "TikTok Shop"],
+        "role": "价格、销量提示、评价与竞品证据",
+    },
+    {
+        "priority": 2,
+        "sources": ["Facebook", "TikTok", "Instagram"],
+        "role": "泰国本地讨论、社群情绪、短视频与直播反馈",
+    },
+    {
+        "priority": 3,
+        "sources": ["Google 搜索", "泰国媒体", "论坛", "公开评测页"],
+        "role": "需求场景、问题词、趋势与第三方验证",
+    },
+    {
+        "priority": 4,
+        "sources": ["YouTube"],
+        "role": "长测评、安装体验与耐用性补充证据",
+    },
+    {
+        "priority": 5,
+        "sources": ["品牌官网"],
+        "role": "产品规格与官方主张基线",
+    },
+]
+PLATFORM_PRIORITY = {
+    "Shopee": (1, "电商购买证据"),
+    "Lazada": (1, "电商购买证据"),
+    "Facebook": (2, "泰国社交讨论"),
+    "TikTok": (2, "泰国社交讨论"),
+    "Instagram": (2, "泰国社交讨论"),
+    "YouTube": (4, "长测评补充证据"),
+    "公开网页": (3, "公开搜索与评测证据"),
 }
 
 PageReader = Callable[[List[str]], Awaitable[List[Dict[str, Any]]]]
@@ -203,6 +240,10 @@ class PublicMarketResearch:
             "evidence": [],
             "collectors": [],
             "warnings": [],
+            "source_strategy": {
+                "ranking_basis": "购买决策价值，不按采集便利度或单纯访问量排序",
+                "priority_order": SOURCE_STRATEGY,
+            },
             "usage_policy": {
                 "quantitative_effect": "none_until_customer_calibration",
                 "allowed": [
@@ -310,7 +351,17 @@ class PublicMarketResearch:
             if not url or url in seen_urls:
                 continue
             seen_urls.add(url)
+            platform = str(item.get("platform") or "公开网页")
+            priority, role = PLATFORM_PRIORITY.get(
+                platform,
+                PLATFORM_PRIORITY["公开网页"],
+            )
+            item["decision_priority"] = priority
+            item["evidence_role"] = role
             unique_evidence.append(item)
+        unique_evidence.sort(
+            key=lambda item: int(item.get("decision_priority") or 99)
+        )
         platform_counts: Dict[str, int] = {}
         for item in unique_evidence:
             platform = str(item.get("platform") or "公开网页")
@@ -375,6 +426,18 @@ class PublicMarketResearch:
         if not allowed:
             return []
 
+        runtime_directory = Path(
+            os.environ.get(
+                "CRAWL4AI_RUNTIME_DIR",
+                "/tmp/market-twin-crawl4ai",
+            )
+        )
+        runtime_directory.mkdir(parents=True, exist_ok=True)
+        # Crawl4AI initializes its SQLite database while being imported. Its
+        # environment variable includes an underscore between "4" and "AI".
+        # Set it explicitly so container runtimes cannot redirect writes to an
+        # unwritable HOME directory.
+        os.environ["CRAWL4_AI_BASE_DIRECTORY"] = str(runtime_directory)
         try:
             from crawl4ai import (
                 AsyncWebCrawler,
@@ -397,7 +460,10 @@ class PublicMarketResearch:
         )
         items: List[Dict[str, Any]] = []
         try:
-            async with AsyncWebCrawler(config=browser) as crawler:
+            async with AsyncWebCrawler(
+                config=browser,
+                base_directory=str(runtime_directory),
+            ) as crawler:
                 results = await crawler.arun_many(allowed, config=run_config)
                 for result in results:
                     if not result.success:

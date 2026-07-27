@@ -63,6 +63,12 @@ class PublicMarketResearchTests(unittest.TestCase):
         self.assertEqual(bundle["status"], "succeeded")
         self.assertEqual(bundle["source_count"], 2)
         self.assertEqual(bundle["platform_counts"]["YouTube"], 1)
+        self.assertEqual(bundle["evidence"][0]["decision_priority"], 3)
+        self.assertEqual(bundle["evidence"][1]["decision_priority"], 4)
+        self.assertEqual(
+            bundle["source_strategy"]["priority_order"][0]["sources"],
+            ["Shopee", "Lazada", "TikTok Shop"],
+        )
         self.assertEqual(
             bundle["usage_policy"]["quantitative_effect"],
             "none_until_customer_calibration",
