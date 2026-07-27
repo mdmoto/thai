@@ -126,6 +126,34 @@ interface ReportData {
       fallback_result?: string | null;
     }>;
   };
+  market_research?: {
+    version: string;
+    status: string;
+    query?: string;
+    source_count: number;
+    platform_counts: Record<string, number>;
+    evidence: Array<{
+      source_id: string;
+      source_type: string;
+      collector: string;
+      platform: string;
+      title: string;
+      url: string;
+      published_at?: string | null;
+      collected_at: string;
+      evidence_grade: string;
+      content_sha256: string;
+      excerpt?: string;
+      observed_fields?: string[];
+      limitation: string;
+    }>;
+    warnings?: string[];
+    usage_policy?: {
+      quantitative_effect?: string;
+      allowed?: string[];
+      not_allowed?: string[];
+    };
+  };
   implied_wtp?: { attribute: string; score_increase: number; implied_wtp_thb: number; status: string }[];
   geo_analysis?: {
     dataset_id?: string;
@@ -238,7 +266,7 @@ const SECTIONS = [
   "executive_summary", "market_response", "segments",
   "sample_profile", "price_elasticity", "scenarios", "geo", "regional", "channels",
   "social_dynamics",
-  "consumer_voices", "sensitivity", "methodology"
+  "market_intelligence", "consumer_voices", "sensitivity", "methodology"
 ] as const;
 
 const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
@@ -252,6 +280,7 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
   regional: "区域表现",
   channels: "渠道适配",
   social_dynamics: "口碑传播",
+  market_intelligence: "AI 市场情报",
   consumer_voices: "消费者声浪",
   sensitivity: "敏感性分析",
   methodology: "数据血缘与附录",
@@ -355,6 +384,8 @@ const STATUS_LABELS: Record<string, string> = {
   available: "可用",
   unavailable: "不可用",
   not_used: "未使用",
+  disabled: "未启用",
+  partial: "部分完成",
   succeeded: "采集成功",
   not_applicable: "本研究不适用",
   authorization_required: "需要客户授权",
@@ -371,12 +402,20 @@ const COLLECTOR_LABELS: Record<string, string> = {
   "Open geospatial / POI evidence": "开放地理与周边设施数据",
   "Structured LLM research": "大模型结构化消费者研究",
   "Social platform evidence": "社交平台传播证据",
+  "Crawl4AI public page reader": "公开网页深度读取",
+  "YouTube public metadata": "YouTube 公开视频资料",
+  "Meta / TikTok authorized business data": "Meta / TikTok 授权商业数据",
+  "Lazada / Shopee merchant data": "Lazada / Shopee 商家授权数据",
 };
 
 const FALLBACK_LABELS: Record<string, string> = {
   synthetic_region_distribution: "合成区域分布",
   model_segment_summary: "选择模型人群摘要",
   disclosed_social_propagation_scenarios: "已披露参数的传播情景",
+  customer_authorized_url_required: "客户提供的公开网址",
+  official_api_key_or_public_url: "官方接口或公开视频网址",
+  public_url_evidence_only: "仅使用公开网页证据",
+  public_product_metadata_only: "仅使用公开商品元数据",
 };
 
 const PLATFORM_ACCESS_LABELS: Record<string, string> = {
@@ -648,6 +687,7 @@ export function ReportClient({
         {activeSection === "regional" && <RegionalSection data={reportData} />}
         {activeSection === "channels" && <ChannelsSection data={reportData} />}
         {activeSection === "social_dynamics" && <SocialDynamicsSection data={reportData} />}
+        {activeSection === "market_intelligence" && <MarketIntelligenceSection data={reportData} />}
         {activeSection === "consumer_voices" && <ConsumerVoicesSection data={reportData} />}
         {activeSection === "sensitivity" && <SensitivitySection data={reportData} />}
         {activeSection === "methodology" && <MethodologySection data={reportData} />}
@@ -1434,6 +1474,100 @@ function SocialDynamicsSection({ data }: { data: ReportData }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function MarketIntelligenceSection({ data }: { data: ReportData }) {
+  const research = data.market_research;
+  const platformEntries = Object.entries(research?.platform_counts ?? {});
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="eyebrow mb-1">AI 市场情报扫描</div>
+        <h2 className="text-base font-semibold text-white tracking-tight">公开资料、来源与可信度</h2>
+        <p className="text-xs text-neutral-400 mt-2 max-w-3xl leading-relaxed">
+          系统只读取允许公开访问的资料，并保存来源、采集时间和内容指纹。Facebook、TikTok、
+          Lazada 等平台的非公开经营数据仍需客户正式授权，不会使用个人 Cookie 绕过限制。
+        </p>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-3">
+        <Card>
+          <div className="eyebrow">采集状态</div>
+          <div className="text-lg text-white mt-2">{statusLabel(research?.status ?? "not_used")}</div>
+        </Card>
+        <Card>
+          <div className="eyebrow">可追溯来源</div>
+          <div className="text-lg text-white mt-2">{research?.source_count ?? 0} 条</div>
+        </Card>
+        <Card>
+          <div className="eyebrow">研究版本</div>
+          <div className="text-[11px] text-neutral-300 font-mono mt-2 break-all">
+            {research?.version ?? "未执行"}
+          </div>
+        </Card>
+      </div>
+
+      {!!platformEntries.length && (
+        <div className="flex flex-wrap gap-2">
+          {platformEntries.map(([platform, count]) => (
+            <span key={platform} className="text-[10px] px-2.5 py-1 rounded-full bg-blue-400/10 text-blue-100">
+              {platform} · {count}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {!research?.evidence?.length ? (
+        <Card className="border-amber-300/20">
+          <div className="flex gap-3">
+            <AlertTriangle size={17} className="text-amber-200 shrink-0 mt-0.5" />
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              本次没有取得可展示的公开网络资料。模拟仍使用已披露的官方宏观数据与模型先验，
+              不会伪造网页、评论或平台成交数据。
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-3">
+          {research.evidence.map(item => (
+            <Card key={item.source_id}>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-[10px] text-blue-100 bg-blue-400/10 px-2 py-1 rounded-full">
+                  {item.platform}
+                </span>
+                <span className="text-[10px] text-neutral-500">证据等级 {item.evidence_grade}</span>
+              </div>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="block text-sm text-white font-medium mt-3 hover:underline"
+              >
+                {item.title}
+              </a>
+              {item.excerpt && (
+                <p className="text-[11px] text-neutral-400 mt-2 leading-relaxed line-clamp-4">
+                  {item.excerpt}
+                </p>
+              )}
+              <div className="text-[9px] text-neutral-600 font-mono mt-3 break-all">
+                {item.collector} · {item.collected_at} · {item.content_sha256.slice(0, 16)}
+              </div>
+              <p className="text-[10px] text-amber-100/70 mt-2">局限：{item.limitation}</p>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Card>
+        <div className="eyebrow">这些资料如何参与结论</div>
+        <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
+          当前用于补充竞品、价格、评价主题、传播素材和风险问题；在没有客户订单、广告归因或
+          A/B 测试完成校准前，公开互动量不会直接修改购买率。
+        </p>
+      </Card>
     </div>
   );
 }

@@ -450,12 +450,12 @@ function Step2({ state, update, onNext, onBack }: {
 
         {/* URL input */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-neutral-400 tracking-wide">参考网址（选填）</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">重点查看的网址（选填）</label>
           <div className="relative">
             <LinkIcon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
               className="input-lazzor pl-9"
-              placeholder="https:// 官网或产品页；将作为研究资料保存"
+              placeholder="https:// 官网、商品页或公开社交页面"
               value={state.url}
               onChange={e => update({ url: e.target.value })}
             />
@@ -651,12 +651,12 @@ function Step2({ state, update, onNext, onBack }: {
 
         {/* Competitors */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-neutral-400 tracking-wide">竞品（选填）</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">竞品名称或公开网址（选填）</label>
           {state.competitors.map((c, i) => (
             <div key={i} className="flex gap-2">
               <input
                 className="input-lazzor flex-1"
-                placeholder={`竞品 ${i + 1}`}
+                placeholder={`竞品 ${i + 1}：名称或商品网址`}
                 value={c}
                 onChange={e => updateListItem("competitors", i, e.target.value)}
               />

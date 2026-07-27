@@ -15,6 +15,7 @@ class CreateStudyRequest(BaseModel):
     category: Optional[str] = Field(default=None, max_length=120)
     price: Optional[float] = Field(default=None, gt=0, le=1_000_000_000)
     url: Optional[str] = Field(default=None, max_length=2048)
+    research_urls: List[str] = Field(default_factory=list, max_length=20)
     description: Optional[str] = Field(default=None, max_length=5000)
     selling_points: List[str] = Field(default_factory=list, max_length=20)
     competitors: List[str] = Field(default_factory=list, max_length=20)
@@ -67,6 +68,11 @@ class CreateStudyRequest(BaseModel):
     @classmethod
     def clean_text_lists(cls, values: List[str]) -> List[str]:
         return [str(value).strip()[:500] for value in values if str(value).strip()]
+
+    @field_validator("research_urls")
+    @classmethod
+    def clean_research_urls(cls, values: List[str]) -> List[str]:
+        return [str(value).strip()[:2048] for value in values if str(value).strip()]
 
 class StudyConfirmRequest(BaseModel):
     overrides: Dict[str, Any] = Field(default_factory=dict)
@@ -121,6 +127,7 @@ class ReportResponse(BaseModel):
     social_evidence: Optional[Dict[str, Any]] = None
     evidence_estimates: List[Dict[str, Any]] = Field(default_factory=list)
     evidence_acquisition: Optional[Dict[str, Any]] = None
+    market_research: Optional[Dict[str, Any]] = None
     geo_analysis: Optional[Dict[str, Any]] = None
     commerce_analysis: Optional[Dict[str, Any]] = None
     model_lineage: Dict[str, Any]

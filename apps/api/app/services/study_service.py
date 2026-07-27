@@ -18,6 +18,7 @@ sys.path.append(
 )
 
 from agents.gemini_gateway import GeminiAgentGateway
+from data_pipeline.market_research import PublicMarketResearch
 from simulation_core.calibration import load_calibration_profile
 from simulation_core.config import (
     get_plan_config,
@@ -103,10 +104,14 @@ def _json_value(value: Any) -> Any:
 
 
 class StudyService:
-    def __init__(self):
+    def __init__(
+        self,
+        market_research: Optional[PublicMarketResearch] = None,
+    ):
         self.studies_db: Dict[str, Dict[str, Any]] = {}
         self.runs_db: Dict[str, Dict[str, Any]] = {}
         self.reports_db: Dict[str, Dict[str, Any]] = {}
+        self.market_research = market_research or PublicMarketResearch()
 
     def create_study(self, data: Dict[str, Any]) -> Dict[str, Any]:
         data = dict(data)
@@ -166,6 +171,7 @@ class StudyService:
             "competitor_data",
             "scenarios",
             "category_panel_version",
+            "research_urls",
         )
         facts = {
             "product_name": data.get("product_name") or data.get("name"),
@@ -277,10 +283,16 @@ class StudyService:
                 competitors.append(dict(item))
         existing_names = {str(item.get("name")) for item in competitors}
         for name in inputs.get("competitors", []):
-            if name and str(name) not in existing_names:
+            normalized_name = str(name or "").strip()
+            is_url = normalized_name.startswith(("http://", "https://"))
+            if (
+                normalized_name
+                and not is_url
+                and normalized_name not in existing_names
+            ):
                 competitors.append(
                     {
-                        "name": str(name),
+                        "name": normalized_name,
                         "data_quality": "name_only_assumption",
                     }
                 )
@@ -642,6 +654,7 @@ class StudyService:
         self,
         sim_results: Mapping[str, Any],
         agent_research: Mapping[str, Any],
+        market_research: Mapping[str, Any],
     ) -> Dict[str, Any]:
         calibration_sources = sim_results["model_lineage"][
             "calibration"
@@ -651,6 +664,7 @@ class StudyService:
         )
         competitors = sim_results["model_lineage"].get("competitors", [])
         geo = sim_results.get("geo_analysis")
+        public_collectors = list(market_research.get("collectors") or [])
         return {
             "execution_policy": "independent_collectors_fail_open",
             "collectors": [
@@ -694,6 +708,7 @@ class StudyService:
                     "result_count": 0,
                     "fallback_result": "disclosed_social_propagation_scenarios",
                 },
+                *public_collectors,
             ],
         }
 
@@ -705,6 +720,7 @@ class StudyService:
         agent_research: Mapping[str, Any],
         representatives: Sequence[Mapping[str, Any]],
         sample_profile: Mapping[str, Any],
+        market_research: Mapping[str, Any],
     ) -> Dict[str, Any]:
         report_id = f"rpt_{uuid.uuid4().hex[:8]}"
         scenarios = list(sim_results["scenarios"])
@@ -863,6 +879,7 @@ class StudyService:
             "market_dynamics": sim_results["market_dynamics"],
             "social_dynamics": sim_results.get("social_dynamics", []),
             "social_evidence": self._social_evidence_policy(),
+            "market_research": market_research,
             "evidence_estimates": self._evidence_estimates(
                 sim_results,
                 agent_research,
@@ -870,6 +887,7 @@ class StudyService:
             "evidence_acquisition": self._evidence_acquisition(
                 sim_results,
                 agent_research,
+                market_research,
             ),
             "geo_analysis": sim_results.get("geo_analysis"),
             "commerce_analysis": self._commerce_analysis(study),
@@ -927,6 +945,12 @@ class StudyService:
         }
 
         try:
+            study["status"] = "COLLECTING_PUBLIC_EVIDENCE"
+            self.runs_db[run_id]["status"] = "COLLECTING_PUBLIC_EVIDENCE"
+            market_research = await self.market_research.collect(
+                study,
+                plan.code,
+            )
             overrides = study["inputs"].get("calibration_overrides")
             use_overrides = overrides if plan.customer_calibration else None
             profile = load_calibration_profile(overrides=use_overrides)
@@ -1066,6 +1090,18 @@ class StudyService:
             sim_results["model_lineage"]["effective_model_type"] = (
                 model_study_type
             )
+            sim_results["model_lineage"]["market_research"] = {
+                "version": market_research.get("version"),
+                "status": market_research.get("status"),
+                "source_count": market_research.get("source_count", 0),
+                "quantitative_effect": market_research.get(
+                    "usage_policy",
+                    {},
+                ).get("quantitative_effect"),
+            }
+            sim_results["warnings"].extend(
+                market_research.get("warnings") or []
+            )
             study["status"] = "GENERATING_REPORT"
             self.runs_db[run_id]["status"] = "GENERATING_REPORT"
             report = self._report(
@@ -1075,6 +1111,7 @@ class StudyService:
                 agent_research,
                 representatives,
                 sample_profile,
+                market_research,
             )
 
             study["status"] = "COMPLETED"

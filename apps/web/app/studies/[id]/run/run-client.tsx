@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 type RunStatus = "running" | "completed" | "failed";
 
 const SERVER_STAGES = [
+  { label: "扫描公开市场信息", detail: "读取客户提供的网页与 YouTube 公开资料，并记录来源和采集时间" },
+  { label: "核验证据可信度", detail: "区分公开证据、模型先验与需要客户授权的平台数据" },
   { label: "准备 AI 模拟消费人群", detail: "读取泰国市场数据，生成本次分析所需的 AI 人群" },
   { label: "分析消费选择", detail: "比较产品卖点、价格、竞品和不购买等选择" },
   { label: "运行市场模拟", detail: "计算不同人群对各个方案的选择倾向" },
@@ -124,10 +126,10 @@ export function RunProgressClient({
             <Loader2 size={22} className="animate-spin text-white mx-auto" />
             <div className="eyebrow">后台模拟正在运行</div>
             <h2 className="text-xl font-semibold text-white tracking-tight">
-              正在分析 AI 模拟消费人群与市场方案…
+              正在采集市场信息并分析 AI 模拟消费人群…
             </h2>
             <p className="text-xs text-neutral-400 font-mono tabular-nums">
-              已等待 {formatElapsed(elapsed)} · 完成时间取决于套餐、人口和轮数
+              已等待 {formatElapsed(elapsed)} · 深度决策通常需要 10–60 分钟
             </p>
             <p className="text-[10px] text-neutral-500">
               当前接口尚未返回分阶段进度，因此这里不会展示推测或虚构的完成百分比。

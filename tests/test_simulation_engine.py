@@ -89,16 +89,16 @@ class SimulationEngineTests(unittest.TestCase):
 
     def test_all_first_release_study_models_execute(self):
         expected_funnel_labels = {
-            "PRODUCT_VALIDATION": "Purchased",
-            "PRICING_STUDY": "Purchased",
-            "CREATIVE_TEST": "Action Intended",
-            "VENUE_STUDY": "Visited",
-            "SITE_COMPARISON": "Visited",
-            "OPERATING_SCENARIO": "Visited",
-            "RESTAURANT": "Visited",
-            "CAFE": "Visited",
-            "BAR": "Visited",
-            "RETAIL": "Visited",
+            "PRODUCT_VALIDATION": "预计选择购买",
+            "PRICING_STUDY": "预计选择购买",
+            "CREATIVE_TEST": "预计采取目标行动",
+            "VENUE_STUDY": "预计到店",
+            "SITE_COMPARISON": "预计到店",
+            "OPERATING_SCENARIO": "预计到店",
+            "RESTAURANT": "预计到店",
+            "CAFE": "预计到店",
+            "BAR": "预计到店",
+            "RETAIL": "预计到店",
         }
         model_keys = set()
         for study_type, final_label in expected_funnel_labels.items():

@@ -75,6 +75,23 @@ class ConditionalLogitEstimatorTests(unittest.TestCase):
 
 
 class StudyServiceTests(unittest.TestCase):
+    def test_competitor_urls_are_research_sources_not_choice_names(self):
+        service = StudyService()
+        study = service.create_study(
+            {
+                "name": "Competitor source handling",
+                "study_type": "PRODUCT_VALIDATION",
+                "competitors": [
+                    "Known Brand",
+                    "https://example.com/competitor-product",
+                ],
+            }
+        )
+        self.assertEqual(
+            [item["name"] for item in service._competitors(study)],
+            ["Known Brand"],
+        )
+
     def test_service_runs_without_mock_personas(self):
         previous_key = os.environ.get("GEMINI_API_KEY")
         os.environ["GEMINI_API_KEY"] = ""
@@ -219,7 +236,7 @@ class StudyServiceTests(unittest.TestCase):
         visited = next(
             item for item in report["funnel"] if item["stage"] == "purchased"
         )
-        self.assertEqual(visited["label"], "Visited")
+        self.assertEqual(visited["label"], "预计到店")
         self.assertEqual(report["geo_analysis"]["venue_type"], "CAFE")
         self.assertTrue(report["geo_analysis"]["heatmap"])
         self.assertEqual(

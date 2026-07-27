@@ -94,6 +94,7 @@ export interface CreateStudyPayload {
   price?: number;
   reference_price?: number;
   url?: string;
+  research_urls?: string[];
   description?: string;
   selling_points?: string[];
   competitors?: string[];
