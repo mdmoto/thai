@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AppShell, TopBar } from "@/components/layout";
 import { ReportQueryClient } from "./query-client";
 
-export const metadata = { title: "研究报告 — Thailand Market Twin" };
+export const metadata = { title: "研究报告 — Chiang Mai AI Center" };
 
 export default function ReportPage() {
   return (

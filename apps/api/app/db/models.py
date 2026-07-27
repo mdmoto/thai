@@ -24,6 +24,9 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     name = Column(String, nullable=True)
     company = Column(String, nullable=True)
+    invite_code = Column(String, nullable=True, index=True)
+    invite_status = Column(String, nullable=False, default="NOT_PROVIDED")
+    acquisition_source = Column(String, nullable=False, default="ORGANIC")
     plan_tier = Column(String, default="FREE")  # FREE, PROFESSIONAL, ENTERPRISE
     credits_balance = Column(Integer, default=0)  # Bonuses are granted explicitly.
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -41,7 +44,7 @@ class CreditTransaction(Base):
     id = Column(String, primary_key=True, default=lambda: f"tx_{uuid.uuid4().hex[:8]}")
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     amount = Column(Integer, nullable=False)  # Positive for recharge, negative for deduction
-    transaction_type = Column(String, nullable=False)  # RECHARGE, DEDUCTION, SIGNUP_BONUS
+    transaction_type = Column(String, nullable=False)  # RECHARGE, DEDUCTION, INVITE_BONUS
     description = Column(String, nullable=True)
     reference_id = Column(String, unique=True, index=True, nullable=True)
     balance_after = Column(Integer, nullable=True)

@@ -63,6 +63,8 @@ export interface UserProfile {
   company?: string;
   plan_tier: string;
   credits_balance: number;
+  invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
+  acquisition_source?: string;
 }
 
 export interface StudyListItem {
@@ -149,6 +151,7 @@ export async function registerApi(payload: {
   password: string;
   name?: string;
   company?: string;
+  invite_code?: string;
 }) {
   return apiJson<{ access_token: string; user: UserProfile }>(
     "/v1/auth/register",

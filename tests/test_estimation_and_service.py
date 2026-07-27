@@ -139,6 +139,26 @@ class StudyServiceTests(unittest.TestCase):
             report["social_evidence"]["policy"],
             "official_api_authorized_provider_or_customer_export_only",
         )
+        self.assertTrue(report["evidence_estimates"])
+        self.assertTrue(
+            all(
+                item["result"] and item["limitation"]
+                for item in report["evidence_estimates"]
+            )
+        )
+        self.assertEqual(
+            report["evidence_acquisition"]["execution_policy"],
+            "independent_collectors_fail_open",
+        )
+        llm_collector = next(
+            item
+            for item in report["evidence_acquisition"]["collectors"]
+            if item["collector"] == "Structured LLM research"
+        )
+        self.assertEqual(
+            llm_collector["fallback_result"],
+            "model_segment_summary",
+        )
 
     def test_venue_uses_subtype_model_and_visit_language(self):
         previous_key = os.environ.get("GEMINI_API_KEY")

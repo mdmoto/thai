@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "隐私说明 — Thailand Market Twin" };
+export const metadata = { title: "隐私说明 — Chiang Mai AI Center" };
 
 export default function PrivacyPage() {
   return (

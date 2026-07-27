@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import json
 import os
 import re
 import secrets
@@ -160,6 +161,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=10, max_length=128)
     name: Optional[str] = Field(default=None, max_length=120)
     company: Optional[str] = Field(default=None, max_length=160)
+    invite_code: Optional[str] = Field(default=None, max_length=64)
 
     @field_validator("email")
     @classmethod
@@ -168,6 +170,12 @@ class RegisterRequest(BaseModel):
         if not EMAIL_PATTERN.match(normalized):
             raise ValueError("请输入有效邮箱")
         return normalized
+
+    @field_validator("invite_code")
+    @classmethod
+    def normalize_invite_code(cls, value: Optional[str]) -> Optional[str]:
+        normalized = (value or "").strip().upper()
+        return normalized or None
 
 
 class LoginRequest(BaseModel):
@@ -196,6 +204,62 @@ def _user_payload(user: User) -> Dict[str, Any]:
         "company": user.company,
         "plan_tier": user.plan_tier,
         "credits_balance": int(user.credits_balance),
+        "invite_status": user.invite_status,
+        "acquisition_source": user.acquisition_source,
+    }
+
+
+def _invite_catalog() -> Dict[str, Dict[str, Any]]:
+    configured = os.environ.get("INVITE_CODES_JSON", "{}")
+    try:
+        payload = json.loads(configured)
+    except json.JSONDecodeError:
+        LOGGER.error("INVITE_CODES_JSON is invalid; invite bonuses disabled")
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    catalog: Dict[str, Dict[str, Any]] = {}
+    for raw_code, raw_config in payload.items():
+        code = str(raw_code).strip().upper()
+        if not code or not isinstance(raw_config, dict):
+            continue
+        try:
+            credits = max(
+                0,
+                min(1000, int(raw_config.get("credits", 0))),
+            )
+        except (TypeError, ValueError):
+            LOGGER.warning(
+                "Invite code %s has invalid credit configuration; skipped",
+                code,
+            )
+            continue
+        source = str(raw_config.get("source") or code).strip()[:120]
+        catalog[code] = {"credits": credits, "source": source}
+    return catalog
+
+
+def _resolve_invite(code: Optional[str]) -> Dict[str, Any]:
+    if not code:
+        return {
+            "code": None,
+            "status": "NOT_PROVIDED",
+            "source": "ORGANIC",
+            "credits": 0,
+        }
+    config = _invite_catalog().get(code)
+    if not config:
+        return {
+            "code": code,
+            "status": "INVALID",
+            "source": "UNATTRIBUTED_INVITE",
+            "credits": 0,
+        }
+    return {
+        "code": code,
+        "status": "VALID",
+        "source": config["source"],
+        "credits": int(config["credits"]),
     }
 
 
@@ -302,31 +366,62 @@ def register_user(req: RegisterRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == req.email).first()
     if existing:
         raise HTTPException(status_code=409, detail="该邮箱已被注册")
+    invite = _resolve_invite(req.invite_code)
     user = User(
         email=req.email,
         password_hash=hash_password(req.password),
         name=(req.name or req.email.split("@")[0]).strip(),
         company=req.company.strip() if req.company else None,
-        credits_balance=5,
+        invite_code=invite["code"],
+        invite_status=invite["status"],
+        acquisition_source=invite["source"],
+        credits_balance=invite["credits"],
     )
     db.add(user)
     db.flush()
-    db.add(
-        CreditTransaction(
-            user_id=user.id,
-            amount=5,
-            transaction_type="SIGNUP_BONUS",
-            description="新用户 Standard 体验额度",
-            reference_id=f"signup:{user.id}",
-            balance_after=5,
+    if invite["credits"] > 0:
+        db.add(
+            CreditTransaction(
+                user_id=user.id,
+                amount=invite["credits"],
+                transaction_type="INVITE_BONUS",
+                description=f"邀请码体验额度：{invite['source']}",
+                reference_id=f"invite:{user.id}",
+                balance_after=invite["credits"],
+            )
         )
-    )
     db.commit()
     db.refresh(user)
     return {
         "access_token": create_access_token(user.id, user.email),
         "token_type": "bearer",
         "user": _user_payload(user),
+    }
+
+
+@app.get("/v1/admin/acquisition/users")
+def admin_acquisition_users(
+    x_admin_key: Optional[str] = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    _require_admin_key(x_admin_key)
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    return {
+        "total": len(users),
+        "users": [
+            {
+                "id": user.id,
+                "email": user.email,
+                "name": user.name,
+                "company": user.company,
+                "invite_code": user.invite_code,
+                "invite_status": user.invite_status,
+                "acquisition_source": user.acquisition_source,
+                "credits_balance": int(user.credits_balance),
+                "created_at": user.created_at.isoformat(),
+            }
+            for user in users
+        ],
     }
 
 
@@ -570,7 +665,7 @@ async def run_simulation(
                 status_code=402,
                 detail=(
                     "每个账号包含 1 次免费 Preview。"
-                    "请使用注册赠送积分运行 Standard，或购买积分。"
+                    "当前积分不足。请使用有效邀请码获得体验积分，或购买积分。"
                 ),
             )
 

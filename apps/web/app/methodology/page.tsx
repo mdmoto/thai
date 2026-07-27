@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "方法与数据 — Thailand Market Twin" };
+export const metadata = { title: "方法与数据 — Chiang Mai AI Center" };
 
 export default function MethodologyPage() {
   return (

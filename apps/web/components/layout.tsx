@@ -74,22 +74,16 @@ export function Sidebar() {
       >
         <div
           className={clsx(
-            "flex items-center gap-3 px-5 h-16 border-b border-neutral-900",
+            "flex items-center gap-3 px-4 h-24 border-b border-neutral-900",
             collapsed && "justify-center px-0",
           )}
         >
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <BrandMark className="w-8 h-8 shrink-0" />
-            {!collapsed && (
-              <div>
-                <div className="text-[13px] font-semibold text-white leading-tight tracking-tight">
-                  CMAI Market Twin
-                </div>
-                <div className="text-[10px] text-neutral-400 font-light">
-                  Thailand Consumer Lab
-                </div>
-              </div>
-            )}
+          <Link href="/" className="flex items-center justify-center group w-full">
+            <BrandMark
+              full={!collapsed}
+              className={collapsed ? "w-9 h-9 shrink-0" : "w-44 h-auto"}
+              priority
+            />
           </Link>
         </div>
 

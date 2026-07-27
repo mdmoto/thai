@@ -2,7 +2,7 @@ import { AppShell, TopBar } from "@/components/layout";
 import { DashboardClient } from "./dashboard-client";
 
 export const metadata = {
-  title: "控制台 — Thailand Market Twin",
+  title: "控制台 — Chiang Mai AI Center",
 };
 
 export default function DashboardPage() {

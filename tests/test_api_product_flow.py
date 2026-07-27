@@ -19,6 +19,9 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_DATABASE_FILE.name}"
 os.environ["JWT_SECRET_KEY"] = "test-secret-with-more-than-thirty-two-characters"
 os.environ["ADMIN_API_KEY"] = "test-admin-key"
 os.environ["APP_ENV"] = "test"
+os.environ["INVITE_CODES_JSON"] = (
+    '{"TEST-INVITE":{"credits":5,"source":"AUTOMATED_TEST"}}'
+)
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -36,7 +39,7 @@ class ApiProductFlowTests(unittest.TestCase):
         cls.client_context.__exit__(None, None, None)
         Path(_DATABASE_FILE.name).unlink(missing_ok=True)
 
-    def _register(self, email: str):
+    def _register(self, email: str, invite_code: str = "TEST-INVITE"):
         response = self.client.post(
             "/v1/auth/register",
             json={
@@ -44,6 +47,7 @@ class ApiProductFlowTests(unittest.TestCase):
                 "password": "a-secure-test-password",
                 "name": "测试客户",
                 "company": "Test Brand",
+                "invite_code": invite_code,
             },
         )
         self.assertEqual(response.status_code, 201, response.text)
@@ -56,6 +60,53 @@ class ApiProductFlowTests(unittest.TestCase):
         self.assertEqual(
             response.json(),
             {"status": "healthy", "database": "connected"},
+        )
+
+    def test_signup_bonus_requires_valid_invite_and_tracks_source(self):
+        no_invite, no_invite_headers = self._register(
+            "organic@example.com",
+            invite_code="",
+        )
+        self.assertEqual(no_invite["user"]["credits_balance"], 0)
+        self.assertEqual(no_invite["user"]["invite_status"], "NOT_PROVIDED")
+        self.assertEqual(
+            no_invite["user"]["acquisition_source"],
+            "ORGANIC",
+        )
+
+        invalid, _ = self._register(
+            "invalid-invite@example.com",
+            invite_code="NOT-A-REAL-CODE",
+        )
+        self.assertEqual(invalid["user"]["credits_balance"], 0)
+        self.assertEqual(invalid["user"]["invite_status"], "INVALID")
+
+        valid, _ = self._register("valid-invite@example.com")
+        self.assertEqual(valid["user"]["credits_balance"], 5)
+        self.assertEqual(valid["user"]["invite_status"], "VALID")
+        self.assertEqual(
+            valid["user"]["acquisition_source"],
+            "AUTOMATED_TEST",
+        )
+
+        transactions = self.client.get(
+            "/v1/billing/transactions",
+            headers=no_invite_headers,
+        ).json()
+        self.assertEqual(transactions, [])
+
+        acquisition = self.client.get(
+            "/v1/admin/acquisition/users",
+            headers={"X-Admin-Key": "test-admin-key"},
+        )
+        self.assertEqual(acquisition.status_code, 200)
+        tracked = {
+            item["email"]: item
+            for item in acquisition.json()["users"]
+        }
+        self.assertEqual(
+            tracked["valid-invite@example.com"]["acquisition_source"],
+            "AUTOMATED_TEST",
         )
 
     def test_public_catalog_excludes_internal_plans(self):

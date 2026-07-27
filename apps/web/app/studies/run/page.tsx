@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AppShell, TopBar } from "@/components/layout";
 import { RunQueryClient } from "./query-client";
 
-export const metadata = { title: "模拟运行中 — Thailand Market Twin" };
+export const metadata = { title: "模拟运行中 — Chiang Mai AI Center" };
 
 export default function RunPage() {
   return (

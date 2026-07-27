@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || production.siteOrigin,
   ),
-  title: "CMAI Thailand Market Twin | 泰国市场决策平台",
+  title: "Chiang Mai AI Center | 泰国商业决策平台",
   description:
     "面向进入泰国市场的品牌与线下商业，比较产品、价格、广告、商圈、门店和经营情景，并披露数据来源、模型版本与可信度边界。",
   keywords: ["CMAI", "Thailand Market Twin", "泰国市场研究", "消费品定价", "门店选址", "广告测试", "Thailand Market Entry"],
@@ -25,14 +25,14 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "CMAI Thailand Market Twin | 泰国市场决策平台",
+    title: "Chiang Mai AI Center | 泰国商业决策平台",
     description: "进入泰国市场前，先比较产品、价格、广告、选址与经营情景。",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Thailand Market Twin" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Chiang Mai AI Center" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CMAI Thailand Market Twin | 泰国市场决策平台",
+    title: "Chiang Mai AI Center | 泰国商业决策平台",
     description: "进入泰国市场前，先比较产品、价格、广告、选址与经营情景。",
     images: ["/og.png"],
   },
