@@ -28,6 +28,7 @@ from simulation_core.engine import SIMULATION_MODEL_VERSION, SimulationEngine
 from simulation_core.geo import build_geo_analysis
 from world_model.generator import PopulationGenerator, WORLD_MODEL_VERSION
 from world_model.category_profiles import load_category_profile
+from world_model.thailand_geo import sample_point_in_province
 
 
 def _data_catalog_root() -> Path:
@@ -75,15 +76,6 @@ SEGMENT_COPY = {
         "barriers": ["品牌认知", "决策惯性"],
         "preferred_channel": "Shopee / Lazada",
     },
-}
-
-REGION_MAP_CENTERS = {
-    "Bangkok Metro": (13.7563, 100.5018),
-    "Central": (14.7069, 100.3560),
-    "East / EEC": (13.1737, 101.2106),
-    "North": (18.7883, 98.9853),
-    "Northeast": (16.4322, 102.8236),
-    "South": (8.4304, 99.9631),
 }
 
 AGE_GROUP_RANGES = {
@@ -464,18 +456,10 @@ class StudyService:
             low, high = AGE_GROUP_RANGES.get(age_group, (35, 44))
             age = int(rng.integers(low, high + 1))
             region = str(row.get("region") or "Central")
-            latitude, longitude = REGION_MAP_CENTERS.get(
-                region,
-                REGION_MAP_CENTERS["Central"],
-            )
-            # These are display coordinates around a regional centroid, not
-            # inferred or observed household addresses.
-            latitude = float(
-                np.clip(latitude + rng.normal(0.0, 0.62), 5.8, 20.4)
-            )
-            longitude = float(
-                np.clip(longitude + rng.normal(0.0, 0.48), 97.5, 105.4)
-            )
+            province = str(row.get("province") or "Bangkok")
+            # These are synthetic display points sampled inside the assigned
+            # province polygon, not observed household addresses.
+            latitude, longitude = sample_point_in_province(province, rng)
             points.append(
                 {
                     "person_id": row.get("person_id"),
@@ -487,7 +471,7 @@ class StudyService:
                     ),
                     "income_tier": row.get("income_tier"),
                     "region": region,
-                    "province": row.get("province"),
+                    "province": province,
                     "latitude": round(latitude, 4),
                     "longitude": round(longitude, 4),
                     "category_eligible": bool(
@@ -521,10 +505,10 @@ class StudyService:
                 {"label": key, "share": round(float(value), 6)}
                 for key, value in region_counts.items()
             ],
-            "location_status": "synthetic_region_centroid_jitter",
+            "location_status": "synthetic_province_polygon_sample",
             "location_disclosure": (
-                "点位由合成人口所属大区中心加确定性扰动生成，仅展示抽样地域分布；"
-                "不是个人住址、设备定位或实测客流。"
+                "点位依据合成人口所属府，在真实泰国府界多边形内确定性抽样，"
+                "仅展示地域分布；不是个人住址、设备定位或实测客流。"
             ),
         }
 
