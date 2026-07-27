@@ -5,6 +5,49 @@ from data_pipeline.market_research import PublicMarketResearch
 
 
 class PublicMarketResearchTests(unittest.TestCase):
+    def test_anti_bot_page_is_not_accepted_as_evidence(self):
+        item = PublicMarketResearch._page_evidence(
+            "https://www.lazada.co.th/products/petkit-eversweet.html",
+            """
+            # Lazada
+            Sorry, we have detected unusual traffic from your network.
+            Loading /punish?x5secdata=challenge-token
+            PETKIT Eversweet
+            """,
+        )
+        self.assertIsNone(item)
+
+    def test_marketplace_page_requires_meaningful_commerce_signals(self):
+        item = PublicMarketResearch._page_evidence(
+            "https://shopee.co.th/petkit-eversweet-solo-2-i.1.2",
+            """
+            PETKIT Eversweet Solo 2 น้ำพุแมวอัตโนมัติ
+            ราคา ฿1,400 คะแนน 5.0 คะแนน ขายแล้ว 5,000 ชิ้น
+            รีวิวจากผู้ซื้อในประเทศไทย รับประกันศูนย์ไทยหนึ่งปี
+            รายละเอียดสินค้า ปั๊มน้ำไร้สายและระบบกรองน้ำ
+            """,
+        )
+        self.assertIsNotNone(item)
+        self.assertIn("฿1,400", item["market_signals"]["prices"])
+        self.assertIn(
+            "price",
+            item["quality_checks"]["matched_signal_groups"],
+        )
+        self.assertTrue(
+            item["quality_checks"]["marketplace_minimum_passed"]
+        )
+
+    def test_marketplace_navigation_text_without_price_is_rejected(self):
+        item = PublicMarketResearch._page_evidence(
+            "https://shopee.co.th/petkitofficialthailand",
+            """
+            Petkit Official Thailand ร้านค้า รายการสินค้า หมวดหมู่
+            ติดตาม พูดคุย ดูร้านค้า โปรโมชั่น และสินค้าแนะนำ
+            ยินดีต้อนรับสู่ร้านค้าอย่างเป็นทางการ
+            """,
+        )
+        self.assertIsNone(item)
+
     def test_professional_run_combines_public_pages_and_video_metadata(self):
         async def fake_pages(urls):
             self.assertEqual(urls, ["https://example.com/product"])

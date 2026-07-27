@@ -24,7 +24,7 @@ from typing import Any, Awaitable, Callable, Dict, Iterable, List, Mapping, Opti
 import httpx
 
 
-RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.2"
+RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.3"
 USER_AGENT = "ThailandMarketTwin/2.1 (+public-market-research)"
 PLATFORM_HOSTS = {
     "facebook.com": "Facebook",
@@ -70,6 +70,31 @@ PLATFORM_PRIORITY = {
     "Instagram": (2, "泰国社交讨论"),
     "YouTube": (4, "长测评补充证据"),
     "公开网页": (3, "公开搜索与评测证据"),
+}
+MARKETPLACE_PLATFORMS = {"Shopee", "Lazada"}
+ANTI_BOT_MARKERS = (
+    "x5secdata",
+    "captcha",
+    "verify you are human",
+    "detected unusual traffic",
+    "unusual traffic from your network",
+    "access denied",
+    "security verification",
+    "robot verification",
+    "too many requests",
+)
+URL_TOKEN_STOPWORDS = {
+    "collection",
+    "collections",
+    "global",
+    "html",
+    "official",
+    "product",
+    "products",
+    "shop",
+    "thailand",
+    "version",
+    "white",
 }
 
 PageReader = Callable[[List[str]], Awaitable[List[Dict[str, Any]]]]
@@ -160,6 +185,44 @@ def _unique(values: Iterable[str]) -> List[str]:
         seen.add(cleaned)
         result.append(cleaned)
     return result
+
+
+def _market_signals(content: str) -> Dict[str, List[str]]:
+    patterns = {
+        "prices": (
+            r"(?:฿\s?[\d][\d,]*(?:\.\d{1,2})?"
+            r"|(?:THB|บาท)\s?[\d][\d,]*(?:\.\d{1,2})?"
+            r"|[\d][\d,]*(?:\.\d{1,2})?\s?บาท)"
+        ),
+        "ratings": (
+            r"\b[0-5](?:\.\d{1,2})?\s*"
+            r"(?:/\s?5|ดาว|คะแนน|rating)"
+        ),
+        "sales_mentions": (
+            r"(?:ขายแล้ว|ขายได้|sold)\s*"
+            r"[\d,.]+\s*(?:k|พัน|หมื่น|ชิ้น)?"
+        ),
+        "review_mentions": (
+            r"(?:[\d,.]+\s*)?"
+            r"(?:รีวิว|reviews?|ratings?|ความคิดเห็น)"
+        ),
+    }
+    return {
+        field: _unique(
+            _clean_text(match, 120)
+            for match in re.findall(pattern, content, flags=re.IGNORECASE)
+        )[:10]
+        for field, pattern in patterns.items()
+    }
+
+
+def _url_identity_terms(url: str) -> List[str]:
+    path = urllib.parse.unquote(urllib.parse.urlsplit(url).path).lower()
+    return [
+        token
+        for token in _unique(re.split(r"[^a-z0-9ก-๙]+", path))
+        if len(token) >= 4 and token not in URL_TOKEN_STOPWORDS
+    ][:20]
 
 
 class PublicMarketResearch:
@@ -480,6 +543,14 @@ class PublicMarketResearch:
                         items.append(item)
         except Exception:
             return await self._read_with_jina(allowed)
+        accepted_urls = {str(item.get("url")) for item in items}
+        fallback_urls = [url for url in allowed if url not in accepted_urls]
+        if fallback_urls:
+            fallback_items = await self._read_with_jina(fallback_urls)
+            for item in fallback_items:
+                if item.get("url") not in accepted_urls:
+                    items.append(item)
+                    accepted_urls.add(str(item.get("url")))
         return items
 
     async def _read_with_jina(
@@ -516,7 +587,49 @@ class PublicMarketResearch:
         cleaned = _clean_text(content)
         if len(cleaned) < 80:
             return None
+        lowered = cleaned.lower()
+        challenge_hits = [
+            marker for marker in ANTI_BOT_MARKERS if marker in lowered
+        ]
+        if challenge_hits:
+            return None
         parsed = urllib.parse.urlsplit(url)
+        platform = _hostname_platform(parsed.hostname or "")
+        market_signals = _market_signals(cleaned)
+        identity_terms = [
+            term for term in _url_identity_terms(url) if term in lowered
+        ]
+        signal_groups = [
+            *(
+                ["product_identity"]
+                if identity_terms
+                else []
+            ),
+            *(
+                ["price"]
+                if market_signals["prices"]
+                else []
+            ),
+            *(
+                ["rating"]
+                if market_signals["ratings"]
+                else []
+            ),
+            *(
+                ["sales"]
+                if market_signals["sales_mentions"]
+                else []
+            ),
+            *(
+                ["reviews"]
+                if market_signals["review_mentions"]
+                else []
+            ),
+        ]
+        if platform in MARKETPLACE_PLATFORMS and not (
+            market_signals["prices"] and len(signal_groups) >= 2
+        ):
+            return None
         title_match = re.search(r"(?:^|\s)Title:\s*(.{3,200}?)(?:\sURL Source:|$)", content)
         title = (
             _clean_text(title_match.group(1), 180)
@@ -528,7 +641,7 @@ class PublicMarketResearch:
             "source_id": _source_id("public_page", url, digest),
             "source_type": "public_page",
             "collector": "Crawl4AI",
-            "platform": _hostname_platform(parsed.hostname or ""),
+            "platform": platform,
             "title": title,
             "url": url,
             "published_at": None,
@@ -536,7 +649,44 @@ class PublicMarketResearch:
             "evidence_grade": "C",
             "content_sha256": digest,
             "excerpt": cleaned[:900],
-            "observed_fields": ["page_text", "page_title"],
+            "observed_fields": [
+                "page_text",
+                "page_title",
+                *(
+                    ["prices"]
+                    if market_signals["prices"]
+                    else []
+                ),
+                *(
+                    ["ratings"]
+                    if market_signals["ratings"]
+                    else []
+                ),
+                *(
+                    ["sales_mentions"]
+                    if market_signals["sales_mentions"]
+                    else []
+                ),
+                *(
+                    ["review_mentions"]
+                    if market_signals["review_mentions"]
+                    else []
+                ),
+            ],
+            "market_signals": market_signals,
+            "quality_checks": {
+                "challenge_detected": False,
+                "matched_signal_groups": signal_groups,
+                "matched_product_terms": identity_terms,
+                "content_length": len(cleaned),
+                "marketplace_minimum_passed": (
+                    platform not in MARKETPLACE_PLATFORMS
+                    or bool(
+                        market_signals["prices"]
+                        and len(signal_groups) >= 2
+                    )
+                ),
+            },
             "limitation": "公开页面内容可变；未验证成交量、转化率或用户身份。",
         }
 
