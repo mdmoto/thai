@@ -631,7 +631,7 @@ async def run_simulation(
             status_code=409,
             detail=(
                 f"{plan_code} 当前采用销售协助交付；"
-                "自助版本请选择 PROFESSIONAL。"
+                "自助版本请选择深度决策。"
             ),
         )
 
@@ -664,7 +664,7 @@ async def run_simulation(
             raise HTTPException(
                 status_code=402,
                 detail=(
-                    "每个账号包含 1 次免费 Preview。"
+                    "每个账号包含 1 次免费预览。"
                     "当前积分不足。请使用有效邀请码获得体验积分，或购买积分。"
                 ),
             )
@@ -746,7 +746,7 @@ async def run_simulation(
     try:
         report = await service.execute_run(
             study_id=study_id,
-            pop_size=req.population_size,
+            pop_size=None if plan_code in SELF_SERVICE_PLANS else req.population_size,
             mc_rounds=req.mc_rounds,
             seed=req.seed,
             plan_code=plan_code,

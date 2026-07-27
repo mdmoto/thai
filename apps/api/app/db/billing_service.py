@@ -20,6 +20,14 @@ CREDIT_PRICING = {
 
 PUBLIC_PLAN_CODES = ("PREVIEW", "STANDARD", "PROFESSIONAL")
 
+RUN_LABELS = {
+    "PREVIEW": "免费预览",
+    "STANDARD": "基础模拟",
+    "PROFESSIONAL": "深度决策",
+    "DEEP": "专属研究",
+    "ENTERPRISE": "企业定制",
+}
+
 PACKAGE_CATALOG: Dict[str, Dict[str, Any]] = {
     "STARTER": {
         "code": "STARTER",
@@ -27,7 +35,7 @@ PACKAGE_CATALOG: Dict[str, Dict[str, Any]] = {
         "credits": 20,
         "amount_minor": 790_000,
         "currency": "THB",
-        "description": "可运行 1 次 Professional，或 4 次 Standard。",
+        "description": "最多可运行 1 次深度决策，或 4 次基础模拟。",
     },
     "GROWTH": {
         "code": "GROWTH",
@@ -35,7 +43,7 @@ PACKAGE_CATALOG: Dict[str, Dict[str, Any]] = {
         "credits": 110,
         "amount_minor": 3_490_000,
         "currency": "THB",
-        "description": "含 100 积分与 10 积分赠送，适合持续测试。",
+        "description": "含 100 积分与 10 积分赠送；最多可运行 5 次深度决策加 2 次基础模拟，或 22 次基础模拟。",
     },
     "SCALE": {
         "code": "SCALE",
@@ -43,7 +51,7 @@ PACKAGE_CATALOG: Dict[str, Dict[str, Any]] = {
         "credits": 360,
         "amount_minor": 8_900_000,
         "currency": "THB",
-        "description": "含 300 积分与 60 积分赠送，适合多产品组合。",
+        "description": "含 300 积分与 60 积分赠送；最多可运行 18 次深度决策，或 72 次基础模拟，可自由组合。",
     },
 }
 
@@ -107,10 +115,11 @@ def check_and_deduct_credits(
         .one()
     )
     if int(locked_user.credits_balance) < cost:
+        run_label = RUN_LABELS.get(plan_code, plan_code)
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=(
-                f"运行 {plan_code} 需要 {cost} 积分，当前余额为 "
+                f"运行{run_label}需要 {cost} 积分，当前余额为 "
                 f"{locked_user.credits_balance} 积分。"
             ),
         )
@@ -120,7 +129,7 @@ def check_and_deduct_credits(
         user_id=locked_user.id,
         amount=-cost,
         transaction_type="RUN_RESERVATION",
-        description=f"运行 {plan_code} 市场模拟",
+        description=f"运行{RUN_LABELS.get(plan_code, plan_code)}",
         reference_id=f"reserve:{reference_id}",
         balance_after=locked_user.credits_balance,
     )

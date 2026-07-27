@@ -507,7 +507,7 @@ class StudyService:
             ],
             "location_status": "synthetic_province_polygon_sample",
             "location_disclosure": (
-                "点位依据合成人口所属府，在真实泰国府界多边形内确定性抽样，"
+                "点位依据 AI 模拟消费人群所属府，在真实泰国府界多边形内确定性抽样，"
                 "仅展示地域分布；不是个人住址、设备定位或实测客流。"
             ),
         }
@@ -590,7 +590,7 @@ class StudyService:
                 "topic": "品类目标人群",
                 "result": (
                     f"{float(category.get('eligible_population_share', 1.0)):.1%}"
-                    " 的合成人口符合当前品类资格规则"
+                    " 的 AI 模拟消费人群符合当前品类资格规则"
                 ),
                 "grade": "C",
                 "basis": str(

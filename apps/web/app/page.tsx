@@ -60,8 +60,8 @@ export default function HomePage() {
             先比较产品、价格与竞品情景
           </h1>
           <p className="text-base sm:text-lg text-neutral-400 leading-relaxed max-w-2xl mt-6">
-            面向进入泰国市场的品牌与线下商业。用版本化人口、选择模型和情景模拟，
-            比较消费品、定价、广告、选址和门店经营方案。
+            让 AI 模拟消费人群先替您试一遍。比较产品、价格、广告、选址和经营方案，
+            再决定钱该花在哪里。
           </p>
           <div className="flex flex-wrap gap-3 mt-8">
             <Link href="/demo/pet-water" className="btn-cmai-primary">
@@ -84,8 +84,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-12 grid grid-cols-2 lg:grid-cols-4 gap-6">
           <Metric value="77" label="泰国府级人口覆盖" />
           <Metric value="15" label="首个品类公开报价" />
-          <Metric value="5" label="Professional 竞品选择集" />
-          <Metric value="P10–P90" label="明确标记的先验预测区间" />
+          <Metric value="30万" label="深度决策 AI 模拟消费人群" />
+          <Metric value="多方案" label="价格、竞品与风险同时比较" />
         </div>
       </section>
 
@@ -141,8 +141,8 @@ export default function HomePage() {
           <div className="space-y-3 text-sm text-neutral-300">
             {[
               "人口与收入：使用泰国国家统计局（NSO）公开宏观数据校准",
-              "选择概率：使用多项逻辑选择模型（MNL）或套餐对应的异质性模型",
-              "大语言模型（LLM）：只提供权重受限的结构化辅助判断",
+              "消费者选择：同时比较您的方案、竞品和不购买",
+              "AI 辅助判断：只作参考，不直接冒充真实销量",
               "竞品：公开报价和商家功能声明，不冒充成交数据",
             ].map(item => (
               <div key={item} className="flex items-start gap-2 border-b border-neutral-900 pb-3">
@@ -160,27 +160,27 @@ export default function HomePage() {
             <span className="eyebrow">套餐与价格</span>
             <h2 className="text-3xl font-semibold text-white mt-3">从免费检查到正式决策报告</h2>
             <p className="text-sm text-neutral-400 mt-3">
-              套餐差异来自样本、竞品数量、模型深度和不确定性轮数，不是简单更换大模型。
+              基础模拟适合快速试方向；深度决策使用更大规模的 AI 人群和更完整的方案分析。
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <PricingCard
-              name="体验版（Preview）"
+              name="免费预览"
               price="免费"
               note="每个账号 1 次"
-              items={["100 名合成消费者", "40 轮蒙特卡洛不确定性模拟", "用于检查输入方向"]}
+              items={["100 人 AI 模拟消费人群", "快速检查输入和研究方向", "不作为正式决策报告"]}
             />
             <PricingCard
-              name="标准版（Standard）"
+              name="基础模拟"
               price="5 积分"
               note="有效邀请码可赠送一次"
-              items={["10,000 名合成消费者", "80 轮蒙特卡洛不确定性模拟", "3 个竞品选择方案"]}
+              items={["5,000 人 AI 模拟消费人群", "快速比较价格、卖点和方案", "适合日常小范围测试"]}
             />
             <PricingCard
-              name="专业版（Professional）"
-              price="฿7,900"
-              note="含 20 积分 / 1 次正式运行"
-              items={["30,000 名合成消费者", "150 轮蒙特卡洛不确定性模拟", "5 个竞品与完整情景分析"]}
+              name="深度决策"
+              price="20 积分"
+              note="入门决策包 ฿7,900 可运行 1 次"
+              items={["300,000 人 AI 模拟消费人群", "完整竞品、价格与风险分析", "生成正式商业决策报告"]}
               featured
             />
           </div>

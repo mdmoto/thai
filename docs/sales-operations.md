@@ -3,8 +3,8 @@
 ## Public offer
 
 - Preview: one free run per account.
-- Standard: 5 credits; a new account receives 5 credits once.
-- Professional: 20 credits; Starter package is ฿7,900.
+- Basic simulation: 5 credits for 5,000 AI simulated consumers; a new account receives 5 credits once.
+- Deep decision: 20 credits for 300,000 AI simulated consumers; Starter package is ฿7,900.
 - Growth: 110 credits for ฿34,900.
 - Scale: 360 credits for ฿89,000.
 

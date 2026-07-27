@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
 
-PLAN_CONFIG_VERSION = "PLAN-CONFIG-2026.07.1"
+PLAN_CONFIG_VERSION = "PLAN-CONFIG-2026.07.2"
 
 
 @dataclass(frozen=True)
@@ -53,12 +53,12 @@ PLAN_CONFIGS: Dict[str, PlanConfig] = {
     ),
     "STANDARD": PlanConfig(
         code="STANDARD",
-        default_population=10_000,
-        maximum_population=10_000,
+        default_population=5_000,
+        maximum_population=5_000,
         default_mc_rounds=80,
         maximum_mc_rounds=120,
         model_family="mnl_prior",
-        model_sample_size=10_000,
+        model_sample_size=5_000,
         representative_agents=12,
         agent_signal_weight=0.03,
         competitor_limit=3,
@@ -70,12 +70,12 @@ PLAN_CONFIGS: Dict[str, PlanConfig] = {
     ),
     "PROFESSIONAL": PlanConfig(
         code="PROFESSIONAL",
-        default_population=30_000,
-        maximum_population=30_000,
+        default_population=300_000,
+        maximum_population=300_000,
         default_mc_rounds=150,
         maximum_mc_rounds=220,
         model_family="mnl_with_observed_heterogeneity",
-        model_sample_size=30_000,
+        model_sample_size=300_000,
         representative_agents=32,
         agent_signal_weight=0.05,
         competitor_limit=5,

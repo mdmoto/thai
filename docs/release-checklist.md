@@ -28,8 +28,8 @@ Verified against production on 2026-07-24.
 
 - [x] New registration receives 5 credits once.
 - [x] One free Preview can be completed.
-- [x] Standard consumes 5 credits.
-- [x] Professional consumes 20 credits.
+- [x] Basic simulation consumes 5 credits and runs 5,000 AI simulated consumers.
+- [x] Deep decision consumes 20 credits and runs 300,000 AI simulated consumers.
 - [x] Duplicate run requests do not double charge.
 - [x] Failed paid runs refund credits.
 - [x] Pending orders do not grant credits.

@@ -24,7 +24,7 @@ export function TemplatesClient() {
               <div>
                 <span className="eyebrow text-blue-300">完整案例 · 无需重新运行</span>
                 <h3 className="text-base font-semibold text-white mt-1">{DEMO_CASES[0].label}</h3>
-                <p className="text-xs text-neutral-400 mt-1">查看真实保存的 Standard 模拟、数据来源、区间、情景与限制。</p>
+                <p className="text-xs text-neutral-400 mt-1">查看已保存的基础模拟、数据来源、结果范围、情景与限制。</p>
               </div>
             </div>
             <span className="btn-cmai-primary">直接查看完整报告 →</span>

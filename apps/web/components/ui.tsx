@@ -19,9 +19,9 @@ const STATUS_CONFIG: Record<StatusType, { label: string; dot: string; text: stri
   NEEDS_CONFIRMATION:   { label: "待确认",     dot: "bg-amber-400 animate-pulse", text: "text-amber-400" },
   READY:                { label: "准备就绪",   dot: "bg-emerald-400", text: "text-emerald-400" },
   QUEUED:               { label: "排队中",     dot: "bg-sky-400", text: "text-sky-400" },
-  PREPARING_POPULATION: { label: "构建人口",   dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
-  RUNNING_AGENTS:       { label: "消费者推理", dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
-  RUNNING_SIMULATION:   { label: "群体模拟",   dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
+  PREPARING_POPULATION: { label: "构建AI人群", dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
+  RUNNING_AGENTS:       { label: "AI人群分析", dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
+  RUNNING_SIMULATION:   { label: "市场模拟",   dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
   RUNNING_SCENARIOS:    { label: "情景对比",   dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
   GENERATING_REPORT:    { label: "生成报告",   dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
   COMPLETED:            { label: "已完成",     dot: "bg-emerald-400", text: "text-emerald-400" },
@@ -50,11 +50,11 @@ export function StatusBadge({ status }: { status: StatusType }) {
 type PlanCode = "PREVIEW" | "STANDARD" | "PROFESSIONAL" | "DEEP" | "ENTERPRISE";
 
 const PLAN_LABELS: Record<PlanCode, string> = {
-  PREVIEW: "体验版",
-  STANDARD: "标准版",
-  PROFESSIONAL: "专业版",
-  DEEP: "深度版",
-  ENTERPRISE: "企业版",
+  PREVIEW: "免费预览",
+  STANDARD: "基础模拟",
+  PROFESSIONAL: "深度决策",
+  DEEP: "专属研究",
+  ENTERPRISE: "企业定制",
 };
 
 export function PlanBadge({ plan }: { plan: PlanCode }) {

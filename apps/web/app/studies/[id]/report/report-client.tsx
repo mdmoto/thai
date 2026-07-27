@@ -603,7 +603,7 @@ export function ReportClient({
             <div className="font-mono text-neutral-300">{reportData.world_model_version}</div>
           </div>
           <div>
-            <div className="text-neutral-500">模拟规模</div>
+            <div className="text-neutral-500">AI 人群规模</div>
             <div className="text-neutral-300">{reportData.population_size.toLocaleString()} 人 ({reportData.mc_rounds} 轮)</div>
           </div>
         </div>
@@ -617,7 +617,10 @@ export function ReportClient({
             <div className="eyebrow mb-1">Chiang Mai AI Center · 商业决策报告</div>
             <h1 className="text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
             <p className="text-xs text-neutral-400 font-light mt-1">
-              基于 {reportData.population_size.toLocaleString()} 名泰国合成消费者 · 实际参与计算的模型样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} 名 · 蒙特卡洛不确定性模拟 {reportData.mc_rounds} 轮
+              覆盖 {reportData.population_size.toLocaleString()} 人泰国 AI 模拟消费人群 · 深度计算样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} 人 · 完成 {reportData.mc_rounds} 轮风险测试
+            </p>
+            <p className="text-[10px] text-neutral-500 mt-1">
+              AI 模拟消费人群由模型生成，不是真实问卷受访者或真实订单；人数表示模拟覆盖规模。
             </p>
             <p className="text-[10px] text-neutral-500 font-mono mt-1">
               校准：{calibrationLabel(reportData.calibration_status)} · {reportData.simulation_model_version}
@@ -735,7 +738,7 @@ function MarketResponseSection({ data }: { data: ReportData }) {
         <div className="eyebrow mb-1">消费者转化路径</div>
         <h2 className="text-base font-semibold text-white tracking-tight">从目标人群到购买 / 到店的逐层变化</h2>
         <p className="text-xs text-neutral-400 mt-2 leading-relaxed">
-          系统先从全部 {data.population_size.toLocaleString()} 名合成消费者中筛出符合本研究条件的目标人群，
+          系统先从全部 {data.population_size.toLocaleString()} 人 AI 模拟消费人群中筛出符合本研究条件的目标人群，
           再估计他们经过注意、理解、考虑和最终选择的过程。人数为模型折算的期望人数，不是真实受访者数量或实际订单。
         </p>
       </div>
@@ -779,8 +782,8 @@ function MarketResponseSection({ data }: { data: ReportData }) {
           })}
         </div>
         <div className="mt-5 pt-4 border-t border-neutral-800 text-[11px] text-neutral-400 leading-relaxed">
-          目标人群占全部合成人口的 <strong className="text-white">{formatPercent((eligibleStage?.value ?? 0) / totalPopulation)}</strong>；
-          最终选择占全部合成人口的 <strong className="text-white">{formatPercent((purchaseStage?.value ?? 0) / totalPopulation)}</strong>。
+          目标人群占全部 AI 模拟消费人群的 <strong className="text-white">{formatPercent((eligibleStage?.value ?? 0) / totalPopulation)}</strong>；
+          最终选择占全部 AI 模拟消费人群的 <strong className="text-white">{formatPercent((purchaseStage?.value ?? 0) / totalPopulation)}</strong>。
           “占目标人群”始终以目标人群为分母，“较上一步”才表示相邻阶段的转化率。
         </div>
       </Card>
@@ -1123,10 +1126,10 @@ function SampleProfileSection({ data }: { data: ReportData }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="eyebrow mb-1">合成人口抽样分布</div>
+        <div className="eyebrow mb-1">AI 模拟人群分布</div>
         <h2 className="text-base font-semibold text-white tracking-tight">取样年龄、家庭收入与地域分布</h2>
         <p className="text-xs text-neutral-400 mt-2">
-          从 {sample.population_size.toLocaleString()} 个合成人口中分层抽取 {sample.display_sample_size.toLocaleString()} 个点用于可视化。
+          从 {sample.population_size.toLocaleString()} 人 AI 模拟消费人群中分层抽取 {sample.display_sample_size.toLocaleString()} 个代表点用于展示。
         </p>
       </div>
 
@@ -1134,7 +1137,7 @@ function SampleProfileSection({ data }: { data: ReportData }) {
         <Card>
           <div className="eyebrow mb-1">泰国样本位置分布</div>
           <h3 className="text-sm font-semibold text-white">泰国合成样本点状图</h3>
-          <svg viewBox="0 0 360 560" className="w-full h-[440px] mt-4" role="img" aria-label="泰国合成人口抽样点位">
+          <svg viewBox="0 0 360 560" className="w-full h-[440px] mt-4" role="img" aria-label="泰国 AI 模拟消费人群分布">
             <defs>
               <linearGradient id="thai-map-fill" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stopColor="#12233d" />
@@ -1600,7 +1603,7 @@ function MethodologySection({ data }: { data: ReportData }) {
           <p>
             <strong className="text-white font-semibold">5. 品类目标人群：</strong>{" "}
             {CATEGORY_LABELS[category?.category_key ?? data.category_key ?? ""] ?? category?.category_key ?? data.category_key ?? "通用消费品"}；
-            占全部合成人口 {formatPercent(category?.eligible_population_share ?? 1)}。
+            占全部 AI 模拟消费人群 {formatPercent(category?.eligible_population_share ?? 1)}。
             筛选依据：{eligibilityLabel(category?.eligibility_status)}。
           </p>
           <p>
