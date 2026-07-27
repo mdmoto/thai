@@ -8,6 +8,13 @@ import {
 import { AlertTriangle, Download, Share2, MapPin, ShoppingBag } from "lucide-react";
 import { Card } from "@/components/ui";
 import { cn, formatPercent } from "@/lib/utils";
+import {
+  THAILAND_BOUNDARY_SOURCE,
+  THAILAND_BOUNDARY_VERSION,
+  THAILAND_COUNTRY_PATH,
+  THAILAND_MAP_BOUNDS,
+  THAILAND_PROVINCE_PATH,
+} from "@/lib/thailand-boundary";
 
 interface ReportData {
   study_name: string;
@@ -844,20 +851,12 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
   );
 }
 
-const THAILAND_OUTLINE: Array<[number, number]> = [
-  [98.3, 20.2], [99.5, 20.4], [100.7, 19.9], [101.1, 18.6],
-  [100.7, 17.5], [101.3, 16.7], [102.4, 16.1], [104.8, 15.8],
-  [105.4, 14.7], [104.5, 14.1], [102.8, 13.5], [101.4, 12.8],
-  [100.5, 11.2], [100.1, 9.8], [100.5, 8.2], [100.1, 6.0],
-  [99.4, 6.1], [99.0, 8.1], [98.5, 9.7], [99.1, 11.8],
-  [100.1, 13.0], [99.5, 14.2], [98.2, 15.3], [97.5, 17.4],
-  [98.2, 18.6],
-];
-
 function mapPoint(longitude: number, latitude: number) {
+  const [minLongitude, minLatitude, maxLongitude, maxLatitude] =
+    THAILAND_MAP_BOUNDS;
   return {
-    x: 24 + ((longitude - 97.0) / 9.0) * 312,
-    y: 18 + ((21.0 - latitude) / 16.0) * 524,
+    x: 12 + ((longitude - minLongitude) / (maxLongitude - minLongitude)) * 336,
+    y: 12 + ((maxLatitude - latitude) / (maxLatitude - minLatitude)) * 536,
   };
 }
 
@@ -872,11 +871,6 @@ function SampleProfileSection({ data }: { data: ReportData }) {
     .map(point => point.household_income_thb)
     .sort((a, b) => a - b);
   const p95Income = incomeValues[Math.floor(incomeValues.length * 0.95)] ?? 100000;
-  const outline = `${THAILAND_OUTLINE.map(([lng, lat], index) => {
-    const point = mapPoint(lng, lat);
-    return `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
-  }).join(" ")} Z`;
-
   return (
     <div className="space-y-6">
       <div>
@@ -897,22 +891,43 @@ function SampleProfileSection({ data }: { data: ReportData }) {
                 <stop offset="0%" stopColor="#12233d" />
                 <stop offset="100%" stopColor="#08111f" />
               </linearGradient>
+              <clipPath id="thailand-country-clip">
+                <path d={THAILAND_COUNTRY_PATH} fillRule="evenodd" />
+              </clipPath>
             </defs>
-            <path d={outline} fill="url(#thai-map-fill)" stroke="#355680" strokeWidth="2" />
-            {other.map(point => {
-              const projected = mapPoint(point.longitude, point.latitude);
-              return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.1" fill="#7c8aa1" opacity=".35" />;
-            })}
-            {eligible.map(point => {
-              const projected = mapPoint(point.longitude, point.latitude);
-              return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.4" fill="#67d9c4" opacity=".7" />;
-            })}
+            <path
+              d={THAILAND_COUNTRY_PATH}
+              fill="url(#thai-map-fill)"
+              fillRule="evenodd"
+              stroke="#4b75aa"
+              strokeWidth="1.6"
+            />
+            <path
+              d={THAILAND_PROVINCE_PATH}
+              fill="none"
+              stroke="#2a456b"
+              strokeWidth=".45"
+              opacity=".75"
+            />
+            <g clipPath="url(#thailand-country-clip)">
+              {other.map(point => {
+                const projected = mapPoint(point.longitude, point.latitude);
+                return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.1" fill="#7c8aa1" opacity=".35" />;
+              })}
+              {eligible.map(point => {
+                const projected = mapPoint(point.longitude, point.latitude);
+                return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.4" fill="#67d9c4" opacity=".7" />;
+              })}
+            </g>
           </svg>
           <div className="flex flex-wrap gap-3 text-[10px] text-neutral-400">
             <span><i className="inline-block w-2 h-2 rounded-full bg-teal-300 mr-1" />品类目标样本</span>
             <span><i className="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1" />其他样本</span>
           </div>
           <p className="text-[10px] leading-relaxed text-neutral-500 mt-3">{sample.location_disclosure}</p>
+          <p className="text-[9px] leading-relaxed text-neutral-600 mt-2">
+            底图：{THAILAND_BOUNDARY_SOURCE} · {THAILAND_BOUNDARY_VERSION} · 真实 ADM0/ADM1 边界
+          </p>
         </Card>
 
         <Card>

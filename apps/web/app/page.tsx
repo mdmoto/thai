@@ -36,12 +36,14 @@ export default function HomePage() {
     <main className="min-h-screen bg-base">
       <header className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between border-b border-blue-400/10">
         <Link href="/" className="flex items-center">
-          <BrandMark full className="w-44 sm:w-52 h-auto" priority />
+          <BrandMark full className="w-32 sm:w-52 h-auto" priority />
         </Link>
         <nav className="flex items-center gap-2">
-          <Link href="/methodology" className="btn-cmai-ghost hidden sm:inline-flex">
-            方法与数据
-          </Link>
+          <div className="hidden sm:block">
+            <Link href="/methodology" className="btn-cmai-ghost">
+              方法与数据
+            </Link>
+          </div>
           <Link href="/login" className="btn-cmai-secondary">登录</Link>
           <Link href="/studies/new?type=PRODUCT_VALIDATION" className="btn-cmai-primary">
             开始测试
@@ -49,7 +51,7 @@ export default function HomePage() {
         </nav>
       </header>
 
-      <section className="hero-grid max-w-7xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-20 grid lg:grid-cols-[1.2fr_.8fr] gap-14 items-center">
+      <section className="hero-grid max-w-7xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-20">
         <div className="max-w-4xl">
           <span className="eyebrow text-blue-300">Thailand market decision infrastructure</span>
           <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05] text-white mt-5">
@@ -74,15 +76,6 @@ export default function HomePage() {
             <span className="flex items-center gap-1.5"><Check size={13} /> 竞品与不购买选项</span>
             <span className="flex items-center gap-1.5"><Check size={13} /> 不把 LLM 投票当销量</span>
             <span className="flex items-center gap-1.5"><Check size={13} /> 报告记录假设和版本</span>
-          </div>
-        </div>
-        <div className="hidden lg:flex relative min-h-[430px] items-center justify-center">
-          <div className="absolute inset-10 rounded-full bg-blue-500/15 blur-3xl" />
-          <BrandMark full className="relative w-full max-w-[500px] drop-shadow-[0_30px_80px_rgba(29,78,216,.35)]" priority />
-          <div className="absolute bottom-1 left-8 right-8 cmai-card p-4 grid grid-cols-3 gap-3 backdrop-blur">
-            <Metric value="6" label="研究类型" />
-            <Metric value="77" label="泰国府级覆盖" />
-            <Metric value="P10–P90" label="先验区间" />
           </div>
         </div>
       </section>

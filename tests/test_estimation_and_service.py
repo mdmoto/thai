@@ -8,6 +8,7 @@ import pandas as pd
 from app.services.study_service import StudyService
 from simulation_core.calibration import load_calibration_profile
 from simulation_core.estimation import ConditionalLogitEstimator
+from world_model.thailand_geo import point_in_province, point_in_thailand
 
 
 class ConditionalLogitEstimatorTests(unittest.TestCase):
@@ -131,9 +132,23 @@ class StudyServiceTests(unittest.TestCase):
         self.assertEqual(report["sample_profile"]["display_sample_size"], 200)
         self.assertEqual(
             report["sample_profile"]["location_status"],
-            "synthetic_region_centroid_jitter",
+            "synthetic_province_polygon_sample",
         )
         self.assertTrue(report["sample_profile"]["points"])
+        self.assertTrue(
+            all(
+                point_in_thailand(
+                    point["longitude"],
+                    point["latitude"],
+                )
+                and point_in_province(
+                    point["longitude"],
+                    point["latitude"],
+                    point["province"],
+                )
+                for point in report["sample_profile"]["points"]
+            )
+        )
         self.assertTrue(report["social_dynamics"])
         self.assertEqual(
             report["social_evidence"]["policy"],
