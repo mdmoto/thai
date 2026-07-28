@@ -169,7 +169,7 @@ class StudyServiceTests(unittest.TestCase):
         self.assertTrue(report["social_dynamics"])
         self.assertEqual(
             report["social_evidence"]["policy"],
-            "official_api_authorized_provider_or_customer_export_only",
+            "cloud_public_research_without_customer_authorization",
         )
         self.assertTrue(report["evidence_estimates"])
         self.assertTrue(

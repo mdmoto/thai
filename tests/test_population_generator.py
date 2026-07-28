@@ -106,6 +106,34 @@ class PopulationGeneratorTests(unittest.TestCase):
             delta=1e-6,
         )
 
+    def test_population_contains_multi_stage_decision_traits(self):
+        population = PopulationGenerator(
+            seed=23,
+            calibration_profile=self.profile,
+        ).generate(1_000, "PRODUCT_VALIDATION")
+        decision_traits = {
+            "risk_aversion",
+            "financial_pressure",
+            "promotion_responsiveness",
+            "product_involvement",
+            "search_intensity",
+            "decision_deliberation",
+            "impulse_tendency",
+            "creator_trust",
+            "marketplace_trust",
+            "family_influence",
+            "warranty_sensitivity",
+            "delivery_sensitivity",
+            "return_anxiety",
+            "payment_confidence",
+            "sustainability_preference",
+            "habit_inertia",
+            "purchase_urgency",
+        }
+        self.assertTrue(decision_traits.issubset(population.columns))
+        for trait in decision_traits:
+            self.assertTrue(population[trait].between(0.02, 0.98).all())
+
 
 if __name__ == "__main__":
     unittest.main()

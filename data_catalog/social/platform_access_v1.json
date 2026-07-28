@@ -1,20 +1,20 @@
 {
-  "version": "TH-SOCIAL-ACCESS-2026.07.1",
-  "effective_date": "2026-07-27",
-  "policy": "official_api_authorized_provider_or_customer_export_only",
+  "version": "TH-SOCIAL-ACCESS-2026.07.2",
+  "effective_date": "2026-07-28",
+  "policy": "cloud_public_research_without_customer_authorization",
   "platforms": [
     {
       "platform": "Facebook / Instagram",
-      "recommended_path": "客户授权的商业账号 Insights、广告数据与评论导出",
+      "recommended_path": "公开搜索索引、公开广告资料与第三方公开讨论",
       "public_market_scan": "restricted_for_commercial_use",
-      "status": "customer_authorization_required",
+      "status": "public_index_only_no_customer_login",
       "official_reference": "https://developers.facebook.com/docs/"
     },
     {
       "platform": "TikTok",
-      "recommended_path": "客户授权的 TikTok Business / Ads 数据或合规数据供应商",
+      "recommended_path": "公开视频发现、官方 oEmbed 验证与合规数据供应商",
       "public_market_scan": "research_api_not_available_for_general_commercial_market_research",
-      "status": "customer_authorization_or_provider_required",
+      "status": "public_embed_or_provider_no_customer_login",
       "official_reference": "https://developers.tiktok.com/products/research-api/"
     },
     {
@@ -33,9 +33,9 @@
     },
     {
       "platform": "Shopee / Lazada / TikTok Shop",
-      "recommended_path": "公开商品证据、客户店铺导出、联盟或授权供应商数据",
+      "recommended_path": "公开商品与评价证据、联盟接口或合规数据供应商",
       "public_market_scan": "transaction_and_conversion_not_public",
-      "status": "mixed_public_and_authorized_data",
+      "status": "public_commerce_evidence_no_customer_login",
       "official_reference": null
     }
   ],
@@ -47,7 +47,7 @@
       "分享率与互动率",
       "曝光到互动漏斗",
       "时间衰减",
-      "客户授权的归因成交"
+      "可验证的公开渠道差异"
     ],
     "not_allowed_as_direct_sales_truth": [
       "点赞量",

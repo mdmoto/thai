@@ -67,6 +67,21 @@ SEGMENT_COPY = {
         "barriers": ["价格", "替代品丰富"],
         "preferred_channel": "Shopee Thailand",
     },
+    "EVIDENCE_SEEKER": {
+        "drivers": ["可验证评价", "保修与退货保障", "详细对比信息"],
+        "barriers": ["信息不完整", "品牌可信度不足", "售后不确定"],
+        "preferred_channel": "品牌官网 / Lazada 官方店",
+    },
+    "SOCIAL_COMMERCE": {
+        "drivers": ["创作者演示", "真实使用场景", "社交口碑"],
+        "barriers": ["广告感过强", "缺少长期评价", "冲动购买顾虑"],
+        "preferred_channel": "TikTok Shop / Facebook 内容",
+    },
+    "FAMILY_PRAGMATIST": {
+        "drivers": ["家庭适用性", "耐用与安全", "配送售后便利"],
+        "barriers": ["家庭成员意见不一致", "维护成本", "退换货麻烦"],
+        "preferred_channel": "Shopee / Lazada 官方店",
+    },
     "LOCAL_TRUST_OFFLINE": {
         "drivers": ["本地认证", "线下体验", "熟人推荐"],
         "barriers": ["新品牌信任", "售后与物流"],
@@ -313,10 +328,42 @@ class StudyService:
                 "clarity_score",
                 "social_proof_score",
                 "brand_strength",
+                "warranty_score",
+                "delivery_score",
+                "return_policy_score",
+                "payment_flexibility_score",
+                "sustainability_score",
                 "distance_km",
             ):
                 if source.get(field) is not None:
                     attributes[field] = source[field]
+        facts = study["facts"]
+        inputs = study["inputs"]
+        delivery_days = facts.get("delivery_days", inputs.get("delivery_days"))
+        if delivery_days is not None and "delivery_score" not in attributes:
+            attributes["delivery_score"] = max(
+                0.15,
+                min(0.95, 1.0 - (float(delivery_days) - 1.0) * 0.09),
+            )
+        cod_available = facts.get(
+            "cod_available",
+            inputs.get("cod_available"),
+        )
+        if (
+            cod_available is not None
+            and "payment_flexibility_score" not in attributes
+        ):
+            attributes["payment_flexibility_score"] = (
+                0.82 if bool(cod_available) else 0.52
+            )
+        official_store = facts.get(
+            "official_store",
+            inputs.get("official_store"),
+        )
+        if official_store:
+            attributes.setdefault("warranty_score", 0.78)
+            attributes.setdefault("return_policy_score", 0.7)
+            attributes.setdefault("brand_strength", 0.68)
         return attributes
 
     def _effective_model_type(self, study: Mapping[str, Any]) -> str:
@@ -704,9 +751,19 @@ class StudyService:
                 },
                 {
                     "collector": "Social platform evidence",
-                    "status": "authorization_required",
-                    "result_count": 0,
-                    "fallback_result": "disclosed_social_propagation_scenarios",
+                    "status": (
+                        "succeeded"
+                        if market_research.get("source_count")
+                        else "public_only"
+                    ),
+                    "result_count": int(
+                        market_research.get("source_count") or 0
+                    ),
+                    "fallback_result": (
+                        None
+                        if market_research.get("source_count")
+                        else "disclosed_social_propagation_scenarios"
+                    ),
                 },
                 *public_collectors,
             ],
@@ -988,6 +1045,20 @@ class StudyService:
                     profile["defaults"]["brand_awareness"],
                 ),
                 "competitors": self._competitors(study),
+                "public_market_evidence": [
+                    {
+                        "platform": item.get("platform"),
+                        "title": item.get("title"),
+                        "excerpt": str(item.get("excerpt") or "")[:500],
+                        "evidence_grade": item.get("evidence_grade"),
+                        "evidence_role": item.get("evidence_role"),
+                    }
+                    for item in market_research.get("evidence", [])[:24]
+                ],
+                "public_market_evidence_count": market_research.get(
+                    "source_count",
+                    0,
+                ),
             }
             agent_research = await gateway.generate_research_signals(
                 product_info=product_context,

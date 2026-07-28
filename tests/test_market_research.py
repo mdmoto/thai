@@ -106,6 +106,8 @@ class PublicMarketResearchTests(unittest.TestCase):
         self.assertIsNone(item)
 
     def test_professional_run_adds_consumer_public_search(self):
+        searched_queries = []
+
         async def fake_pages(urls):
             return []
 
@@ -113,8 +115,8 @@ class PublicMarketResearchTests(unittest.TestCase):
             return []
 
         async def fake_consumer_search(query, limit):
-            self.assertIn("ข้อเสีย", query)
-            self.assertEqual(limit, 5)
+            searched_queries.append(query)
+            self.assertEqual(limit, 10)
             return [
                 {
                     "source_id": "src_search",
@@ -150,6 +152,9 @@ class PublicMarketResearchTests(unittest.TestCase):
 
         self.assertEqual(bundle["status"], "succeeded")
         self.assertEqual(bundle["source_count"], 1)
+        self.assertEqual(len(searched_queries), 12)
+        self.assertTrue(any("ข้อเสีย" in query for query in searched_queries))
+        self.assertTrue(any("site:tiktok.com" in query for query in searched_queries))
         self.assertEqual(bundle["platform_counts"], {"TikTok": 1})
         self.assertEqual(
             bundle["evidence"][0]["evidence_role"],
@@ -158,10 +163,12 @@ class PublicMarketResearchTests(unittest.TestCase):
         firecrawl = next(
             item
             for item in bundle["collectors"]
-            if item["collector"] == "Firecrawl consumer public search"
+            if item["collector"]
+            == "Firecrawl multi-query consumer research"
         )
         self.assertEqual(firecrawl["status"], "succeeded")
-        self.assertEqual(firecrawl["estimated_credits"], 2)
+        self.assertEqual(firecrawl["query_count"], 12)
+        self.assertEqual(firecrawl["estimated_credits"], 24)
 
     def test_professional_run_combines_public_pages_and_video_metadata(self):
         async def fake_pages(urls):

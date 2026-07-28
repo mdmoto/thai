@@ -23,9 +23,9 @@ from simulation_core.config import (
 )
 
 
-SIMULATION_MODEL_VERSION = "SIM-2.0.0"
+SIMULATION_MODEL_VERSION = "SIM-3.0.0"
 
-FEATURE_NAMES = (
+CORE_FEATURE_NAMES = (
     "intercept",
     "price_log_ratio",
     "affordability",
@@ -39,6 +39,26 @@ FEATURE_NAMES = (
     "localization",
     "distance_friction",
 )
+
+ADVANCED_FEATURE_PRIORS: Dict[str, Dict[str, float]] = {
+    "promotion_fit": {"mean": 0.95, "sd": 0.18},
+    "warranty_trust": {"mean": 0.62, "sd": 0.14},
+    "delivery_fit": {"mean": 0.48, "sd": 0.12},
+    "return_policy_trust": {"mean": 0.44, "sd": 0.11},
+    "payment_fit": {"mean": 0.38, "sd": 0.1},
+    "creator_fit": {"mean": 0.34, "sd": 0.11},
+    "sustainability_fit": {"mean": 0.2, "sd": 0.08},
+    "household_fit": {"mean": 0.28, "sd": 0.09},
+    "planned_need": {"mean": 0.52, "sd": 0.13},
+    "search_validation": {"mean": 0.36, "sd": 0.1},
+    "budget_pressure": {"mean": -0.68, "sd": 0.16},
+    "risk_friction": {"mean": -0.54, "sd": 0.14},
+    "habit_friction": {"mean": -0.36, "sd": 0.1},
+    "deliberation_friction": {"mean": -0.3, "sd": 0.09},
+}
+
+ADVANCED_FEATURE_NAMES = tuple(ADVANCED_FEATURE_PRIORS)
+ADVANCED_PLAN_CODES = {"PROFESSIONAL", "DEEP", "ENTERPRISE"}
 
 VENUE_STUDY_TYPES = {
     "VENUE_STUDY",
@@ -54,6 +74,9 @@ SEGMENT_LABELS = {
     "AFFLUENT_DIGITAL": "高收入数字消费人群",
     "TREND_EXPLORER": "年轻潮流探索人群",
     "VALUE_SEEKER": "价格敏感价值人群",
+    "EVIDENCE_SEEKER": "谨慎查证型人群",
+    "SOCIAL_COMMERCE": "社交电商影响人群",
+    "FAMILY_PRAGMATIST": "家庭务实决策人群",
     "LOCAL_TRUST_OFFLINE": "本地信任线下人群",
     "MAINSTREAM": "主流谨慎消费人群",
 }
@@ -141,6 +164,11 @@ class SimulationEngine:
             "clarity_score": float(defaults["clarity_score"]),
             "social_proof_score": 0.45,
             "brand_strength": 0.4,
+            "warranty_score": 0.5,
+            "delivery_score": 0.55,
+            "return_policy_score": 0.5,
+            "payment_flexibility_score": 0.6,
+            "sustainability_score": 0.5,
             "distance_km": float(defaults["distance_km"]),
         }
         for key, value in (product_attributes or {}).items():
@@ -155,6 +183,11 @@ class SimulationEngine:
             "clarity_score",
             "social_proof_score",
             "brand_strength",
+            "warranty_score",
+            "delivery_score",
+            "return_policy_score",
+            "payment_flexibility_score",
+            "sustainability_score",
         ):
             attributes[score_name] = _clamp(attributes[score_name], 0.0, 1.0)
         attributes["distance_km"] = max(0.0, attributes["distance_km"])
@@ -186,8 +219,14 @@ class SimulationEngine:
                 "design_score",
                 "convenience_score",
                 "localization_score",
+                "clarity_score",
                 "social_proof_score",
                 "brand_strength",
+                "warranty_score",
+                "delivery_score",
+                "return_policy_score",
+                "payment_flexibility_score",
+                "sustainability_score",
                 "distance_km",
             )
             provided_fields = sorted(
@@ -255,6 +294,14 @@ class SimulationEngine:
                         0.0,
                         1.0,
                     ),
+                    "clarity_score": _clamp(
+                        competitor.get(
+                            "clarity_score",
+                            focal_attributes["clarity_score"],
+                        ),
+                        0.0,
+                        1.0,
+                    ),
                     "social_proof_score": _clamp(
                         competitor.get(
                             "social_proof_score",
@@ -265,6 +312,46 @@ class SimulationEngine:
                     ),
                     "brand_strength": _clamp(
                         competitor.get("brand_strength", 0.6),
+                        0.0,
+                        1.0,
+                    ),
+                    "warranty_score": _clamp(
+                        competitor.get(
+                            "warranty_score",
+                            focal_attributes["warranty_score"],
+                        ),
+                        0.0,
+                        1.0,
+                    ),
+                    "delivery_score": _clamp(
+                        competitor.get(
+                            "delivery_score",
+                            focal_attributes["delivery_score"],
+                        ),
+                        0.0,
+                        1.0,
+                    ),
+                    "return_policy_score": _clamp(
+                        competitor.get(
+                            "return_policy_score",
+                            focal_attributes["return_policy_score"],
+                        ),
+                        0.0,
+                        1.0,
+                    ),
+                    "payment_flexibility_score": _clamp(
+                        competitor.get(
+                            "payment_flexibility_score",
+                            focal_attributes["payment_flexibility_score"],
+                        ),
+                        0.0,
+                        1.0,
+                    ),
+                    "sustainability_score": _clamp(
+                        competitor.get(
+                            "sustainability_score",
+                            focal_attributes["sustainability_score"],
+                        ),
                         0.0,
                         1.0,
                     ),
@@ -538,6 +625,27 @@ class SimulationEngine:
             coefficients[name] = float(rng.normal(mean, sd)) if sd else mean
         return coefficients
 
+    def _coefficient_priors(
+        self,
+        study_model: Mapping[str, Any],
+        plan: PlanConfig,
+    ) -> Dict[str, Dict[str, Any]]:
+        priors = {
+            name: dict(prior)
+            for name, prior in study_model["coefficients"].items()
+        }
+        if plan.code in ADVANCED_PLAN_CODES:
+            priors.update(
+                {
+                    name: {
+                        **prior,
+                        "source": "disclosed_behavioral_journey_prior",
+                    }
+                    for name, prior in ADVANCED_FEATURE_PRIORS.items()
+                }
+            )
+        return priors
+
     def _feature_matrix(
         self,
         frame: pd.DataFrame,
@@ -568,6 +676,25 @@ class SimulationEngine:
                 0.5,
             )
             distance_feature = distance / tolerance
+
+        discount_ratio = np.clip(
+            (max(0.01, float(ref_price)) - price)
+            / max(0.01, float(ref_price)),
+            -0.35,
+            0.35,
+        )
+        trust_composite = np.clip(
+            (
+                float(offer["brand_strength"])
+                + float(offer["review_score"])
+                + float(offer["warranty_score"])
+                + float(offer["return_policy_score"])
+            )
+            / 4.0,
+            0.0,
+            1.0,
+        )
+        budget_ratio = np.clip(price / disposable * 4.0, 0.0, 2.0)
 
         return {
             "intercept": np.ones(len(frame), dtype=float),
@@ -608,6 +735,81 @@ class SimulationEngine:
                 * float(offer["localization_score"])
             ),
             "distance_friction": distance_feature,
+            "promotion_fit": (
+                frame["promotion_responsiveness"].to_numpy(dtype=float)
+                * discount_ratio
+            ),
+            "warranty_trust": (
+                frame["warranty_sensitivity"].to_numpy(dtype=float)
+                * (float(offer["warranty_score"]) - 0.5)
+            ),
+            "delivery_fit": (
+                frame["delivery_sensitivity"].to_numpy(dtype=float)
+                * (float(offer["delivery_score"]) - 0.5)
+            ),
+            "return_policy_trust": (
+                frame["return_anxiety"].to_numpy(dtype=float)
+                * (float(offer["return_policy_score"]) - 0.5)
+            ),
+            "payment_fit": (
+                frame["payment_confidence"].to_numpy(dtype=float)
+                * (float(offer["payment_flexibility_score"]) - 0.5)
+            ),
+            "creator_fit": (
+                frame["creator_trust"].to_numpy(dtype=float)
+                * (float(offer["social_proof_score"]) - 0.5)
+            ),
+            "sustainability_fit": (
+                frame["sustainability_preference"].to_numpy(dtype=float)
+                * (float(offer["sustainability_score"]) - 0.5)
+            ),
+            "household_fit": (
+                frame["family_influence"].to_numpy(dtype=float)
+                * (
+                    (
+                        float(offer["quality_score"])
+                        + float(offer["localization_score"])
+                    )
+                    / 2.0
+                    - 0.5
+                )
+            ),
+            "planned_need": (
+                0.38
+                * frame["product_involvement"].to_numpy(dtype=float)
+                + 0.37
+                * frame["category_engagement"].to_numpy(dtype=float)
+                + 0.25
+                * frame["purchase_urgency"].to_numpy(dtype=float)
+                - 0.5
+            ),
+            "search_validation": (
+                frame["search_intensity"].to_numpy(dtype=float)
+                * (
+                    (
+                        float(offer["review_score"])
+                        + float(offer["clarity_score"])
+                    )
+                    / 2.0
+                    - 0.5
+                )
+            ),
+            "budget_pressure": (
+                frame["financial_pressure"].to_numpy(dtype=float)
+                * budget_ratio
+            ),
+            "risk_friction": (
+                frame["risk_aversion"].to_numpy(dtype=float)
+                * (1.0 - trust_composite)
+            ),
+            "habit_friction": (
+                frame["habit_inertia"].to_numpy(dtype=float)
+                * (1.0 - float(offer["brand_strength"]))
+            ),
+            "deliberation_friction": (
+                frame["decision_deliberation"].to_numpy(dtype=float)
+                * (1.0 - float(offer["clarity_score"]))
+            ),
         }
 
     def _awareness_vector(
@@ -637,11 +839,13 @@ class SimulationEngine:
         mixed_taste: Optional[Mapping[str, np.ndarray]] = None,
     ) -> np.ndarray:
         utility = np.zeros_like(features["intercept"], dtype=float)
-        for feature_name in FEATURE_NAMES:
+        for feature_name, feature_values in features.items():
+            if feature_name not in coefficients:
+                continue
             coefficient: Any = coefficients[feature_name]
             if mixed_taste and feature_name in mixed_taste:
                 coefficient = coefficient * mixed_taste[feature_name]
-            utility = utility + coefficient * features[feature_name]
+            utility = utility + coefficient * feature_values
         return np.clip(utility, -25.0, 25.0)
 
     def _choice_probabilities(
@@ -653,6 +857,7 @@ class SimulationEngine:
         study_type: str,
         coefficients: Mapping[str, float],
         mixed_taste: Optional[Mapping[str, np.ndarray]],
+        plan: PlanConfig,
     ) -> Dict[str, np.ndarray]:
         focal_features = self._feature_matrix(
             frame,
@@ -705,9 +910,65 @@ class SimulationEngine:
         clarity = float(focal_offer["clarity_score"])
         understood = focal_awareness * (0.55 + 0.45 * clarity)
         focal_consideration = focal_numerator / (1.0 + focal_numerator)
+        if plan.code in ADVANCED_PLAN_CODES:
+            information_readiness = np.clip(
+                0.48
+                + 0.2
+                * frame["search_intensity"].to_numpy(dtype=float)
+                + 0.12
+                * frame["product_involvement"].to_numpy(dtype=float)
+                + 0.1
+                * frame["impulse_tendency"].to_numpy(dtype=float)
+                + 0.1 * clarity,
+                0.5,
+                0.98,
+            )
+            searched = np.minimum(
+                understood,
+                understood * information_readiness,
+            )
+            compared = np.minimum(focal_consideration, searched)
+            trust_readiness = np.clip(
+                0.52
+                + 0.16 * float(focal_offer["review_score"])
+                + 0.12 * float(focal_offer["brand_strength"])
+                + 0.1 * float(focal_offer["warranty_score"])
+                + 0.08
+                * frame["marketplace_trust"].to_numpy(dtype=float)
+                + 0.08
+                * frame["creator_trust"].to_numpy(dtype=float)
+                - 0.12
+                * frame["risk_aversion"].to_numpy(dtype=float),
+                0.35,
+                0.98,
+            )
+            trusted = compared * trust_readiness
+            checkout_readiness = np.clip(
+                0.55
+                + 0.14 * float(focal_offer["delivery_score"])
+                + 0.12 * float(focal_offer["return_policy_score"])
+                + 0.1 * float(focal_offer["payment_flexibility_score"])
+                + 0.12
+                * frame["payment_confidence"].to_numpy(dtype=float)
+                - 0.12
+                * frame["financial_pressure"].to_numpy(dtype=float),
+                0.35,
+                0.98,
+            )
+            checkout = trusted * checkout_readiness
+            focal_purchase = np.minimum(focal_purchase, checkout)
+        else:
+            searched = np.minimum(understood, focal_consideration)
+            compared = searched
+            trusted = compared
+            checkout = np.minimum(trusted, focal_purchase)
         return {
             "awareness": focal_awareness,
             "understood": np.minimum(understood, focal_awareness),
+            "searched": searched,
+            "compared": compared,
+            "trusted": trusted,
+            "checkout": checkout,
             "consideration": np.minimum(focal_consideration, focal_awareness),
             "purchase": np.minimum(focal_purchase, focal_consideration),
             "competitors": competitor_probabilities,
@@ -736,6 +997,11 @@ class SimulationEngine:
                     "clarity_score",
                     "social_proof_score",
                     "brand_strength",
+                    "warranty_score",
+                    "delivery_score",
+                    "return_policy_score",
+                    "payment_flexibility_score",
+                    "sustainability_score",
                     "distance_km",
                 }
             }
@@ -754,7 +1020,10 @@ class SimulationEngine:
         plan: PlanConfig,
         rng: np.random.Generator,
     ) -> Optional[Dict[str, np.ndarray]]:
-        if not plan.model_family.startswith("mixed_logit"):
+        if (
+            not plan.model_family.startswith("mixed_logit")
+            and "mixed_logit" not in plan.model_family
+        ):
             return None
         price_sigma = 0.22 if plan.code == "DEEP" else 0.18
         quality_sigma = 0.14 if plan.code == "DEEP" else 0.12
@@ -773,6 +1042,21 @@ class SimulationEngine:
                 rng.normal(1.0, 0.14, frame_size),
                 0.55,
                 1.55,
+            ),
+            "promotion_fit": np.clip(
+                rng.normal(1.0, 0.16, frame_size),
+                0.5,
+                1.6,
+            ),
+            "risk_friction": np.clip(
+                rng.normal(1.0, 0.14, frame_size),
+                0.55,
+                1.55,
+            ),
+            "brand_trust": np.clip(
+                rng.normal(1.0, 0.12, frame_size),
+                0.6,
+                1.5,
             ),
         }
 
@@ -1189,7 +1473,7 @@ class SimulationEngine:
         )
 
         study_model = get_study_model(self.profile, normalized_study_type)
-        coefficient_priors = study_model["coefficients"]
+        coefficient_priors = self._coefficient_priors(study_model, plan)
         attributes = self._normalize_product_attributes(
             product_attributes,
             brand_awareness,
@@ -1230,6 +1514,10 @@ class SimulationEngine:
             variant["scenario_id"]: {
                 "awareness": [],
                 "understood": [],
+                "searched": [],
+                "compared": [],
+                "trusted": [],
+                "checkout": [],
                 "consideration": [],
                 "purchase": [],
                 "repeat": [],
@@ -1276,6 +1564,7 @@ class SimulationEngine:
                     normalized_study_type,
                     coefficients,
                     mixed_taste,
+                    plan,
                 )
                 purchase = probabilities["purchase"]
                 awareness = probabilities["awareness"]
@@ -1287,8 +1576,16 @@ class SimulationEngine:
                     * model_frame["quality_sensitivity"].to_numpy(dtype=float)
                     + 0.45
                     * model_frame["category_engagement"].to_numpy(dtype=float)
+                    + 0.18
+                    * model_frame["product_involvement"].to_numpy(dtype=float)
+                    + 0.16
+                    * model_frame["warranty_sensitivity"].to_numpy(dtype=float)
+                    * float(offer["warranty_score"])
                     - 0.28
                     * model_frame["price_sensitivity"].to_numpy(dtype=float)
+                    - 0.14
+                    * model_frame["return_anxiety"].to_numpy(dtype=float)
+                    * (1.0 - float(offer["return_policy_score"]))
                 )
                 referral_probability = _sigmoid(
                     float(study_model["referral_intercept"])
@@ -1297,6 +1594,10 @@ class SimulationEngine:
                     * model_frame["social_influence"].to_numpy(dtype=float)
                     + 0.45
                     * model_frame["novelty_seeking"].to_numpy(dtype=float)
+                    + 0.2
+                    * model_frame["creator_trust"].to_numpy(dtype=float)
+                    + 0.16
+                    * model_frame["family_influence"].to_numpy(dtype=float)
                 )
 
                 metrics = variant_metrics[variant["scenario_id"]]
@@ -1306,6 +1607,10 @@ class SimulationEngine:
                 metrics["understood"].append(
                     _weighted_mean(probabilities["understood"], weights)
                 )
+                for stage in ("searched", "compared", "trusted", "checkout"):
+                    metrics[stage].append(
+                        _weighted_mean(probabilities[stage], weights)
+                    )
                 metrics["consideration"].append(
                     _weighted_mean(probabilities["consideration"], weights)
                 )
@@ -1415,7 +1720,15 @@ class SimulationEngine:
             "eligible": eligibility_rate,
             "aware": awareness_rate,
             "understood": baseline["understood"]["mean"],
-            "considered": baseline["consideration"]["mean"],
+            "searched": baseline["searched"]["mean"],
+            "compared": baseline["compared"]["mean"],
+            "trusted": baseline["trusted"]["mean"],
+            "checkout": baseline["checkout"]["mean"],
+            "considered": (
+                baseline["compared"]["mean"]
+                if plan.code in ADVANCED_PLAN_CODES
+                else baseline["consideration"]["mean"]
+            ),
             "purchased": purchase_rate,
             "repeated": purchase_rate * repeat_rate,
             "referred": purchase_rate * referral_rate,
@@ -1458,6 +1771,46 @@ class SimulationEngine:
                 ("repeated", "购买后预计复购"),
                 ("referred", "购买后预计推荐"),
             )
+        if plan.code in ADVANCED_PLAN_CODES:
+            if normalized_study_type in VENUE_STUDY_TYPES:
+                funnel_labels = (
+                    ("eligible", "符合门店条件的目标客群"),
+                    ("aware", "已注意到门店"),
+                    ("understood", "已理解消费场景"),
+                    ("searched", "已完成必要信息搜集"),
+                    ("compared", "已比较门店与替代方案"),
+                    ("trusted", "已建立到店信任"),
+                    ("checkout", "已跨过时间与交通摩擦"),
+                    ("purchased", "预计到店"),
+                    ("repeated", "到店后预计再访"),
+                    ("referred", "到店后预计推荐"),
+                )
+            elif normalized_study_type == "CREATIVE_TEST":
+                funnel_labels = (
+                    ("eligible", "符合投放条件的目标受众"),
+                    ("aware", "已触达并注意广告"),
+                    ("understood", "已理解广告信息"),
+                    ("searched", "已完成必要信息搜集"),
+                    ("compared", "已比较主张与替代方案"),
+                    ("trusted", "已形成可信判断"),
+                    ("checkout", "已跨过行动摩擦"),
+                    ("purchased", "预计采取目标行动"),
+                    ("repeated", "预计继续互动"),
+                    ("referred", "预计分享广告"),
+                )
+            else:
+                funnel_labels = (
+                    ("eligible", "符合品类条件的目标人群"),
+                    ("aware", "已注意到产品"),
+                    ("understood", "已理解产品卖点"),
+                    ("searched", "已完成必要信息搜集"),
+                    ("compared", "已比较产品与替代方案"),
+                    ("trusted", "已建立品牌与保障信任"),
+                    ("checkout", "已跨过支付、配送与退货顾虑"),
+                    ("purchased", "预计选择购买"),
+                    ("repeated", "购买后预计复购"),
+                    ("referred", "购买后预计推荐"),
+                )
         funnel = [
             {
                 "stage": stage,
@@ -1472,7 +1825,9 @@ class SimulationEngine:
             name: {
                 "mean": float(prior["mean"]),
                 "sd": float(prior["sd"]),
-                "source": "calibration_profile_prior",
+                "source": str(
+                    prior.get("source") or "calibration_profile_prior"
+                ),
             }
             for name, prior in coefficient_priors.items()
         }
@@ -1548,6 +1903,10 @@ class SimulationEngine:
             "ci_p90": baseline["purchase"]["p90"],
             "metric_intervals": {
                 "awareness_rate": baseline["awareness"],
+                "information_search_rate": baseline["searched"],
+                "comparison_rate": baseline["compared"],
+                "trust_rate": baseline["trusted"],
+                "checkout_readiness_rate": baseline["checkout"],
                 "consideration_rate": baseline["consideration"],
                 "purchase_rate": baseline["purchase"],
                 "repeat_rate": baseline["repeat"],
@@ -1600,6 +1959,64 @@ class SimulationEngine:
                     "eligible_population_share": round(eligibility_rate, 6),
                 },
                 "coefficient_priors": coefficient_output,
+                "decision_journey": {
+                    "version": "consumer-journey-2026.07.1",
+                    "enabled": plan.code in ADVANCED_PLAN_CODES,
+                    "stages": [
+                        "eligible",
+                        "aware",
+                        "understood",
+                        "searched",
+                        "compared",
+                        "trusted",
+                        "checkout",
+                        "purchased",
+                        "repeated",
+                        "referred",
+                    ],
+                    "consumer_parameter_count": int(
+                        len(
+                            [
+                                column
+                                for column in model_frame.columns
+                                if column
+                                in {
+                                    "price_sensitivity",
+                                    "brand_sensitivity",
+                                    "quality_sensitivity",
+                                    "novelty_seeking",
+                                    "review_sensitivity",
+                                    "convenience_preference",
+                                    "social_influence",
+                                    "local_brand_trust",
+                                    "online_affinity",
+                                    "risk_aversion",
+                                    "financial_pressure",
+                                    "promotion_responsiveness",
+                                    "product_involvement",
+                                    "search_intensity",
+                                    "decision_deliberation",
+                                    "impulse_tendency",
+                                    "creator_trust",
+                                    "marketplace_trust",
+                                    "family_influence",
+                                    "warranty_sensitivity",
+                                    "delivery_sensitivity",
+                                    "return_anxiety",
+                                    "payment_confidence",
+                                    "sustainability_preference",
+                                    "habit_inertia",
+                                    "purchase_urgency",
+                                    "category_engagement",
+                                }
+                            ]
+                        )
+                    ),
+                    "advanced_choice_parameter_count": len(
+                        coefficient_priors
+                    ),
+                    "status": "disclosed_prior_not_observed_individual_behavior",
+                },
                 "agent_signal": adjustments,
                 "competitors": competitor_quality,
                 "uncertainty": {
@@ -1608,8 +2025,11 @@ class SimulationEngine:
                         "coefficient_prior_uncertainty",
                         "observed_population_heterogeneity",
                         "random_taste_heterogeneity"
-                        if plan.model_family.startswith("mixed_logit")
+                        if "mixed_logit" in plan.model_family
                         else "fixed_taste_mnl",
+                        "multi_stage_consumer_decision_journey"
+                        if plan.code in ADVANCED_PLAN_CODES
+                        else "single_stage_choice_journey",
                         "bounded_llm_weak_signal"
                         if adjustments["effective_weight"] > 0
                         else "no_llm_quantitative_effect",

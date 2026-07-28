@@ -201,6 +201,42 @@ class SimulationEngineTests(unittest.TestCase):
             "PET_WATER_FOUNTAIN",
         )
 
+    def test_professional_uses_multi_stage_consumer_journey(self):
+        result = self.run_engine(
+            plan_code="PROFESSIONAL",
+            mc_rounds=20,
+        )
+        journey = result["model_lineage"]["decision_journey"]
+        self.assertTrue(journey["enabled"])
+        self.assertGreaterEqual(journey["consumer_parameter_count"], 27)
+        self.assertGreaterEqual(
+            journey["advanced_choice_parameter_count"],
+            26,
+        )
+        stages = [item["stage"] for item in result["funnel"]]
+        self.assertEqual(
+            stages,
+            [
+                "eligible",
+                "aware",
+                "understood",
+                "searched",
+                "compared",
+                "trusted",
+                "checkout",
+                "purchased",
+                "repeated",
+                "referred",
+            ],
+        )
+        rates = [item["rate"] for item in result["funnel"][:-2]]
+        self.assertTrue(
+            all(left >= right for left, right in zip(rates, rates[1:]))
+        )
+        uncertainty = result["model_lineage"]["uncertainty"]["components"]
+        self.assertIn("random_taste_heterogeneity", uncertainty)
+        self.assertIn("multi_stage_consumer_decision_journey", uncertainty)
+
 
 if __name__ == "__main__":
     unittest.main()

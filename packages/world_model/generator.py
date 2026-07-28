@@ -15,7 +15,7 @@ from simulation_core.calibration import load_calibration_profile
 from world_model.category_profiles import load_category_profile
 
 
-WORLD_MODEL_VERSION = "TH-WORLD-2026.07.4"
+WORLD_MODEL_VERSION = "TH-WORLD-2026.07.5"
 
 REGION_PROVINCES = {
     "Bangkok Metro": ["Bangkok", "Nonthaburi", "Pathum Thani", "Samut Prakan"],
@@ -304,6 +304,119 @@ class PopulationGenerator:
             + 0.18 * review_sensitivity
             + self.rng.normal(0.0, 0.08, size)
         )
+        risk_aversion = _clip01(
+            self.rng.beta(2.7, 2.0, size=size)
+            + 0.08 * age_senior
+            - 0.05 * age_young
+        )
+        financial_pressure = _clip01(
+            0.82
+            - 0.14 * income_index
+            + 0.35 * (1.0 - disposable_share)
+            + self.rng.normal(0.0, 0.09, size)
+        )
+        promotion_responsiveness = _clip01(
+            0.22
+            + 0.52 * price_sensitivity
+            + self.rng.beta(1.8, 2.8, size=size) * 0.25
+            + self.rng.normal(0.0, 0.06, size)
+        )
+        product_involvement = _clip01(
+            0.18
+            + 0.32 * quality_sensitivity
+            + 0.22 * review_sensitivity
+            + 0.12 * novelty_seeking
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        search_intensity = _clip01(
+            0.12
+            + 0.4 * review_sensitivity
+            + 0.22 * risk_aversion
+            + 0.18 * product_involvement
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        decision_deliberation = _clip01(
+            0.18
+            + 0.32 * search_intensity
+            + 0.3 * risk_aversion
+            + 0.12 * price_sensitivity
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        impulse_tendency = _clip01(
+            0.18
+            + 0.32 * novelty_seeking
+            + 0.22 * social_influence
+            + 0.12 * age_young
+            - 0.25 * decision_deliberation
+            + self.rng.normal(0.0, 0.09, size)
+        )
+        creator_trust = _clip01(
+            0.1
+            + 0.45 * social_influence
+            + 0.22 * online_affinity
+            - 0.18 * risk_aversion
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        marketplace_trust = _clip01(
+            0.2
+            + 0.4 * online_affinity
+            + 0.2 * review_sensitivity
+            + 0.08 * local_brand_trust
+            + self.rng.normal(0.0, 0.07, size)
+        )
+        family_influence = _clip01(
+            0.14
+            + 0.08 * np.maximum(household_size - 1, 0)
+            + 0.2 * social_influence
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        warranty_sensitivity = _clip01(
+            0.12
+            + 0.42 * risk_aversion
+            + 0.24 * quality_sensitivity
+            + 0.12 * financial_pressure
+            + self.rng.normal(0.0, 0.07, size)
+        )
+        delivery_sensitivity = _clip01(
+            0.15
+            + 0.36 * convenience_preference
+            + 0.22 * online_affinity
+            + 0.12 * financial_pressure
+            + self.rng.normal(0.0, 0.07, size)
+        )
+        return_anxiety = _clip01(
+            0.12
+            + 0.4 * risk_aversion
+            + 0.18 * financial_pressure
+            + 0.12 * review_sensitivity
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        payment_confidence = _clip01(
+            0.24
+            + 0.48 * online_affinity
+            + 0.12 * income_index
+            - 0.18 * risk_aversion
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        sustainability_preference = _clip01(
+            self.rng.beta(2.0, 2.7, size=size)
+            + 0.08 * age_young
+            + 0.04 * income_index
+        )
+        habit_inertia = _clip01(
+            0.15
+            + 0.32 * (1.0 - novelty_seeking)
+            + 0.22 * risk_aversion
+            + 0.08 * age_senior
+            + self.rng.normal(0.0, 0.08, size)
+        )
+        purchase_urgency = _clip01(
+            0.12
+            + 0.25 * impulse_tendency
+            + 0.18 * product_involvement
+            + self.rng.beta(1.6, 3.2, size=size) * 0.22
+            + self.rng.normal(0.0, 0.07, size)
+        )
 
         tourist_probability = np.array(
             [population["tourist_share_by_region"][region] for region in regions]
@@ -406,6 +519,38 @@ class PopulationGenerator:
                 "price_sensitivity": np.round(price_sensitivity, 4),
                 "brand_sensitivity": np.round(brand_sensitivity, 4),
                 "quality_sensitivity": np.round(quality_sensitivity, 4),
+                "risk_aversion": np.round(risk_aversion, 4),
+                "financial_pressure": np.round(financial_pressure, 4),
+                "promotion_responsiveness": np.round(
+                    promotion_responsiveness,
+                    4,
+                ),
+                "product_involvement": np.round(product_involvement, 4),
+                "search_intensity": np.round(search_intensity, 4),
+                "decision_deliberation": np.round(
+                    decision_deliberation,
+                    4,
+                ),
+                "impulse_tendency": np.round(impulse_tendency, 4),
+                "creator_trust": np.round(creator_trust, 4),
+                "marketplace_trust": np.round(marketplace_trust, 4),
+                "family_influence": np.round(family_influence, 4),
+                "warranty_sensitivity": np.round(
+                    warranty_sensitivity,
+                    4,
+                ),
+                "delivery_sensitivity": np.round(
+                    delivery_sensitivity,
+                    4,
+                ),
+                "return_anxiety": np.round(return_anxiety, 4),
+                "payment_confidence": np.round(payment_confidence, 4),
+                "sustainability_preference": np.round(
+                    sustainability_preference,
+                    4,
+                ),
+                "habit_inertia": np.round(habit_inertia, 4),
+                "purchase_urgency": np.round(purchase_urgency, 4),
                 "novelty_seeking": np.round(novelty_seeking, 4),
                 "review_sensitivity": np.round(review_sensitivity, 4),
                 "convenience_preference": np.round(
@@ -445,14 +590,25 @@ class PopulationGenerator:
             (frame["income_tier"].isin(["HIGH", "LUXURY"]))
             & (frame["online_affinity"] >= 0.55),
             (frame["age_group"].isin(["18-24", "25-34"]))
-            & (frame["novelty_seeking"] >= 0.6),
-            frame["price_sensitivity"] >= 0.72,
+            & (frame["novelty_seeking"] >= 0.6)
+            & (frame["creator_trust"] >= 0.52),
+            (frame["search_intensity"] >= 0.68)
+            & (frame["risk_aversion"] >= 0.58),
+            (frame["creator_trust"] >= 0.62)
+            & (frame["social_influence"] >= 0.58),
+            (frame["family_influence"] >= 0.62)
+            & (frame["household_size"] >= 3),
+            (frame["price_sensitivity"] >= 0.72)
+            & (frame["promotion_responsiveness"] >= 0.62),
             (frame["online_affinity"] < 0.42)
             & (frame["local_brand_trust"] >= 0.55),
         ]
         labels = [
             "AFFLUENT_DIGITAL",
             "TREND_EXPLORER",
+            "EVIDENCE_SEEKER",
+            "SOCIAL_COMMERCE",
+            "FAMILY_PRAGMATIST",
             "VALUE_SEEKER",
             "LOCAL_TRUST_OFFLINE",
         ]

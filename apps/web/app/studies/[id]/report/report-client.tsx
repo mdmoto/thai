@@ -132,12 +132,22 @@ interface ReportData {
     query?: string;
     consumer_search_query?: string;
     source_count: number;
+    candidate_count?: number;
     platform_counts: Record<string, number>;
+    consumer_search_queries?: string[];
+    evidence_target?: {
+      minimum: number;
+      target: number;
+      maximum: number;
+      target_met: boolean;
+    };
     collectors?: Array<{
       collector: string;
       status: string;
       requested: number;
       result_count: number;
+      query_count?: number;
+      completed_queries?: number;
       estimated_credits?: number;
       access_mode?: string;
       fallback_result?: string | null;
@@ -156,6 +166,7 @@ interface ReportData {
       excerpt?: string;
       observed_fields?: string[];
       evidence_role?: string;
+      evidence_quality_score?: number;
       limitation: string;
     }>;
     warnings?: string[];
@@ -238,6 +249,14 @@ interface ReportData {
     };
     uncertainty?: { interval_type?: string; components?: string[]; validated_forecast_error?: number | null };
     agent_signal?: { status?: string; effective_weight?: number; sample_size?: number };
+    decision_journey?: {
+      version?: string;
+      enabled?: boolean;
+      stages?: string[];
+      consumer_parameter_count?: number;
+      advanced_choice_parameter_count?: number;
+      status?: string;
+    };
     category?: {
       category_key?: string;
       profile_version?: string;
@@ -334,6 +353,10 @@ const FUNNEL_COPY: Record<string, Record<string, { label: string; description: s
     eligible: { label: "符合品类条件的目标人群", description: "根据品类资格规则筛出的潜在消费者" },
     aware: { label: "已注意到产品", description: "在设定曝光条件下知道或注意到该产品" },
     understood: { label: "已理解产品卖点", description: "能够理解主要功能、价格和核心价值" },
+    searched: { label: "已完成必要信息搜集", description: "结合主动检索和被动接触，取得足够信息继续决策" },
+    compared: { label: "已比较产品与替代方案", description: "比较价格、功能、竞品和不购买方案" },
+    trusted: { label: "已建立品牌与保障信任", description: "评价、品牌、保修和退货信息达到个人信任门槛" },
+    checkout: { label: "已跨过购买摩擦", description: "跨过预算、支付、配送和退货顾虑" },
     considered: { label: "已纳入购买考虑", description: "愿意把该产品与竞品及“不购买”方案一起比较" },
     purchased: { label: "预计选择购买", description: "选择模型中最终选择本产品的期望人数" },
     repeated: { label: "购买后预计复购", description: "预计购买者中具有再次购买倾向的人数" },
@@ -343,6 +366,10 @@ const FUNNEL_COPY: Record<string, Record<string, { label: string; description: s
     eligible: { label: "符合门店条件的目标客群", description: "根据门店类型、区域和消费能力筛出的潜在顾客" },
     aware: { label: "已注意到门店", description: "在设定获客条件下知道或注意到该门店" },
     understood: { label: "符合消费场景", description: "门店定位与消费者的用餐、休闲或购物场景相符" },
+    searched: { label: "已完成必要信息搜集", description: "取得位置、价格、评价和营业信息" },
+    compared: { label: "已比较门店与替代方案", description: "与其他门店及不出行方案进行比较" },
+    trusted: { label: "已建立到店信任", description: "评价、品牌和服务保障达到个人信任门槛" },
+    checkout: { label: "已跨过到店摩擦", description: "跨过时间、交通、停车和预算顾虑" },
     considered: { label: "已纳入到店考虑", description: "愿意把该门店与其他去处及“不出行”方案一起比较" },
     purchased: { label: "预计到店", description: "选择模型中最终选择到店的期望人数" },
     repeated: { label: "到店后预计再访", description: "预计到店顾客中具有再次到店倾向的人数" },
@@ -352,6 +379,10 @@ const FUNNEL_COPY: Record<string, Record<string, { label: string; description: s
     eligible: { label: "符合投放条件的目标受众", description: "根据广告目标筛出的潜在受众" },
     aware: { label: "已触达并注意广告", description: "在设定投放条件下看到并注意到广告" },
     understood: { label: "已理解广告信息", description: "能够理解广告主张、优惠和行动指引" },
+    searched: { label: "已完成必要信息搜集", description: "从广告及公开资料中取得足够信息" },
+    compared: { label: "已比较主张与替代方案", description: "将广告主张与替代产品或不行动进行比较" },
+    trusted: { label: "已形成可信判断", description: "素材证据和品牌信任达到个人门槛" },
+    checkout: { label: "已跨过行动摩擦", description: "跨过点击、咨询、支付或到店顾虑" },
     considered: { label: "已产生行动考虑", description: "愿意进一步了解、点击或比较广告中的方案" },
     purchased: { label: "预计采取目标行动", description: "模型中预计点击、咨询或购买的期望人数" },
     repeated: { label: "预计继续互动", description: "采取行动后仍愿意持续关注或再次互动的人数" },
@@ -378,6 +409,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const MODEL_LABELS: Record<string, string> = {
   mnl_prior: "多项逻辑选择模型（MNL，当前系数为待验证先验）",
+  mnl_with_observed_heterogeneity: "纳入人群差异的多项选择模型",
+  hybrid_journey_mixed_logit: "多阶段消费决策旅程与随机偏好混合模型",
   mixed_logit: "混合逻辑选择模型（Mixed Logit）",
   latent_class: "潜在人群分类选择模型（Latent Class）",
   hierarchical_bayes: "分层贝叶斯联合分析模型",
@@ -388,6 +421,9 @@ const UNCERTAINTY_LABELS: Record<string, string> = {
   coefficient_prior_uncertainty: "选择系数尚未实证拟合带来的不确定性",
   observed_population_heterogeneity: "已纳入模型的人群差异",
   fixed_taste_mnl: "当前模型假定同类人群偏好结构固定",
+  random_taste_heterogeneity: "已模拟个体随机偏好差异",
+  multi_stage_consumer_decision_journey: "已模拟多阶段消费决策旅程",
+  single_stage_choice_journey: "采用基础选择旅程",
   no_llm_quantitative_effect: "本次大模型信号未参与定量结果",
 };
 
@@ -399,9 +435,10 @@ const STATUS_LABELS: Record<string, string> = {
   partial: "部分完成",
   succeeded: "采集成功",
   not_applicable: "本研究不适用",
-  authorization_required: "需要客户授权",
-  customer_authorization_required: "需要客户授权",
-  customer_authorization_or_provider_required: "需要客户授权或合规数据供应商",
+  public_only: "仅使用公开资料",
+  public_index_only_no_customer_login: "公开索引，无需客户登录",
+  public_embed_or_provider_no_customer_login: "公开验证或云端数据源，无需客户登录",
+  public_commerce_evidence_no_customer_login: "公开电商证据，无需客户登录",
   paid_api_access_required: "需要付费官方接口",
   api_key_and_quota_required: "需要官方接口密钥与额度",
   mixed_public_and_authorized_data: "公开证据与授权数据并用",
@@ -414,21 +451,22 @@ const COLLECTOR_LABELS: Record<string, string> = {
   "Structured LLM research": "大模型结构化消费者研究",
   "Social platform evidence": "社交平台传播证据",
   "Crawl4AI public page reader": "公开网页深度读取",
-  "Firecrawl consumer public search": "泰国消费者公开检索",
+  "Firecrawl multi-query consumer research": "泰国消费者多主题公开检索",
   "YouTube public metadata": "YouTube 公开视频资料",
-  "Meta / TikTok authorized business data": "Meta / TikTok 授权商业数据",
-  "Lazada / Shopee merchant data": "Lazada / Shopee 商家授权数据",
+  "Meta / TikTok public discovery": "Meta / TikTok 公开内容发现",
+  "Lazada / Shopee public commerce evidence": "Lazada / Shopee 公开消费证据",
 };
 
 const FALLBACK_LABELS: Record<string, string> = {
   synthetic_region_distribution: "合成区域分布",
   model_segment_summary: "选择模型人群摘要",
   disclosed_social_propagation_scenarios: "已披露参数的传播情景",
-  customer_authorized_url_required: "客户提供的公开网址",
+  public_search_discovery: "云端公开搜索发现",
   official_api_key_or_public_url: "官方接口或公开视频网址",
   public_url_evidence_only: "仅使用公开网页证据",
   public_product_metadata_only: "仅使用公开商品元数据",
-  customer_public_urls_and_existing_collectors: "客户公开网址与现有采集通道",
+  public_pages_and_official_public_apis: "公开网页与官方公开接口",
+  search_index_and_official_embed_only: "搜索索引与官方嵌入验证",
 };
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
@@ -683,6 +721,13 @@ export function ReportClient({
             <p className="text-[10px] text-neutral-500 font-mono mt-1">
               校准：{calibrationLabel(reportData.calibration_status)} · {reportData.simulation_model_version}
             </p>
+            {reportData.model_lineage?.decision_journey?.enabled && (
+              <p className="text-[10px] text-cyan-200/70 mt-1">
+                多阶段决策模型：{reportData.model_lineage.decision_journey.consumer_parameter_count ?? 0} 项消费者参数 ·{" "}
+                {reportData.model_lineage.decision_journey.advanced_choice_parameter_count ?? 0} 项选择参数 ·{" "}
+                {reportData.model_lineage.decision_journey.stages?.length ?? 0} 个决策阶段
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={shareReport} className="btn-cmai-secondary text-xs py-1.5 px-3">
@@ -1504,7 +1549,7 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
     item => item.source_type === "consumer_public_search",
   ) ?? [];
   const firecrawlCollector = research?.collectors?.find(
-    item => item.collector === "Firecrawl consumer public search",
+    item => item.collector === "Firecrawl multi-query consumer research",
   );
   return (
     <div className="space-y-6">
@@ -1512,8 +1557,9 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
         <div className="eyebrow mb-1">AI 市场情报扫描</div>
         <h2 className="text-base font-semibold text-white tracking-tight">公开资料、来源与可信度</h2>
         <p className="text-xs text-neutral-400 mt-2 max-w-3xl leading-relaxed">
-          系统只读取允许公开访问的资料，并保存来源、采集时间和内容指纹。Facebook、TikTok、
-          Lazada 等平台的非公开经营数据仍需客户正式授权，不会使用个人 Cookie 绕过限制。
+          所有研究都由 Google Cloud 后台完成，客户不需要授权社交或电商账号。
+          系统只读取允许公开访问的资料，并保存来源、采集时间和内容指纹；
+          登录页、验证码和非公开经营数据不会进入报告。
         </p>
       </div>
 
@@ -1525,6 +1571,9 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
         <Card>
           <div className="eyebrow">可追溯来源</div>
           <div className="text-lg text-white mt-2">{research?.source_count ?? 0} 条</div>
+          <div className="text-[10px] text-neutral-500 mt-1">
+            候选 {research?.candidate_count ?? research?.source_count ?? 0} 条
+          </div>
         </Card>
         <Card>
           <div className="eyebrow">消费者公开检索</div>
@@ -1557,17 +1606,20 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
             <div>
               <div className="eyebrow">像消费者一样公开检索</div>
               <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
-                系统会用商品名、价格、优缺点、真实使用体验等泰国消费者常用词，寻找公开评测、
-                社媒帖子和电商线索。本次检索到 {firecrawlCollector.result_count} 条通过质量检查的结果。
+                系统会围绕价格、优缺点、真实使用、负面评价、竞品、售后和购买场景执行
+                {firecrawlCollector.query_count ?? research?.consumer_search_queries?.length ?? 0} 组泰文检索。
+                本次获得 {firecrawlCollector.result_count} 条通过质量检查的结果。
               </p>
             </div>
             <span className="text-[9px] text-cyan-100 bg-cyan-400/10 px-2 py-1 rounded-full whitespace-nowrap">
               约 {firecrawlCollector.estimated_credits ?? 0} 检索额度
             </span>
           </div>
-          {research?.consumer_search_query && (
+          {!!research?.consumer_search_queries?.length && (
             <p className="text-[10px] text-neutral-500 mt-3 break-words">
-              检索主题：{research.consumer_search_query}
+              已完成 {firecrawlCollector.completed_queries ?? 0} 组主题；
+              有效证据目标 {research.evidence_target?.minimum ?? 80}–
+              {research.evidence_target?.maximum ?? 150} 条。
             </p>
           )}
           <p className="text-[10px] text-amber-100/70 mt-2">
@@ -1768,6 +1820,7 @@ function MethodologySection({ data }: { data: ReportData }) {
   const calibration = data.model_lineage?.calibration;
   const uncertainty = data.model_lineage?.uncertainty;
   const agentSignal = data.model_lineage?.agent_signal;
+  const decisionJourney = data.model_lineage?.decision_journey;
   const category = data.model_lineage?.category;
   return (
     <div className="space-y-6">
@@ -1789,25 +1842,31 @@ function MethodologySection({ data }: { data: ReportData }) {
             模型要求消费者在本项目方案、竞品和“不购买 / 不到店”之间进行选择；大语言模型的回答不会被直接平均成市场规模。
           </p>
           <p>
-            <strong className="text-white font-semibold">3. 结果区间与不确定性：</strong>{" "}
+            <strong className="text-white font-semibold">3. 多阶段消费决策：</strong>{" "}
+            本次使用 {decisionJourney?.consumer_parameter_count ?? "未记录"} 项消费者参数和{" "}
+            {decisionJourney?.advanced_choice_parameter_count ?? "未记录"} 项选择参数，依次模拟
+            {(decisionJourney?.stages ?? []).map(stage => funnelCopy(data, stage).label).join("、") || "基础选择流程"}。
+          </p>
+          <p>
+            <strong className="text-white font-semibold">4. 结果区间与不确定性：</strong>{" "}
             {UNCERTAINTY_LABELS[uncertainty?.interval_type ?? ""] ?? uncertainty?.interval_type ?? "未记录"}。
             当前纳入：
             {(uncertainty?.components ?? []).map(component => UNCERTAINTY_LABELS[component] ?? component).join("；") || "未记录"}。
             历史回测误差：{uncertainty?.validated_forecast_error ?? "尚未建立，因此区间不是经过验证的销量置信区间"}。
           </p>
           <p>
-            <strong className="text-white font-semibold">4. 大语言模型辅助信号：</strong>{" "}
+            <strong className="text-white font-semibold">5. 大语言模型辅助信号：</strong>{" "}
             本次状态为“{statusLabel(agentSignal?.status ?? "not_used")}”，定量结果中的有效权重为 {formatPercent(agentSignal?.effective_weight ?? 0)}，
             完成代表样本 {agentSignal?.sample_size ?? 0} 个。不可用时系统不会用固定虚拟人物冒充真实研究结果。
           </p>
           <p>
-            <strong className="text-white font-semibold">5. 品类目标人群：</strong>{" "}
+            <strong className="text-white font-semibold">6. 品类目标人群：</strong>{" "}
             {CATEGORY_LABELS[category?.category_key ?? data.category_key ?? ""] ?? category?.category_key ?? data.category_key ?? "通用消费品"}；
             占全部 AI 模拟消费人群 {formatPercent(category?.eligible_population_share ?? 1)}。
             筛选依据：{eligibilityLabel(category?.eligibility_status)}。
           </p>
           <p>
-            <strong className="text-white font-semibold">6. 数据追溯：</strong>{" "}
+            <strong className="text-white font-semibold">7. 数据追溯：</strong>{" "}
             已记录 {(calibration?.sources ?? []).filter(source => source.observed).length} 个真实观测数据源；
             本报告运行编号为 <code className="text-white font-mono bg-neutral-900 px-1 py-0.5 rounded">{data.run_id}</code>，
             可用于追查数据版本、模型版本和运行条件。
@@ -1828,7 +1887,7 @@ function MethodologySection({ data }: { data: ReportData }) {
         <div className="eyebrow mb-1">证据有限时的保守估计</div>
         <h3 className="text-sm font-semibold text-white">证据不足时仍保留的保守结果</h3>
         <p className="text-xs text-neutral-400 mt-2">
-          当公开抓取、客户授权数据或大语言模型不可用时，系统不会用伪造数据填空，而是保留可追溯的保守模型估计，
+          当公开采集、官方接口或大语言模型不可用时，系统不会要求客户提供账号，也不会用伪造数据填空，而是保留可追溯的保守模型估计，
           并同时说明证据等级、计算依据和使用边界。
         </p>
       </div>

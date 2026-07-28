@@ -25,7 +25,7 @@ from typing import Any, Awaitable, Callable, Dict, Iterable, List, Mapping, Opti
 import httpx
 
 
-RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.4"
+RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.5"
 USER_AGENT = "ThailandMarketTwin/2.1 (+public-market-research)"
 PLATFORM_HOSTS = {
     "facebook.com": "Facebook",
@@ -226,6 +226,43 @@ def _unique(values: Iterable[str]) -> List[str]:
     return result
 
 
+def _canonical_url(value: str) -> str:
+    """Normalize public result URLs so tracking parameters do not create duplicates."""
+    try:
+        parsed = urllib.parse.urlsplit(value)
+    except ValueError:
+        return value
+    filtered_query = urllib.parse.urlencode(
+        [
+            (key, item)
+            for key, item in urllib.parse.parse_qsl(
+                parsed.query,
+                keep_blank_values=False,
+            )
+            if not key.lower().startswith("utm_")
+            and key.lower()
+            not in {
+                "fbclid",
+                "gclid",
+                "ref",
+                "referrer",
+                "source",
+                "spm",
+            }
+        ]
+    )
+    path = parsed.path.rstrip("/") or "/"
+    return urllib.parse.urlunsplit(
+        (
+            parsed.scheme.lower(),
+            parsed.netloc.lower(),
+            path,
+            filtered_query,
+            "",
+        )
+    )
+
+
 def _market_signals(content: str) -> Dict[str, List[str]]:
     patterns = {
         "prices": (
@@ -277,6 +314,8 @@ class PublicMarketResearch:
         consumer_searcher: Optional[ConsumerSearcher] = None,
         firecrawl_enabled: Optional[bool] = None,
         max_search_results: Optional[int] = None,
+        max_search_queries: Optional[int] = None,
+        max_evidence: Optional[int] = None,
     ):
         configured = os.environ.get("MARKET_RESEARCH_ENABLED", "").lower()
         self.enabled = (
@@ -301,11 +340,34 @@ class PublicMarketResearch:
         self.max_videos = max(1, min(int(max_videos), 30))
         configured_search_limit = max_search_results or os.environ.get(
             "FIRECRAWL_SEARCH_LIMIT",
-            "5",
+            "10",
         )
         self.max_search_results = max(
             1,
             min(int(configured_search_limit), 10),
+        )
+        configured_query_limit = max_search_queries or os.environ.get(
+            "MARKET_RESEARCH_QUERY_COUNT",
+            "12",
+        )
+        self.max_search_queries = max(
+            1,
+            min(int(configured_query_limit), 20),
+        )
+        configured_evidence_limit = max_evidence or os.environ.get(
+            "MARKET_RESEARCH_EVIDENCE_LIMIT",
+            "150",
+        )
+        self.max_evidence = max(
+            20,
+            min(int(configured_evidence_limit), 200),
+        )
+        self.search_concurrency = max(
+            1,
+            min(
+                int(os.environ.get("MARKET_RESEARCH_SEARCH_CONCURRENCY", "3")),
+                6,
+            ),
         )
 
     @staticmethod
@@ -356,6 +418,103 @@ class PublicMarketResearch:
             320,
         )
 
+    @staticmethod
+    def _consumer_search_queries(study: Mapping[str, Any]) -> List[str]:
+        """Build Thai consumer-intent query clusters instead of one broad query."""
+        inputs = study.get("inputs") or {}
+        facts = study.get("facts") or {}
+        product = _clean_text(
+            facts.get("product_name") or study.get("name") or "",
+            120,
+        )
+        category = _clean_text(
+            facts.get("category") or inputs.get("category") or product,
+            100,
+        )
+        subject = _clean_text(" ".join(_unique([product, category])), 180)
+        competitors = [
+            value
+            for value in _unique(
+                [
+                    *(inputs.get("competitors") or []),
+                    *(
+                        item.get("name")
+                        for item in (inputs.get("competitor_data") or [])
+                        if isinstance(item, Mapping)
+                    ),
+                ]
+            )
+            if value and not _is_public_http_url(value)
+        ][:3]
+        query_templates = [
+            f"{subject} รีวิว ใช้จริง ข้อดี ข้อเสีย ประเทศไทย",
+            f"{subject} ปัญหา เสีย พัง เสียงดัง คืนสินค้า รีวิวลบ",
+            f"{subject} ราคา คุ้มไหม เปรียบเทียบ รุ่นไหนดี",
+            f"{subject} ซื้อที่ไหน Shopee Lazada Thailand รีวิวผู้ซื้อ",
+            f"site:tiktok.com {subject} รีวิว ไทย ใช้จริง",
+            f"site:facebook.com {subject} รีวิว ความคิดเห็น ไทย",
+            f"site:instagram.com {subject} Thailand review",
+            f"site:youtube.com {subject} รีวิว ทดสอบ แกะกล่อง",
+            f"{category} ความต้องการ ผู้บริโภคไทย พฤติกรรมการซื้อ",
+            f"{category} pantip รีวิว ปัญหา แนะนำ",
+            f"{category} รับประกัน จัดส่ง บริการหลังการขาย ประเทศไทย",
+            f"{category} ทางเลือก คู่แข่ง แบรนด์ยอดนิยม Thailand",
+            *(
+                f"{subject} เทียบ {competitor} ราคา รีวิว Thailand"
+                for competitor in competitors
+            ),
+        ]
+        return _unique(_clean_text(query, 320) for query in query_templates)
+
+    async def _search_consumer_queries(
+        self,
+        queries: List[str],
+    ) -> Dict[str, Any]:
+        semaphore = asyncio.Semaphore(self.search_concurrency)
+
+        async def search_one(query: str) -> Dict[str, Any]:
+            async with semaphore:
+                try:
+                    items = await self.consumer_searcher(
+                        query,
+                        self.max_search_results,
+                    )
+                    for item in items:
+                        item.setdefault("query_cluster", query)
+                    return {
+                        "query": query,
+                        "items": items,
+                        "error": None,
+                    }
+                except Exception as error:
+                    return {
+                        "query": query,
+                        "items": [],
+                        "error": type(error).__name__,
+                    }
+
+        results = await asyncio.gather(
+            *(search_one(query) for query in queries),
+        )
+        return {
+            "items": [
+                item
+                for result in results
+                for item in result["items"]
+            ],
+            "completed_queries": sum(
+                1 for result in results if not result["error"]
+            ),
+            "failed_queries": [
+                {
+                    "query": result["query"],
+                    "error": result["error"],
+                }
+                for result in results
+                if result["error"]
+            ],
+        }
+
     async def collect(
         self,
         study: Mapping[str, Any],
@@ -369,7 +528,9 @@ class PublicMarketResearch:
             "completed_at": started_at,
             "query": self._search_query(study),
             "consumer_search_query": self._consumer_search_query(study),
+            "consumer_search_queries": [],
             "source_count": 0,
+            "candidate_count": 0,
             "platform_counts": {},
             "evidence": [],
             "collectors": [],
@@ -406,16 +567,17 @@ class PublicMarketResearch:
 
         urls = self._research_urls(study)[: self.max_pages]
         query = base["query"]
+        consumer_queries = self._consumer_search_queries(study)[
+            : self.max_search_queries
+        ]
+        base["consumer_search_queries"] = consumer_queries
         page_task = asyncio.create_task(self.page_reader(urls))
         video_task = asyncio.create_task(
             self.video_searcher(query, self.max_videos)
         )
         if self.firecrawl_enabled:
             search_task = asyncio.create_task(
-                self.consumer_searcher(
-                    base["consumer_search_query"],
-                    self.max_search_results,
-                )
+                self._search_consumer_queries(consumer_queries)
             )
             page_results, video_results, search_results = await asyncio.gather(
                 page_task,
@@ -451,7 +613,7 @@ class PublicMarketResearch:
                 "requested": len(urls),
                 "result_count": len(page_items),
                 "fallback_result": (
-                    None if page_items else "customer_authorized_url_required"
+                    None if page_items else "public_search_discovery"
                 ),
             }
         )
@@ -466,18 +628,34 @@ class PublicMarketResearch:
             search_items = []
             search_status = "unavailable"
         else:
-            search_items = search_results
+            search_items = search_results["items"]
             search_status = "succeeded" if search_items else "partial"
             evidence.extend(search_items)
+            for failed in search_results["failed_queries"]:
+                warnings.append(
+                    f"公开检索主题失败：{failed['error']}"
+                )
         collectors.append(
             {
-                "collector": "Firecrawl consumer public search",
+                "collector": "Firecrawl multi-query consumer research",
                 "status": search_status,
                 "requested": (
-                    self.max_search_results if self.firecrawl_enabled else 0
+                    len(consumer_queries) * self.max_search_results
+                    if self.firecrawl_enabled
+                    else 0
                 ),
                 "result_count": len(search_items),
-                "estimated_credits": 2 if self.firecrawl_enabled else 0,
+                "query_count": len(consumer_queries),
+                "completed_queries": (
+                    int(search_results.get("completed_queries", 0))
+                    if isinstance(search_results, Mapping)
+                    else 0
+                ),
+                "estimated_credits": (
+                    2 * len(consumer_queries)
+                    if self.firecrawl_enabled
+                    else 0
+                ),
                 "access_mode": (
                     "api_key"
                     if os.environ.get("FIRECRAWL_API_KEY")
@@ -486,7 +664,7 @@ class PublicMarketResearch:
                 "fallback_result": (
                     None
                     if search_items
-                    else "customer_public_urls_and_existing_collectors"
+                    else "public_pages_and_official_public_apis"
                 ),
             }
         )
@@ -515,15 +693,15 @@ class PublicMarketResearch:
         collectors.extend(
             [
                 {
-                    "collector": "Meta / TikTok authorized business data",
-                    "status": "authorization_required",
+                    "collector": "Meta / TikTok public discovery",
+                    "status": "public_only",
                     "requested": 0,
                     "result_count": 0,
-                    "fallback_result": "public_url_evidence_only",
+                    "fallback_result": "search_index_and_official_embed_only",
                 },
                 {
-                    "collector": "Lazada / Shopee merchant data",
-                    "status": "authorization_required",
+                    "collector": "Lazada / Shopee public commerce evidence",
+                    "status": "public_only",
                     "requested": 0,
                     "result_count": 0,
                     "fallback_result": "public_product_metadata_only",
@@ -535,9 +713,11 @@ class PublicMarketResearch:
         seen_urls = set()
         for item in evidence:
             url = item.get("url")
-            if not url or url in seen_urls:
+            canonical_url = _canonical_url(str(url or ""))
+            if not canonical_url or canonical_url in seen_urls:
                 continue
-            seen_urls.add(url)
+            seen_urls.add(canonical_url)
+            item["url"] = canonical_url
             platform = str(item.get("platform") or "公开网页")
             priority, role = PLATFORM_PRIORITY.get(
                 platform,
@@ -545,10 +725,40 @@ class PublicMarketResearch:
             )
             item["decision_priority"] = priority
             item.setdefault("evidence_role", role)
+            grade_score = {
+                "A": 40,
+                "B": 32,
+                "C": 24,
+                "D": 12,
+            }.get(str(item.get("evidence_grade") or "D"), 8)
+            observed_score = min(
+                20,
+                3 * len(item.get("observed_fields") or []),
+            )
+            signal_score = min(
+                20,
+                2
+                * sum(
+                    len(values)
+                    for values in (item.get("market_signals") or {}).values()
+                ),
+            )
+            excerpt_score = min(
+                20,
+                len(str(item.get("excerpt") or "")) // 80,
+            )
+            item["evidence_quality_score"] = min(
+                100,
+                grade_score + observed_score + signal_score + excerpt_score,
+            )
             unique_evidence.append(item)
         unique_evidence.sort(
-            key=lambda item: int(item.get("decision_priority") or 99)
+            key=lambda item: (
+                int(item.get("decision_priority") or 99),
+                -int(item.get("evidence_quality_score") or 0),
+            )
         )
+        unique_evidence = unique_evidence[: self.max_evidence]
         platform_counts: Dict[str, int] = {}
         for item in unique_evidence:
             platform = str(item.get("platform") or "公开网页")
@@ -566,12 +776,16 @@ class PublicMarketResearch:
                 ),
                 "completed_at": completed_at,
                 "source_count": len(unique_evidence),
+                "candidate_count": len(evidence),
+                "evidence_target": {
+                    "minimum": min(80, self.max_evidence),
+                    "target": min(120, self.max_evidence),
+                    "maximum": self.max_evidence,
+                    "target_met": len(unique_evidence)
+                    >= min(80, self.max_evidence),
+                },
                 "platform_counts": platform_counts,
-                "evidence": unique_evidence[
-                    : self.max_pages
-                    + self.max_videos
-                    + self.max_search_results
-                ],
+                "evidence": unique_evidence,
                 "collectors": collectors,
                 "warnings": warnings,
             }
