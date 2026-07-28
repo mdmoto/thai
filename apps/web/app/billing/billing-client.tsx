@@ -229,8 +229,11 @@ export function BillingClient() {
               </div>
               {pkg.bonus_credits > 0 && (
                 <div className="rounded-lg border border-emerald-950/70 bg-emerald-950/10 px-3 py-2 text-xs text-emerald-300">
-                  赠送 {pkg.bonus_credits} 积分，可运行{" "}
-                  {Math.floor(pkg.bonus_credits / 5)} 次基础模拟
+                  {pkg.bonus_credits >= 5
+                    ? `赠送 ${pkg.bonus_credits} 积分，可运行 ${Math.floor(
+                        pkg.bonus_credits / 5,
+                      )} 次基础模拟`
+                    : `赠送 ${pkg.bonus_credits} 积分，可累计用于基础模拟`}
                 </div>
               )}
             </div>
