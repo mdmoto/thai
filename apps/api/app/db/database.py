@@ -71,6 +71,15 @@ def _upgrade_legacy_schema() -> None:
                 "ALTER TABLE users ADD COLUMN acquisition_source VARCHAR "
                 "NOT NULL DEFAULT 'ORGANIC'"
             )
+        if "invite_owner" not in columns:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN invite_owner VARCHAR"
+            )
+        if "invite_commission_bps" not in columns:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN invite_commission_bps "
+                "INTEGER NOT NULL DEFAULT 0"
+            )
         if "basic_decision_runs_balance" not in columns:
             statements.append(
                 "ALTER TABLE users ADD COLUMN basic_decision_runs_balance "

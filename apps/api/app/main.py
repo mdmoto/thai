@@ -37,6 +37,7 @@ from app.db.billing_service import (
     refund_run_reservation,
 )
 from app.db.database import (
+    SessionLocal,
     database_is_healthy,
     get_db,
     initialize_database,
@@ -44,6 +45,7 @@ from app.db.database import (
 from app.db.models import (
     AdminAuditLog,
     CreditTransaction,
+    InviteCode,
     PendingRegistration,
     PurchaseOrder,
     ReportRecord,
@@ -87,6 +89,7 @@ _rate_buckets: Dict[str, deque] = defaultdict(deque)
 async def lifespan(_: FastAPI):
     ensure_verification_configured()
     initialize_database()
+    _sync_configured_invite_codes()
     yield
 
 
@@ -118,7 +121,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Admin-Key"],
 )
 
@@ -238,6 +241,36 @@ class ProvisionAdminRequest(BaseModel):
         return normalized
 
 
+class InviteCodeRequest(BaseModel):
+    code: str = Field(
+        min_length=3,
+        max_length=40,
+        pattern=r"^[A-Za-z0-9-]+$",
+    )
+    source_name: str = Field(min_length=2, max_length=120)
+    owner_name: str = Field(min_length=2, max_length=120)
+    owner_contact: Optional[str] = Field(default=None, max_length=160)
+    commission_percent: float = Field(default=0, ge=0, le=100)
+    bonus_credits: int = Field(default=0, ge=0, le=1000)
+    notes: Optional[str] = Field(default=None, max_length=500)
+
+    @field_validator("code")
+    @classmethod
+    def normalize_code(cls, value: str) -> str:
+        return value.strip().upper()
+
+    @field_validator("source_name", "owner_name")
+    @classmethod
+    def normalize_required_text(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("owner_contact", "notes")
+    @classmethod
+    def normalize_optional_text(cls, value: Optional[str]) -> Optional[str]:
+        normalized = (value or "").strip()
+        return normalized or None
+
+
 def _admin_emails() -> set[str]:
     return {
         item.strip().lower()
@@ -263,7 +296,13 @@ def _user_payload(user: User) -> Dict[str, Any]:
         ),
         "deep_decision_runs_balance": int(user.deep_decision_runs_balance),
         "invite_status": user.invite_status,
+        "invite_code": user.invite_code,
         "acquisition_source": user.acquisition_source,
+        "invite_owner": user.invite_owner,
+        "invite_commission_percent": round(
+            int(user.invite_commission_bps or 0) / 100,
+            2,
+        ),
         "is_admin": _is_admin_user(user),
     }
 
@@ -280,7 +319,7 @@ def _create_registered_user(
 ) -> User:
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=409, detail="该邮箱已被注册")
-    invite = _resolve_invite(invite_code)
+    invite = _resolve_invite(db, invite_code)
     user = User(
         email=email,
         password_hash=password_hash,
@@ -289,6 +328,8 @@ def _create_registered_user(
         invite_code=invite["code"],
         invite_status=invite["status"],
         acquisition_source=invite["source"],
+        invite_owner=invite.get("owner"),
+        invite_commission_bps=int(invite.get("commission_bps", 0)),
         credits_balance=invite["credits"],
     )
     db.add(user)
@@ -323,7 +364,7 @@ def _auth_payload(user: User) -> Dict[str, Any]:
     }
 
 
-def _invite_catalog() -> Dict[str, Dict[str, Any]]:
+def _configured_invite_catalog() -> Dict[str, Dict[str, Any]]:
     configured = os.environ.get("INVITE_CODES_JSON", "{}")
     try:
         payload = json.loads(configured)
@@ -349,31 +390,105 @@ def _invite_catalog() -> Dict[str, Dict[str, Any]]:
             )
             continue
         source = str(raw_config.get("source") or code).strip()[:120]
-        catalog[code] = {"credits": credits, "source": source}
+        owner = str(raw_config.get("owner_name") or source).strip()[:120]
+        contact = str(raw_config.get("owner_contact") or "").strip()[:160]
+        try:
+            commission_bps = max(
+                0,
+                min(
+                    10_000,
+                    round(
+                        float(raw_config.get("commission_percent", 0)) * 100
+                    ),
+                ),
+            )
+        except (TypeError, ValueError):
+            commission_bps = 0
+        catalog[code] = {
+            "credits": credits,
+            "source": source,
+            "owner": owner,
+            "owner_contact": contact or None,
+            "commission_bps": commission_bps,
+        }
     return catalog
 
 
-def _resolve_invite(code: Optional[str]) -> Dict[str, Any]:
+def _sync_configured_invite_codes() -> None:
+    catalog = _configured_invite_catalog()
+    if not catalog:
+        return
+    with SessionLocal() as db:
+        existing_codes = {
+            item.code
+            for item in db.query(InviteCode)
+            .filter(InviteCode.code.in_(list(catalog)))
+            .all()
+        }
+        for code, config in catalog.items():
+            if code in existing_codes:
+                continue
+            db.add(
+                InviteCode(
+                    code=code,
+                    source_name=config["source"],
+                    owner_name=config["owner"],
+                    owner_contact=config["owner_contact"],
+                    commission_bps=config["commission_bps"],
+                    bonus_credits=config["credits"],
+                    notes="从系统邀请码配置导入",
+                    active=True,
+                )
+            )
+        db.commit()
+
+
+def _resolve_invite(db: Session, code: Optional[str]) -> Dict[str, Any]:
     if not code:
         return {
             "code": None,
             "status": "NOT_PROVIDED",
             "source": "ORGANIC",
             "credits": 0,
+            "owner": None,
+            "commission_bps": 0,
         }
-    config = _invite_catalog().get(code)
+    managed = db.query(InviteCode).filter(InviteCode.code == code).first()
+    if managed is not None:
+        if not managed.active:
+            return {
+                "code": code,
+                "status": "INVALID",
+                "source": "INACTIVE_INVITE",
+                "credits": 0,
+                "owner": None,
+                "commission_bps": 0,
+            }
+        return {
+            "code": code,
+            "status": "VALID",
+            "source": managed.source_name,
+            "credits": int(managed.bonus_credits),
+            "owner": managed.owner_name,
+            "commission_bps": int(managed.commission_bps),
+        }
+    config = _configured_invite_catalog().get(code)
     if not config:
         return {
             "code": code,
             "status": "INVALID",
             "source": "UNATTRIBUTED_INVITE",
             "credits": 0,
+            "owner": None,
+            "commission_bps": 0,
         }
     return {
         "code": code,
         "status": "VALID",
         "source": config["source"],
         "credits": int(config["credits"]),
+        "owner": config["owner"],
+        "commission_bps": int(config["commission_bps"]),
     }
 
 
@@ -620,6 +735,11 @@ def admin_acquisition_users(
                 "invite_code": user.invite_code,
                 "invite_status": user.invite_status,
                 "acquisition_source": user.acquisition_source,
+                "invite_owner": user.invite_owner,
+                "invite_commission_percent": round(
+                    int(user.invite_commission_bps or 0) / 100,
+                    2,
+                ),
                 "credits_balance": int(user.credits_balance),
                 "basic_decision_runs_balance": int(
                     user.basic_decision_runs_balance
@@ -675,6 +795,99 @@ def provision_admin_account(
     return _user_payload(user)
 
 
+@app.post("/v1/admin/invite-codes", status_code=status.HTTP_201_CREATED)
+def create_invite_code(
+    req: InviteCodeRequest,
+    admin: User = Depends(_current_admin_required),
+    db: Session = Depends(get_db),
+):
+    record = (
+        db.query(InviteCode)
+        .filter(InviteCode.code == req.code)
+        .first()
+    )
+    reactivated = record is not None
+    if record is None:
+        record = InviteCode(
+            code=req.code,
+            created_by_user_id=admin.id,
+        )
+        db.add(record)
+    record.source_name = req.source_name
+    record.owner_name = req.owner_name
+    record.owner_contact = req.owner_contact
+    record.commission_bps = round(req.commission_percent * 100)
+    record.bonus_credits = req.bonus_credits
+    record.notes = req.notes
+    record.active = True
+    db.commit()
+    db.refresh(record)
+    _record_admin_action(
+        db,
+        actor=admin,
+        action=(
+            "INVITE_CODE_REACTIVATED"
+            if reactivated
+            else "INVITE_CODE_CREATED"
+        ),
+        target_type="invite_code",
+        target_id=record.code,
+        details={
+            "owner_name": record.owner_name,
+            "commission_percent": round(record.commission_bps / 100, 2),
+            "bonus_credits": record.bonus_credits,
+        },
+    )
+    return {
+        "id": record.id,
+        "code": record.code,
+        "source_name": record.source_name,
+        "owner_name": record.owner_name,
+        "owner_contact": record.owner_contact,
+        "commission_percent": round(record.commission_bps / 100, 2),
+        "bonus_credits": record.bonus_credits,
+        "notes": record.notes,
+        "active": bool(record.active),
+        "created_at": record.created_at.isoformat(),
+        "updated_at": record.updated_at.isoformat(),
+    }
+
+
+@app.delete("/v1/admin/invite-codes/{code}")
+def deactivate_invite_code(
+    code: str,
+    admin: User = Depends(_current_admin_required),
+    db: Session = Depends(get_db),
+):
+    normalized = code.strip().upper()
+    record = (
+        db.query(InviteCode)
+        .filter(InviteCode.code == normalized)
+        .first()
+    )
+    if record is None:
+        raise HTTPException(status_code=404, detail="邀请码不存在")
+    record.active = False
+    db.commit()
+    db.refresh(record)
+    _record_admin_action(
+        db,
+        actor=admin,
+        action="INVITE_CODE_DEACTIVATED",
+        target_type="invite_code",
+        target_id=record.code,
+        details={
+            "owner_name": record.owner_name,
+            "historical_attribution_retained": True,
+        },
+    )
+    return {
+        "code": record.code,
+        "active": False,
+        "message": "邀请码已停用，历史客户归属和分成记录已保留",
+    }
+
+
 @app.get("/v1/admin/dashboard")
 def admin_dashboard(
     _: User = Depends(_current_admin_required),
@@ -683,7 +896,6 @@ def admin_dashboard(
     users = (
         db.query(User)
         .order_by(User.created_at.desc())
-        .limit(500)
         .all()
     )
     order_rows = (
@@ -716,6 +928,31 @@ def admin_dashboard(
             .all()
         )
     }
+    invite_metrics: Dict[str, Dict[str, int]] = {}
+    for user in users:
+        if not user.invite_code:
+            continue
+        metrics = invite_metrics.setdefault(
+            user.invite_code,
+            {
+                "registrations": 0,
+                "paid_revenue_minor": 0,
+                "commission_due_minor": 0,
+            },
+        )
+        paid_total = int(
+            order_metrics.get(user.id, {}).get("paid_total_minor", 0)
+        )
+        metrics["registrations"] += 1
+        metrics["paid_revenue_minor"] += paid_total
+        metrics["commission_due_minor"] += round(
+            paid_total * int(user.invite_commission_bps or 0) / 10_000
+        )
+    invite_codes = (
+        db.query(InviteCode)
+        .order_by(InviteCode.created_at.desc())
+        .all()
+    )
     total_orders = db.query(PurchaseOrder).count()
     paid_orders = (
         db.query(PurchaseOrder)
@@ -760,6 +997,9 @@ def admin_dashboard(
             "total_runs": total_runs,
             "completed_runs": completed_runs,
             "failed_runs": failed_runs,
+            "active_invite_codes": sum(
+                1 for item in invite_codes if item.active
+            ),
         },
         "users": [
             {
@@ -773,6 +1013,16 @@ def admin_dashboard(
                     "paid_total_minor",
                     0,
                 ),
+                "referral_commission_minor": round(
+                    int(
+                        order_metrics.get(user.id, {}).get(
+                            "paid_total_minor",
+                            0,
+                        )
+                    )
+                    * int(user.invite_commission_bps or 0)
+                    / 10_000
+                ),
             }
             for user in users
         ],
@@ -782,8 +1032,50 @@ def admin_dashboard(
                 "user_email": user.email,
                 "user_name": user.name,
                 "company": user.company,
+                "invite_code": user.invite_code,
+                "invite_owner": user.invite_owner,
+                "referral_commission_minor": (
+                    round(
+                        order.amount_minor
+                        * int(user.invite_commission_bps or 0)
+                        / 10_000
+                    )
+                    if order.status == "PAID"
+                    else 0
+                ),
             }
             for order, user in order_rows
+        ],
+        "invite_codes": [
+            {
+                "id": item.id,
+                "code": item.code,
+                "source_name": item.source_name,
+                "owner_name": item.owner_name,
+                "owner_contact": item.owner_contact,
+                "commission_percent": round(
+                    int(item.commission_bps or 0) / 100,
+                    2,
+                ),
+                "bonus_credits": int(item.bonus_credits),
+                "notes": item.notes,
+                "active": bool(item.active),
+                "registrations": invite_metrics.get(item.code, {}).get(
+                    "registrations",
+                    0,
+                ),
+                "paid_revenue_minor": invite_metrics.get(item.code, {}).get(
+                    "paid_revenue_minor",
+                    0,
+                ),
+                "commission_due_minor": invite_metrics.get(item.code, {}).get(
+                    "commission_due_minor",
+                    0,
+                ),
+                "created_at": item.created_at.isoformat(),
+                "updated_at": item.updated_at.isoformat(),
+            }
+            for item in invite_codes
         ],
         "audit_logs": [
             {

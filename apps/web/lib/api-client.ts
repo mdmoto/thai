@@ -66,7 +66,10 @@ export interface UserProfile {
   basic_decision_runs_balance: number;
   deep_decision_runs_balance: number;
   invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
+  invite_code?: string | null;
   acquisition_source?: string;
+  invite_owner?: string | null;
+  invite_commission_percent?: number;
   is_admin?: boolean;
 }
 
@@ -177,16 +180,37 @@ export interface AdminDashboard {
     total_runs: number;
     completed_runs: number;
     failed_runs: number;
+    active_invite_codes: number;
   };
   users: Array<UserProfile & {
     created_at: string;
     order_count: number;
     paid_total_minor: number;
+    referral_commission_minor: number;
   }>;
   orders: Array<PurchaseOrder & {
     user_email: string;
     user_name?: string;
     company?: string;
+    invite_code?: string | null;
+    invite_owner?: string | null;
+    referral_commission_minor: number;
+  }>;
+  invite_codes: Array<{
+    id: string;
+    code: string;
+    source_name: string;
+    owner_name: string;
+    owner_contact?: string | null;
+    commission_percent: number;
+    bonus_credits: number;
+    notes?: string | null;
+    active: boolean;
+    registrations: number;
+    paid_revenue_minor: number;
+    commission_due_minor: number;
+    created_at: string;
+    updated_at: string;
   }>;
   audit_logs: Array<{
     id: string;
@@ -346,5 +370,30 @@ export async function completeAdminOrderApi(
       method: "POST",
       body: JSON.stringify({ payment_reference: paymentReference }),
     },
+  );
+}
+
+export async function createAdminInviteCodeApi(payload: {
+  code: string;
+  source_name: string;
+  owner_name: string;
+  owner_contact?: string;
+  commission_percent: number;
+  bonus_credits: number;
+  notes?: string;
+}) {
+  return apiJson<AdminDashboard["invite_codes"][number]>(
+    "/v1/admin/invite-codes",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function deactivateAdminInviteCodeApi(code: string) {
+  return apiJson<{ code: string; active: boolean; message: string }>(
+    `/v1/admin/invite-codes/${encodeURIComponent(code)}`,
+    { method: "DELETE" },
   );
 }

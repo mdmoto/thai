@@ -41,6 +41,13 @@ const PACKAGE_LABELS: Record<string, string> = {
   ENTERPRISE: "企业定制",
 };
 
+const PACKAGE_POPULATION: Record<string, string> = {
+  BASIC_DECISION_SINGLE: "每次覆盖 20,000 人 AI 模拟消费人群",
+  STARTER: "每次覆盖 300,000 人 AI 模拟消费人群",
+  GROWTH: "每次覆盖 300,000 人 AI 模拟消费人群",
+  SCALE: "每次覆盖 300,000 人 AI 模拟消费人群",
+};
+
 const ORDER_STATUS_LABELS: Record<string, string> = {
   PENDING: "待付款",
   PAYMENT_PENDING: "等待付款核验",
@@ -150,7 +157,7 @@ export function BillingClient() {
           <span className="eyebrow">决策次数、赠送积分与已核验订单</span>
           <h1 className="text-2xl font-semibold text-white mt-2">购买决策服务</h1>
           <p className="text-sm text-neutral-400 mt-2 max-w-2xl">
-            付款由销售团队核验。深度决策和基础决策按次数入账，赠送积分只用于基础模拟。
+            选择一种套餐创建订单。付款由销售团队核验，到账后决策次数和赠送积分自动入账。
           </p>
         </div>
         <Card className="!p-4 min-w-64">
@@ -179,24 +186,6 @@ export function BillingClient() {
 
       {error && <p className="text-sm text-rose-300">{error}</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="!p-5">
-          <span className="eyebrow">基础模拟</span>
-          <div className="text-xl font-semibold text-white mt-2">5 积分 / 次</div>
-          <p className="text-xs text-neutral-400 mt-2">5,000 人 AI 模拟消费人群，适合快速比较价格、卖点和方案。</p>
-        </Card>
-        <Card className="!p-5 border-neutral-700">
-          <span className="eyebrow">基础决策</span>
-          <div className="text-xl font-semibold text-white mt-2">1 次 / ฿990</div>
-          <p className="text-xs text-neutral-400 mt-2">20,000 人 AI 模拟消费人群，生成基础决策报告，并赠送 1 积分。</p>
-        </Card>
-        <Card className="!p-5 border-blue-900/60">
-          <span className="eyebrow text-blue-300">深度决策</span>
-          <div className="text-xl font-semibold text-white mt-2">1 次 / ฿7,900 起</div>
-          <p className="text-xs text-neutral-400 mt-2">300,000 人 AI 模拟消费人群，生成完整市场决策报告。</p>
-        </Card>
-      </div>
-
       {createdOrder && (
         <Card className="border-neutral-700">
           <div className="flex items-start gap-3">
@@ -222,25 +211,29 @@ export function BillingClient() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {packages.map(pkg => (
           <Card key={pkg.code} className="flex flex-col">
-            <span className="eyebrow">{PACKAGE_LABELS[pkg.code] ?? pkg.code}</span>
-            <h2 className="text-base font-semibold text-white mt-2">{pkg.name}</h2>
-            <div className="text-2xl font-semibold text-white mt-4">
+            <h2 className="text-base font-semibold text-white">
+              {PACKAGE_LABELS[pkg.code] ?? pkg.name}
+            </h2>
+            <div className="text-3xl font-semibold text-white mt-4">
               ฿{(pkg.amount_minor / 100).toLocaleString()}
             </div>
-            <div className="text-xs text-neutral-300 mt-1">
-              {entitlementSummary(pkg.run_entitlements)}
+            <div className="text-xs text-neutral-500 mt-2">
+              {PACKAGE_POPULATION[pkg.code]}
             </div>
-            {pkg.bonus_credits > 0 && (
-              <div className="text-xs text-emerald-400 mt-1">
-                另赠 {pkg.bonus_credits} 积分
+            <div className="mt-5 space-y-2 flex-1">
+              <div className="rounded-lg border border-neutral-900 bg-neutral-950 px-3 py-2 text-xs text-neutral-300">
+                包含 {entitlementSummary(pkg.run_entitlements)}
               </div>
-            )}
-            <p className="text-xs text-neutral-400 mt-4 leading-relaxed flex-1">
-              {pkg.description}
-            </p>
+              {pkg.bonus_credits > 0 && (
+                <div className="rounded-lg border border-emerald-950/70 bg-emerald-950/10 px-3 py-2 text-xs text-emerald-300">
+                  赠送 {pkg.bonus_credits} 积分，可运行{" "}
+                  {Math.floor(pkg.bonus_credits / 5)} 次基础模拟
+                </div>
+              )}
+            </div>
             <button
               onClick={() => createOrder(pkg.code)}
               disabled={creating !== null}
