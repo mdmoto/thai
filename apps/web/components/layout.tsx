@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   PlusCircle,
+  ShieldCheck,
   User as UserIcon,
   Zap,
 } from "lucide-react";
@@ -62,6 +63,12 @@ export function Sidebar() {
     clearAuthSession();
     setUser(null);
   };
+  const navItems = user?.is_admin
+    ? [
+        ...NAV_ITEMS,
+        { href: "/admin", label: "管理后台", icon: ShieldCheck },
+      ]
+    : NAV_ITEMS;
 
   return (
     <>
@@ -93,7 +100,7 @@ export function Sidebar() {
               工作区
             </div>
           )}
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link

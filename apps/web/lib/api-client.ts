@@ -67,6 +67,7 @@ export interface UserProfile {
   deep_decision_runs_balance: number;
   invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
   acquisition_source?: string;
+  is_admin?: boolean;
 }
 
 export interface AuthConfig {
@@ -164,6 +165,38 @@ export interface PurchaseOrder {
   created_at: string;
   updated_at: string;
   next_step?: string;
+}
+
+export interface AdminDashboard {
+  overview: {
+    total_users: number;
+    total_orders: number;
+    pending_orders: number;
+    paid_orders: number;
+    paid_revenue_minor: number;
+    total_runs: number;
+    completed_runs: number;
+    failed_runs: number;
+  };
+  users: Array<UserProfile & {
+    created_at: string;
+    order_count: number;
+    paid_total_minor: number;
+  }>;
+  orders: Array<PurchaseOrder & {
+    user_email: string;
+    user_name?: string;
+    company?: string;
+  }>;
+  audit_logs: Array<{
+    id: string;
+    actor_email: string;
+    action: string;
+    target_type: string;
+    target_id: string;
+    details: Record<string, unknown>;
+    created_at: string;
+  }>;
 }
 
 export async function registerApi(payload: RegistrationPayload) {
@@ -297,4 +330,21 @@ export async function createOrderApi(packageCode: string) {
     method: "POST",
     body: JSON.stringify({ package_code: packageCode }),
   });
+}
+
+export async function getAdminDashboardApi() {
+  return apiJson<AdminDashboard>("/v1/admin/dashboard");
+}
+
+export async function completeAdminOrderApi(
+  orderId: string,
+  paymentReference: string,
+) {
+  return apiJson<PurchaseOrder>(
+    `/v1/admin/billing/orders/${encodeURIComponent(orderId)}/complete`,
+    {
+      method: "POST",
+      body: JSON.stringify({ payment_reference: paymentReference }),
+    },
+  );
 }

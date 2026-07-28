@@ -18,11 +18,13 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import case, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.auth import (
     create_access_token,
+    get_current_user_optional,
     get_current_user_required,
     hash_password,
     verify_password,
@@ -40,6 +42,7 @@ from app.db.database import (
     initialize_database,
 )
 from app.db.models import (
+    AdminAuditLog,
     CreditTransaction,
     PendingRegistration,
     PurchaseOrder,
@@ -221,6 +224,32 @@ class CompleteOrderRequest(BaseModel):
     payment_reference: str = Field(min_length=4, max_length=160)
 
 
+class ProvisionAdminRequest(BaseModel):
+    email: str = Field(min_length=5, max_length=254)
+    password: str = Field(min_length=8, max_length=128)
+    name: Optional[str] = Field(default=None, max_length=120)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not EMAIL_PATTERN.match(normalized):
+            raise ValueError("请输入有效邮箱")
+        return normalized
+
+
+def _admin_emails() -> set[str]:
+    return {
+        item.strip().lower()
+        for item in os.environ.get("ADMIN_USER_EMAILS", "").split(",")
+        if item.strip()
+    }
+
+
+def _is_admin_user(user: Optional[User]) -> bool:
+    return bool(user and user.email.strip().lower() in _admin_emails())
+
+
 def _user_payload(user: User) -> Dict[str, Any]:
     return {
         "id": user.id,
@@ -235,6 +264,7 @@ def _user_payload(user: User) -> Dict[str, Any]:
         "deep_decision_runs_balance": int(user.deep_decision_runs_balance),
         "invite_status": user.invite_status,
         "acquisition_source": user.acquisition_source,
+        "is_admin": _is_admin_user(user),
     }
 
 
@@ -405,6 +435,45 @@ def _require_admin_key(value: Optional[str]) -> None:
         raise HTTPException(status_code=403, detail="管理凭证无效")
 
 
+def _require_admin_access(
+    x_admin_key: Optional[str],
+    user: Optional[User],
+) -> None:
+    if _is_admin_user(user):
+        return
+    _require_admin_key(x_admin_key)
+
+
+def _current_admin_required(
+    user: User = Depends(get_current_user_required),
+) -> User:
+    if not _is_admin_user(user):
+        raise HTTPException(status_code=403, detail="仅管理员账号可以访问")
+    return user
+
+
+def _record_admin_action(
+    db: Session,
+    *,
+    actor: Optional[User],
+    action: str,
+    target_type: str,
+    target_id: str,
+    details: Optional[Dict[str, Any]] = None,
+) -> None:
+    db.add(
+        AdminAuditLog(
+            actor_user_id=actor.id if actor else None,
+            actor_email=actor.email if actor else "protected-admin-api",
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            details_json=details or {},
+        )
+    )
+    db.commit()
+
+
 @app.get("/")
 def root():
     return {
@@ -535,9 +604,10 @@ def complete_registration_verification(
 @app.get("/v1/admin/acquisition/users")
 def admin_acquisition_users(
     x_admin_key: Optional[str] = Header(default=None),
+    user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
-    _require_admin_key(x_admin_key)
+    _require_admin_access(x_admin_key, user)
     users = db.query(User).order_by(User.created_at.desc()).all()
     return {
         "total": len(users),
@@ -560,6 +630,172 @@ def admin_acquisition_users(
                 "created_at": user.created_at.isoformat(),
             }
             for user in users
+        ],
+    }
+
+
+@app.post("/v1/admin/accounts/provision")
+def provision_admin_account(
+    req: ProvisionAdminRequest,
+    x_admin_key: Optional[str] = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    _require_admin_key(x_admin_key)
+    if req.email not in _admin_emails():
+        raise HTTPException(
+            status_code=400,
+            detail="该邮箱不在管理员允许名单中",
+        )
+    user = db.query(User).filter(User.email == req.email).first()
+    created = user is None
+    if user is None:
+        user = User(
+            email=req.email,
+            password_hash=hash_password(req.password),
+            name=(req.name or req.email.split("@")[0]).strip(),
+            invite_status="NOT_PROVIDED",
+            acquisition_source="ADMIN_PROVISIONED",
+            credits_balance=0,
+        )
+        db.add(user)
+    else:
+        user.password_hash = hash_password(req.password)
+        if req.name:
+            user.name = req.name.strip()
+    db.commit()
+    db.refresh(user)
+    _record_admin_action(
+        db,
+        actor=None,
+        action="ADMIN_ACCOUNT_PROVISIONED",
+        target_type="user",
+        target_id=user.id,
+        details={"created": created},
+    )
+    return _user_payload(user)
+
+
+@app.get("/v1/admin/dashboard")
+def admin_dashboard(
+    _: User = Depends(_current_admin_required),
+    db: Session = Depends(get_db),
+):
+    users = (
+        db.query(User)
+        .order_by(User.created_at.desc())
+        .limit(500)
+        .all()
+    )
+    order_rows = (
+        db.query(PurchaseOrder, User)
+        .join(User, User.id == PurchaseOrder.user_id)
+        .order_by(PurchaseOrder.created_at.desc())
+        .limit(500)
+        .all()
+    )
+    order_metrics = {
+        user_id: {
+            "order_count": int(order_count),
+            "paid_total_minor": int(paid_total_minor or 0),
+        }
+        for user_id, order_count, paid_total_minor in (
+            db.query(
+                PurchaseOrder.user_id,
+                func.count(PurchaseOrder.id),
+                func.sum(
+                    case(
+                        (
+                            PurchaseOrder.status == "PAID",
+                            PurchaseOrder.amount_minor,
+                        ),
+                        else_=0,
+                    )
+                ),
+            )
+            .group_by(PurchaseOrder.user_id)
+            .all()
+        )
+    }
+    total_orders = db.query(PurchaseOrder).count()
+    paid_orders = (
+        db.query(PurchaseOrder)
+        .filter(PurchaseOrder.status == "PAID")
+        .count()
+    )
+    pending_orders = (
+        db.query(PurchaseOrder)
+        .filter(PurchaseOrder.status == "PENDING_PAYMENT")
+        .count()
+    )
+    paid_revenue_minor = int(
+        db.query(func.coalesce(func.sum(PurchaseOrder.amount_minor), 0))
+        .filter(PurchaseOrder.status == "PAID")
+        .scalar()
+        or 0
+    )
+    total_runs = db.query(SimulationRunRecord).count()
+    completed_runs = (
+        db.query(SimulationRunRecord)
+        .filter(SimulationRunRecord.status == "COMPLETED")
+        .count()
+    )
+    failed_runs = (
+        db.query(SimulationRunRecord)
+        .filter(SimulationRunRecord.status == "FAILED")
+        .count()
+    )
+    audit_logs = (
+        db.query(AdminAuditLog)
+        .order_by(AdminAuditLog.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    return {
+        "overview": {
+            "total_users": db.query(User).count(),
+            "total_orders": total_orders,
+            "pending_orders": pending_orders,
+            "paid_orders": paid_orders,
+            "paid_revenue_minor": paid_revenue_minor,
+            "total_runs": total_runs,
+            "completed_runs": completed_runs,
+            "failed_runs": failed_runs,
+        },
+        "users": [
+            {
+                **_user_payload(user),
+                "created_at": user.created_at.isoformat(),
+                "order_count": order_metrics.get(user.id, {}).get(
+                    "order_count",
+                    0,
+                ),
+                "paid_total_minor": order_metrics.get(user.id, {}).get(
+                    "paid_total_minor",
+                    0,
+                ),
+            }
+            for user in users
+        ],
+        "orders": [
+            {
+                **_order_payload(order),
+                "user_email": user.email,
+                "user_name": user.name,
+                "company": user.company,
+            }
+            for order, user in order_rows
+        ],
+        "audit_logs": [
+            {
+                "id": item.id,
+                "actor_email": item.actor_email,
+                "action": item.action,
+                "target_type": item.target_type,
+                "target_id": item.target_id,
+                "details": dict(item.details_json or {}),
+                "created_at": item.created_at.isoformat(),
+            }
+            for item in audit_logs
         ],
     }
 
@@ -671,13 +907,26 @@ def admin_complete_order(
     order_id: str,
     req: CompleteOrderRequest,
     x_admin_key: Optional[str] = Header(default=None),
+    user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
-    _require_admin_key(x_admin_key)
+    _require_admin_access(x_admin_key, user)
     order = complete_purchase_order(
         db,
         order_id,
         req.payment_reference,
+    )
+    _record_admin_action(
+        db,
+        actor=user,
+        action="PAYMENT_CONFIRMED",
+        target_type="purchase_order",
+        target_id=order.id,
+        details={
+            "payment_reference": req.payment_reference,
+            "amount_minor": order.amount_minor,
+            "currency": order.currency,
+        },
     )
     return _order_payload(order)
 

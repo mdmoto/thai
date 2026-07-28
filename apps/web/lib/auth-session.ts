@@ -9,6 +9,7 @@ export interface StoredUser {
   deep_decision_runs_balance?: number;
   invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
   acquisition_source?: string;
+  is_admin?: boolean;
 }
 
 const TOKEN_KEY = "market_twin_token";

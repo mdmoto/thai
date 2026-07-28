@@ -120,6 +120,30 @@ class RegistrationAttempt(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
+class AdminAuditLog(Base):
+    """Auditable record of sensitive administrator actions."""
+
+    __tablename__ = "admin_audit_logs"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"admlog_{uuid.uuid4().hex[:12]}",
+    )
+    actor_user_id = Column(
+        String,
+        ForeignKey("users.id"),
+        nullable=True,
+        index=True,
+    )
+    actor_email = Column(String, nullable=False)
+    action = Column(String, nullable=False, index=True)
+    target_type = Column(String, nullable=False)
+    target_id = Column(String, nullable=False, index=True)
+    details_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class StudyRecord(Base):
     __tablename__ = "studies"
 
