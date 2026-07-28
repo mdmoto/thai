@@ -71,6 +71,37 @@ def _upgrade_legacy_schema() -> None:
                 "ALTER TABLE users ADD COLUMN acquisition_source VARCHAR "
                 "NOT NULL DEFAULT 'ORGANIC'"
             )
+        if "basic_decision_runs_balance" not in columns:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN basic_decision_runs_balance "
+                "INTEGER NOT NULL DEFAULT 0"
+            )
+        if "deep_decision_runs_balance" not in columns:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN deep_decision_runs_balance "
+                "INTEGER NOT NULL DEFAULT 0"
+            )
+    if "purchase_orders" in tables:
+        columns = {
+            item["name"] for item in inspector.get_columns("purchase_orders")
+        }
+        if "entitlements_json" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN entitlements_json JSON"
+            )
+    if "simulation_runs" in tables:
+        columns = {
+            item["name"] for item in inspector.get_columns("simulation_runs")
+        }
+        if "entitlement_code" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN entitlement_code VARCHAR"
+            )
+        if "entitlement_reserved" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN entitlement_reserved "
+                "INTEGER NOT NULL DEFAULT 0"
+            )
     if "reports" in tables:
         columns = {item["name"] for item in inspector.get_columns("reports")}
         if "user_id" not in columns:

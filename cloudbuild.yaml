@@ -42,8 +42,8 @@ steps:
       - --max-instances=5
       - --startup-probe=httpGet.path=/v1/health,initialDelaySeconds=2,timeoutSeconds=3,periodSeconds=5,failureThreshold=24
       - --liveness-probe=httpGet.path=/v1/health,initialDelaySeconds=30,timeoutSeconds=3,periodSeconds=30,failureThreshold=3
-      - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|CORS_ALLOWED_ORIGINS=${_CORS_ORIGINS}|FREE_PREVIEW_LIMIT=1|MARKET_RESEARCH_ENABLED=true|FIRECRAWL_ENABLED=true|FIRECRAWL_API_URL=https://api.firecrawl.dev/v2|FIRECRAWL_SEARCH_LIMIT=10|MARKET_RESEARCH_QUERY_COUNT=12|MARKET_RESEARCH_EVIDENCE_LIMIT=150|MARKET_RESEARCH_SEARCH_CONCURRENCY=3
-      - --set-secrets=DATABASE_URL=market-twin-database-url:latest,JWT_SECRET_KEY=market-twin-jwt-secret:latest,ADMIN_API_KEY=market-twin-admin-api-key:latest,INVITE_CODES_JSON=market-twin-invite-codes:latest
+      - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|CORS_ALLOWED_ORIGINS=${_CORS_ORIGINS}|FREE_PREVIEW_LIMIT=1|MARKET_RESEARCH_ENABLED=true|FIRECRAWL_ENABLED=true|FIRECRAWL_API_URL=https://api.firecrawl.dev/v2|FIRECRAWL_SEARCH_LIMIT=10|MARKET_RESEARCH_QUERY_COUNT=12|MARKET_RESEARCH_EVIDENCE_LIMIT=150|MARKET_RESEARCH_SEARCH_CONCURRENCY=3|GEMINI_VERTEX_FALLBACK=true|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GOOGLE_CLOUD_LOCATION=global
+      - --set-secrets=DATABASE_URL=market-twin-database-url:latest,JWT_SECRET_KEY=market-twin-jwt-secret:latest,ADMIN_API_KEY=market-twin-admin-api-key:latest,INVITE_CODES_JSON=market-twin-invite-codes:latest,GEMINI_API_KEY_PRIMARY=market-twin-gemini-api-key-primary:latest,GEMINI_API_KEY_SECONDARY=market-twin-gemini-api-key-secondary:latest
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID

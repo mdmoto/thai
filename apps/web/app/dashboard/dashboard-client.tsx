@@ -94,11 +94,13 @@ export function DashboardClient() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <StatCard label="运行中" value={summary.running} />
         <StatCard label="已完成" value={summary.completed} />
         <StatCard label="需要处理" value={summary.action} />
-        <StatCard label="可用积分" value={user.credits_balance} />
+        <StatCard label="赠送积分" value={user.credits_balance} />
+        <StatCard label="基础决策次数" value={user.basic_decision_runs_balance} />
+        <StatCard label="深度决策次数" value={user.deep_decision_runs_balance} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

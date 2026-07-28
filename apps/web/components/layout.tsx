@@ -136,7 +136,7 @@ export function Sidebar() {
                         {user.name || "用户"}
                       </div>
                       <div className="text-[10px] text-neutral-400 font-mono flex items-center gap-1">
-                        <Zap size={10} /> {user.credits_balance} 积分
+                        <Zap size={10} /> {user.credits_balance} 积分 · {user.basic_decision_runs_balance ?? 0} 基础 · {user.deep_decision_runs_balance ?? 0} 深度
                       </div>
                     </div>
                   )}

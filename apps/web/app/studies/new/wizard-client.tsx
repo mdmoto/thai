@@ -901,7 +901,7 @@ function Step5({ state, update, onBack, onSubmit, submitting }: {
         <div className="eyebrow mb-1">第 5 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择分析方式</h2>
         <p className="text-xs text-neutral-400 font-light mt-1">
-          选择快速试方向，或生成一份完整的深度决策报告
+          从免费检查、基础模拟、基础决策或深度决策中选择
         </p>
       </div>
 
@@ -925,7 +925,7 @@ function Step5({ state, update, onBack, onSubmit, submitting }: {
                 {code === "PREVIEW" ? (
                   <span className="text-xs font-mono text-accent">免费</span>
                 ) : (
-                  <span className="text-xs text-neutral-400 font-mono">{plan.credits} 积分</span>
+                  <span className="text-xs text-neutral-400 font-mono">{plan.billing_label}</span>
                 )}
               </div>
               <p className="text-[11px] text-neutral-400 font-light mt-1">{plan.desc}</p>
@@ -934,7 +934,15 @@ function Step5({ state, update, onBack, onSubmit, submitting }: {
                 <span>·</span>
                 <span>{plan.scenarios} 个方案对比</span>
                 <span>·</span>
-                <span>{code === "PROFESSIONAL" ? "完整决策报告" : code === "STANDARD" ? "快速方案比较" : "方向预览"}</span>
+                <span>
+                  {code === "PROFESSIONAL"
+                    ? "完整决策报告"
+                    : code === "BASIC_DECISION"
+                      ? "基础决策报告"
+                      : code === "STANDARD"
+                        ? "快速方案比较"
+                        : "方向预览"}
+                </span>
               </div>
             </button>
           );
@@ -948,7 +956,7 @@ function Step5({ state, update, onBack, onSubmit, submitting }: {
           <div className="flex justify-between"><span className="text-neutral-400">研究类型</span><span className="text-white">{state.study_type ? STUDY_TYPE_META[state.study_type].label : "—"}</span></div>
           <div className="flex justify-between"><span className="text-neutral-400">分析方式</span><span className="text-white">{selected.label}</span></div>
           <div className="flex justify-between"><span className="text-neutral-400">AI人群规模</span><span className="text-white font-mono">{selected.population.toLocaleString()} 人</span></div>
-          <div className="flex justify-between"><span className="text-neutral-400">本次消耗</span><span className="text-white font-mono">{selected.credits} 积分</span></div>
+          <div className="flex justify-between"><span className="text-neutral-400">本次消耗</span><span className="text-white font-mono">{selected.billing_label}</span></div>
         </div>
       </Card>
 

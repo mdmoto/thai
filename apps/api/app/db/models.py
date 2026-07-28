@@ -29,6 +29,8 @@ class User(Base):
     acquisition_source = Column(String, nullable=False, default="ORGANIC")
     plan_tier = Column(String, default="FREE")  # FREE, PROFESSIONAL, ENTERPRISE
     credits_balance = Column(Integer, default=0)  # Bonuses are granted explicitly.
+    basic_decision_runs_balance = Column(Integer, nullable=False, default=0)
+    deep_decision_runs_balance = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -37,6 +39,10 @@ class User(Base):
     reports = relationship("ReportRecord", back_populates="user")
     purchase_orders = relationship("PurchaseOrder", back_populates="user")
     simulation_runs = relationship("SimulationRunRecord", back_populates="user")
+    entitlement_transactions = relationship(
+        "RunEntitlementTransaction",
+        back_populates="user",
+    )
 
 class CreditTransaction(Base):
     __tablename__ = "credit_transactions"
@@ -51,6 +57,28 @@ class CreditTransaction(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="transactions")
+
+
+class RunEntitlementTransaction(Base):
+    """Auditable changes to purchased decision-run balances."""
+
+    __tablename__ = "run_entitlement_transactions"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"entx_{uuid.uuid4().hex[:10]}",
+    )
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    plan_code = Column(String, nullable=False)
+    amount = Column(Integer, nullable=False)
+    transaction_type = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    reference_id = Column(String, unique=True, index=True, nullable=True)
+    balance_after = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="entitlement_transactions")
 
 class StudyRecord(Base):
     __tablename__ = "studies"
@@ -104,6 +132,7 @@ class PurchaseOrder(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     package_code = Column(String, nullable=False)
     credits = Column(Integer, nullable=False)
+    entitlements_json = Column(JSON, nullable=True)
     amount_minor = Column(Integer, nullable=False)
     currency = Column(String, nullable=False, default="THB")
     status = Column(String, nullable=False, default="PENDING_PAYMENT")
@@ -141,6 +170,8 @@ class SimulationRunRecord(Base):
     plan_code = Column(String, nullable=False)
     status = Column(String, nullable=False, default="PENDING")
     credits_reserved = Column(Integer, nullable=False, default=0)
+    entitlement_code = Column(String, nullable=True)
+    entitlement_reserved = Column(Integer, nullable=False, default=0)
     report_id = Column(String, ForeignKey("reports.id"), nullable=True)
     error_code = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

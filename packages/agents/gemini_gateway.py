@@ -9,13 +9,14 @@ import json
 import os
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
-import httpx
 import numpy as np
+from google import genai
+from google.genai import types
 
 from simulation_core.config import get_plan_config
 
 
-PROMPT_VERSION = "P-AGENT-STRUCTURED-2026.07.1"
+PROMPT_VERSION = "P-AGENT-STRUCTURED-2026.07.2"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL_STANDARD = os.environ.get(
     "GEMINI_MODEL_STANDARD",
@@ -127,16 +128,53 @@ def _clamp(value: Any, low: float = 0.0, high: float = 1.0) -> float:
 
 
 class GeminiAgentGateway:
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = (
-            api_key
-            if api_key is not None
-            else os.environ.get("GEMINI_API_KEY", GEMINI_API_KEY)
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        api_keys: Optional[Sequence[str]] = None,
+        vertex_fallback: Optional[bool] = None,
+    ):
+        configured_keys = list(api_keys) if api_keys is not None else []
+        if api_key is not None:
+            configured_keys.insert(0, api_key)
+        if api_key is None and api_keys is None:
+            configured_keys = [
+                os.environ.get("GEMINI_API_KEY_PRIMARY", ""),
+                os.environ.get("GEMINI_API_KEY_SECONDARY", ""),
+                os.environ.get("GEMINI_API_KEY", GEMINI_API_KEY),
+            ]
+        self.api_keys = []
+        for key in configured_keys:
+            normalized = str(key or "").strip()
+            if normalized and normalized not in self.api_keys:
+                self.api_keys.append(normalized)
+        self.api_key = self.api_keys[0] if self.api_keys else ""
+        configured_vertex = os.environ.get(
+            "GEMINI_VERTEX_FALLBACK",
+            "",
+        ).lower()
+        self.vertex_fallback = (
+            vertex_fallback
+            if vertex_fallback is not None
+            else configured_vertex in {"1", "true", "yes", "on"}
         )
+        self.vertex_project = os.environ.get(
+            "GOOGLE_CLOUD_PROJECT",
+            "",
+        ).strip()
+        self.vertex_location = os.environ.get(
+            "GOOGLE_CLOUD_LOCATION",
+            "global",
+        ).strip()
 
     def select_model(self, plan_code: str = "PROFESSIONAL") -> str:
         plan = get_plan_config(plan_code)
-        if plan.code in {"PROFESSIONAL", "DEEP", "ENTERPRISE"}:
+        if plan.code in {
+            "BASIC_DECISION",
+            "PROFESSIONAL",
+            "DEEP",
+            "ENTERPRISE",
+        }:
             return GEMINI_MODEL_DEEP
         return GEMINI_MODEL_STANDARD
 
@@ -217,28 +255,76 @@ class GeminiAgentGateway:
             "the supplied context."
         )
 
-    async def _call_batch(
+    def _providers(self) -> List[Dict[str, Any]]:
+        providers: List[Dict[str, Any]] = []
+        for index, key in enumerate(self.api_keys, start=1):
+            providers.append(
+                {
+                    "id": f"api_key_{index}",
+                    "mode": (
+                        "vertex_express"
+                        if key.startswith("AQ.")
+                        else "gemini_developer"
+                    ),
+                    "api_key": key,
+                }
+            )
+        if self.vertex_fallback and self.vertex_project:
+            providers.append(
+                {
+                    "id": "vertex_service_account",
+                    "mode": "vertex_adc",
+                }
+            )
+        return providers
+
+    @staticmethod
+    def _provider_public(provider: Mapping[str, Any]) -> Dict[str, str]:
+        return {
+            "id": str(provider["id"]),
+            "mode": str(provider["mode"]),
+        }
+
+    async def _call_provider(
         self,
-        client: httpx.AsyncClient,
+        provider: Mapping[str, Any],
         model: str,
         prompt: str,
     ) -> Dict[str, Any]:
-        url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{model}:generateContent?key={self.api_key}"
-        )
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "responseJsonSchema": RESPONSE_SCHEMA,
-                "maxOutputTokens": 16384,
-            },
-        }
-        response = await client.post(url, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        text_output = data["candidates"][0]["content"]["parts"][0]["text"]
+        mode = str(provider["mode"])
+        http_options = types.HttpOptions(api_version="v1")
+        if mode == "vertex_express":
+            client = genai.Client(
+                vertexai=True,
+                api_key=str(provider["api_key"]),
+                http_options=http_options,
+            )
+        elif mode == "gemini_developer":
+            client = genai.Client(api_key=str(provider["api_key"]))
+        elif mode == "vertex_adc":
+            client = genai.Client(
+                vertexai=True,
+                project=self.vertex_project,
+                location=self.vertex_location,
+                http_options=http_options,
+            )
+        else:
+            raise ValueError("Unsupported Gemini provider mode")
+
+        async with client.aio as async_client:
+            response = await async_client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_json_schema=RESPONSE_SCHEMA,
+                    max_output_tokens=16_384,
+                    temperature=0.2,
+                ),
+            )
+        text_output = response.text
+        if not text_output:
+            raise ValueError("Gemini response contained no text")
         parsed = json.loads(text_output)
         if not isinstance(parsed, dict) or not isinstance(
             parsed.get("responses"),
@@ -387,6 +473,7 @@ class GeminiAgentGateway:
         model = self.select_model(plan.code)
         selected = list(representatives)[: plan.representative_agents]
         requested = len(selected)
+        providers = self._providers()
 
         if plan.representative_agents == 0:
             result = self._unavailable_result(
@@ -397,12 +484,15 @@ class GeminiAgentGateway:
             )
             result["status"] = "disabled"
             return result
-        if not self.api_key:
+        if not providers:
             return self._unavailable_result(
                 plan.code,
                 model,
                 requested,
-                "GEMINI_API_KEY is not configured; no mock personas were substituted.",
+                (
+                    "No Gemini API key or Vertex service-account fallback is "
+                    "configured; no mock personas were substituted."
+                ),
             )
         if not selected:
             return self._unavailable_result(
@@ -420,15 +510,22 @@ class GeminiAgentGateway:
         valid_ids = list(profile_lookup)
         responses: List[Dict[str, Any]] = []
         errors: List[str] = []
+        provider_failures: List[Dict[str, str]] = []
+        providers_used: List[Dict[str, str]] = []
         batch_size = 12
-        timeout_seconds = 75.0 if plan.code in {"DEEP", "ENTERPRISE"} else 45.0
+        active_provider_index = 0
 
-        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-            for start in range(0, len(selected), batch_size):
-                batch = selected[start : start + batch_size]
+        for start in range(0, len(selected), batch_size):
+            batch = selected[start : start + batch_size]
+            parsed: Optional[Dict[str, Any]] = None
+            for provider_index in range(
+                active_provider_index,
+                len(providers),
+            ):
+                provider = providers[provider_index]
                 try:
-                    parsed = await self._call_batch(
-                        client,
+                    parsed = await self._call_provider(
+                        provider,
                         model,
                         self._build_prompt(
                             product_info,
@@ -436,24 +533,31 @@ class GeminiAgentGateway:
                             batch,
                         ),
                     )
-                    for raw_response in parsed["responses"]:
-                        validated = self._validate_response(
-                            raw_response,
-                            valid_ids,
-                        )
-                        if validated is not None:
-                            responses.append(validated)
+                    active_provider_index = provider_index
+                    public_provider = self._provider_public(provider)
+                    if public_provider not in providers_used:
+                        providers_used.append(public_provider)
+                    break
                 except Exception as error:
-                    if isinstance(error, httpx.HTTPStatusError):
-                        error_detail = (
-                            f"HTTP {error.response.status_code} from model provider"
-                        )
-                    else:
-                        error_detail = type(error).__name__
-                    errors.append(
-                        f"batch_{start // batch_size + 1}: "
-                        f"{error_detail}"
+                    provider_failures.append(
+                        {
+                            **self._provider_public(provider),
+                            "error": type(error).__name__,
+                        }
                     )
+                    active_provider_index = provider_index + 1
+            if parsed is None:
+                errors.append(
+                    f"batch_{start // batch_size + 1}: all providers unavailable"
+                )
+                continue
+            for raw_response in parsed["responses"]:
+                validated = self._validate_response(
+                    raw_response,
+                    valid_ids,
+                )
+                if validated is not None:
+                    responses.append(validated)
 
         deduplicated = {
             item["representative_id"]: item
@@ -487,6 +591,12 @@ class GeminiAgentGateway:
                 baseline_awareness,
             ),
             "errors": errors,
+            "provider_chain": [
+                self._provider_public(provider)
+                for provider in providers
+            ],
+            "providers_used": providers_used,
+            "provider_failures": provider_failures,
             "quantitative_policy": (
                 "Signals receive a bounded plan-specific prior weight. They are "
                 "never averaged into the final purchase rate."

@@ -14,7 +14,7 @@ export default function TermsPage() {
         <h2 className="text-white font-semibold mt-8">2. 用户输入</h2>
         <p>用户应确保有权提交产品、品牌、网址与商业资料，不得提交违法内容、他人机密或受限制的个人信息。</p>
         <h2 className="text-white font-semibold mt-8">3. 额度与订单</h2>
-        <p>付费订单在官方销售渠道确认到账后入账。失败运行的预留积分会自动退回；已经完成并生成报告的运行会消耗对应额度。</p>
+        <p>付费订单在官方销售渠道确认到账后入账。基础模拟消耗积分，基础决策与深度决策消耗对应次数；运行失败时，系统会自动退回预留的积分或次数。</p>
         <h2 className="text-white font-semibold mt-8">4. 结果解释</h2>
         <p>报告会区分真实观测数据、待验证的模型先验和大语言模型（LLM）辅助信号。用户应结合实地测试、法律、财务与运营判断作出最终决策。</p>
         <h2 className="text-white font-semibold mt-8">5. 合理使用</h2>

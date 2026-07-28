@@ -7,6 +7,7 @@ import {
   BillingPackage,
   createOrderApi,
   getCatalogApi,
+  getEntitlementTransactionsApi,
   getMeApi,
   getOrdersApi,
   getTransactionsApi,
@@ -28,11 +29,13 @@ const SALES_URL =
   process.env.NEXT_PUBLIC_SALES_URL || "https://wa.me/66623458238";
 
 const PACKAGE_LABELS: Record<string, string> = {
-  STARTER: "入门决策包",
+  BASIC_DECISION_SINGLE: "单次基础决策",
+  STARTER: "单次专业决策包",
   GROWTH: "增长团队包",
   SCALE: "规模化决策包",
   PREVIEW: "免费预览",
   STANDARD: "基础模拟",
+  BASIC_DECISION: "基础决策",
   PROFESSIONAL: "深度决策",
   DEEP: "专属研究",
   ENTERPRISE: "企业定制",
@@ -49,13 +52,27 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 const TRANSACTION_TYPE_LABELS: Record<string, string> = {
-  PURCHASE: "购买积分",
+  PURCHASE: "购买次数",
+  PURCHASE_BONUS: "套餐赠送积分",
   RESERVATION: "运行预留积分",
+  RUN_RESERVATION: "运行消耗",
   CONSUMPTION: "运行消耗积分",
   REFUND: "退回积分",
+  FAILED_RUN_REFUND: "失败自动退回",
   INVITE_BONUS: "邀请码赠送积分",
   ADJUSTMENT: "人工调整",
 };
+
+function entitlementSummary(entitlements: Record<string, number>): string {
+  const parts: string[] = [];
+  if (entitlements.BASIC_DECISION) {
+    parts.push(`${entitlements.BASIC_DECISION} 次基础决策`);
+  }
+  if (entitlements.PROFESSIONAL) {
+    parts.push(`${entitlements.PROFESSIONAL} 次深度决策`);
+  }
+  return parts.join(" · ");
+}
 
 function salesUrlForOrder(order: PurchaseOrder): string {
   const separator = SALES_URL.includes("?") ? "&" : "?";
@@ -73,6 +90,9 @@ export function BillingClient() {
   const [packages, setPackages] = useState<BillingPackage[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [entitlementTransactions, setEntitlementTransactions] = useState<
+    Array<Transaction & { plan_code: string }>
+  >([]);
   const [creating, setCreating] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<PurchaseOrder | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -83,12 +103,14 @@ export function BillingClient() {
       getCatalogApi(),
       getOrdersApi(),
       getTransactionsApi(),
+      getEntitlementTransactionsApi(),
     ])
-      .then(([profile, catalog, orderList, transactionList]) => {
+      .then(([profile, catalog, orderList, transactionList, entitlementList]) => {
         setUser(profile);
         setPackages(catalog.packages);
         setOrders(orderList);
         setTransactions(transactionList);
+        setEntitlementTransactions(entitlementList);
       })
       .catch(err => setError(err instanceof Error ? err.message : "读取账单失败"));
 
@@ -125,32 +147,52 @@ export function BillingClient() {
     <div className="p-5 sm:p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <span className="eyebrow">积分与已核验订单</span>
-          <h1 className="text-2xl font-semibold text-white mt-2">购买决策积分</h1>
+          <span className="eyebrow">决策次数、赠送积分与已核验订单</span>
+          <h1 className="text-2xl font-semibold text-white mt-2">购买决策服务</h1>
           <p className="text-sm text-neutral-400 mt-2 max-w-2xl">
-            付款由销售团队核验，到账后积分才会入账。平台不会通过前端按钮自行增加余额。
+            付款由销售团队核验。深度决策和基础决策按次数入账，赠送积分只用于基础模拟。
           </p>
         </div>
-        <Card className="!p-4 min-w-48">
-          <div className="text-[11px] text-neutral-500">当前可用</div>
-          <div className="text-3xl font-semibold text-white mt-1 tabular-nums">
-            {user?.credits_balance ?? "—"}
+        <Card className="!p-4 min-w-64">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <div className="text-2xl font-semibold text-white tabular-nums">
+                {user?.credits_balance ?? "—"}
+              </div>
+              <div className="text-[11px] text-neutral-500 mt-1">赠送积分</div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-white tabular-nums">
+                {user?.basic_decision_runs_balance ?? "—"}
+              </div>
+              <div className="text-[11px] text-neutral-500 mt-1">基础决策</div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-white tabular-nums">
+                {user?.deep_decision_runs_balance ?? "—"}
+              </div>
+              <div className="text-[11px] text-neutral-500 mt-1">深度决策</div>
+            </div>
           </div>
-          <div className="text-[11px] text-neutral-500">积分</div>
         </Card>
       </div>
 
       {error && <p className="text-sm text-rose-300">{error}</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="!p-5">
           <span className="eyebrow">基础模拟</span>
           <div className="text-xl font-semibold text-white mt-2">5 积分 / 次</div>
           <p className="text-xs text-neutral-400 mt-2">5,000 人 AI 模拟消费人群，适合快速比较价格、卖点和方案。</p>
         </Card>
+        <Card className="!p-5 border-neutral-700">
+          <span className="eyebrow">基础决策</span>
+          <div className="text-xl font-semibold text-white mt-2">1 次 / ฿990</div>
+          <p className="text-xs text-neutral-400 mt-2">20,000 人 AI 模拟消费人群，生成基础决策报告，并赠送 1 积分。</p>
+        </Card>
         <Card className="!p-5 border-blue-900/60">
           <span className="eyebrow text-blue-300">深度决策</span>
-          <div className="text-xl font-semibold text-white mt-2">20 积分 / 次</div>
+          <div className="text-xl font-semibold text-white mt-2">1 次 / ฿7,900 起</div>
           <p className="text-xs text-neutral-400 mt-2">300,000 人 AI 模拟消费人群，生成完整市场决策报告。</p>
         </Card>
       </div>
@@ -165,7 +207,7 @@ export function BillingClient() {
               <h2 className="text-sm font-semibold text-white">订单已创建</h2>
               <p className="text-xs text-neutral-400 mt-1">
                 订单编号 <span className="font-mono text-white">{createdOrder.id}</span>。
-                联系销售时请附上该编号，到账核验后系统自动记入积分。
+                联系销售时请附上该编号，到账核验后系统自动记入决策次数和赠送积分。
               </p>
               <a
                 href={salesUrlForOrder(createdOrder)}
@@ -188,7 +230,14 @@ export function BillingClient() {
             <div className="text-2xl font-semibold text-white mt-4">
               ฿{(pkg.amount_minor / 100).toLocaleString()}
             </div>
-            <div className="text-xs text-neutral-400 mt-1">{pkg.credits} 积分</div>
+            <div className="text-xs text-neutral-300 mt-1">
+              {entitlementSummary(pkg.run_entitlements)}
+            </div>
+            {pkg.bonus_credits > 0 && (
+              <div className="text-xs text-emerald-400 mt-1">
+                另赠 {pkg.bonus_credits} 积分
+              </div>
+            )}
             <p className="text-xs text-neutral-400 mt-4 leading-relaxed flex-1">
               {pkg.description}
             </p>
@@ -204,7 +253,7 @@ export function BillingClient() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <span className="eyebrow">订单记录</span>
           <h2 className="text-sm font-semibold text-white mt-1 mb-4">最近订单</h2>
@@ -213,7 +262,11 @@ export function BillingClient() {
               <div key={order.id} className="flex justify-between gap-4 text-xs border-b border-neutral-900 pb-3">
                 <div>
                   <div className="text-white font-mono">{order.id}</div>
-                  <div className="text-neutral-500 mt-1">{PACKAGE_LABELS[order.package_code] ?? order.package_code} · {order.credits} 积分</div>
+                  <div className="text-neutral-500 mt-1">
+                    {PACKAGE_LABELS[order.package_code] ?? order.package_code}
+                    {entitlementSummary(order.run_entitlements) ? ` · ${entitlementSummary(order.run_entitlements)}` : ""}
+                    {order.bonus_credits > 0 ? ` · 赠 ${order.bonus_credits} 积分` : ""}
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-neutral-300">฿{(order.amount_minor / 100).toLocaleString()}</div>
@@ -241,6 +294,26 @@ export function BillingClient() {
                 </div>
               </div>
             )) : <p className="text-xs text-neutral-500">暂无流水。</p>}
+          </div>
+        </Card>
+
+        <Card>
+          <span className="eyebrow">决策次数流水</span>
+          <h2 className="text-sm font-semibold text-white mt-1 mb-4">次数变动</h2>
+          <div className="space-y-3">
+            {entitlementTransactions.length ? entitlementTransactions.slice(0, 8).map(item => (
+              <div key={item.id} className="flex justify-between gap-4 text-xs border-b border-neutral-900 pb-3">
+                <div>
+                  <div className="text-neutral-300">{item.description || TRANSACTION_TYPE_LABELS[item.type] || item.type}</div>
+                  <div className="text-neutral-500 mt-1">
+                    {PACKAGE_LABELS[item.plan_code] ?? item.plan_code} · {new Date(item.created_at).toLocaleString()}
+                  </div>
+                </div>
+                <div className={item.amount >= 0 ? "text-emerald-400" : "text-neutral-300"}>
+                  {item.amount >= 0 ? "+" : ""}{item.amount}
+                </div>
+              </div>
+            )) : <p className="text-xs text-neutral-500">暂无次数流水。</p>}
           </div>
         </Card>
       </div>

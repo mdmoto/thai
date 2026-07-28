@@ -58,7 +58,12 @@ ADVANCED_FEATURE_PRIORS: Dict[str, Dict[str, float]] = {
 }
 
 ADVANCED_FEATURE_NAMES = tuple(ADVANCED_FEATURE_PRIORS)
-ADVANCED_PLAN_CODES = {"PROFESSIONAL", "DEEP", "ENTERPRISE"}
+ADVANCED_PLAN_CODES = {
+    "BASIC_DECISION",
+    "PROFESSIONAL",
+    "DEEP",
+    "ENTERPRISE",
+}
 
 VENUE_STUDY_TYPES = {
     "VENUE_STUDY",
@@ -613,6 +618,7 @@ class SimulationEngine:
         uncertainty_scale = {
             "PREVIEW": 1.35,
             "STANDARD": 1.15,
+            "BASIC_DECISION": 1.08,
             "PROFESSIONAL": 1.0,
             "DEEP": 0.9,
             "ENTERPRISE": 0.8,

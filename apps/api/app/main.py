@@ -27,11 +27,11 @@ from app.db.auth import (
     verify_password,
 )
 from app.db.billing_service import (
-    check_and_deduct_credits,
+    check_and_reserve_run,
     complete_purchase_order,
     create_purchase_order,
     public_catalog,
-    refund_reserved_credits,
+    refund_run_reservation,
 )
 from app.db.database import (
     database_is_healthy,
@@ -42,6 +42,7 @@ from app.db.models import (
     CreditTransaction,
     PurchaseOrder,
     ReportRecord,
+    RunEntitlementTransaction,
     SimulationRunRecord,
     StudyRecord,
     User,
@@ -57,7 +58,12 @@ from simulation_core.config import PLAN_CONFIGS, normalize_plan_code
 
 LOGGER = logging.getLogger("market_twin.api")
 APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
-SELF_SERVICE_PLANS = {"PREVIEW", "STANDARD", "PROFESSIONAL"}
+SELF_SERVICE_PLANS = {
+    "PREVIEW",
+    "STANDARD",
+    "BASIC_DECISION",
+    "PROFESSIONAL",
+}
 ASSISTED_PLANS = {"DEEP", "ENTERPRISE"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_REQUEST_BYTES = int(os.environ.get("MAX_REQUEST_BYTES", "1048576"))
@@ -204,6 +210,10 @@ def _user_payload(user: User) -> Dict[str, Any]:
         "company": user.company,
         "plan_tier": user.plan_tier,
         "credits_balance": int(user.credits_balance),
+        "basic_decision_runs_balance": int(
+            user.basic_decision_runs_balance
+        ),
+        "deep_decision_runs_balance": int(user.deep_decision_runs_balance),
         "invite_status": user.invite_status,
         "acquisition_source": user.acquisition_source,
     }
@@ -268,6 +278,8 @@ def _order_payload(order: PurchaseOrder) -> Dict[str, Any]:
         "id": order.id,
         "package_code": order.package_code,
         "credits": order.credits,
+        "bonus_credits": order.credits,
+        "run_entitlements": dict(order.entitlements_json or {}),
         "amount_minor": order.amount_minor,
         "currency": order.currency,
         "status": order.status,
@@ -418,6 +430,12 @@ def admin_acquisition_users(
                 "invite_status": user.invite_status,
                 "acquisition_source": user.acquisition_source,
                 "credits_balance": int(user.credits_balance),
+                "basic_decision_runs_balance": int(
+                    user.basic_decision_runs_balance
+                ),
+                "deep_decision_runs_balance": int(
+                    user.deep_decision_runs_balance
+                ),
                 "created_at": user.created_at.isoformat(),
             }
             for user in users
@@ -459,6 +477,32 @@ def get_user_transactions(
     return [
         {
             "id": item.id,
+            "amount": item.amount,
+            "type": item.transaction_type,
+            "description": item.description,
+            "balance_after": item.balance_after,
+            "created_at": item.created_at.isoformat(),
+        }
+        for item in transactions
+    ]
+
+
+@app.get("/v1/billing/entitlement-transactions")
+def get_user_entitlement_transactions(
+    user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db),
+):
+    transactions = (
+        db.query(RunEntitlementTransaction)
+        .filter(RunEntitlementTransaction.user_id == user.id)
+        .order_by(RunEntitlementTransaction.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    return [
+        {
+            "id": item.id,
+            "plan_code": item.plan_code,
             "amount": item.amount,
             "type": item.transaction_type,
             "description": item.description,
@@ -717,7 +761,7 @@ async def run_simulation(
 
     billing_reference = f"{user.id}:{request_key}"
     try:
-        reservation = check_and_deduct_credits(
+        reservation = check_and_reserve_run(
             db,
             user,
             plan_code,
@@ -740,7 +784,11 @@ async def run_simulation(
         .one()
     )
     run_job.status = "RUNNING"
-    run_job.credits_reserved = int(reservation["deducted"])
+    run_job.credits_reserved = int(reservation["deducted_credits"])
+    run_job.entitlement_code = reservation.get("entitlement_code")
+    run_job.entitlement_reserved = int(
+        reservation.get("entitlement_deducted") or 0
+    )
     db.commit()
 
     try:
@@ -793,10 +841,10 @@ async def run_simulation(
         failed_job.status = "FAILED"
         failed_job.error_code = type(error).__name__[:120]
         db.commit()
-        refund_reserved_credits(
+        refund_run_reservation(
             db,
             user.id,
-            int(reservation["deducted"]),
+            reservation,
             billing_reference,
         )
         LOGGER.exception("Simulation failed for study %s", study_id)
@@ -806,7 +854,7 @@ async def run_simulation(
             raise HTTPException(status_code=400, detail=str(error)) from error
         raise HTTPException(
             status_code=500,
-            detail="模拟失败，预留积分已自动退回；项目可以重新运行。",
+            detail="模拟失败，预留的积分或决策次数已自动退回；项目可以重新运行。",
         ) from error
 
 

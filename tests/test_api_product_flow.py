@@ -113,7 +113,12 @@ class ApiProductFlowTests(unittest.TestCase):
         response = self.client.get("/v1/catalog")
         self.assertEqual(response.status_code, 200, response.text)
         catalog = response.json()
-        expected = ["PREVIEW", "STANDARD", "PROFESSIONAL"]
+        expected = [
+            "PREVIEW",
+            "STANDARD",
+            "BASIC_DECISION",
+            "PROFESSIONAL",
+        ]
         self.assertEqual(catalog["self_service_plans"], expected)
         self.assertEqual(catalog["assisted_plans"], [])
         self.assertEqual(list(catalog["credit_pricing"]), expected)
@@ -256,6 +261,7 @@ class ApiProductFlowTests(unittest.TestCase):
             credited["credits_balance"],
             starting_balance + order["credits"],
         )
+        self.assertEqual(credited["deep_decision_runs_balance"], 1)
 
     def test_failed_paid_run_refunds_reserved_credits(self):
         _, headers = self._register("refund@example.com")
@@ -319,7 +325,7 @@ class ApiProductFlowTests(unittest.TestCase):
                 "自助套餐必须忽略客户端人口参数并使用固定产品规格",
             )
             population = 5_000 if plan_code == "STANDARD" else 300_000
-            rounds = 80 if plan_code == "STANDARD" else 150
+            rounds = 80 if plan_code == "STANDARD" else 220
             return {
                 "report_id": f"rpt_charge_{plan_code.lower()}",
                 "run_id": f"run_charge_{plan_code.lower()}",
@@ -403,7 +409,29 @@ class ApiProductFlowTests(unittest.TestCase):
             for item in transactions
             if item["type"] == "RUN_RESERVATION"
         ]
-        self.assertEqual(reservations, [-20, -5])
+        self.assertEqual(reservations, [-5])
+
+    def test_basic_decision_package_grants_one_run_and_one_bonus_credit(self):
+        account, headers = self._register("basic-decision@example.com")
+        starting_credits = account["user"]["credits_balance"]
+        order = self.client.post(
+            "/v1/billing/orders",
+            headers=headers,
+            json={"package_code": "BASIC_DECISION_SINGLE"},
+        ).json()
+        self.assertEqual(order["amount_minor"], 99_000)
+        self.assertEqual(order["bonus_credits"], 1)
+        self.assertEqual(order["run_entitlements"], {"BASIC_DECISION": 1})
+
+        completed = self.client.post(
+            f"/v1/admin/billing/orders/{order['id']}/complete",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={"payment_reference": "basic-decision-payment-test"},
+        )
+        self.assertEqual(completed.status_code, 200, completed.text)
+        profile = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(profile["credits_balance"], starting_credits + 1)
+        self.assertEqual(profile["basic_decision_runs_balance"], 1)
 
 
 if __name__ == "__main__":

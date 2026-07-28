@@ -63,6 +63,8 @@ export interface UserProfile {
   company?: string;
   plan_tier: string;
   credits_balance: number;
+  basic_decision_runs_balance: number;
+  deep_decision_runs_balance: number;
   invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
   acquisition_source?: string;
 }
@@ -129,6 +131,8 @@ export interface BillingPackage {
   code: string;
   name: string;
   credits: number;
+  bonus_credits: number;
+  run_entitlements: Record<string, number>;
   amount_minor: number;
   currency: string;
   description: string;
@@ -138,6 +142,8 @@ export interface PurchaseOrder {
   id: string;
   package_code: string;
   credits: number;
+  bonus_credits: number;
+  run_entitlements: Record<string, number>;
   amount_minor: number;
   currency: string;
   status: string;
@@ -229,6 +235,20 @@ export async function getTransactionsApi() {
       created_at: string;
     }>
   >("/v1/billing/transactions");
+}
+
+export async function getEntitlementTransactionsApi() {
+  return apiJson<
+    Array<{
+      id: string;
+      plan_code: string;
+      amount: number;
+      type: string;
+      description?: string;
+      balance_after: number;
+      created_at: string;
+    }>
+  >("/v1/billing/entitlement-transactions");
 }
 
 export async function getOrdersApi() {

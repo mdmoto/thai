@@ -160,10 +160,10 @@ export default function HomePage() {
             <span className="eyebrow">套餐与价格</span>
             <h2 className="text-3xl font-semibold text-white mt-3">从免费检查到正式决策报告</h2>
             <p className="text-sm text-neutral-400 mt-3">
-              基础模拟适合快速试方向；深度决策使用更大规模的 AI 人群和更完整的方案分析。
+              基础模拟使用赠送积分；基础决策和深度决策按已购买次数运行。
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <PricingCard
               name="免费预览"
               price="免费"
@@ -177,9 +177,15 @@ export default function HomePage() {
               items={["5,000 人 AI 模拟消费人群", "快速比较价格、卖点和方案", "适合日常小范围测试"]}
             />
             <PricingCard
+              name="基础决策"
+              price="฿990 / 次"
+              note="购买 1 次并赠送 1 积分"
+              items={["20,000 人 AI 模拟消费人群", "进阶消费者决策模型", "生成基础决策报告"]}
+            />
+            <PricingCard
               name="深度决策"
-              price="20 积分"
-              note="入门决策包 ฿7,900 可运行 1 次"
+              price="฿7,900 / 次起"
+              note="深度决策按次数，不扣赠送积分"
               items={["300,000 人 AI 模拟消费人群", "完整竞品、价格与风险分析", "生成正式商业决策报告"]}
               featured
             />

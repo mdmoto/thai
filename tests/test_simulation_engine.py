@@ -148,10 +148,13 @@ class SimulationEngineTests(unittest.TestCase):
     def test_plan_changes_model_and_evidence_depth(self):
         preview = get_plan_config("PREVIEW")
         standard = get_plan_config("STANDARD")
+        basic_decision = get_plan_config("BASIC_DECISION")
         professional = get_plan_config("PROFESSIONAL")
         deep = get_plan_config("DEEP")
         self.assertEqual(standard.default_population, 5_000)
         self.assertEqual(standard.model_sample_size, 5_000)
+        self.assertEqual(basic_decision.default_population, 20_000)
+        self.assertEqual(basic_decision.model_sample_size, 20_000)
         self.assertEqual(professional.default_population, 300_000)
         self.assertEqual(professional.model_sample_size, 300_000)
         self.assertNotEqual(preview.model_family, deep.model_family)
