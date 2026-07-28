@@ -62,37 +62,40 @@ PACKAGE_CATALOG: Dict[str, Dict[str, Any]] = {
     "STARTER": {
         "code": "STARTER",
         "name": "单次专业决策包",
-        "credits": 0,
-        "bonus_credits": 0,
+        "credits": 10,
+        "bonus_credits": 10,
         "run_entitlements": {"PROFESSIONAL": 1},
         "amount_minor": 790_000,
         "currency": "THB",
-        "description": "含 1 次深度决策（300,000 人 AI 模拟消费人群）。",
+        "description": (
+            "含 1 次深度决策（300,000 人 AI 模拟消费人群），"
+            "另赠 10 积分，可运行 2 次基础模拟。"
+        ),
     },
     "GROWTH": {
         "code": "GROWTH",
         "name": "增长团队包",
-        "credits": 10,
-        "bonus_credits": 10,
+        "credits": 50,
+        "bonus_credits": 50,
         "run_entitlements": {"PROFESSIONAL": 5},
         "amount_minor": 3_490_000,
         "currency": "THB",
         "description": (
-            "含 5 次深度决策，另赠 10 积分；"
-            "赠送积分可运行 2 次基础模拟。"
+            "含 5 次深度决策，另赠 50 积分；"
+            "赠送积分可运行 10 次基础模拟。"
         ),
     },
     "SCALE": {
         "code": "SCALE",
         "name": "规模化决策包",
-        "credits": 60,
-        "bonus_credits": 60,
+        "credits": 200,
+        "bonus_credits": 200,
         "run_entitlements": {"PROFESSIONAL": 15},
         "amount_minor": 8_900_000,
         "currency": "THB",
         "description": (
-            "含 15 次深度决策，另赠 60 积分；"
-            "赠送积分可运行 12 次基础模拟。"
+            "含 15 次深度决策，另赠 200 积分；"
+            "赠送积分可运行 40 次基础模拟。"
         ),
     },
 }

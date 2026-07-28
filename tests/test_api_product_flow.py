@@ -123,6 +123,12 @@ class ApiProductFlowTests(unittest.TestCase):
         self.assertEqual(catalog["assisted_plans"], [])
         self.assertEqual(list(catalog["credit_pricing"]), expected)
         self.assertEqual(list(catalog["plans"]), expected)
+        packages = {
+            item["code"]: item for item in catalog["packages"]
+        }
+        self.assertEqual(packages["STARTER"]["bonus_credits"], 10)
+        self.assertEqual(packages["GROWTH"]["bonus_credits"], 50)
+        self.assertEqual(packages["SCALE"]["bonus_credits"], 200)
         self.assertNotIn("DEEP", response.text)
         self.assertNotIn("ENTERPRISE", response.text)
 
@@ -342,7 +348,7 @@ class ApiProductFlowTests(unittest.TestCase):
         ):
             for plan_code, expected_balance in (
                 ("STANDARD", 0),
-                ("PROFESSIONAL", 0),
+                ("PROFESSIONAL", 10),
             ):
                 if plan_code == "PROFESSIONAL":
                     order = self.client.post(

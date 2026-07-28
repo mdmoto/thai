@@ -185,7 +185,7 @@ export default function HomePage() {
             <PricingCard
               name="深度决策"
               price="฿7,900 / 次起"
-              note="深度决策按次数，不扣赠送积分"
+              note="单次专业决策包另赠 10 积分"
               items={["300,000 人 AI 模拟消费人群", "完整竞品、价格与风险分析", "生成正式商业决策报告"]}
               featured
             />
