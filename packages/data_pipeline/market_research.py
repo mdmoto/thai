@@ -1,9 +1,10 @@
 """Auditable public-market research for deep decision studies.
 
 The collector deliberately avoids login cookies, private endpoints, and claims
-that public engagement equals sales. It gathers only public pages supplied by
-the customer plus public YouTube metadata, records provenance and hashes, and
-fails open so a blocked source never corrupts the quantitative simulation.
+that public engagement equals sales. It gathers customer-supplied public pages,
+public YouTube metadata, and bounded consumer-style public search results,
+records provenance and hashes, and fails open so a blocked source never
+corrupts the quantitative simulation.
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ from typing import Any, Awaitable, Callable, Dict, Iterable, List, Mapping, Opti
 import httpx
 
 
-RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.3"
+RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.4"
 USER_AGENT = "ThailandMarketTwin/2.1 (+public-market-research)"
 PLATFORM_HOSTS = {
     "facebook.com": "Facebook",
@@ -79,9 +80,46 @@ ANTI_BOT_MARKERS = (
     "detected unusual traffic",
     "unusual traffic from your network",
     "access denied",
+    "error 403",
+    "403 forbidden",
+    "do not have access to this page",
     "security verification",
     "robot verification",
     "too many requests",
+)
+LOGIN_WALL_MARKERS = (
+    "login required",
+    "not logged in",
+    "log in to continue",
+    "please log in",
+    "sign in to continue",
+    "เข้าสู่ระบบเพื่อดำเนินการต่อ",
+)
+SEARCH_TERM_STOPWORDS = {
+    "and",
+    "review",
+    "reviews",
+    "thailand",
+    "lazada",
+    "shopee",
+    "tiktok",
+    "ราคา",
+    "รีวิว",
+    "ขายแล้ว",
+}
+CONSUMER_SIGNAL_TERMS = (
+    "รีวิว",
+    "ราคา",
+    "ข้อดี",
+    "ข้อเสีย",
+    "ใช้จริง",
+    "ซื้อ",
+    "เปรียบเทียบ",
+    "review",
+    "price",
+    "pros",
+    "cons",
+    "unboxing",
 )
 URL_TOKEN_STOPWORDS = {
     "collection",
@@ -99,6 +137,7 @@ URL_TOKEN_STOPWORDS = {
 
 PageReader = Callable[[List[str]], Awaitable[List[Dict[str, Any]]]]
 VideoSearcher = Callable[[str, int], Awaitable[List[Dict[str, Any]]]]
+ConsumerSearcher = Callable[[str, int], Awaitable[List[Dict[str, Any]]]]
 
 
 def _utc_now() -> str:
@@ -235,6 +274,9 @@ class PublicMarketResearch:
         video_searcher: Optional[VideoSearcher] = None,
         max_pages: int = 12,
         max_videos: int = 12,
+        consumer_searcher: Optional[ConsumerSearcher] = None,
+        firecrawl_enabled: Optional[bool] = None,
+        max_search_results: Optional[int] = None,
     ):
         configured = os.environ.get("MARKET_RESEARCH_ENABLED", "").lower()
         self.enabled = (
@@ -244,8 +286,27 @@ class PublicMarketResearch:
         )
         self.page_reader = page_reader or self._crawl_public_pages
         self.video_searcher = video_searcher or self._search_youtube
+        firecrawl_configured = os.environ.get(
+            "FIRECRAWL_ENABLED",
+            "",
+        ).lower()
+        self.firecrawl_enabled = (
+            firecrawl_enabled
+            if firecrawl_enabled is not None
+            else bool(consumer_searcher)
+            or firecrawl_configured in {"1", "true", "yes", "on"}
+        )
+        self.consumer_searcher = consumer_searcher or self._search_firecrawl
         self.max_pages = max(1, min(int(max_pages), 30))
         self.max_videos = max(1, min(int(max_videos), 30))
+        configured_search_limit = max_search_results or os.environ.get(
+            "FIRECRAWL_SEARCH_LIMIT",
+            "5",
+        )
+        self.max_search_results = max(
+            1,
+            min(int(configured_search_limit), 10),
+        )
 
     @staticmethod
     def _research_urls(study: Mapping[str, Any]) -> List[str]:
@@ -286,6 +347,15 @@ class PublicMarketResearch:
         plain = [value for value in pieces if not _is_public_http_url(value)]
         return _clean_text(" ".join(plain) + " Thailand รีวิว review", 240)
 
+    @staticmethod
+    def _consumer_search_query(study: Mapping[str, Any]) -> str:
+        base = PublicMarketResearch._search_query(study)
+        return _clean_text(
+            f"{base} ราคา ข้อดี ข้อเสีย ใช้จริง ซื้อที่ไหน "
+            "Shopee Lazada TikTok Thailand",
+            320,
+        )
+
     async def collect(
         self,
         study: Mapping[str, Any],
@@ -298,6 +368,7 @@ class PublicMarketResearch:
             "started_at": started_at,
             "completed_at": started_at,
             "query": self._search_query(study),
+            "consumer_search_query": self._consumer_search_query(study),
             "source_count": 0,
             "platform_counts": {},
             "evidence": [],
@@ -306,6 +377,9 @@ class PublicMarketResearch:
             "source_strategy": {
                 "ranking_basis": "购买决策价值，不按采集便利度或单纯访问量排序",
                 "priority_order": SOURCE_STRATEGY,
+                "discovery_channel": (
+                    "Firecrawl 消费者公开检索；只作为公开线索，不代表平台后台数据"
+                ),
             },
             "usage_policy": {
                 "quantitative_effect": "none_until_customer_calibration",
@@ -336,11 +410,26 @@ class PublicMarketResearch:
         video_task = asyncio.create_task(
             self.video_searcher(query, self.max_videos)
         )
-        page_results, video_results = await asyncio.gather(
-            page_task,
-            video_task,
-            return_exceptions=True,
-        )
+        if self.firecrawl_enabled:
+            search_task = asyncio.create_task(
+                self.consumer_searcher(
+                    base["consumer_search_query"],
+                    self.max_search_results,
+                )
+            )
+            page_results, video_results, search_results = await asyncio.gather(
+                page_task,
+                video_task,
+                search_task,
+                return_exceptions=True,
+            )
+        else:
+            page_results, video_results = await asyncio.gather(
+                page_task,
+                video_task,
+                return_exceptions=True,
+            )
+            search_results = []
 
         evidence: List[Dict[str, Any]] = []
         collectors: List[Dict[str, Any]] = []
@@ -363,6 +452,41 @@ class PublicMarketResearch:
                 "result_count": len(page_items),
                 "fallback_result": (
                     None if page_items else "customer_authorized_url_required"
+                ),
+            }
+        )
+
+        if not self.firecrawl_enabled:
+            search_items: List[Dict[str, Any]] = []
+            search_status = "disabled"
+        elif isinstance(search_results, Exception):
+            warnings.append(
+                f"消费者公开检索失败：{type(search_results).__name__}"
+            )
+            search_items = []
+            search_status = "unavailable"
+        else:
+            search_items = search_results
+            search_status = "succeeded" if search_items else "partial"
+            evidence.extend(search_items)
+        collectors.append(
+            {
+                "collector": "Firecrawl consumer public search",
+                "status": search_status,
+                "requested": (
+                    self.max_search_results if self.firecrawl_enabled else 0
+                ),
+                "result_count": len(search_items),
+                "estimated_credits": 2 if self.firecrawl_enabled else 0,
+                "access_mode": (
+                    "api_key"
+                    if os.environ.get("FIRECRAWL_API_KEY")
+                    else "keyless"
+                ),
+                "fallback_result": (
+                    None
+                    if search_items
+                    else "customer_public_urls_and_existing_collectors"
                 ),
             }
         )
@@ -420,7 +544,7 @@ class PublicMarketResearch:
                 PLATFORM_PRIORITY["公开网页"],
             )
             item["decision_priority"] = priority
-            item["evidence_role"] = role
+            item.setdefault("evidence_role", role)
             unique_evidence.append(item)
         unique_evidence.sort(
             key=lambda item: int(item.get("decision_priority") or 99)
@@ -443,7 +567,11 @@ class PublicMarketResearch:
                 "completed_at": completed_at,
                 "source_count": len(unique_evidence),
                 "platform_counts": platform_counts,
-                "evidence": unique_evidence[: self.max_pages + self.max_videos],
+                "evidence": unique_evidence[
+                    : self.max_pages
+                    + self.max_videos
+                    + self.max_search_results
+                ],
                 "collectors": collectors,
                 "warnings": warnings,
             }
@@ -552,6 +680,167 @@ class PublicMarketResearch:
                     items.append(item)
                     accepted_urls.add(str(item.get("url")))
         return items
+
+    async def _search_firecrawl(
+        self,
+        query: str,
+        limit: int,
+    ) -> List[Dict[str, Any]]:
+        if not query:
+            return []
+        base_url = os.environ.get(
+            "FIRECRAWL_API_URL",
+            "https://api.firecrawl.dev/v2",
+        ).rstrip("/")
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
+        }
+        api_key = os.environ.get("FIRECRAWL_API_KEY", "").strip()
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        payload = {
+            "query": query,
+            "limit": limit,
+            "sources": ["web"],
+            "scrapeOptions": {
+                "formats": ["markdown"],
+                "onlyMainContent": True,
+            },
+        }
+        async with httpx.AsyncClient(
+            headers=headers,
+            timeout=90.0,
+            follow_redirects=False,
+        ) as client:
+            response = await client.post(f"{base_url}/search", json=payload)
+            response.raise_for_status()
+        body = response.json()
+        data = body.get("data") or {}
+        results = data.get("web") if isinstance(data, Mapping) else data
+        if not isinstance(results, list):
+            return []
+        items: List[Dict[str, Any]] = []
+        for rank, result in enumerate(results[:limit], start=1):
+            if not isinstance(result, Mapping):
+                continue
+            item = self._consumer_search_evidence(result, query, rank)
+            if item:
+                items.append(item)
+        return items
+
+    @staticmethod
+    def _consumer_search_evidence(
+        result: Mapping[str, Any],
+        query: str,
+        rank: int,
+    ) -> Optional[Dict[str, Any]]:
+        url = str(result.get("url") or "").strip()
+        if not _is_public_http_url(url):
+            return None
+        parsed = urllib.parse.urlsplit(url)
+        platform = _hostname_platform(parsed.hostname or "")
+        if platform != "公开网页" and parsed.path in {"", "/"}:
+            return None
+        title = _clean_text(result.get("title"), 220)
+        description = _clean_text(result.get("description"), 1_200)
+        markdown = _clean_text(result.get("markdown"), 4_000)
+        lowered_markdown = markdown.lower()
+        if any(
+            marker in lowered_markdown
+            for marker in (*ANTI_BOT_MARKERS, *LOGIN_WALL_MARKERS)
+        ):
+            markdown = ""
+        combined = _clean_text(
+            " ".join(value for value in (title, description, markdown) if value),
+            5_000,
+        )
+        lowered = combined.lower()
+        if len(combined) < 24 or any(
+            marker in lowered
+            for marker in (*ANTI_BOT_MARKERS, *LOGIN_WALL_MARKERS)
+        ):
+            return None
+        query_terms = [
+            token
+            for token in _unique(
+                re.findall(r"[a-z0-9ก-๙\u3400-\u9fff]+", query.lower())
+            )
+            if len(token) >= 4 and token not in SEARCH_TERM_STOPWORDS
+        ]
+        matched_terms = [term for term in query_terms if term in lowered][:12]
+        consumer_signal_hits = [
+            term for term in CONSUMER_SIGNAL_TERMS if term in lowered
+        ]
+        if not matched_terms and not consumer_signal_hits:
+            return None
+
+        metadata = result.get("metadata")
+        if not isinstance(metadata, Mapping):
+            metadata = {}
+        published_at = (
+            metadata.get("datePublished")
+            or metadata.get("uploadDate")
+            or metadata.get("publishedTime")
+        )
+        market_signals = _market_signals(combined)
+        digest_payload = json.dumps(
+            {
+                "url": url,
+                "title": title,
+                "description": description,
+                "markdown": markdown,
+                "rank": rank,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        digest = _content_hash(digest_payload)
+        has_scraped_content = len(markdown) >= 80
+        observed_fields = [
+            field
+            for field, value in (
+                ("title", title),
+                ("description", description),
+                ("page_text", markdown),
+                ("published_at", published_at),
+            )
+            if value
+        ]
+        return {
+            "source_id": _source_id(
+                "consumer_public_search",
+                url,
+                digest,
+            ),
+            "source_type": "consumer_public_search",
+            "collector": "Firecrawl",
+            "platform": platform,
+            "title": title or parsed.hostname or "消费者公开检索结果",
+            "url": url,
+            "published_at": published_at,
+            "collected_at": _utc_now(),
+            "evidence_grade": "C" if has_scraped_content else "D",
+            "content_sha256": digest,
+            "excerpt": (markdown or description or title)[:900],
+            "observed_fields": observed_fields,
+            "market_signals": market_signals,
+            "quality_checks": {
+                "search_rank": rank,
+                "matched_query_terms": matched_terms,
+                "consumer_signal_terms": consumer_signal_hits,
+                "login_or_challenge_content_removed": bool(
+                    lowered_markdown
+                    and not markdown
+                ),
+                "content_length": len(combined),
+            },
+            "evidence_role": "消费者公开检索线索",
+            "limitation": (
+                "来自公开搜索索引或页面摘要，不代表平台后台、真实身份、"
+                "成交量或整体市场；排名和内容会随时间变化。"
+            ),
+        }
 
     async def _read_with_jina(
         self,

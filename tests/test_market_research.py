@@ -48,6 +48,121 @@ class PublicMarketResearchTests(unittest.TestCase):
         )
         self.assertIsNone(item)
 
+    def test_firecrawl_consumer_search_keeps_relevant_public_signal(self):
+        item = PublicMarketResearch._consumer_search_evidence(
+            {
+                "url": (
+                    "https://www.facebook.com/petkitthailand/posts/"
+                    "public-review"
+                ),
+                "title": "รีวิว PETKIT Eversweet Solo 2 หลังใช้จริง",
+                "description": (
+                    "เปรียบเทียบข้อดี ข้อเสีย ราคา และเสียงปั๊มน้ำ "
+                    "พร้อมลิงก์ร้านค้าในไทย"
+                ),
+                "markdown": "",
+            },
+            "PETKIT Eversweet Solo 2 Thailand ราคา รีวิว",
+            2,
+        )
+        self.assertIsNotNone(item)
+        self.assertEqual(item["source_type"], "consumer_public_search")
+        self.assertEqual(item["platform"], "Facebook")
+        self.assertEqual(item["evidence_grade"], "D")
+        self.assertEqual(item["quality_checks"]["search_rank"], 2)
+        self.assertIn(
+            "petkit",
+            item["quality_checks"]["matched_query_terms"],
+        )
+        self.assertEqual(len(item["content_sha256"]), 64)
+
+    def test_firecrawl_login_wall_is_rejected(self):
+        item = PublicMarketResearch._consumer_search_evidence(
+            {
+                "url": "https://shopee.co.th/product/1/2",
+                "title": "Shopee Thailand",
+                "description": "Login Required",
+                "markdown": (
+                    "Looks like you're not logged in yet. "
+                    "Please log in to continue."
+                ),
+            },
+            "PETKIT Eversweet Solo 2 Thailand ราคา รีวิว",
+            1,
+        )
+        self.assertIsNone(item)
+
+    def test_firecrawl_irrelevant_result_is_rejected(self):
+        item = PublicMarketResearch._consumer_search_evidence(
+            {
+                "url": "https://example.com/company",
+                "title": "Company information",
+                "description": "Annual governance and investor relations notice.",
+                "markdown": "",
+            },
+            "PETKIT Eversweet Solo 2 Thailand ราคา รีวิว",
+            5,
+        )
+        self.assertIsNone(item)
+
+    def test_professional_run_adds_consumer_public_search(self):
+        async def fake_pages(urls):
+            return []
+
+        async def fake_videos(query, limit):
+            return []
+
+        async def fake_consumer_search(query, limit):
+            self.assertIn("ข้อเสีย", query)
+            self.assertEqual(limit, 5)
+            return [
+                {
+                    "source_id": "src_search",
+                    "source_type": "consumer_public_search",
+                    "collector": "Firecrawl",
+                    "platform": "TikTok",
+                    "title": "รีวิวจากผู้ใช้ไทย",
+                    "url": "https://www.tiktok.com/@petkit/video/123",
+                    "collected_at": "2026-07-28T00:00:00Z",
+                    "evidence_grade": "D",
+                    "content_sha256": "c" * 64,
+                    "limitation": "公开搜索摘要。",
+                    "evidence_role": "消费者公开检索线索",
+                }
+            ]
+
+        collector = PublicMarketResearch(
+            enabled=True,
+            page_reader=fake_pages,
+            video_searcher=fake_videos,
+            consumer_searcher=fake_consumer_search,
+        )
+        bundle = asyncio.run(
+            collector.collect(
+                {
+                    "name": "PETKIT 饮水机",
+                    "inputs": {"category": "宠物饮水机"},
+                    "facts": {"product_name": "PETKIT Eversweet Solo 2"},
+                },
+                "PROFESSIONAL",
+            )
+        )
+
+        self.assertEqual(bundle["status"], "succeeded")
+        self.assertEqual(bundle["source_count"], 1)
+        self.assertEqual(bundle["platform_counts"], {"TikTok": 1})
+        self.assertEqual(
+            bundle["evidence"][0]["evidence_role"],
+            "消费者公开检索线索",
+        )
+        firecrawl = next(
+            item
+            for item in bundle["collectors"]
+            if item["collector"] == "Firecrawl consumer public search"
+        )
+        self.assertEqual(firecrawl["status"], "succeeded")
+        self.assertEqual(firecrawl["estimated_credits"], 2)
+
     def test_professional_run_combines_public_pages_and_video_metadata(self):
         async def fake_pages(urls):
             self.assertEqual(urls, ["https://example.com/product"])

@@ -130,8 +130,18 @@ interface ReportData {
     version: string;
     status: string;
     query?: string;
+    consumer_search_query?: string;
     source_count: number;
     platform_counts: Record<string, number>;
+    collectors?: Array<{
+      collector: string;
+      status: string;
+      requested: number;
+      result_count: number;
+      estimated_credits?: number;
+      access_mode?: string;
+      fallback_result?: string | null;
+    }>;
     evidence: Array<{
       source_id: string;
       source_type: string;
@@ -145,6 +155,7 @@ interface ReportData {
       content_sha256: string;
       excerpt?: string;
       observed_fields?: string[];
+      evidence_role?: string;
       limitation: string;
     }>;
     warnings?: string[];
@@ -403,6 +414,7 @@ const COLLECTOR_LABELS: Record<string, string> = {
   "Structured LLM research": "大模型结构化消费者研究",
   "Social platform evidence": "社交平台传播证据",
   "Crawl4AI public page reader": "公开网页深度读取",
+  "Firecrawl consumer public search": "泰国消费者公开检索",
   "YouTube public metadata": "YouTube 公开视频资料",
   "Meta / TikTok authorized business data": "Meta / TikTok 授权商业数据",
   "Lazada / Shopee merchant data": "Lazada / Shopee 商家授权数据",
@@ -416,6 +428,13 @@ const FALLBACK_LABELS: Record<string, string> = {
   official_api_key_or_public_url: "官方接口或公开视频网址",
   public_url_evidence_only: "仅使用公开网页证据",
   public_product_metadata_only: "仅使用公开商品元数据",
+  customer_public_urls_and_existing_collectors: "客户公开网址与现有采集通道",
+};
+
+const SOURCE_TYPE_LABELS: Record<string, string> = {
+  public_page: "直接公开页面",
+  consumer_public_search: "消费者公开检索线索",
+  youtube_public_metadata: "公开视频资料",
 };
 
 const PLATFORM_ACCESS_LABELS: Record<string, string> = {
@@ -1481,6 +1500,12 @@ function SocialDynamicsSection({ data }: { data: ReportData }) {
 function MarketIntelligenceSection({ data }: { data: ReportData }) {
   const research = data.market_research;
   const platformEntries = Object.entries(research?.platform_counts ?? {});
+  const consumerSearchSources = research?.evidence?.filter(
+    item => item.source_type === "consumer_public_search",
+  ) ?? [];
+  const firecrawlCollector = research?.collectors?.find(
+    item => item.collector === "Firecrawl consumer public search",
+  );
   return (
     <div className="space-y-6">
       <div>
@@ -1492,7 +1517,7 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Card>
           <div className="eyebrow">采集状态</div>
           <div className="text-lg text-white mt-2">{statusLabel(research?.status ?? "not_used")}</div>
@@ -1500,6 +1525,13 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
         <Card>
           <div className="eyebrow">可追溯来源</div>
           <div className="text-lg text-white mt-2">{research?.source_count ?? 0} 条</div>
+        </Card>
+        <Card>
+          <div className="eyebrow">消费者公开检索</div>
+          <div className="text-lg text-white mt-2">{consumerSearchSources.length} 条</div>
+          <div className="text-[10px] text-neutral-500 mt-1">
+            {statusLabel(firecrawlCollector?.status ?? "not_used")}
+          </div>
         </Card>
         <Card>
           <div className="eyebrow">研究版本</div>
@@ -1519,6 +1551,32 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
         </div>
       )}
 
+      {firecrawlCollector && firecrawlCollector.status !== "disabled" && (
+        <Card className="border-cyan-300/20">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="eyebrow">像消费者一样公开检索</div>
+              <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
+                系统会用商品名、价格、优缺点、真实使用体验等泰国消费者常用词，寻找公开评测、
+                社媒帖子和电商线索。本次检索到 {firecrawlCollector.result_count} 条通过质量检查的结果。
+              </p>
+            </div>
+            <span className="text-[9px] text-cyan-100 bg-cyan-400/10 px-2 py-1 rounded-full whitespace-nowrap">
+              约 {firecrawlCollector.estimated_credits ?? 0} 检索额度
+            </span>
+          </div>
+          {research?.consumer_search_query && (
+            <p className="text-[10px] text-neutral-500 mt-3 break-words">
+              检索主题：{research.consumer_search_query}
+            </p>
+          )}
+          <p className="text-[10px] text-amber-100/70 mt-2">
+            公开搜索摘要只作为发现线索；登录页、验证码和反爬页面不会进入证据，
+            搜索结果也不会冒充平台成交数据。
+          </p>
+        </Card>
+      )}
+
       {!research?.evidence?.length ? (
         <Card className="border-amber-300/20">
           <div className="flex gap-3">
@@ -1534,9 +1592,14 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
           {research.evidence.map(item => (
             <Card key={item.source_id}>
               <div className="flex items-start justify-between gap-3">
-                <span className="text-[10px] text-blue-100 bg-blue-400/10 px-2 py-1 rounded-full">
-                  {item.platform}
-                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-[10px] text-blue-100 bg-blue-400/10 px-2 py-1 rounded-full">
+                    {item.platform}
+                  </span>
+                  <span className="text-[10px] text-cyan-100 bg-cyan-400/10 px-2 py-1 rounded-full">
+                    {SOURCE_TYPE_LABELS[item.source_type] ?? item.source_type}
+                  </span>
+                </div>
                 <span className="text-[10px] text-neutral-500">证据等级 {item.evidence_grade}</span>
               </div>
               <a
@@ -1553,8 +1616,11 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
                 </p>
               )}
               <div className="text-[9px] text-neutral-600 font-mono mt-3 break-all">
-                {item.collector} · {item.collected_at} · {item.content_sha256.slice(0, 16)}
+                {COLLECTOR_LABELS[item.collector] ?? item.collector} · {item.collected_at} · {item.content_sha256.slice(0, 16)}
               </div>
+              {item.evidence_role && (
+                <p className="text-[10px] text-neutral-500 mt-2">用途：{item.evidence_role}</p>
+              )}
               <p className="text-[10px] text-amber-100/70 mt-2">局限：{item.limitation}</p>
             </Card>
           ))}
