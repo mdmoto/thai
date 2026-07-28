@@ -11,6 +11,7 @@ import time
 import uuid
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
@@ -40,6 +41,7 @@ from app.db.database import (
 )
 from app.db.models import (
     CreditTransaction,
+    PendingRegistration,
     PurchaseOrder,
     ReportRecord,
     RunEntitlementTransaction,
@@ -53,6 +55,13 @@ from app.schemas.study import (
     StudyConfirmRequest,
 )
 from app.services.study_service import StudyService
+from app.services.registration_security import (
+    consume_registration_challenge,
+    create_registration_challenge,
+    ensure_verification_configured,
+    public_auth_config,
+    verification_is_required,
+)
 from simulation_core.config import PLAN_CONFIGS, normalize_plan_code
 
 
@@ -73,6 +82,7 @@ _rate_buckets: Dict[str, deque] = defaultdict(deque)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    ensure_verification_configured()
     initialize_database()
     yield
 
@@ -194,6 +204,15 @@ class LoginRequest(BaseModel):
         return value.strip().lower()
 
 
+class RegistrationStartRequest(RegisterRequest):
+    turnstile_token: str = Field(default="", max_length=2048)
+
+
+class RegistrationCompleteRequest(BaseModel):
+    challenge_id: str = Field(min_length=8, max_length=80)
+    code: str = Field(pattern=r"^\d{6}$")
+
+
 class PurchaseOrderRequest(BaseModel):
     package_code: str = Field(min_length=2, max_length=32)
 
@@ -216,6 +235,61 @@ def _user_payload(user: User) -> Dict[str, Any]:
         "deep_decision_runs_balance": int(user.deep_decision_runs_balance),
         "invite_status": user.invite_status,
         "acquisition_source": user.acquisition_source,
+    }
+
+
+def _create_registered_user(
+    db: Session,
+    *,
+    email: str,
+    password_hash: str,
+    name: Optional[str],
+    company: Optional[str],
+    invite_code: Optional[str],
+    pending: Optional[PendingRegistration] = None,
+) -> User:
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=409, detail="该邮箱已被注册")
+    invite = _resolve_invite(invite_code)
+    user = User(
+        email=email,
+        password_hash=password_hash,
+        name=(name or email.split("@")[0]).strip(),
+        company=company.strip() if company else None,
+        invite_code=invite["code"],
+        invite_status=invite["status"],
+        acquisition_source=invite["source"],
+        credits_balance=invite["credits"],
+    )
+    db.add(user)
+    if pending is not None:
+        pending.consumed_at = datetime.utcnow()
+    try:
+        db.flush()
+        if invite["credits"] > 0:
+            db.add(
+                CreditTransaction(
+                    user_id=user.id,
+                    amount=invite["credits"],
+                    transaction_type="INVITE_BONUS",
+                    description=f"邀请码体验额度：{invite['source']}",
+                    reference_id=f"invite:{user.id}",
+                    balance_after=invite["credits"],
+                )
+            )
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="该邮箱已被注册") from error
+    db.refresh(user)
+    return user
+
+
+def _auth_payload(user: User) -> Dict[str, Any]:
+    return {
+        "access_token": create_access_token(user.id, user.email),
+        "token_type": "bearer",
+        "user": _user_payload(user),
     }
 
 
@@ -375,40 +449,87 @@ def get_catalog():
 
 @app.post("/v1/auth/register", status_code=status.HTTP_201_CREATED)
 def register_user(req: RegisterRequest, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == req.email).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="该邮箱已被注册")
-    invite = _resolve_invite(req.invite_code)
-    user = User(
+    if verification_is_required():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="请先完成邮箱验证",
+        )
+    user = _create_registered_user(
+        db,
         email=req.email,
         password_hash=hash_password(req.password),
-        name=(req.name or req.email.split("@")[0]).strip(),
-        company=req.company.strip() if req.company else None,
-        invite_code=invite["code"],
-        invite_status=invite["status"],
-        acquisition_source=invite["source"],
-        credits_balance=invite["credits"],
+        name=req.name,
+        company=req.company,
+        invite_code=req.invite_code,
     )
-    db.add(user)
-    db.flush()
-    if invite["credits"] > 0:
-        db.add(
-            CreditTransaction(
-                user_id=user.id,
-                amount=invite["credits"],
-                transaction_type="INVITE_BONUS",
-                description=f"邀请码体验额度：{invite['source']}",
-                reference_id=f"invite:{user.id}",
-                balance_after=invite["credits"],
-            )
+    return _auth_payload(user)
+
+
+@app.get("/v1/auth/config")
+def get_auth_config():
+    return public_auth_config()
+
+
+@app.post(
+    "/v1/auth/register/verification/start",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_registration_verification(
+    req: RegistrationStartRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    if not verification_is_required():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="当前注册流程不需要邮箱验证码",
         )
-    db.commit()
-    db.refresh(user)
+    challenge = await create_registration_challenge(
+        db,
+        request,
+        email=req.email,
+        password=req.password,
+        name=req.name,
+        company=req.company,
+        invite_code=req.invite_code,
+        turnstile_token=req.turnstile_token,
+    )
     return {
-        "access_token": create_access_token(user.id, user.email),
-        "token_type": "bearer",
-        "user": _user_payload(user),
+        "challenge_id": challenge.id,
+        "email": challenge.email,
+        "expires_in_seconds": 600,
+        "attempts_remaining": challenge.attempts_remaining,
     }
+
+
+@app.post(
+    "/v1/auth/register/verification/complete",
+    status_code=status.HTTP_201_CREATED,
+)
+def complete_registration_verification(
+    req: RegistrationCompleteRequest,
+    db: Session = Depends(get_db),
+):
+    if not verification_is_required():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="当前注册流程不需要邮箱验证码",
+        )
+    challenge = consume_registration_challenge(
+        db,
+        req.challenge_id,
+        req.code,
+    )
+    user = _create_registered_user(
+        db,
+        email=challenge.email,
+        password_hash=challenge.password_hash,
+        name=challenge.name,
+        company=challenge.company,
+        invite_code=challenge.invite_code,
+        pending=challenge,
+    )
+    return _auth_payload(user)
 
 
 @app.get("/v1/admin/acquisition/users")

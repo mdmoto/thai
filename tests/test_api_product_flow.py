@@ -109,6 +109,149 @@ class ApiProductFlowTests(unittest.TestCase):
             "AUTOMATED_TEST",
         )
 
+    def test_registration_requires_turnstile_and_email_code_when_enabled(self):
+        verification_env = {
+            "EMAIL_VERIFICATION_REQUIRED": "true",
+            "TURNSTILE_SITE_KEY": "test-site-key",
+            "TURNSTILE_SECRET_KEY": "test-secret-key",
+            "TURNSTILE_EXPECTED_HOSTNAMES": "testserver",
+            "RESEND_API_KEY": "test-resend-key",
+            "REGISTRATION_SECURITY_KEY": (
+                "test-registration-key-with-more-than-thirty-two-characters"
+            ),
+            "VERIFICATION_FROM_EMAIL": (
+                "Chiang Mai AI Center <verify@auth.lazzor.com>"
+            ),
+        }
+        payload = {
+            "email": "verified-registration@example.com",
+            "password": "a-secure-test-password",
+            "name": "验证客户",
+            "company": "Verified Brand",
+            "invite_code": "TEST-INVITE",
+            "turnstile_token": "valid-test-token",
+        }
+        with (
+            patch.dict(os.environ, verification_env),
+            patch(
+                "app.services.registration_security.verify_turnstile",
+                new=AsyncMock(),
+            ) as turnstile,
+            patch(
+                "app.services.registration_security._send_verification_email",
+                new=AsyncMock(),
+            ) as sender,
+        ):
+            config = self.client.get("/v1/auth/config")
+            self.assertEqual(
+                config.json(),
+                {
+                    "email_verification_required": True,
+                    "turnstile_site_key": "test-site-key",
+                },
+            )
+            bypass = self.client.post(
+                "/v1/auth/register",
+                json={
+                    key: value
+                    for key, value in payload.items()
+                    if key != "turnstile_token"
+                },
+            )
+            self.assertEqual(bypass.status_code, 403)
+
+            started = self.client.post(
+                "/v1/auth/register/verification/start",
+                json=payload,
+            )
+            self.assertEqual(started.status_code, 202, started.text)
+            challenge = started.json()
+            turnstile.assert_awaited_once()
+            sender.assert_awaited_once()
+            sent_code = sender.await_args.args[1]
+            self.assertRegex(sent_code, r"^\d{6}$")
+
+            wrong = self.client.post(
+                "/v1/auth/register/verification/complete",
+                json={
+                    "challenge_id": challenge["challenge_id"],
+                    "code": "999999" if sent_code != "999999" else "888888",
+                },
+            )
+            self.assertEqual(wrong.status_code, 400)
+
+            completed = self.client.post(
+                "/v1/auth/register/verification/complete",
+                json={
+                    "challenge_id": challenge["challenge_id"],
+                    "code": sent_code,
+                },
+            )
+            self.assertEqual(completed.status_code, 201, completed.text)
+            self.assertEqual(completed.json()["user"]["credits_balance"], 5)
+
+            replay = self.client.post(
+                "/v1/auth/register/verification/complete",
+                json={
+                    "challenge_id": challenge["challenge_id"],
+                    "code": sent_code,
+                },
+            )
+            self.assertEqual(replay.status_code, 400)
+
+    def test_registration_rate_limit_is_durable_across_requests(self):
+        verification_env = {
+            "EMAIL_VERIFICATION_REQUIRED": "true",
+            "TURNSTILE_SITE_KEY": "test-site-key",
+            "TURNSTILE_SECRET_KEY": "test-secret-key",
+            "TURNSTILE_EXPECTED_HOSTNAMES": "testserver",
+            "RESEND_API_KEY": "test-resend-key",
+            "REGISTRATION_SECURITY_KEY": (
+                "test-registration-key-with-more-than-thirty-two-characters"
+            ),
+            "VERIFICATION_FROM_EMAIL": (
+                "Chiang Mai AI Center <verify@auth.lazzor.com>"
+            ),
+            "REGISTRATION_IP_HOURLY_LIMIT": "1",
+            "REGISTRATION_EMAIL_HOURLY_LIMIT": "3",
+            "REGISTRATION_SUBNET_DAILY_LIMIT": "10",
+        }
+        with (
+            patch.dict(os.environ, verification_env),
+            patch(
+                "app.services.registration_security._request_ip",
+                return_value="203.0.113.99",
+            ),
+            patch(
+                "app.services.registration_security.verify_turnstile",
+                new=AsyncMock(),
+            ),
+            patch(
+                "app.services.registration_security._send_verification_email",
+                new=AsyncMock(),
+            ),
+        ):
+            first = self.client.post(
+                "/v1/auth/register/verification/start",
+                json={
+                    "email": "rate-one@example.com",
+                    "password": "a-secure-test-password",
+                    "name": "Rate One",
+                    "turnstile_token": "valid-test-token",
+                },
+            )
+            self.assertEqual(first.status_code, 202, first.text)
+            blocked = self.client.post(
+                "/v1/auth/register/verification/start",
+                json={
+                    "email": "rate-two@example.com",
+                    "password": "a-secure-test-password",
+                    "name": "Rate Two",
+                    "turnstile_token": "valid-test-token",
+                },
+            )
+            self.assertEqual(blocked.status_code, 429, blocked.text)
+
     def test_public_catalog_excludes_internal_plans(self):
         response = self.client.get("/v1/catalog")
         self.assertEqual(response.status_code, 200, response.text)

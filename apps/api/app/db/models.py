@@ -80,6 +80,46 @@ class RunEntitlementTransaction(Base):
 
     user = relationship("User", back_populates="entitlement_transactions")
 
+
+class PendingRegistration(Base):
+    """Short-lived registration state awaiting an email verification code."""
+
+    __tablename__ = "pending_registrations"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"reg_{uuid.uuid4().hex[:16]}",
+    )
+    email = Column(String, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    name = Column(String, nullable=True)
+    company = Column(String, nullable=True)
+    invite_code = Column(String, nullable=True)
+    code_digest = Column(String, nullable=False)
+    attempts_remaining = Column(Integer, nullable=False, default=5)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    consumed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class RegistrationAttempt(Base):
+    """Privacy-preserving registration rate-limit record."""
+
+    __tablename__ = "registration_attempts"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"rega_{uuid.uuid4().hex[:16]}",
+    )
+    ip_hash = Column(String, nullable=False, index=True)
+    subnet_hash = Column(String, nullable=False, index=True)
+    email_hash = Column(String, nullable=False, index=True)
+    outcome = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class StudyRecord(Base):
     __tablename__ = "studies"
 

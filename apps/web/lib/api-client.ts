@@ -69,6 +69,19 @@ export interface UserProfile {
   acquisition_source?: string;
 }
 
+export interface AuthConfig {
+  email_verification_required: boolean;
+  turnstile_site_key?: string | null;
+}
+
+export interface RegistrationPayload {
+  email: string;
+  password: string;
+  name?: string;
+  company?: string;
+  invite_code?: string;
+}
+
 export interface StudyListItem {
   id: string;
   name: string;
@@ -153,15 +166,39 @@ export interface PurchaseOrder {
   next_step?: string;
 }
 
-export async function registerApi(payload: {
-  email: string;
-  password: string;
-  name?: string;
-  company?: string;
-  invite_code?: string;
-}) {
+export async function registerApi(payload: RegistrationPayload) {
   return apiJson<{ access_token: string; user: UserProfile }>(
     "/v1/auth/register",
+    { method: "POST", body: JSON.stringify(payload) },
+    false,
+  );
+}
+
+export async function getAuthConfigApi() {
+  return apiJson<AuthConfig>("/v1/auth/config", {}, false);
+}
+
+export async function startRegistrationVerificationApi(
+  payload: RegistrationPayload & { turnstile_token: string },
+) {
+  return apiJson<{
+    challenge_id: string;
+    email: string;
+    expires_in_seconds: number;
+    attempts_remaining: number;
+  }>(
+    "/v1/auth/register/verification/start",
+    { method: "POST", body: JSON.stringify(payload) },
+    false,
+  );
+}
+
+export async function completeRegistrationVerificationApi(payload: {
+  challenge_id: string;
+  code: string;
+}) {
+  return apiJson<{ access_token: string; user: UserProfile }>(
+    "/v1/auth/register/verification/complete",
     { method: "POST", body: JSON.stringify(payload) },
     false,
   );
