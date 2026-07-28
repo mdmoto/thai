@@ -1,0 +1,59 @@
+{
+  "version": "TH-SOCIAL-ACCESS-2026.07.2",
+  "effective_date": "2026-07-28",
+  "policy": "cloud_public_research_without_customer_authorization",
+  "platforms": [
+    {
+      "platform": "Facebook / Instagram",
+      "recommended_path": "公开搜索索引、公开广告资料与第三方公开讨论",
+      "public_market_scan": "restricted_for_commercial_use",
+      "status": "public_index_only_no_customer_login",
+      "official_reference": "https://developers.facebook.com/docs/"
+    },
+    {
+      "platform": "TikTok",
+      "recommended_path": "公开视频发现、官方 oEmbed 验证与合规数据供应商",
+      "public_market_scan": "research_api_not_available_for_general_commercial_market_research",
+      "status": "public_embed_or_provider_no_customer_login",
+      "official_reference": "https://developers.tiktok.com/products/research-api/"
+    },
+    {
+      "platform": "X",
+      "recommended_path": "官方 X API 按批准权限和实际读取量采集",
+      "public_market_scan": "paid_official_api_required",
+      "status": "paid_api_access_required",
+      "official_reference": "https://developer.x.com/"
+    },
+    {
+      "platform": "YouTube",
+      "recommended_path": "YouTube Data API 获取公开视频与评论线程",
+      "public_market_scan": "official_api_with_quota",
+      "status": "api_key_and_quota_required",
+      "official_reference": "https://developers.google.com/youtube/v3/docs/commentThreads/list"
+    },
+    {
+      "platform": "Shopee / Lazada / TikTok Shop",
+      "recommended_path": "公开商品与评价证据、联盟接口或合规数据供应商",
+      "public_market_scan": "transaction_and_conversion_not_public",
+      "status": "public_commerce_evidence_no_customer_login",
+      "official_reference": null
+    }
+  ],
+  "model_usage": {
+    "allowed": [
+      "声量趋势",
+      "主题与购买阻碍",
+      "情绪与评价星级",
+      "分享率与互动率",
+      "曝光到互动漏斗",
+      "时间衰减",
+      "可验证的公开渠道差异"
+    ],
+    "not_allowed_as_direct_sales_truth": [
+      "点赞量",
+      "单条爆款播放量",
+      "未经校准的情绪分数",
+      "抓取页面展示的销量文案"
+    ]
+  }
+}

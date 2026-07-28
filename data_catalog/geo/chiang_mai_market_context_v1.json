@@ -1,0 +1,88 @@
+{
+  "schema_version": "1",
+  "dataset_id": "CMAI-CNX-GEO-2026.07.1",
+  "generated_at": "2026-07-25T00:18:00+07:00",
+  "license": "OpenStreetMap data is available under ODbL; model priors are CMAI engineering assumptions.",
+  "sources": [
+    {
+      "source_id": "OSM_OVERPASS_NIMMAN_1500M",
+      "source_type": "public_poi_snapshot",
+      "observed": true,
+      "url": "https://overpass-api.de/api/interpreter",
+      "query_scope": "amenity POIs within 1,500 metres of 18.7966,98.9677",
+      "fetched_at": "2026-07-25T00:10:00+07:00",
+      "limitations": "OSM completeness varies by place and category. Counts are listings, not visits or transactions."
+    }
+  ],
+  "zones": [
+    {
+      "zone_id": "CNX_NIMMAN",
+      "name": "Nimman",
+      "aliases": ["nimman", "nimman road", "นิมมาน", "宁曼", "宁曼路"],
+      "latitude": 18.7966,
+      "longitude": 98.9677,
+      "radius_m": 1500,
+      "observed_poi": {
+        "restaurants": 386,
+        "cafes": 264,
+        "bars_pubs": 98,
+        "parking": 140
+      },
+      "model_priors": {
+        "resident_demand_index": 72,
+        "tourism_index": 88,
+        "office_student_index": 91,
+        "transit_access_index": 68,
+        "rent_pressure_index": 92
+      }
+    },
+    {
+      "zone_id": "CNX_OLD_CITY",
+      "name": "Chiang Mai Old City",
+      "aliases": ["old city", "chiang mai old city", "เมืองเก่า", "古城", "清迈古城"],
+      "latitude": 18.7883,
+      "longitude": 98.9853,
+      "radius_m": 1500,
+      "observed_poi": {},
+      "model_priors": {
+        "resident_demand_index": 70,
+        "tourism_index": 94,
+        "office_student_index": 64,
+        "transit_access_index": 74,
+        "rent_pressure_index": 82
+      }
+    },
+    {
+      "zone_id": "CNX_NIGHT_BAZAAR",
+      "name": "Chiang Mai Night Bazaar",
+      "aliases": ["night bazaar", "chiang mai night bazaar", "ไนท์บาซาร์", "夜市", "长康路"],
+      "latitude": 18.7879,
+      "longitude": 99.0004,
+      "radius_m": 1500,
+      "observed_poi": {},
+      "model_priors": {
+        "resident_demand_index": 58,
+        "tourism_index": 97,
+        "office_student_index": 52,
+        "transit_access_index": 78,
+        "rent_pressure_index": 86
+      }
+    },
+    {
+      "zone_id": "CNX_SANTITHAM",
+      "name": "Santitham",
+      "aliases": ["santitham", "สันติธรรม", "圣提探"],
+      "latitude": 18.8037,
+      "longitude": 98.9818,
+      "radius_m": 1500,
+      "observed_poi": {},
+      "model_priors": {
+        "resident_demand_index": 84,
+        "tourism_index": 56,
+        "office_student_index": 77,
+        "transit_access_index": 65,
+        "rent_pressure_index": 61
+      }
+    }
+  ]
+}

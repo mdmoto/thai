@@ -1,0 +1,1145 @@
+{
+  "version": "TH-CONSUMER-MACRO-2026.07.1",
+  "status": "official_macro_calibrated_choice_prior",
+  "claim": "Thailand regional population, binary sex margins, household-income bands, province income, expenditure residual and household size are calibrated from versioned NSO public aggregates. Age, behavioral traits and all discrete-choice coefficients remain unvalidated priors.",
+  "sources": [
+    {
+      "source_id": "NSO_REGISTERED_POPULATION",
+      "source_type": "official_public_aggregate",
+      "observed": true,
+      "dataset_id": "0405_01_0005",
+      "dataset_page": "https://catalog.nso.go.th/dataset/0405_01_0005",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=OS_0405_01_0005_01&format=json",
+      "license": "Creative Commons Attribution",
+      "fetched_at": "2026-07-24T10:05:10.638022+00:00",
+      "record_count": 15090,
+      "sha256": "655d596dfd9bb4a1f78baf25a4c7c62a8c42f5f3d9a5de9ea86ac9200283acf1",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/OS_0405_01_0005_01.json.gz",
+      "pipeline_key": "registered_population"
+    },
+    {
+      "source_id": "NSO_SES_HOUSEHOLD_INCOME_DISTRIBUTION",
+      "source_type": "official_public_aggregate",
+      "observed": true,
+      "dataset_id": "ns_08_20241",
+      "dataset_page": "https://catalog.nso.go.th/dataset/ns_08_20241",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_41_03&format=json",
+      "license": "Creative Commons Attribution",
+      "fetched_at": "2026-07-24T10:05:10.872120+00:00",
+      "record_count": 42,
+      "sha256": "4928161da72d549f72d68cbc14a867b3e4ea88104c4b9479c9bd5499f99f1f96",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_41_03.json.gz",
+      "pipeline_key": "household_income_distribution"
+    },
+    {
+      "source_id": "NSO_SES_PROVINCE_INCOME_EXPENSE",
+      "source_type": "official_public_aggregate",
+      "observed": true,
+      "dataset_id": "0705_08_0031",
+      "dataset_page": "https://catalog.nso.go.th/dataset/0705_08_0031",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=SFD_SPB0801&format=json",
+      "license": "Creative Commons Attribution",
+      "fetched_at": "2026-07-24T10:05:11.817719+00:00",
+      "record_count": 3388,
+      "sha256": "883be00883b73d0b5f65127e54a5abf5a0144741e3fc6bd09524522a98e67f87",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/SFD_SPB0801.json.gz",
+      "pipeline_key": "province_income_expense"
+    },
+    {
+      "source_id": "NSO_SES_HOUSEHOLD_SIZE",
+      "source_type": "official_public_aggregate",
+      "observed": true,
+      "dataset_id": "0705_08_0017",
+      "dataset_page": "https://catalog.nso.go.th/dataset/0705_08_0017",
+      "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_0705_08_0049_01&format=json",
+      "license": "Creative Commons Attribution",
+      "fetched_at": "2026-07-24T10:05:12.239233+00:00",
+      "record_count": 1161,
+      "sha256": "f193d50a66fefa280c0780298189256ba36f0127c86e67609a8f028bc753d0ad",
+      "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_0705_08_0049_01.json.gz",
+      "pipeline_key": "household_size"
+    },
+    {
+      "source_id": "PROJECT_ENGINEERING_PRIOR",
+      "source_type": "assumption",
+      "observed": false,
+      "note": "Migrated from the prototype into an explicit replaceable profile; it must not be presented as empirical calibration."
+    }
+  ],
+  "limitations": [
+    "Official inputs are aggregate margins, not household microdata; joint dependencies are synthesized.",
+    "Registered-population regional shares cover all ages while the simulated decision population starts at age 18.",
+    "NSO reports binary sex; the 1% non-binary share remains an explicit engineering prior.",
+    "Income and expenditure describe households, not individual wages.",
+    "Behavioral traits and category engagement remain development priors.",
+    "Choice coefficients, WTP and conversion rates have not been fitted to observed product choices or sales.",
+    "Marketplace page prices and review metadata are evidence, not transaction volume or conversion data.",
+    "Forecast intervals remain prior-predictive and are not validated forecast intervals."
+  ],
+  "population": {
+    "age_group": {
+      "18-24": 0.2,
+      "25-34": 0.35,
+      "35-44": 0.25,
+      "45-54": 0.12,
+      "55+": 0.08
+    },
+    "gender": {
+      "Female": 0.5079286751475417,
+      "Male": 0.48207132485245824,
+      "Non-binary": 0.01
+    },
+    "region": {
+      "Bangkok Metro": 0.1424551722863606,
+      "Central": 0.15733310442851056,
+      "East / EEC": 0.048156247174114195,
+      "Northeast": 0.32730783630831345,
+      "North": 0.1800373812030088,
+      "South": 0.14471025859969236
+    },
+    "income_tier": {
+      "LOW": 0.14614614614614616,
+      "MID_LOW": 0.5385385385385385,
+      "MID_HIGH": 0.1901901901901902,
+      "HIGH": 0.10410410410410412,
+      "LUXURY": 0.021021021021021023
+    },
+    "income_monthly_thb": {
+      "LOW": 7500.0,
+      "MID_LOW": 20000.0,
+      "MID_HIGH": 40000.0,
+      "HIGH": 75000.0,
+      "LUXURY": 130000.0
+    },
+    "region_income_multiplier": {
+      "Bangkok Metro": 0.9945375504550241,
+      "Central": 0.9290312658021155,
+      "East / EEC": 1.0870161170769597,
+      "North": 0.939905819973271,
+      "Northeast": 0.9204256971294215,
+      "South": 0.9526562125782881
+    },
+    "tourist_share_by_region": {
+      "Bangkok Metro": 0.12,
+      "Central": 0.04,
+      "North": 0.08,
+      "Northeast": 0.02,
+      "East / EEC": 0.06,
+      "South": 0.18
+    },
+    "income_tier_by_region": {
+      "Bangkok Metro": {
+        "LOW": 0.02897102897102898,
+        "MID_LOW": 0.4785214785214786,
+        "MID_HIGH": 0.2687312687312688,
+        "HIGH": 0.18581418581418588,
+        "LUXURY": 0.03796203796203797
+      },
+      "Central": {
+        "LOW": 0.1178821178821179,
+        "MID_LOW": 0.5364635364635365,
+        "MID_HIGH": 0.2177822177822178,
+        "HIGH": 0.1078921078921079,
+        "LUXURY": 0.01998001998001998
+      },
+      "East / EEC": {
+        "LOW": 0.1178821178821179,
+        "MID_LOW": 0.5364635364635365,
+        "MID_HIGH": 0.2177822177822178,
+        "HIGH": 0.1078921078921079,
+        "LUXURY": 0.01998001998001998
+      },
+      "North": {
+        "LOW": 0.2257742257742258,
+        "MID_LOW": 0.5504495504495505,
+        "MID_HIGH": 0.14685314685314688,
+        "HIGH": 0.06093906093906095,
+        "LUXURY": 0.015984015984015987
+      },
+      "Northeast": {
+        "LOW": 0.22377622377622378,
+        "MID_LOW": 0.5784215784215785,
+        "MID_HIGH": 0.12387612387612389,
+        "HIGH": 0.06293706293706294,
+        "LUXURY": 0.01098901098901099
+      },
+      "South": {
+        "LOW": 0.15284715284715283,
+        "MID_LOW": 0.5484515484515484,
+        "MID_HIGH": 0.18581418581418582,
+        "HIGH": 0.09190809190809189,
+        "LUXURY": 0.020979020979020976
+      }
+    },
+    "official_region_household_income_thb": {
+      "Bangkok Metro": 39192.82719438019,
+      "Central": 28812.962684142534,
+      "East / EEC": 33712.70265200221,
+      "Northeast": 22412.963404125523,
+      "North": 23708.913041283813,
+      "South": 27787.392374380186
+    },
+    "province_by_region": {
+      "Bangkok Metro": {
+        "Bangkok": 0.5784174951791147,
+        "Samut Prakan": 0.14762117387891882,
+        "Nonthaburi": 0.1410456974491495,
+        "Pathum Thani": 0.13291563349281704
+      },
+      "Central": {
+        "Ayutthaya": 0.07945799549079693,
+        "Ang Thong": 0.02577985801727961,
+        "Lopburi": 0.06968943984200791,
+        "Sing Buri": 0.01912548039702003,
+        "Chai Nat": 0.03010198247313872,
+        "Saraburi": 0.06166514840346705,
+        "Chanthaburi": 0.05172554669064982,
+        "Trat": 0.021787946149174574,
+        "Prachin Buri": 0.04847953473925278,
+        "Nakhon Nayok": 0.02508060702712476,
+        "Sa Kaeo": 0.054167516584997244,
+        "Ratchaburi": 0.0832416773679111,
+        "Kanchanaburi": 0.08660213854905033,
+        "Suphan Buri": 0.07898918826618206,
+        "Nakhon Pathom": 0.08946530092517474,
+        "Samut Sakhon": 0.05672886137213906,
+        "Samut Songkhram": 0.017894740705370404,
+        "Phetchaburi": 0.046757774048439164,
+        "Prachuap Khiri Khan": 0.05325926295082373
+      },
+      "East / EEC": {
+        "Chon Buri": 0.5193831716425563,
+        "Rayong": 0.2491957533885643,
+        "Chachoengsao": 0.23142107496887931
+      },
+      "Northeast": {
+        "Nakhon Ratchasima": 0.12133034630536349,
+        "Buri Ram": 0.07243700674170449,
+        "Surin": 0.06288250984630547,
+        "Si Sa Ket": 0.06670167162608946,
+        "Ubon Ratchathani": 0.08660714430794522,
+        "Yasothon": 0.024272225305660845,
+        "Chaiyaphum": 0.05109828060189031,
+        "Amnat Charoen": 0.017208930164409567,
+        "Bueng Kan": 0.019401614824275337,
+        "Nong Bua Lam Phu": 0.023309774624236383,
+        "Khon Kaen": 0.081986211110082,
+        "Udon Thani": 0.07180831024236292,
+        "Loei": 0.029219252449128486,
+        "Nong Khai": 0.02368586902249115,
+        "Maha Sarakham": 0.04290308106317583,
+        "Roi Et": 0.05893498107341269,
+        "Kalasin": 0.04444891678452985,
+        "Sakon Nakhon": 0.05265094089756151,
+        "Nakhon Phanom": 0.032881681147995535,
+        "Mukdahan": 0.01623125186137943
+      },
+      "North": {
+        "Chiang Mai": 0.15180414855332702,
+        "Lamphun": 0.03333400292131672,
+        "Lampang": 0.05888539596535541,
+        "Uttaradit": 0.03656921010506173,
+        "Phrae": 0.035236082937305804,
+        "Nan": 0.03953112410937061,
+        "Phayao": 0.03814659621700795,
+        "Chiang Rai": 0.10937820990773021,
+        "Mae Hong Son": 0.024371624031636514,
+        "Nakhon Sawan": 0.08510761488652763,
+        "Uthai Thani": 0.026921488220625078,
+        "Kamphaeng Phet": 0.058825723859777475,
+        "Tak": 0.05946059455024028,
+        "Sukhothai": 0.04804676402475945,
+        "Phitsanulok": 0.07051605483486695,
+        "Phichit": 0.04331080760582177,
+        "Phetchabun": 0.08055455726926941
+      },
+      "South": {
+        "Nakhon Si Thammarat": 0.16070530205111938,
+        "Krabi": 0.05090662956164389,
+        "Phang Nga": 0.02789523606411642,
+        "Phuket": 0.04541144037233551,
+        "Surat Thani": 0.1129843533276861,
+        "Ranong": 0.02021234582057638,
+        "Chumphon": 0.053223068327908185,
+        "Songkhla": 0.15006711477051032,
+        "Satun": 0.03408084161281682,
+        "Trang": 0.06651266444116334,
+        "Phatthalung": 0.05440018884331266,
+        "Pattani": 0.0782266411669391,
+        "Yala": 0.058392633010680504,
+        "Narathiwat": 0.08698154062919139
+      }
+    },
+    "province_income_multiplier": {
+      "Bangkok": 1.0218961699640505,
+      "Samut Prakan": 0.823186340704356,
+      "Nonthaburi": 0.9381053277338455,
+      "Pathum Thani": 1.1667696176446547,
+      "Ayutthaya": 1.1772131999000441,
+      "Ang Thong": 0.9691124202013307,
+      "Lopburi": 0.8995256851619843,
+      "Sing Buri": 1.0713580667977967,
+      "Chai Nat": 0.9559239118148212,
+      "Saraburi": 1.176345534874616,
+      "Chanthaburi": 1.5221274008082857,
+      "Trat": 1.0939867706609656,
+      "Prachin Buri": 0.828897752092124,
+      "Nakhon Nayok": 0.8674220792211388,
+      "Sa Kaeo": 0.7361617141743518,
+      "Ratchaburi": 1.0886766607053446,
+      "Kanchanaburi": 0.8580512969465136,
+      "Suphan Buri": 0.7476495991110219,
+      "Nakhon Pathom": 1.1346282004520254,
+      "Samut Sakhon": 0.9684877013830223,
+      "Samut Songkhram": 0.9672382637464056,
+      "Phetchaburi": 1.000348361116748,
+      "Prachuap Khiri Khan": 0.9027186924555604,
+      "Chon Buri": 1.0672831653816717,
+      "Rayong": 0.9855632265076408,
+      "Chachoengsao": 0.864540594708713,
+      "Nakhon Ratchasima": 1.2392381810112398,
+      "Buri Ram": 0.979834732428005,
+      "Surin": 0.9912120766641118,
+      "Si Sa Ket": 0.8860051052572889,
+      "Ubon Ratchathani": 0.9064843248822813,
+      "Yasothon": 1.090395748181231,
+      "Chaiyaphum": 1.0162868510197667,
+      "Amnat Charoen": 1.2722547878140595,
+      "Bueng Kan": 1.1215384394628096,
+      "Nong Bua Lam Phu": 1.0927158340646723,
+      "Khon Kaen": 0.8622688419882348,
+      "Udon Thani": 0.9464165722992051,
+      "Loei": 1.0603684828051532,
+      "Nong Khai": 1.169010966000918,
+      "Maha Sarakham": 0.944498039741744,
+      "Roi Et": 0.9081351552224222,
+      "Kalasin": 0.9191109461325487,
+      "Sakon Nakhon": 0.9214310320159901,
+      "Nakhon Phanom": 0.9859918834263687,
+      "Mukdahan": 1.112079627784164,
+      "Chiang Mai": 1.2337975996227297,
+      "Lamphun": 1.0770211167224943,
+      "Lampang": 1.013922483841474,
+      "Uttaradit": 1.0519672477844422,
+      "Phrae": 1.066687450241311,
+      "Nan": 0.8594236253901525,
+      "Phayao": 0.7335216072418601,
+      "Chiang Rai": 0.6640962397805237,
+      "Mae Hong Son": 0.7806768689804835,
+      "Nakhon Sawan": 0.9759620763595769,
+      "Uthai Thani": 0.8692089748743749,
+      "Kamphaeng Phet": 0.9465638496763742,
+      "Tak": 0.9552103869361397,
+      "Sukhothai": 1.1327807374903478,
+      "Phitsanulok": 1.1061240957919487,
+      "Phichit": 0.9670202914860633,
+      "Phetchabun": 1.1690540157508271,
+      "Nakhon Si Thammarat": 1.2024877883398484,
+      "Krabi": 1.0206067420038936,
+      "Phang Nga": 0.7968721822352686,
+      "Phuket": 1.5066185209447465,
+      "Surat Thani": 1.2064104306134178,
+      "Ranong": 0.9622709335134736,
+      "Chumphon": 1.1632613656041557,
+      "Songkhla": 0.8612898856269107,
+      "Satun": 0.8438359268867172,
+      "Trang": 1.0180156388507102,
+      "Phatthalung": 0.9461125263498718,
+      "Pattani": 0.7117256536181595,
+      "Yala": 0.9629906843893579,
+      "Narathiwat": 0.6597596403793153
+    },
+    "province_disposable_income_share": {
+      "Bangkok": 0.18264213128261464,
+      "Samut Prakan": 0.15212472491708773,
+      "Nonthaburi": 0.14784997416161227,
+      "Pathum Thani": 0.21268779111723413,
+      "Ayutthaya": 0.21156284088563937,
+      "Ang Thong": 0.3299430576943738,
+      "Lopburi": 0.2041052550351108,
+      "Sing Buri": 0.2559849687388642,
+      "Chai Nat": 0.21867625167919258,
+      "Saraburi": 0.19711453354576036,
+      "Chanthaburi": 0.37702077205463214,
+      "Trat": 0.26458551441895883,
+      "Prachin Buri": 0.12021102876523049,
+      "Nakhon Nayok": 0.13139679110150837,
+      "Sa Kaeo": 0.13733440196124658,
+      "Ratchaburi": 0.15716653914817647,
+      "Kanchanaburi": 0.13651255915544225,
+      "Suphan Buri": 0.1712932875313341,
+      "Nakhon Pathom": 0.22204208980790408,
+      "Samut Sakhon": 0.18326464791256047,
+      "Samut Songkhram": 0.1546162402669633,
+      "Phetchaburi": 0.20063837907226867,
+      "Prachuap Khiri Khan": 0.1674740484429066,
+      "Chon Buri": 0.11939634807259392,
+      "Rayong": 0.1594534400770481,
+      "Chachoengsao": 0.19206752212996636,
+      "Nakhon Ratchasima": 0.22232223222322234,
+      "Buri Ram": 0.14402804972451166,
+      "Surin": 0.17707958228303922,
+      "Si Sa Ket": 0.12186524322691106,
+      "Ubon Ratchathani": 0.22478712408328005,
+      "Yasothon": 0.22901919063791476,
+      "Chaiyaphum": 0.2329001668276407,
+      "Amnat Charoen": 0.20389268805891636,
+      "Bueng Kan": 0.06349206349206349,
+      "Nong Bua Lam Phu": 0.20260503858560286,
+      "Khon Kaen": 0.11047293801096969,
+      "Udon Thani": 0.17551386007920045,
+      "Loei": 0.18884120171673824,
+      "Nong Khai": 0.13396435250562955,
+      "Maha Sarakham": 0.1429921111058623,
+      "Roi Et": 0.04,
+      "Kalasin": 0.2113106796116505,
+      "Sakon Nakhon": 0.16855510362192527,
+      "Nakhon Phanom": 0.08199466039187298,
+      "Mukdahan": 0.21969909729187564,
+      "Chiang Mai": 0.22542048406946535,
+      "Lamphun": 0.1638535343645976,
+      "Lampang": 0.21423520113149463,
+      "Uttaradit": 0.21819494005853812,
+      "Phrae": 0.27481217872676944,
+      "Nan": 0.15189438555162937,
+      "Phayao": 0.13294232649071358,
+      "Chiang Rai": 0.15268339155287391,
+      "Mae Hong Son": 0.1935815008914582,
+      "Nakhon Sawan": 0.24115130299494358,
+      "Uthai Thani": 0.2008443322981367,
+      "Kamphaeng Phet": 0.14504054897067997,
+      "Tak": 0.2372499668830309,
+      "Sukhothai": 0.32192724429385267,
+      "Phitsanulok": 0.14573879885605334,
+      "Phichit": 0.2293802067431413,
+      "Phetchabun": 0.24569758631886562,
+      "Nakhon Si Thammarat": 0.3096007661459269,
+      "Krabi": 0.13480253878702397,
+      "Phang Nga": 0.09646389378133047,
+      "Phuket": 0.06984354472709897,
+      "Surat Thani": 0.21388300569758079,
+      "Ranong": 0.1984367403418228,
+      "Chumphon": 0.2656849399826754,
+      "Songkhla": 0.0996949818242594,
+      "Satun": 0.173532923916752,
+      "Trang": 0.2089932126696833,
+      "Phatthalung": 0.13959680486877135,
+      "Pattani": 0.11311118976588963,
+      "Yala": 0.2888374005007661,
+      "Narathiwat": 0.04
+    },
+    "household_size_by_province": {
+      "Bangkok": 2.3,
+      "Samut Prakan": 2.5,
+      "Nonthaburi": 2.2,
+      "Pathum Thani": 2.5,
+      "Ayutthaya": 2.9,
+      "Ang Thong": 2.9,
+      "Lopburi": 2.5,
+      "Sing Buri": 2.8,
+      "Chai Nat": 2.7,
+      "Saraburi": 2.8,
+      "Chon Buri": 2.4,
+      "Rayong": 1.9,
+      "Chanthaburi": 2.8,
+      "Trat": 2.6,
+      "Chachoengsao": 2.3,
+      "Prachin Buri": 2.1,
+      "Nakhon Nayok": 2.9,
+      "Sa Kaeo": 2.8,
+      "Ratchaburi": 2.7,
+      "Kanchanaburi": 2.7,
+      "Suphan Buri": 2.4,
+      "Nakhon Pathom": 2.7,
+      "Samut Sakhon": 2.1,
+      "Samut Songkhram": 2.7,
+      "Phetchaburi": 2.7,
+      "Prachuap Khiri Khan": 2.6,
+      "Chiang Mai": 2.6,
+      "Lamphun": 2.5,
+      "Lampang": 2.5,
+      "Uttaradit": 2.7,
+      "Phrae": 2.5,
+      "Nan": 2.6,
+      "Phayao": 2.2,
+      "Chiang Rai": 2.3,
+      "Mae Hong Son": 2.6,
+      "Nakhon Sawan": 2.6,
+      "Uthai Thani": 2.4,
+      "Kamphaeng Phet": 2.7,
+      "Tak": 2.9,
+      "Sukhothai": 2.8,
+      "Phitsanulok": 2.6,
+      "Phichit": 2.7,
+      "Phetchabun": 2.8,
+      "Nakhon Ratchasima": 2.9,
+      "Buri Ram": 2.9,
+      "Surin": 3.0,
+      "Si Sa Ket": 2.8,
+      "Ubon Ratchathani": 2.9,
+      "Yasothon": 2.7,
+      "Chaiyaphum": 2.8,
+      "Amnat Charoen": 2.9,
+      "Bueng Kan": 2.8,
+      "Nong Bua Lam Phu": 3.0,
+      "Khon Kaen": 2.3,
+      "Udon Thani": 2.4,
+      "Loei": 2.6,
+      "Nong Khai": 2.7,
+      "Maha Sarakham": 2.5,
+      "Roi Et": 2.7,
+      "Kalasin": 2.7,
+      "Sakon Nakhon": 2.8,
+      "Nakhon Phanom": 3.0,
+      "Mukdahan": 2.7,
+      "Nakhon Si Thammarat": 2.8,
+      "Krabi": 2.9,
+      "Phang Nga": 2.8,
+      "Phuket": 2.7,
+      "Surat Thani": 2.6,
+      "Ranong": 2.9,
+      "Chumphon": 2.7,
+      "Songkhla": 2.2,
+      "Satun": 3.1,
+      "Trang": 3.0,
+      "Phatthalung": 2.8,
+      "Pattani": 3.4,
+      "Yala": 2.8,
+      "Narathiwat": 3.4
+    },
+    "income_basis": "household_monthly_income",
+    "official_reference_years": {
+      "registered_population": 2025,
+      "household_income_distribution": 2023,
+      "province_income_expense": 2023,
+      "household_size": 2024
+    },
+    "registered_population_total": 65809011
+  },
+  "behavior": {
+    "disposable_income_share": {
+      "mean": 0.18010331126698223,
+      "sd": 0.05929520293673489,
+      "basis": "one_minus_total_household_expenditure_divided_by_income"
+    },
+    "online_affinity_beta": [
+      2.6,
+      1.8
+    ],
+    "review_sensitivity_beta": [
+      3.0,
+      1.6
+    ],
+    "novelty_seeking_beta": [
+      2.1,
+      2.3
+    ],
+    "social_influence_beta": [
+      2.0,
+      2.8
+    ],
+    "local_brand_trust_beta": [
+      2.8,
+      2.0
+    ],
+    "pet_ownership_probability": 0.34,
+    "coffee_visits_weekly_lambda": 2.8,
+    "dining_out_weekly_lambda": 2.4,
+    "nightlife_monthly_lambda": 1.2
+  },
+  "defaults": {
+    "brand_awareness": 0.12,
+    "quality_score": 0.6,
+    "review_score": 0.5,
+    "design_score": 0.55,
+    "convenience_score": 0.55,
+    "localization_score": 0.45,
+    "clarity_score": 0.6,
+    "variable_cost_share": 0.5,
+    "distance_km": 3.0
+  },
+  "study_models": {
+    "PRODUCT_VALIDATION": {
+      "model_key": "product_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.9,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -1.35,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 1.05,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "convenience": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "localization": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -0.9,
+      "referral_intercept": -1.5
+    },
+    "PRICING_STUDY": {
+      "model_key": "pricing_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.32
+        },
+        "price_log_ratio": {
+          "mean": -1.9,
+          "sd": 0.34
+        },
+        "affordability": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.52,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.26,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.0,
+      "referral_intercept": -1.7
+    },
+    "CREATIVE_TEST": {
+      "model_key": "creative_response_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.38
+        },
+        "price_log_ratio": {
+          "mean": -1.05,
+          "sd": 0.25
+        },
+        "affordability": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "brand_trust": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.78,
+          "sd": 0.18
+        },
+        "convenience": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "social_influence": {
+          "mean": 0.7,
+          "sd": 0.17
+        },
+        "category_engagement": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.1,
+      "referral_intercept": -1.2
+    },
+    "VENUE_STUDY": {
+      "model_key": "venue_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.8,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.9,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 0.88,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "review_proof": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "novelty": {
+          "mean": 0.32,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.92,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.95,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.15,
+          "sd": 0.25
+        }
+      },
+      "repeat_intercept": -0.65,
+      "referral_intercept": -1.3
+    },
+    "SITE_COMPARISON": {
+      "inherits": "VENUE_STUDY",
+      "model_key": "site_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.75,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.7,
+          "sd": 0.15
+        },
+        "brand_trust": {
+          "mean": 0.4,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.55,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "convenience": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "social_influence": {
+          "mean": 0.25,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -1.45,
+          "sd": 0.3
+        }
+      },
+      "repeat_intercept": -0.8,
+      "referral_intercept": -1.5
+    },
+    "RESTAURANT": {
+      "model_key": "restaurant_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.6,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.0,
+          "sd": 0.24
+        },
+        "affordability": {
+          "mean": 0.5,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 1.08,
+          "sd": 0.22
+        },
+        "brand_trust": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "novelty": {
+          "mean": 0.34,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "social_influence": {
+          "mean": 0.44,
+          "sd": 0.12
+        },
+        "category_engagement": {
+          "mean": 1.02,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "distance_friction": {
+          "mean": -1.2,
+          "sd": 0.26
+        }
+      },
+      "repeat_intercept": -0.45,
+      "referral_intercept": -1.15
+    },
+    "CAFE": {
+      "model_key": "cafe_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.7,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.82,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "novelty": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "convenience": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "social_influence": {
+          "mean": 0.58,
+          "sd": 0.15
+        },
+        "category_engagement": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "distance_friction": {
+          "mean": -1.0,
+          "sd": 0.23
+        }
+      },
+      "repeat_intercept": -0.35,
+      "referral_intercept": -1.0
+    },
+    "BAR": {
+      "model_key": "bar_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.4
+        },
+        "price_log_ratio": {
+          "mean": -0.88,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "brand_trust": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "review_proof": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "convenience": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "social_influence": {
+          "mean": 0.95,
+          "sd": 0.22
+        },
+        "category_engagement": {
+          "mean": 1.12,
+          "sd": 0.25
+        },
+        "localization": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -0.92,
+          "sd": 0.22
+        }
+      },
+      "repeat_intercept": -0.75,
+      "referral_intercept": -0.8
+    },
+    "RETAIL": {
+      "model_key": "retail_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.25,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.55,
+          "sd": 0.13
+        },
+        "review_proof": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.86,
+          "sd": 0.18
+        },
+        "social_influence": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "category_engagement": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "localization": {
+          "mean": 0.46,
+          "sd": 0.11
+        },
+        "distance_friction": {
+          "mean": -0.72,
+          "sd": 0.18
+        }
+      },
+      "repeat_intercept": -0.55,
+      "referral_intercept": -1.4
+    },
+    "OPERATING_SCENARIO": {
+      "model_key": "venue_operations_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.85,
+          "sd": 0.21
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.8,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.96,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.05,
+          "sd": 0.24
+        }
+      },
+      "repeat_intercept": -0.6,
+      "referral_intercept": -1.25
+    }
+  },
+  "dynamics": {
+    "innovation_rate": {
+      "mean": 0.025,
+      "sd": 0.008
+    },
+    "word_of_mouth_rate": {
+      "mean": 0.28,
+      "sd": 0.06
+    },
+    "repeat_quality_effect": 1.1,
+    "referral_social_effect": 0.9
+  },
+  "base_profile_version": "TH-PRIORS-2026.07.1",
+  "observed_dimensions": [
+    "region_population_share",
+    "province_population_share",
+    "binary_sex_share",
+    "household_income_tier_share",
+    "province_average_household_income",
+    "province_household_expenditure_residual",
+    "province_average_household_size"
+  ],
+  "unobserved_dimensions": [
+    "age_distribution",
+    "psychographics",
+    "category_penetration",
+    "brand_preference",
+    "choice_coefficients",
+    "purchase_conversion",
+    "repeat_purchase"
+  ]
+}
