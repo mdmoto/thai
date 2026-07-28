@@ -11,6 +11,7 @@ const production = JSON.parse(
 
 const expectedApiOrigin =
   "https://market-twin-api-100282158973.asia-southeast1.run.app";
+const turnstileOrigin = "https://challenges.cloudflare.com";
 const retiredApiOrigin = [
   "https://",
   "ai",
@@ -40,8 +41,22 @@ if (
 }
 
 const headers = readFileSync(resolve(webRoot, "public/_headers"), "utf8");
-if (!headers.includes(`connect-src 'self' ${expectedApiOrigin};`)) {
+if (
+  !headers.includes(
+    `connect-src 'self' ${expectedApiOrigin} ${turnstileOrigin};`,
+  )
+) {
   fail("public/_headers does not allow the canonical production API");
+}
+if (!headers.includes(`frame-src ${turnstileOrigin};`)) {
+  fail("public/_headers does not allow the Turnstile challenge frame");
+}
+if (
+  !headers.includes(
+    `script-src 'self' 'unsafe-inline' ${turnstileOrigin};`,
+  )
+) {
+  fail("public/_headers does not allow the Turnstile client script");
 }
 if (headers.includes(["*", ".run.app"].join(""))) {
   fail("public/_headers must not allow wildcard Cloud Run origins");
