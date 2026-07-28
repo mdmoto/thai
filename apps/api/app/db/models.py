@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import (
     Column,
+    Boolean,
     String,
     Integer,
     DateTime,
@@ -27,6 +28,8 @@ class User(Base):
     invite_code = Column(String, nullable=True, index=True)
     invite_status = Column(String, nullable=False, default="NOT_PROVIDED")
     acquisition_source = Column(String, nullable=False, default="ORGANIC")
+    invite_owner = Column(String, nullable=True)
+    invite_commission_bps = Column(Integer, nullable=False, default=0)
     plan_tier = Column(String, default="FREE")  # FREE, PROFESSIONAL, ENTERPRISE
     credits_balance = Column(Integer, default=0)  # Bonuses are granted explicitly.
     basic_decision_runs_balance = Column(Integer, nullable=False, default=0)
@@ -142,6 +145,38 @@ class AdminAuditLog(Base):
     target_id = Column(String, nullable=False, index=True)
     details_json = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class InviteCode(Base):
+    """Administrator-managed referral code and commission terms."""
+
+    __tablename__ = "invite_codes"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"inv_{uuid.uuid4().hex[:10]}",
+    )
+    code = Column(String, unique=True, nullable=False, index=True)
+    source_name = Column(String, nullable=False)
+    owner_name = Column(String, nullable=False)
+    owner_contact = Column(String, nullable=True)
+    commission_bps = Column(Integer, nullable=False, default=0)
+    bonus_credits = Column(Integer, nullable=False, default=0)
+    notes = Column(String, nullable=True)
+    active = Column(Boolean, nullable=False, default=True)
+    created_by_user_id = Column(
+        String,
+        ForeignKey("users.id"),
+        nullable=True,
+        index=True,
+    )
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
 
 
 class StudyRecord(Base):

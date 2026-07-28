@@ -482,6 +482,128 @@ class ApiProductFlowTests(unittest.TestCase):
             )
         )
 
+    def test_admin_manages_invite_codes_and_preserves_commission_history(self):
+        provisioned = self.client.post(
+            "/v1/admin/accounts/provision",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={
+                "email": "bootstrap-admin@example.com",
+                "password": "Admin-1!",
+                "name": "平台管理员",
+            },
+        )
+        self.assertEqual(provisioned.status_code, 200, provisioned.text)
+        login = self.client.post(
+            "/v1/auth/login",
+            json={
+                "email": "bootstrap-admin@example.com",
+                "password": "Admin-1!",
+            },
+        )
+        self.assertEqual(login.status_code, 200, login.text)
+        admin_headers = {
+            "Authorization": f"Bearer {login.json()['access_token']}"
+        }
+
+        created = self.client.post(
+            "/v1/admin/invite-codes",
+            headers=admin_headers,
+            json={
+                "code": "partner-one",
+                "source_name": "清迈合作伙伴",
+                "owner_name": "Partner One",
+                "owner_contact": "partner@example.com",
+                "commission_percent": 12.5,
+                "bonus_credits": 5,
+                "notes": "按已付款订单结算",
+            },
+        )
+        self.assertEqual(created.status_code, 201, created.text)
+        self.assertEqual(created.json()["code"], "PARTNER-ONE")
+
+        customer, customer_headers = self._register(
+            "partner-customer@example.com",
+            invite_code="partner-one",
+        )
+        profile = customer["user"]
+        self.assertEqual(profile["credits_balance"], 5)
+        self.assertEqual(profile["invite_code"], "PARTNER-ONE")
+        self.assertEqual(profile["acquisition_source"], "清迈合作伙伴")
+        self.assertEqual(profile["invite_owner"], "Partner One")
+        self.assertEqual(profile["invite_commission_percent"], 12.5)
+
+        order = self.client.post(
+            "/v1/billing/orders",
+            headers=customer_headers,
+            json={"package_code": "BASIC_DECISION_SINGLE"},
+        ).json()
+        completed = self.client.post(
+            f"/v1/admin/billing/orders/{order['id']}/complete",
+            headers=admin_headers,
+            json={"payment_reference": "partner-commission-payment"},
+        )
+        self.assertEqual(completed.status_code, 200, completed.text)
+
+        dashboard = self.client.get(
+            "/v1/admin/dashboard",
+            headers=admin_headers,
+        )
+        self.assertEqual(dashboard.status_code, 200, dashboard.text)
+        payload = dashboard.json()
+        invite = next(
+            item
+            for item in payload["invite_codes"]
+            if item["code"] == "PARTNER-ONE"
+        )
+        self.assertEqual(invite["registrations"], 1)
+        self.assertEqual(invite["paid_revenue_minor"], 99_000)
+        self.assertEqual(invite["commission_due_minor"], 12_375)
+        tracked = {
+            item["email"]: item for item in payload["users"]
+        }
+        self.assertEqual(
+            tracked["partner-customer@example.com"][
+                "referral_commission_minor"
+            ],
+            12_375,
+        )
+
+        deactivated = self.client.delete(
+            "/v1/admin/invite-codes/PARTNER-ONE",
+            headers=admin_headers,
+        )
+        self.assertEqual(deactivated.status_code, 200, deactivated.text)
+        self.assertFalse(deactivated.json()["active"])
+
+        invalid_after_stop, _ = self._register(
+            "partner-after-stop@example.com",
+            invite_code="PARTNER-ONE",
+        )
+        self.assertEqual(
+            invalid_after_stop["user"]["invite_status"],
+            "INVALID",
+        )
+        self.assertEqual(invalid_after_stop["user"]["credits_balance"], 0)
+
+        after_stop = self.client.get(
+            "/v1/admin/dashboard",
+            headers=admin_headers,
+        ).json()
+        historical = {
+            item["email"]: item for item in after_stop["users"]
+        }
+        self.assertEqual(
+            historical["partner-customer@example.com"]["invite_owner"],
+            "Partner One",
+        )
+        stopped_code = next(
+            item
+            for item in after_stop["invite_codes"]
+            if item["code"] == "PARTNER-ONE"
+        )
+        self.assertFalse(stopped_code["active"])
+        self.assertEqual(stopped_code["commission_due_minor"], 12_375)
+
     def test_failed_paid_run_refunds_reserved_credits(self):
         _, headers = self._register("refund@example.com")
         created = self.client.post(

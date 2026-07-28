@@ -7,9 +7,12 @@ import {
   CircleDollarSign,
   ClipboardCheck,
   Loader2,
+  Plus,
   RefreshCw,
   Search,
   ShieldAlert,
+  TicketPercent,
+  Trash2,
   Users,
   Workflow,
 } from "lucide-react";
@@ -17,6 +20,8 @@ import { Card } from "@/components/ui";
 import {
   AdminDashboard,
   completeAdminOrderApi,
+  createAdminInviteCodeApi,
+  deactivateAdminInviteCodeApi,
   getAdminDashboardApi,
   getMeApi,
 } from "@/lib/api-client";
@@ -39,6 +44,9 @@ const STATUS_LABELS: Record<string, string> = {
 const AUDIT_LABELS: Record<string, string> = {
   ADMIN_ACCOUNT_PROVISIONED: "创建或更新管理员账号",
   PAYMENT_CONFIRMED: "确认付款并入账",
+  INVITE_CODE_CREATED: "创建邀请码",
+  INVITE_CODE_REACTIVATED: "重新启用邀请码",
+  INVITE_CODE_DEACTIVATED: "停用邀请码",
 };
 
 function formatMoney(amountMinor: number): string {
@@ -92,6 +100,19 @@ export function AdminClient() {
   const [query, setQuery] = useState("");
   const [references, setReferences] = useState<Record<string, string>>({});
   const [completing, setCompleting] = useState<string | null>(null);
+  const [savingInvite, setSavingInvite] = useState(false);
+  const [deactivatingInvite, setDeactivatingInvite] = useState<string | null>(
+    null,
+  );
+  const [inviteForm, setInviteForm] = useState({
+    code: "",
+    source_name: "",
+    owner_name: "",
+    owner_contact: "",
+    commission_percent: "10",
+    bonus_credits: "0",
+    notes: "",
+  });
 
   const load = async () => {
     setLoading(true);
@@ -124,6 +145,8 @@ export function AdminClient() {
           user.name,
           user.company,
           user.acquisition_source,
+          user.invite_code,
+          user.invite_owner,
         ]
           .filter(Boolean)
           .some(value =>
@@ -141,6 +164,8 @@ export function AdminClient() {
           order.user_name,
           order.company,
           order.payment_reference,
+          order.invite_code,
+          order.invite_owner,
         ]
           .filter(Boolean)
           .some(value =>
@@ -170,6 +195,82 @@ export function AdminClient() {
       setError(err instanceof Error ? err.message : "付款核销失败");
     } finally {
       setCompleting(null);
+    }
+  };
+
+  const createInviteCode = async () => {
+    const code = inviteForm.code.trim().toUpperCase();
+    const sourceName = inviteForm.source_name.trim();
+    const ownerName = inviteForm.owner_name.trim();
+    if (!/^[A-Z0-9-]{3,40}$/.test(code)) {
+      setError("邀请码只能使用 3–40 位英文字母、数字和短横线。");
+      return;
+    }
+    if (!sourceName || !ownerName) {
+      setError("请填写来源名称和分成对象。");
+      return;
+    }
+    const commissionPercent = Number(inviteForm.commission_percent);
+    const bonusCredits = Number(inviteForm.bonus_credits);
+    if (
+      !Number.isFinite(commissionPercent) ||
+      commissionPercent < 0 ||
+      commissionPercent > 100
+    ) {
+      setError("分成比例必须是 0–100 之间的数字。");
+      return;
+    }
+    if (
+      !Number.isInteger(bonusCredits) ||
+      bonusCredits < 0 ||
+      bonusCredits > 1000
+    ) {
+      setError("注册赠送积分必须是 0–1000 之间的整数。");
+      return;
+    }
+    setSavingInvite(true);
+    setError(null);
+    try {
+      await createAdminInviteCodeApi({
+        code,
+        source_name: sourceName,
+        owner_name: ownerName,
+        owner_contact: inviteForm.owner_contact.trim() || undefined,
+        commission_percent: commissionPercent,
+        bonus_credits: bonusCredits,
+        notes: inviteForm.notes.trim() || undefined,
+      });
+      setInviteForm({
+        code: "",
+        source_name: "",
+        owner_name: "",
+        owner_contact: "",
+        commission_percent: "10",
+        bonus_credits: "0",
+        notes: "",
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "邀请码创建失败");
+    } finally {
+      setSavingInvite(false);
+    }
+  };
+
+  const deactivateInviteCode = async (code: string) => {
+    const confirmed = window.confirm(
+      `确认停用邀请码 ${code} 吗？停用后新用户不能再使用，但已有客户的来源和分成记录会保留。`,
+    );
+    if (!confirmed) return;
+    setDeactivatingInvite(code);
+    setError(null);
+    try {
+      await deactivateAdminInviteCodeApi(code);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "邀请码停用失败");
+    } finally {
+      setDeactivatingInvite(null);
     }
   };
 
@@ -283,6 +384,222 @@ export function AdminClient() {
       </div>
 
       <Card className="!p-0 overflow-hidden">
+        <div className="px-5 py-4 border-b border-neutral-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span className="eyebrow">渠道分成</span>
+            <h2 className="text-sm font-semibold text-white mt-1">
+              邀请码管理
+            </h2>
+            <p className="text-xs text-neutral-500 mt-1">
+              停用邀请码不会删除历史归属；应分成金额按客户注册时记录的比例计算。
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-neutral-400">
+            <TicketPercent size={14} />
+            {overview?.active_invite_codes ?? 0} 个启用中
+          </div>
+        </div>
+
+        <div className="p-5 border-b border-neutral-900 bg-neutral-950/40">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <label className="text-xs text-neutral-400">
+              邀请码
+              <input
+                value={inviteForm.code}
+                onChange={event =>
+                  setInviteForm(current => ({
+                    ...current,
+                    code: event.target.value.toUpperCase(),
+                  }))
+                }
+                placeholder="例如 PARTNER-001"
+                className="mt-1.5 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-xs text-white outline-none focus:border-neutral-600"
+              />
+            </label>
+            <label className="text-xs text-neutral-400">
+              注册来源名称
+              <input
+                value={inviteForm.source_name}
+                onChange={event =>
+                  setInviteForm(current => ({
+                    ...current,
+                    source_name: event.target.value,
+                  }))
+                }
+                placeholder="例如 清迈合作伙伴"
+                className="mt-1.5 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-xs text-white outline-none focus:border-neutral-600"
+              />
+            </label>
+            <label className="text-xs text-neutral-400">
+              分成对象
+              <input
+                value={inviteForm.owner_name}
+                onChange={event =>
+                  setInviteForm(current => ({
+                    ...current,
+                    owner_name: event.target.value,
+                  }))
+                }
+                placeholder="姓名或公司"
+                className="mt-1.5 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-xs text-white outline-none focus:border-neutral-600"
+              />
+            </label>
+            <label className="text-xs text-neutral-400">
+              联系方式
+              <input
+                value={inviteForm.owner_contact}
+                onChange={event =>
+                  setInviteForm(current => ({
+                    ...current,
+                    owner_contact: event.target.value,
+                  }))
+                }
+                placeholder="电话、LINE 或邮箱"
+                className="mt-1.5 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-xs text-white outline-none focus:border-neutral-600"
+              />
+            </label>
+            <label className="text-xs text-neutral-400">
+              分成比例（%）
+              <input
+                value={inviteForm.commission_percent}
+                onChange={event =>
+                  setInviteForm(current => ({
+                    ...current,
+                    commission_percent: event.target.value,
+                  }))
+                }
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                className="mt-1.5 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-xs text-white outline-none focus:border-neutral-600"
+              />
+            </label>
+            <label className="text-xs text-neutral-400">
+              注册赠送积分
+              <input
+                value={inviteForm.bonus_credits}
+                onChange={event =>
+                  setInviteForm(current => ({
+                    ...current,
+                    bonus_credits: event.target.value,
+                  }))
+                }
+                type="number"
+                min="0"
+                max="1000"
+                className="mt-1.5 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-xs text-white outline-none focus:border-neutral-600"
+              />
+            </label>
+            <label className="text-xs text-neutral-400 md:col-span-2 xl:col-span-1">
+              备注
+              <input
+                value={inviteForm.notes}
+                onChange={event =>
+                  setInviteForm(current => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))
+                }
+                placeholder="结算周期或合作说明"
+                className="mt-1.5 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-xs text-white outline-none focus:border-neutral-600"
+              />
+            </label>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={createInviteCode}
+                disabled={savingInvite}
+                className="btn-cmai-primary w-full justify-center"
+              >
+                {savingInvite ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Plus size={14} />
+                )}
+                新增邀请码
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1050px] text-xs">
+            <thead className="bg-neutral-950 text-neutral-500">
+              <tr>
+                <th className="text-left font-medium px-5 py-3">邀请码</th>
+                <th className="text-left font-medium px-4 py-3">分成对象</th>
+                <th className="text-right font-medium px-4 py-3">分成比例</th>
+                <th className="text-right font-medium px-4 py-3">注册人数</th>
+                <th className="text-right font-medium px-4 py-3">成交金额</th>
+                <th className="text-right font-medium px-4 py-3">应分成</th>
+                <th className="text-left font-medium px-5 py-3">状态与操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data?.invite_codes ?? []).map(invite => (
+                <tr key={invite.id} className="border-t border-neutral-900">
+                  <td className="px-5 py-4">
+                    <div className="font-mono text-white">{invite.code}</div>
+                    <div className="text-neutral-500 mt-1">
+                      {invite.source_name} · 注册赠 {invite.bonus_credits} 积分
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="text-neutral-300">{invite.owner_name}</div>
+                    <div className="text-neutral-600 mt-1">
+                      {invite.owner_contact || "未填写联系方式"}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-right text-neutral-300 tabular-nums">
+                    {invite.commission_percent}%
+                  </td>
+                  <td className="px-4 py-4 text-right text-neutral-300 tabular-nums">
+                    {invite.registrations}
+                  </td>
+                  <td className="px-4 py-4 text-right text-neutral-300 tabular-nums">
+                    {formatMoney(invite.paid_revenue_minor)}
+                  </td>
+                  <td className="px-4 py-4 text-right text-emerald-300 tabular-nums">
+                    {formatMoney(invite.commission_due_minor)}
+                  </td>
+                  <td className="px-5 py-4">
+                    {invite.active ? (
+                      <button
+                        type="button"
+                        onClick={() => deactivateInviteCode(invite.code)}
+                        disabled={deactivatingInvite !== null}
+                        className="inline-flex items-center gap-1.5 text-rose-300 hover:text-rose-200"
+                      >
+                        {deactivatingInvite === invite.code ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={13} />
+                        )}
+                        停用
+                      </button>
+                    ) : (
+                      <span className="text-neutral-600">已停用</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!data?.invite_codes.length && (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-5 py-10 text-center text-neutral-600"
+                  >
+                    暂无邀请码，请在上方创建。
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="!p-0 overflow-hidden">
         <div className="px-5 py-4 border-b border-neutral-900 flex items-center justify-between gap-3">
           <div>
             <span className="eyebrow">订单</span>
@@ -319,6 +636,14 @@ export function AdminClient() {
                     </div>
                     {order.company && (
                       <div className="text-neutral-600 mt-1">{order.company}</div>
+                    )}
+                    {order.invite_code && (
+                      <div className="text-blue-300/80 mt-1">
+                        邀请码 {order.invite_code}
+                        {order.invite_owner
+                          ? ` · 分成对象 ${order.invite_owner}`
+                          : ""}
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-4 text-neutral-300">
@@ -412,11 +737,13 @@ export function AdminClient() {
             <thead className="bg-neutral-950 text-neutral-500">
               <tr>
                 <th className="text-left font-medium px-5 py-3">用户</th>
-                <th className="text-left font-medium px-4 py-3">来源</th>
+                <th className="text-left font-medium px-4 py-3">邀请码来源</th>
                 <th className="text-right font-medium px-4 py-3">积分</th>
                 <th className="text-right font-medium px-4 py-3">基础/深度</th>
                 <th className="text-right font-medium px-4 py-3">订单</th>
-                <th className="text-right font-medium px-4 py-3">已付款</th>
+                <th className="text-right font-medium px-4 py-3">
+                  已付款 / 应分成
+                </th>
                 <th className="text-left font-medium px-5 py-3">注册时间</th>
               </tr>
             </thead>
@@ -438,10 +765,27 @@ export function AdminClient() {
                     )}
                   </td>
                   <td className="px-4 py-4 text-neutral-400">
-                    {user.acquisition_source || "ORGANIC"}
-                    <div className="text-neutral-600 mt-1">
-                      邀请码：{user.invite_status || "NOT_PROVIDED"}
-                    </div>
+                    {user.invite_code ? (
+                      <>
+                        <div className="font-mono text-blue-300">
+                          {user.invite_code}
+                        </div>
+                        <div className="text-neutral-400 mt-1">
+                          {user.acquisition_source || "未命名来源"}
+                        </div>
+                        <div className="text-neutral-600 mt-1">
+                          分成对象：{user.invite_owner || "未设置"} ·{" "}
+                          {user.invite_commission_percent || 0}%
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-neutral-400">自然注册</div>
+                        <div className="text-neutral-600 mt-1">
+                          未使用邀请码
+                        </div>
+                      </>
+                    )}
                   </td>
                   <td className="px-4 py-4 text-right text-white tabular-nums">
                     {user.credits_balance}
@@ -454,7 +798,10 @@ export function AdminClient() {
                     {user.order_count}
                   </td>
                   <td className="px-4 py-4 text-right text-emerald-300 tabular-nums">
-                    {formatMoney(user.paid_total_minor)}
+                    <div>{formatMoney(user.paid_total_minor)}</div>
+                    <div className="text-neutral-500 mt-1">
+                      分成 {formatMoney(user.referral_commission_minor)}
+                    </div>
                   </td>
                   <td className="px-5 py-4 text-neutral-500">
                     {formatDate(user.created_at)}

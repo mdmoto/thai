@@ -8,7 +8,10 @@ export interface StoredUser {
   basic_decision_runs_balance?: number;
   deep_decision_runs_balance?: number;
   invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
+  invite_code?: string | null;
   acquisition_source?: string;
+  invite_owner?: string | null;
+  invite_commission_percent?: number;
   is_admin?: boolean;
 }
 
