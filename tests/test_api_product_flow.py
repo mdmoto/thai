@@ -18,6 +18,9 @@ _DATABASE_FILE.close()
 os.environ["DATABASE_URL"] = f"sqlite:///{_DATABASE_FILE.name}"
 os.environ["JWT_SECRET_KEY"] = "test-secret-with-more-than-thirty-two-characters"
 os.environ["ADMIN_API_KEY"] = "test-admin-key"
+os.environ["ADMIN_USER_EMAILS"] = (
+    "admin@example.com,bootstrap-admin@example.com"
+)
 os.environ["APP_ENV"] = "test"
 os.environ["INVITE_CODES_JSON"] = (
     '{"TEST-INVITE":{"credits":5,"source":"AUTOMATED_TEST"}}'
@@ -411,6 +414,73 @@ class ApiProductFlowTests(unittest.TestCase):
             starting_balance + order["credits"],
         )
         self.assertEqual(credited["deep_decision_runs_balance"], 1)
+
+    def test_admin_account_and_dashboard_require_allowlisted_user(self):
+        provisioned = self.client.post(
+            "/v1/admin/accounts/provision",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={
+                "email": "bootstrap-admin@example.com",
+                "password": "Admin-1!",
+                "name": "平台管理员",
+            },
+        )
+        self.assertEqual(provisioned.status_code, 200, provisioned.text)
+        self.assertTrue(provisioned.json()["is_admin"])
+
+        login = self.client.post(
+            "/v1/auth/login",
+            json={
+                "email": "bootstrap-admin@example.com",
+                "password": "Admin-1!",
+            },
+        )
+        self.assertEqual(login.status_code, 200, login.text)
+        admin_headers = {
+            "Authorization": f"Bearer {login.json()['access_token']}"
+        }
+        customer, customer_headers = self._register(
+            "admin-dashboard-customer@example.com"
+        )
+        denied = self.client.get(
+            "/v1/admin/dashboard",
+            headers=customer_headers,
+        )
+        self.assertEqual(denied.status_code, 403)
+
+        order = self.client.post(
+            "/v1/billing/orders",
+            headers=customer_headers,
+            json={"package_code": "BASIC_DECISION_SINGLE"},
+        ).json()
+        completed = self.client.post(
+            f"/v1/admin/billing/orders/{order['id']}/complete",
+            headers=admin_headers,
+            json={"payment_reference": "admin-dashboard-payment"},
+        )
+        self.assertEqual(completed.status_code, 200, completed.text)
+
+        dashboard = self.client.get(
+            "/v1/admin/dashboard",
+            headers=admin_headers,
+        )
+        self.assertEqual(dashboard.status_code, 200, dashboard.text)
+        payload = dashboard.json()
+        self.assertGreaterEqual(payload["overview"]["total_users"], 2)
+        self.assertGreaterEqual(payload["overview"]["paid_orders"], 1)
+        tracked = {
+            item["email"]: item for item in payload["users"]
+        }
+        self.assertEqual(
+            tracked[customer["user"]["email"]]["order_count"],
+            1,
+        )
+        self.assertTrue(
+            any(
+                item["action"] == "PAYMENT_CONFIRMED"
+                for item in payload["audit_logs"]
+            )
+        )
 
     def test_failed_paid_run_refunds_reserved_credits(self):
         _, headers = self._register("refund@example.com")
