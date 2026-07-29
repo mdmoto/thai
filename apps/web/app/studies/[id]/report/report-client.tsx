@@ -198,6 +198,10 @@ interface ReportData {
       parking_index: number;
       market_activity_index: number;
       competition_saturation_index: number;
+      resident_catchment_population_15m?: number | null;
+      resident_population_index?: number | null;
+      footfall_opportunity_index?: number | null;
+      footfall_opportunity_status?: string;
       site_score: number;
       rank: number;
     }>;
@@ -215,6 +219,11 @@ interface ReportData {
       data_class: string;
       location_id?: string;
       location_name?: string;
+      estimated_resident_population?: number;
+      estimated_resident_density_per_km2?: number | null;
+      population_status?: string;
+      population_dataset_id?: string;
+      population_runtime_resolution?: string;
     }>;
     operations: {
       daily_visit_prior: number;
@@ -1097,7 +1106,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
         <div className="eyebrow mb-1">地理需求与门店经营</div>
         <h2 className="text-base font-semibold text-white tracking-tight">地理需求热力图与小时经营模型</h2>
         <p className="text-xs text-neutral-400 mt-2">
-          地点数量来自公开地图聚合数据；橙色热区为模型可视化，不代表手机信令。综合机会分的权重只有在报告明确标记时才使用客户真实门店数据校准。
+          地点数量来自公开地图聚合数据，步行商圈常住人口来自 WorldPop 2025 人口网格。橙色热区和到店机会指数为模型推算，不是手机信令、闸机或支付客流。
         </p>
       </div>
 
@@ -1157,8 +1166,14 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
                 {item.mode === "walking_network_isochrone"
                   ? ` · 路网覆盖 ${item.area_km2 ?? "—"} km²`
                   : ` ≈ ${item.radius_km} km · 半径代理`}
+                {item.estimated_resident_population != null
+                  ? ` · 约 ${item.estimated_resident_population.toLocaleString()} 名常住人口`
+                  : ""}
               </span>
             ))}
+          </div>
+          <div className="px-5 pb-3 text-[9px] text-neutral-600">
+            路网与地点数据：Google Maps · 常住人口：WorldPop 2025（CC BY 4.0）
           </div>
         </Card>
 
@@ -1180,7 +1195,10 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
                 <div className="rounded-lg bg-black/40 p-2 text-neutral-400">交通便利 <strong className="block text-white text-xs mt-0.5">{location.access_index}</strong></div>
                 <div className="rounded-lg bg-black/40 p-2 text-neutral-400">市场活跃 <strong className="block text-white text-xs mt-0.5">{location.market_activity_index}</strong></div>
                 <div className="rounded-lg bg-black/40 p-2 text-neutral-400">竞争饱和 <strong className="block text-white text-xs mt-0.5">{location.competition_saturation_index}</strong></div>
+                <div className="rounded-lg bg-black/40 p-2 text-neutral-400">15 分钟常住人口 <strong className="block text-white text-xs mt-0.5">{location.resident_catchment_population_15m != null ? location.resident_catchment_population_15m.toLocaleString() : "数据不足"}</strong></div>
+                <div className="rounded-lg bg-black/40 p-2 text-neutral-400">到店机会指数 <strong className="block text-orange-200 text-xs mt-0.5">{location.footfall_opportunity_index ?? "数据不足"}</strong></div>
               </div>
+              <p className="mt-2 text-[10px] text-orange-200/75">到店机会指数是常住人口、交通与商业活跃度的综合代理，不是实测客流。</p>
               <div className="mt-3 text-[10px] text-neutral-500">
                 周边 1 公里营业地点：{["public_snapshot", "osm_versioned_snapshot", "google_places_aggregate_live", "partial_external_observation"].includes(location.observed_poi_status)
                   ? Object.entries(location.observed_poi).map(([key, value]) => `${key} ${value}`).join(" · ")
@@ -1191,6 +1209,12 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
                   ? "选址权重：已用客户多店日均客流拟合（仍需留店验证）"
                   : location.score_status === "observed_geospatial_features_with_unvalidated_weights"
                     ? "选址权重：真实地点特征 + 未校准行业权重"
+                    : location.score_status === "observed_geospatial_population_features_with_unvalidated_weights"
+                      ? "选址权重：真实地点特征 + 人口网格 + 未校准行业权重"
+                    : location.score_status === "population_only_geospatial_evidence_unvalidated"
+                      ? "选址权重：人口网格 + 中性地点占位，需补充周边设施证据"
+                    : location.score_status === "population_grid_with_legacy_prior_unvalidated"
+                      ? "选址权重：人口网格 + 旧版工程先验，可信度有限"
                     : location.score_status === "legacy_engineering_prior_unvalidated"
                       ? "选址权重：旧版工程先验，可信度较低"
                       : "选址证据不足，不建议据此定址"}
@@ -1219,7 +1243,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
           </div>
         </Card>
         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-          <Card><span className="eyebrow">日访问先验</span><div className="text-2xl font-semibold text-white mt-2">{geo.operations.daily_visit_prior}</div></Card>
+          <Card><span className="eyebrow">模型日访问先验</span><div className="text-2xl font-semibold text-white mt-2">{geo.operations.daily_visit_prior}</div></Card>
           <Card><span className="eyebrow">相对日收入</span><div className="text-2xl font-semibold text-white mt-2">฿{geo.operations.daily_revenue_index_thb.toLocaleString()}</div></Card>
           <Card><span className="eyebrow">峰值容量</span><div className="text-2xl font-semibold text-white mt-2">{formatPercent(geo.operations.peak_capacity_utilization)}</div></Card>
           <Card><span className="eyebrow">排队风险</span><div className="text-2xl font-semibold text-white mt-2">{queueLabel}</div></Card>

@@ -20,6 +20,7 @@ import google.auth
 from google.auth.transport.requests import Request
 import httpx
 
+from simulation_core.population_grid import estimate_population_for_geojson
 from world_model.thailand_geo import point_in_thailand
 
 
@@ -258,12 +259,24 @@ class GoogleGeospatialResearch:
             geojson = dict(raw_geojson)
         else:
             geojson = {}
+        area_km2 = _polygon_area_km2(geojson)
+        population = estimate_population_for_geojson(geojson) or {
+            "population_status": "population_grid_unavailable",
+        }
+        population_estimate = population.get("estimated_resident_population")
+        density = (
+            round(float(population_estimate) / area_km2, 1)
+            if population_estimate is not None and area_km2
+            else None
+        )
         return {
             "minutes": minutes,
             "mode": "walking_network_isochrone",
             "data_class": "external_market_data",
-            "area_km2": _polygon_area_km2(geojson),
+            "area_km2": area_km2,
             "source": "google_isochrones",
+            **population,
+            "estimated_resident_density_per_km2": density,
         }
 
     async def _collect_location(
@@ -360,7 +373,7 @@ class GoogleGeospatialResearch:
                 if locations
                 else "unavailable"
             ),
-            "version": "google-geospatial-v1",
+            "version": "google-geospatial-worldpop-v2",
             "locations": locations,
             "historical_locations": historical_locations,
             "sources": [
@@ -378,6 +391,18 @@ class GoogleGeospatialResearch:
                     "name": "Google Isochrones API",
                     "role": "5/10/15 分钟真实步行路网可达范围",
                     "data_class": "external_market_data",
+                },
+                {
+                    "name": "WorldPop Thailand 2025 constrained population grid",
+                    "role": "步行商圈常住人口估算（100 米源数据，生产环境聚合至约 500 米）",
+                    "data_class": "external_modeled_population",
+                    "license": "CC BY 4.0",
+                    "doi": "10.5258/SOTON/WP00839",
+                },
+                {
+                    "name": "Thailand NSO 2025 Population and Housing Census (early results)",
+                    "role": "全国人口与家庭总量合理性参照，不用于虚构街区分布",
+                    "data_class": "official_national_benchmark",
                 },
             ],
             "warnings": warnings,
