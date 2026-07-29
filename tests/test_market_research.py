@@ -190,7 +190,7 @@ class PublicMarketResearchTests(unittest.TestCase):
 
         async def fake_videos(query, limit):
             self.assertIn("饮水机", query)
-            self.assertEqual(limit, 12)
+            self.assertEqual(limit, 8)
             return [
                 {
                     "source_id": "src_video",
@@ -236,7 +236,10 @@ class PublicMarketResearchTests(unittest.TestCase):
         )
         self.assertEqual(
             bundle["usage_policy"]["quantitative_effect"],
-            "none_until_customer_calibration",
+            (
+                "verified_public_price_rating_fields_may_update_choice_"
+                "set_attributes_but_never_choice_coefficients"
+            ),
         )
         self.assertTrue(
             all(item["content_sha256"] for item in bundle["evidence"])

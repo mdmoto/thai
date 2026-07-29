@@ -1,6 +1,7 @@
 import asyncio
 import os
 import unittest
+from unittest.mock import AsyncMock, patch
 
 import numpy as np
 import pandas as pd
@@ -75,6 +76,23 @@ class ConditionalLogitEstimatorTests(unittest.TestCase):
 
 
 class StudyServiceTests(unittest.TestCase):
+    @staticmethod
+    def _empty_research_bundle():
+        return {
+            "version": "test-research",
+            "status": "succeeded",
+            "source_count": 0,
+            "evidence": [],
+            "collectors": [],
+            "warnings": [],
+            "usage_policy": {
+                "quantitative_effect": (
+                    "verified_public_price_rating_fields_may_update_choice_"
+                    "set_attributes_but_never_choice_coefficients"
+                )
+            },
+        }
+
     def test_competitor_urls_are_research_sources_not_choice_names(self):
         service = StudyService()
         study = service.create_study(
@@ -191,6 +209,157 @@ class StudyServiceTests(unittest.TestCase):
             llm_collector["fallback_result"],
             "model_segment_summary",
         )
+
+    def test_professional_run_applies_supplied_observed_choice_fit(self):
+        rng = np.random.default_rng(29)
+        rows = []
+        true_beta = np.array([-1.2, 0.9])
+        for choice_set_id in range(120):
+            focal = np.array(
+                [
+                    rng.uniform(0.65, 1.35),
+                    rng.uniform(0.15, 1.0),
+                ]
+            )
+            utilities = np.array([0.0, float(focal @ true_beta)])
+            probabilities = np.exp(utilities - utilities.max())
+            probabilities = probabilities / probabilities.sum()
+            chosen = int(rng.choice([0, 1], p=probabilities))
+            rows.extend(
+                [
+                    {
+                        "choice_set_id": f"set-{choice_set_id}",
+                        "alternative": "outside",
+                        "price_log_ratio": 0.0,
+                        "quality_fit": 0.0,
+                        "chosen": int(chosen == 0),
+                    },
+                    {
+                        "choice_set_id": f"set-{choice_set_id}",
+                        "alternative": "focal",
+                        "price_log_ratio": float(focal[0]),
+                        "quality_fit": float(focal[1]),
+                        "chosen": int(chosen == 1),
+                    },
+                ]
+            )
+
+        service = StudyService()
+        service.market_research.collect = AsyncMock(
+            return_value=self._empty_research_bundle()
+        )
+        study = service.create_study(
+            {
+                "name": "Observed choice calibration",
+                "study_type": "PRODUCT_VALIDATION",
+                "plan_code": "PROFESSIONAL",
+                "price": 799,
+                "observed_choice_data": rows,
+            }
+        )
+        service.confirm_study(study["id"], {})
+        unavailable_agents = {
+            "status": "unavailable",
+            "source_type": "none",
+            "prompt_version": "test",
+            "model_id": "test",
+            "plan_code": "PROFESSIONAL",
+            "sample_size_requested": 96,
+            "sample_size_completed": 0,
+            "responses": [],
+            "aggregate": {},
+            "errors": ["disabled in test"],
+            "quantitative_policy": "No LLM output used.",
+        }
+        with patch(
+            "app.services.study_service.GeminiAgentGateway."
+            "generate_research_signals",
+            new=AsyncMock(return_value=unavailable_agents),
+        ):
+            report = asyncio.run(
+                service.execute_run(
+                    study["id"],
+                    pop_size=600,
+                    mc_rounds=20,
+                    seed=31,
+                )
+            )
+
+        self.assertEqual(
+            report["calibration_status"],
+            "observed_choice_fit_unvalidated",
+        )
+        estimation = report["model_lineage"]["choice_estimation"]
+        self.assertEqual(estimation["status"], "applied_unvalidated")
+        self.assertGreaterEqual(
+            estimation["diagnostics"]["choice_sets"],
+            120,
+        )
+        self.assertEqual(
+            report["model_lineage"]["uncertainty"]["interval_type"],
+            "fitted_model_predictive_p10_p90_unvalidated",
+        )
+        self.assertEqual(
+            report["model_lineage"]["coefficient_priors"][
+                "price_log_ratio"
+            ]["source"],
+            "observed_choice_fit_unvalidated",
+        )
+        choice_collector = next(
+            item
+            for item in report["evidence_acquisition"]["collectors"]
+            if item["collector"] == "Customer observed choice calibration"
+        )
+        self.assertEqual(choice_collector["status"], "succeeded")
+        self.assertEqual(choice_collector["result_count"], 120)
+
+    def test_public_market_fields_enrich_choice_set_without_fitting_coefficients(
+        self,
+    ):
+        service = StudyService()
+        study = service.create_study(
+            {
+                "name": "Public competitor evidence",
+                "study_type": "PRODUCT_VALIDATION",
+                "plan_code": "PROFESSIONAL",
+                "price": 1290,
+                "competitor_data": [
+                    {
+                        "name": "Known Competitor",
+                        "source_url": (
+                            "https://www.lazada.co.th/products/known-item"
+                        ),
+                    }
+                ],
+            }
+        )
+        enriched = service._research_enriched_choice_inputs(
+            study,
+            {
+                "evidence": [
+                    {
+                        "source_id": "src_marketplace_1",
+                        "platform": "Lazada",
+                        "title": "Known Competitor",
+                        "url": (
+                            "https://www.lazada.co.th/products/known-item"
+                        ),
+                        "market_signals": {
+                            "prices": ["฿1,190"],
+                            "ratings": ["4.8 / 5 rating"],
+                            "review_mentions": ["350 reviews"],
+                        },
+                    }
+                ]
+            },
+            competitor_limit=5,
+        )
+        competitor = enriched["competitors"][0]
+        self.assertEqual(competitor["price"], 1190.0)
+        self.assertAlmostEqual(competitor["review_score"], 0.96)
+        self.assertGreater(competitor["social_proof_score"], 0.5)
+        self.assertEqual(enriched["lineage"]["status"], "applied")
+        self.assertEqual(enriched["lineage"]["coefficient_effect"], "none")
 
     def test_venue_uses_subtype_model_and_visit_language(self):
         previous_key = os.environ.get("GEMINI_API_KEY")

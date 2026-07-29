@@ -4,11 +4,14 @@ import os
 import sys
 import uuid
 import json
+import re
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
+import pandas as pd
 
 # Add repository packages to sys.path for Cloud Run and local execution.
 sys.path.append(
@@ -19,13 +22,17 @@ sys.path.append(
 
 from agents.gemini_gateway import GeminiAgentGateway
 from data_pipeline.market_research import PublicMarketResearch
-from simulation_core.calibration import load_calibration_profile
+from simulation_core.calibration import (
+    get_study_model,
+    load_calibration_profile,
+)
 from simulation_core.config import (
     get_plan_config,
     normalize_plan_code,
     resolve_execution_config,
 )
 from simulation_core.engine import SIMULATION_MODEL_VERSION, SimulationEngine
+from simulation_core.estimation import ConditionalLogitEstimator
 from simulation_core.geo import build_geo_analysis
 from world_model.generator import PopulationGenerator, WORLD_MODEL_VERSION
 from world_model.category_profiles import load_category_profile
@@ -103,6 +110,21 @@ AGE_GROUP_RANGES = {
     "65+": (65, 78),
 }
 
+OBSERVED_CHOICE_FEATURES = (
+    "price_log_ratio",
+    "affordability",
+    "quality_fit",
+    "brand_trust",
+    "review_proof",
+    "novelty",
+    "convenience",
+    "social_influence",
+    "category_engagement",
+    "localization",
+    "distance_friction",
+)
+MARKETPLACE_PLATFORMS = {"Shopee", "Lazada"}
+
 
 def _utc_now() -> str:
     return datetime.utcnow().isoformat() + "Z"
@@ -116,6 +138,45 @@ def _json_value(value: Any) -> Any:
     if isinstance(value, list):
         return [_json_value(item) for item in value]
     return value
+
+
+def _canonical_source_url(value: Any) -> Optional[str]:
+    raw = str(value or "").strip()
+    if not raw.startswith(("http://", "https://")):
+        return None
+    parsed = urllib.parse.urlsplit(raw)
+    if not parsed.hostname:
+        return None
+    return urllib.parse.urlunsplit(
+        (
+            parsed.scheme.lower(),
+            parsed.netloc.lower(),
+            parsed.path.rstrip("/") or "/",
+            parsed.query,
+            "",
+        )
+    )
+
+
+def _signal_numbers(values: Sequence[Any]) -> List[float]:
+    numbers: List[float] = []
+    for value in values:
+        for match in re.findall(r"\d[\d,]*(?:\.\d+)?", str(value or "")):
+            try:
+                number = float(match.replace(",", ""))
+            except ValueError:
+                continue
+            if np.isfinite(number):
+                numbers.append(number)
+    return numbers
+
+
+def _normalized_name(value: Any) -> str:
+    return re.sub(
+        r"[^a-z0-9ก-๙\u3400-\u9fff]+",
+        "",
+        str(value or "").lower(),
+    )
 
 
 class StudyService:
@@ -312,6 +373,316 @@ class StudyService:
                     }
                 )
         return competitors
+
+    def _calibration_profile_for_run(
+        self,
+        study: Mapping[str, Any],
+        plan: Any,
+        model_study_type: str,
+    ) -> tuple[Dict[str, Any], Dict[str, Any], List[str]]:
+        inputs = study.get("inputs") or {}
+        observed_rows = list(inputs.get("observed_choice_data") or [])
+        manual_overrides = inputs.get("calibration_overrides")
+        warnings: List[str] = []
+
+        if not observed_rows:
+            use_overrides = manual_overrides if plan.customer_calibration else None
+            if manual_overrides and not plan.customer_calibration:
+                warnings.append(
+                    f"{plan.code} 不支持客户校准覆盖，已使用平台基础模型。"
+                )
+            return (
+                load_calibration_profile(overrides=use_overrides),
+                {
+                    "status": "not_supplied",
+                    "method": "conditional_multinomial_logit_newton",
+                    "coefficient_effect": "none",
+                    "reason": "未提供真实订单、选择实验或 A/B 选择数据。",
+                },
+                warnings,
+            )
+
+        if not plan.customer_calibration:
+            raise ValueError(
+                f"{plan.code} 不支持真实选择数据校准，请使用深度决策。"
+            )
+        if manual_overrides:
+            raise ValueError(
+                "真实选择数据与手工系数覆盖不能同时使用，请只保留一种校准来源。"
+            )
+
+        frame = pd.DataFrame(observed_rows)
+        required = {"choice_set_id", "chosen"}
+        missing = required - set(frame.columns)
+        if missing:
+            raise ValueError(
+                "真实选择数据缺少字段：" + ", ".join(sorted(missing))
+            )
+        feature_columns = [
+            name
+            for name in OBSERVED_CHOICE_FEATURES
+            if name in frame.columns
+            and frame[name].notna().all()
+            and frame[name].nunique(dropna=True) > 1
+        ]
+        if not feature_columns:
+            raise ValueError(
+                "真实选择数据至少需要一个在备选方案之间发生变化的模型特征。"
+            )
+        for column in feature_columns:
+            frame[column] = pd.to_numeric(frame[column], errors="raise")
+            if not np.isfinite(frame[column].to_numpy(dtype=float)).all():
+                raise ValueError(f"真实选择特征 {column} 包含无效数字。")
+
+        choice_set_count = int(frame["choice_set_id"].nunique())
+        minimum_choice_sets = max(20, len(feature_columns) * 5)
+        if choice_set_count < minimum_choice_sets:
+            raise ValueError(
+                "真实选择数据量不足："
+                f"当前 {choice_set_count} 个选择组，至少需要 "
+                f"{minimum_choice_sets} 个。"
+            )
+
+        base_profile = load_calibration_profile()
+        base_model = get_study_model(base_profile, model_study_type)
+        initial_coefficients = {
+            name: float(base_model["coefficients"][name]["mean"])
+            for name in feature_columns
+            if name in base_model["coefficients"]
+        }
+        fit = ConditionalLogitEstimator(
+            l2_penalty=0.05,
+            max_iterations=150,
+            tolerance=1e-7,
+        ).fit(
+            frame,
+            feature_columns,
+            initial_coefficients=initial_coefficients,
+        )
+        if not fit.converged:
+            raise ValueError(
+                "真实选择模型未收敛，未替换生产系数；请检查选择组和特征尺度。"
+            )
+        override = fit.calibration_override(model_study_type)
+        profile = load_calibration_profile(overrides=override)
+        profile["limitations"] = [
+            limitation
+            for limitation in profile.get("limitations", [])
+            if "Choice coefficients" not in str(limitation)
+        ]
+        profile["limitations"].append(
+            "Choice coefficients were fitted from supplied observed choice "
+            "sets but have not passed out-of-sample or time-based validation."
+        )
+        profile.setdefault("sources", []).append(
+            {
+                "source_id": "CUSTOMER_OBSERVED_CHOICE_DATA",
+                "source_type": "observed_choice_data",
+                "observed": True,
+                "record_count": len(frame),
+                "choice_set_count": choice_set_count,
+                "note": (
+                    "Customer-supplied grouped choices; raw rows are not "
+                    "embedded in the report."
+                ),
+            }
+        )
+        diagnostics = {
+            key: value
+            for key, value in fit.to_dict().items()
+            if key != "covariance"
+        }
+        return (
+            profile,
+            {
+                "status": "applied_unvalidated",
+                "method": "conditional_multinomial_logit_newton",
+                "coefficient_effect": "fitted_coefficients_replaced_priors",
+                "study_type": model_study_type,
+                "feature_columns": feature_columns,
+                "diagnostics": diagnostics,
+                "validation_status": "out_of_sample_validation_required",
+            },
+            warnings,
+        )
+
+    def _research_enriched_choice_inputs(
+        self,
+        study: Mapping[str, Any],
+        market_research: Mapping[str, Any],
+        competitor_limit: int,
+    ) -> Dict[str, Any]:
+        product_attributes = self._product_attributes(study)
+        competitors = self._competitors(study)
+        inputs = study.get("inputs") or {}
+        facts = study.get("facts") or {}
+        focal_urls = {
+            canonical
+            for canonical in (
+                _canonical_source_url(facts.get("url")),
+                _canonical_source_url(inputs.get("url")),
+            )
+            if canonical
+        }
+        focal_name = _normalized_name(
+            facts.get("product_name") or study.get("name")
+        )
+        used_sources: List[str] = []
+        focal_fields: List[str] = []
+        competitor_fields = 0
+
+        def competitor_urls(item: Mapping[str, Any]) -> set[str]:
+            return {
+                canonical
+                for canonical in (
+                    _canonical_source_url(item.get("source_url")),
+                    _canonical_source_url(item.get("url")),
+                    _canonical_source_url(item.get("product_url")),
+                )
+                if canonical
+            }
+
+        for evidence in market_research.get("evidence") or []:
+            if not isinstance(evidence, Mapping):
+                continue
+            signals = evidence.get("market_signals") or {}
+            price_values = _signal_numbers(signals.get("prices") or [])
+            rating_values = []
+            for rating_signal in signals.get("ratings") or []:
+                parsed_rating = _signal_numbers([rating_signal])
+                if parsed_rating and 0 <= parsed_rating[0] <= 5:
+                    rating_values.append(parsed_rating[0])
+            review_values = _signal_numbers(
+                signals.get("review_mentions") or []
+            )
+            if not price_values and not rating_values and not review_values:
+                continue
+            source_url = _canonical_source_url(evidence.get("url"))
+            title = str(evidence.get("title") or "").strip()[:200]
+            normalized_title = _normalized_name(title)
+            source_id = str(evidence.get("source_id") or "")
+
+            extracted: Dict[str, Any] = {}
+            if price_values:
+                plausible_prices = [
+                    value for value in price_values if 1 <= value <= 10_000_000
+                ]
+                if plausible_prices:
+                    extracted["price"] = float(np.median(plausible_prices))
+            if rating_values:
+                extracted["review_score"] = float(
+                    np.clip(np.median(rating_values) / 5.0, 0.0, 1.0)
+                )
+            if review_values:
+                review_count = max(review_values)
+                if review_count >= 1:
+                    extracted["social_proof_score"] = float(
+                        np.clip(
+                            np.log1p(review_count) / np.log1p(10_000),
+                            0.0,
+                            1.0,
+                        )
+                    )
+            if not extracted:
+                continue
+
+            if source_url and source_url in focal_urls:
+                focal_changed = False
+                for field in ("review_score", "social_proof_score"):
+                    if (
+                        field in extracted
+                        and field not in product_attributes
+                    ):
+                        product_attributes[field] = extracted[field]
+                        focal_fields.append(field)
+                        focal_changed = True
+                if focal_changed and source_id:
+                    used_sources.append(source_id)
+                continue
+
+            matched: Optional[Dict[str, Any]] = None
+            for competitor in competitors:
+                exact_url_match = bool(
+                    source_url
+                    and source_url in competitor_urls(competitor)
+                )
+                normalized_competitor = _normalized_name(
+                    competitor.get("name")
+                )
+                name_match = bool(
+                    normalized_competitor
+                    and normalized_title
+                    and (
+                        normalized_competitor in normalized_title
+                        or normalized_title in normalized_competitor
+                    )
+                )
+                if exact_url_match or name_match:
+                    matched = competitor
+                    break
+
+            is_focal_title = bool(
+                focal_name
+                and normalized_title
+                and (
+                    focal_name in normalized_title
+                    or normalized_title in focal_name
+                )
+            )
+            if (
+                matched is None
+                and str(evidence.get("platform")) in MARKETPLACE_PLATFORMS
+                and "price" in extracted
+                and title
+                and not is_focal_title
+                and len(competitors) < competitor_limit
+            ):
+                matched = {
+                    "name": title,
+                    "source_url": source_url,
+                }
+                competitors.append(matched)
+
+            if matched is None:
+                continue
+            changed = False
+            changed_fields = 0
+            for field, value in extracted.items():
+                if matched.get(field) is None:
+                    matched[field] = value
+                    changed = True
+                    changed_fields += 1
+            if changed:
+                matched["data_quality"] = (
+                    "public_price_rating_evidence_unvalidated"
+                )
+                matched["evidence_source_id"] = source_id or None
+                competitor_fields += changed_fields
+                if source_id:
+                    used_sources.append(source_id)
+
+        return {
+            "product_attributes": product_attributes,
+            "competitors": competitors[:competitor_limit],
+            "lineage": {
+                "status": (
+                    "applied"
+                    if used_sources
+                    else "no_usable_quantitative_fields"
+                ),
+                "coefficient_effect": "none",
+                "choice_set_effect": (
+                    "public_price_rating_fields_update_offer_attributes"
+                ),
+                "source_ids": list(dict.fromkeys(used_sources)),
+                "focal_fields_enriched": sorted(set(focal_fields)),
+                "competitor_field_updates": competitor_fields,
+                "limitation": (
+                    "公开价格、评分和评论量只更新产品与竞品属性；"
+                    "不会被当作真实成交选择，也不会重新拟合购买系数。"
+                ),
+            },
+        }
 
     def _product_attributes(self, study: Mapping[str, Any]) -> Dict[str, Any]:
         attributes: Dict[str, Any] = {}
@@ -616,6 +987,10 @@ class StudyService:
         purchase = sim_results["metric_intervals"]["purchase_rate"]
         category = lineage.get("category", {})
         competitors = lineage.get("competitors", [])
+        choice_estimation = lineage.get("choice_estimation", {})
+        fitted_choices = (
+            choice_estimation.get("status") == "applied_unvalidated"
+        )
         social = sim_results.get("social_dynamics", [])
         final_period = max(
             (int(item["period"]) for item in social),
@@ -637,13 +1012,23 @@ class StudyService:
             {
                 "topic": "购买 / 到店选择",
                 "result": (
-                    f"{float(purchase['mean']):.2%}，先验预测区间 "
+                    f"{float(purchase['mean']):.2%}，"
+                    f"{'拟合后模型预测区间' if fitted_choices else '先验预测区间'} "
                     f"{float(purchase['p10']):.2%}–"
                     f"{float(purchase['p90']):.2%}"
                 ),
-                "grade": "C",
-                "basis": "官方宏观校准人口 + 行业选择模型 + 竞品与不选择选项",
-                "limitation": "选择系数尚未由真实订单、选择实验或 A/B 数据拟合。",
+                "grade": "B" if fitted_choices else "C",
+                "basis": (
+                    "官方宏观校准人口 + 真实选择组条件多项 Logit 拟合 + "
+                    "竞品与不选择选项"
+                    if fitted_choices
+                    else "官方宏观校准人口 + 行业选择模型 + 竞品与不选择选项"
+                ),
+                "limitation": (
+                    "选择系数已经拟合，但尚未完成时间外或样本外回测。"
+                    if fitted_choices
+                    else "选择系数尚未由真实订单、选择实验或 A/B 数据拟合。"
+                ),
             },
             {
                 "topic": "品类目标人群",
@@ -710,6 +1095,13 @@ class StudyService:
             1 for source in calibration_sources if source.get("observed")
         )
         competitors = sim_results["model_lineage"].get("competitors", [])
+        choice_estimation = sim_results["model_lineage"].get(
+            "choice_estimation",
+            {},
+        )
+        choice_fit_applied = (
+            choice_estimation.get("status") == "applied_unvalidated"
+        )
         geo = sim_results.get("geo_analysis")
         public_collectors = list(market_research.get("collectors") or [])
         return {
@@ -729,6 +1121,25 @@ class StudyService:
                     "result_count": len(competitors),
                     "fallback_result": (
                         None if competitors else "generic_competitor_prior"
+                    ),
+                },
+                {
+                    "collector": "Customer observed choice calibration",
+                    "status": (
+                        "succeeded"
+                        if choice_fit_applied
+                        else choice_estimation.get("status", "not_supplied")
+                    ),
+                    "result_count": int(
+                        choice_estimation.get("diagnostics", {}).get(
+                            "choice_sets"
+                        )
+                        or 0
+                    ),
+                    "fallback_result": (
+                        None
+                        if choice_fit_applied
+                        else "disclosed_choice_coefficient_prior"
                     ),
                 },
                 {
@@ -787,6 +1198,17 @@ class StudyService:
         metrics = sim_results["metric_intervals"]
         calibration_lineage = sim_results["model_lineage"]["calibration"]
         calibration_status = calibration_lineage["status"]
+        interval_type = sim_results["model_lineage"].get(
+            "uncertainty",
+            {},
+        ).get("interval_type", "prior_predictive_p10_p90")
+        choice_estimation = sim_results["model_lineage"].get(
+            "choice_estimation",
+            {},
+        )
+        fitted_choices = (
+            choice_estimation.get("status") == "applied_unvalidated"
+        )
         has_official_macro = any(
             source.get("source_type") == "official_public_aggregate"
             and source.get("observed")
@@ -843,17 +1265,27 @@ class StudyService:
             )
             audience_rate_label = "模型购买率"
 
+        validation_warning = (
+            "在完成样本外或时间外回测前，"
+            if fitted_choices
+            else "在接入真实订单、选择实验或 A/B 选择数据并完成回测前，"
+        )
         recommendation = (
             f"当前{population_calibration_label}、{choice_calibration_label}的 "
             f"{sim_results['study_model_key']} 模型中，"
             f"“{best_scenario['name']}”的相对收入指数最高"
             f"（{best_scenario['revenue_idx']:.1f}）。"
-            "在接入真实销量、问卷选择或 A/B 数据并完成回测前，"
+            f"{validation_warning}"
             "该结果应作为方案筛选依据，而不是销量承诺。"
         )
         next_steps = [
             "补充至少一个可验证的竞品价格、评价、渠道和品牌认知基准。",
-            "导入客户历史订单、投放或 A/B 测试数据，拟合并替换当前系数先验。",
+            (
+                "扩大真实选择样本，并执行时间外或样本外回测。"
+                if fitted_choices
+                else "导入客户历史订单、选择实验或 A/B 选择数据，"
+                "拟合并替换当前系数先验。"
+            ),
             f"优先验证“{best_scenario['name']}”，同时保留基准方案作为对照组。",
             "上线前执行时间外回测，并记录预测误差、数据版本与模型版本。",
         ]
@@ -896,13 +1328,13 @@ class StudyService:
                         "label": metric_labels[0],
                         "value": purchase["mean"],
                         "ci": [purchase["p10"], purchase["p90"]],
-                        "interval_type": "prior_predictive",
+                        "interval_type": interval_type,
                     },
                     {
                         "label": metric_labels[1],
                         "value": awareness["mean"],
                         "ci": [awareness["p10"], awareness["p90"]],
-                        "interval_type": "prior_predictive",
+                        "interval_type": interval_type,
                     },
                     {
                         "label": metric_labels[2],
@@ -911,13 +1343,13 @@ class StudyService:
                             consideration["p10"],
                             consideration["p90"],
                         ],
-                        "interval_type": "prior_predictive",
+                        "interval_type": interval_type,
                     },
                     {
                         "label": metric_labels[3],
                         "value": repeat["mean"],
                         "ci": [repeat["p10"], repeat["p90"]],
-                        "interval_type": "prior_predictive",
+                        "interval_type": interval_type,
                     },
                 ],
                 "next_steps": next_steps,
@@ -960,7 +1392,13 @@ class StudyService:
             "methodology": {
                 "quantitative_path": [
                     population_stage,
+                    *(
+                        ["observed_choice_conditional_logit_fit"]
+                        if fitted_choices
+                        else ["disclosed_choice_coefficient_prior"]
+                    ),
                     "study_specific_discrete_choice_model",
+                    "public_evidence_choice_set_attribute_enrichment",
                     "competitor_and_outside_option_choice_set",
                     "bounded_llm_weak_signal",
                     "prior_predictive_monte_carlo",
@@ -994,6 +1432,10 @@ class StudyService:
             mc_rounds,
         )
         plan = execution["plan"]
+        if plan.execution_backend == "not_deployed":
+            raise ValueError(
+                f"{plan.code} execution backend is not deployed"
+            )
         run_id = f"run_{uuid.uuid4().hex[:8]}"
         study["status"] = "PREPARING_POPULATION"
         self.runs_db[run_id] = {
@@ -1008,10 +1450,19 @@ class StudyService:
                 study,
                 plan.code,
             )
-            overrides = study["inputs"].get("calibration_overrides")
-            use_overrides = overrides if plan.customer_calibration else None
-            profile = load_calibration_profile(overrides=use_overrides)
             model_study_type = self._effective_model_type(study)
+            profile, choice_estimation, calibration_warnings = (
+                self._calibration_profile_for_run(
+                    study,
+                    plan,
+                    model_study_type,
+                )
+            )
+            research_choice_inputs = self._research_enriched_choice_inputs(
+                study,
+                market_research,
+                plan.competitor_limit,
+            )
             generator = PopulationGenerator(
                 seed=seed,
                 calibration_profile=profile,
@@ -1044,7 +1495,7 @@ class StudyService:
                     "brand_awareness",
                     profile["defaults"]["brand_awareness"],
                 ),
-                "competitors": self._competitors(study),
+                "competitors": research_choice_inputs["competitors"],
                 "public_market_evidence": [
                     {
                         "platform": item.get("platform"),
@@ -1090,8 +1541,10 @@ class StudyService:
                 mc_rounds=execution["mc_rounds"],
                 scenarios=study["facts"].get("scenarios")
                 or study["inputs"].get("scenarios"),
-                product_attributes=self._product_attributes(study),
-                competitors=self._competitors(study),
+                product_attributes=research_choice_inputs[
+                    "product_attributes"
+                ],
+                competitors=research_choice_inputs["competitors"],
                 plan_code=plan.code,
                 agent_signals=agent_research,
                 variable_cost=study["facts"].get("variable_cost"),
@@ -1150,11 +1603,7 @@ class StudyService:
                             }
                         )
                     sim_results["scenarios"] = site_scenarios
-            if overrides and not plan.customer_calibration:
-                sim_results["warnings"].append(
-                    f"{plan.code} does not apply customer calibration overrides; "
-                    "the bundled prior profile was used."
-                )
+            sim_results["warnings"].extend(calibration_warnings)
             sim_results["model_lineage"]["requested_study_type"] = study[
                 "study_type"
             ]
@@ -1169,7 +1618,15 @@ class StudyService:
                     "usage_policy",
                     {},
                 ).get("quantitative_effect"),
+                "choice_set_enrichment": research_choice_inputs["lineage"],
             }
+            sim_results["model_lineage"]["choice_estimation"] = (
+                choice_estimation
+            )
+            if research_choice_inputs["lineage"]["status"] == "applied":
+                sim_results["warnings"].append(
+                    research_choice_inputs["lineage"]["limitation"]
+                )
             sim_results["warnings"].extend(
                 market_research.get("warnings") or []
             )

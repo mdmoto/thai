@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
 
-PLAN_CONFIG_VERSION = "PLAN-CONFIG-2026.07.3"
+PLAN_CONFIG_VERSION = "PLAN-CONFIG-2026.07.4"
 
 
 @dataclass(frozen=True)
@@ -93,13 +93,16 @@ PLAN_CONFIGS: Dict[str, PlanConfig] = {
         maximum_mc_rounds=320,
         model_family="hybrid_journey_mixed_logit",
         model_sample_size=300_000,
-        representative_agents=48,
+        representative_agents=96,
         agent_signal_weight=0.05,
         competitor_limit=5,
         elasticity_points=9,
         dynamic_periods=18,
-        customer_calibration=False,
-        data_depth="multi_query_public_evidence_and_multi_stage_consumer_journey",
+        customer_calibration=True,
+        data_depth=(
+            "multi_query_public_evidence_observed_choice_calibration_when_"
+            "provided_and_multi_stage_consumer_journey"
+        ),
         execution_backend="inline_long_running",
     ),
     "DEEP": PlanConfig(
@@ -117,7 +120,7 @@ PLAN_CONFIGS: Dict[str, PlanConfig] = {
         dynamic_periods=18,
         customer_calibration=True,
         data_depth="mixed_logit_conjoint_ready_and_dynamic_diffusion",
-        execution_backend="cloud_batch",
+        execution_backend="not_deployed",
     ),
     "ENTERPRISE": PlanConfig(
         code="ENTERPRISE",
@@ -134,7 +137,7 @@ PLAN_CONFIGS: Dict[str, PlanConfig] = {
         dynamic_periods=24,
         customer_calibration=True,
         data_depth="customer_data_calibration_backtesting_and_regional_model",
-        execution_backend="cloud_batch",
+        execution_backend="not_deployed",
     ),
 }
 

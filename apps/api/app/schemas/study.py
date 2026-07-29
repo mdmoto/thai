@@ -23,6 +23,10 @@ class CreateStudyRequest(BaseModel):
         default_factory=list,
         max_length=20,
     )
+    observed_choice_data: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        max_length=5000,
+    )
     business_questions: List[str] = Field(default_factory=list, max_length=20)
     scenarios: List[Dict[str, Any]] = Field(default_factory=list, max_length=20)
     product_attributes: Dict[str, float] = Field(default_factory=dict)
@@ -73,6 +77,37 @@ class CreateStudyRequest(BaseModel):
     @classmethod
     def clean_research_urls(cls, values: List[str]) -> List[str]:
         return [str(value).strip()[:2048] for value in values if str(value).strip()]
+
+    @field_validator("observed_choice_data")
+    @classmethod
+    def validate_observed_choice_data(
+        cls,
+        rows: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        allowed = {
+            "choice_set_id",
+            "alternative",
+            "chosen",
+            "price_log_ratio",
+            "affordability",
+            "quality_fit",
+            "brand_trust",
+            "review_proof",
+            "novelty",
+            "convenience",
+            "social_influence",
+            "category_engagement",
+            "localization",
+            "distance_friction",
+        }
+        return [
+            {
+                key: value
+                for key, value in row.items()
+                if key in allowed
+            }
+            for row in rows
+        ]
 
 class StudyConfirmRequest(BaseModel):
     overrides: Dict[str, Any] = Field(default_factory=dict)

@@ -25,7 +25,7 @@ from typing import Any, Awaitable, Callable, Dict, Iterable, List, Mapping, Opti
 import httpx
 
 
-RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.5"
+RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.6"
 USER_AGENT = "ThailandMarketTwin/2.1 (+public-market-research)"
 PLATFORM_HOSTS = {
     "facebook.com": "Facebook",
@@ -309,8 +309,8 @@ class PublicMarketResearch:
         enabled: Optional[bool] = None,
         page_reader: Optional[PageReader] = None,
         video_searcher: Optional[VideoSearcher] = None,
-        max_pages: int = 12,
-        max_videos: int = 12,
+        max_pages: Optional[int] = None,
+        max_videos: Optional[int] = None,
         consumer_searcher: Optional[ConsumerSearcher] = None,
         firecrawl_enabled: Optional[bool] = None,
         max_search_results: Optional[int] = None,
@@ -336,8 +336,16 @@ class PublicMarketResearch:
             or firecrawl_configured in {"1", "true", "yes", "on"}
         )
         self.consumer_searcher = consumer_searcher or self._search_firecrawl
-        self.max_pages = max(1, min(int(max_pages), 30))
-        self.max_videos = max(1, min(int(max_videos), 30))
+        configured_page_limit = max_pages or os.environ.get(
+            "MARKET_RESEARCH_MAX_PAGES",
+            "20",
+        )
+        configured_video_limit = max_videos or os.environ.get(
+            "MARKET_RESEARCH_MAX_VIDEOS",
+            "8",
+        )
+        self.max_pages = max(1, min(int(configured_page_limit), 30))
+        self.max_videos = max(1, min(int(configured_video_limit), 30))
         configured_search_limit = max_search_results or os.environ.get(
             "FIRECRAWL_SEARCH_LIMIT",
             "10",
@@ -367,6 +375,13 @@ class PublicMarketResearch:
             min(
                 int(os.environ.get("MARKET_RESEARCH_SEARCH_CONCURRENCY", "3")),
                 6,
+            ),
+        )
+        self.retry_attempts = max(
+            1,
+            min(
+                int(os.environ.get("MARKET_RESEARCH_RETRY_ATTEMPTS", "3")),
+                4,
             ),
         )
 
@@ -474,24 +489,31 @@ class PublicMarketResearch:
 
         async def search_one(query: str) -> Dict[str, Any]:
             async with semaphore:
-                try:
-                    items = await self.consumer_searcher(
-                        query,
-                        self.max_search_results,
-                    )
-                    for item in items:
-                        item.setdefault("query_cluster", query)
-                    return {
-                        "query": query,
-                        "items": items,
-                        "error": None,
-                    }
-                except Exception as error:
-                    return {
-                        "query": query,
-                        "items": [],
-                        "error": type(error).__name__,
-                    }
+                last_error: Optional[Exception] = None
+                for attempt in range(self.retry_attempts):
+                    try:
+                        items = await self.consumer_searcher(
+                            query,
+                            self.max_search_results,
+                        )
+                        for item in items:
+                            item.setdefault("query_cluster", query)
+                        return {
+                            "query": query,
+                            "items": items,
+                            "error": None,
+                            "attempts": attempt + 1,
+                        }
+                    except Exception as error:
+                        last_error = error
+                        if attempt + 1 < self.retry_attempts:
+                            await asyncio.sleep(min(4.0, 0.75 * 2**attempt))
+                return {
+                    "query": query,
+                    "items": [],
+                    "error": type(last_error).__name__,
+                    "attempts": self.retry_attempts,
+                }
 
         results = await asyncio.gather(
             *(search_one(query) for query in queries),
@@ -543,10 +565,14 @@ class PublicMarketResearch:
                 ),
             },
             "usage_policy": {
-                "quantitative_effect": "none_until_customer_calibration",
+                "quantitative_effect": (
+                    "verified_public_price_rating_fields_may_update_choice_"
+                    "set_attributes_but_never_choice_coefficients"
+                ),
                 "allowed": [
                     "竞品与价格证据",
                     "公开评价主题",
+                    "可验证公开价格与评分用于补充产品和竞品属性",
                     "传播素材与市场风险",
                     "后续调研问题",
                 ],

@@ -78,7 +78,7 @@ SELF_SERVICE_PLANS = {
     "BASIC_DECISION",
     "PROFESSIONAL",
 }
-ASSISTED_PLANS = {"DEEP", "ENTERPRISE"}
+UNAVAILABLE_PLANS = {"DEEP", "ENTERPRISE"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_REQUEST_BYTES = int(os.environ.get("MAX_REQUEST_BYTES", "1048576"))
 FREE_PREVIEW_LIMIT = int(os.environ.get("FREE_PREVIEW_LIMIT", "1"))
@@ -1332,12 +1332,12 @@ async def run_simulation(
         plan_code = normalize_plan_code(req.plan_code or record.plan_code)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
-    if plan_code in ASSISTED_PLANS:
+    if plan_code in UNAVAILABLE_PLANS:
         raise HTTPException(
             status_code=409,
             detail=(
-                f"{plan_code} 当前采用销售协助交付；"
-                "自助版本请选择深度决策。"
+                f"{plan_code} 的独立执行后端尚未部署，"
+                "系统不会扣费。当前请选择可自助运行的深度决策。"
             ),
         )
 
