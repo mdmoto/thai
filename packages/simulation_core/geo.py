@@ -264,6 +264,7 @@ def _weighted_site_score(scores: Mapping[str, float]) -> float:
 def _calibrated_site_scores(
     locations: Sequence[Mapping[str, Any]],
     history_evidence: Mapping[str, Any],
+    venue_type: str,
 ) -> Optional[Dict[str, Any]]:
     feature_names = list(SCORE_WEIGHTS)
     x_rows: List[List[float]] = []
@@ -274,7 +275,7 @@ def _calibrated_site_scores(
         if visits is None or not observed:
             continue
         scores = _observed_feature_scores(
-            "RESTAURANT", observed, {}, 50.0
+            venue_type, observed, {}, 50.0
         )
         x_rows.append([float(scores[name]) for name in feature_names])
         y_rows.append(math.log1p(visits))
@@ -563,6 +564,7 @@ def build_geo_analysis(
     calibrated = _calibrated_site_scores(
         locations,
         live.get("historical_locations") or {},
+        normalized_venue,
     )
     if calibrated:
         for item in locations:
