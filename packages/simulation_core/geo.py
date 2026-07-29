@@ -261,6 +261,49 @@ def _weighted_site_score(scores: Mapping[str, float]) -> float:
     return round(min(100.0, max(0.0, (raw + 13.0) / 1.03)), 1)
 
 
+def _catchment_population(
+    catchments: Sequence[Mapping[str, Any]],
+    minutes: int = 15,
+) -> Optional[float]:
+    exact = [
+        item
+        for item in catchments
+        if int(item.get("minutes") or 0) == minutes
+        and _as_float(item.get("estimated_resident_population")) is not None
+    ]
+    candidates = exact or [
+        item
+        for item in catchments
+        if _as_float(item.get("estimated_resident_population")) is not None
+    ]
+    if not candidates:
+        return None
+    selected = max(candidates, key=lambda item: int(item.get("minutes") or 0))
+    return _as_float(selected.get("estimated_resident_population"))
+
+
+def _footfall_opportunity(
+    feature_scores: Mapping[str, float],
+    resident_population_index: Optional[float],
+) -> Dict[str, Any]:
+    if resident_population_index is None:
+        return {
+            "footfall_opportunity_index": None,
+            "footfall_opportunity_status": "insufficient_population_evidence",
+        }
+    value = (
+        resident_population_index * 0.35
+        + float(feature_scores["access_index"]) * 0.20
+        + float(feature_scores["market_activity_index"]) * 0.20
+        + float(feature_scores["tourism_index"]) * 0.10
+        + float(feature_scores["target_audience_index"]) * 0.15
+    )
+    return {
+        "footfall_opportunity_index": round(min(100.0, max(0.0, value)), 1),
+        "footfall_opportunity_status": "modeled_opportunity_not_measured_footfall",
+    }
+
+
 def _calibrated_site_scores(
     locations: Sequence[Mapping[str, Any]],
     history_evidence: Mapping[str, Any],
@@ -499,6 +542,17 @@ def build_geo_analysis(
         if longitude is None and zone:
             longitude = float(zone["longitude"])
         province_context = _province_context(latitude, longitude, macro)
+        evidence_catchments = [
+            dict(item)
+            for item in evidence.get("catchments") or []
+            if isinstance(item, Mapping)
+        ]
+        resident_population = _catchment_population(evidence_catchments)
+        resident_population_index = (
+            round(_count_index(resident_population, 20_000.0), 1)
+            if resident_population is not None
+            else None
+        )
 
         if observed:
             feature_scores = _observed_feature_scores(
@@ -507,7 +561,17 @@ def build_geo_analysis(
                 candidate,
                 province_context["province_income_context_index"],
             )
-            score_status = "observed_geospatial_features_with_unvalidated_weights"
+            if resident_population_index is not None:
+                feature_scores["target_audience_index"] = round(
+                    feature_scores["target_audience_index"] * 0.60
+                    + resident_population_index * 0.40,
+                    1,
+                )
+                score_status = (
+                    "observed_geospatial_population_features_with_unvalidated_weights"
+                )
+            else:
+                score_status = "observed_geospatial_features_with_unvalidated_weights"
         elif priors:
             feature_scores = _legacy_prior_scores(
                 normalized_venue,
@@ -516,7 +580,31 @@ def build_geo_analysis(
                 candidate,
                 province_context["province_income_context_index"],
             )
-            score_status = "legacy_engineering_prior_unvalidated"
+            if resident_population_index is not None:
+                feature_scores["target_audience_index"] = round(
+                    feature_scores["target_audience_index"] * 0.60
+                    + resident_population_index * 0.40,
+                    1,
+                )
+                score_status = "population_grid_with_legacy_prior_unvalidated"
+            else:
+                score_status = "legacy_engineering_prior_unvalidated"
+        elif resident_population_index is not None:
+            feature_scores = {
+                "target_audience_index": round(
+                    50.0 * 0.60 + resident_population_index * 0.40,
+                    1,
+                ),
+                "tourism_index": 50.0,
+                "access_index": 50.0,
+                "parking_index": 50.0,
+                "market_activity_index": 50.0,
+                "competition_saturation_index": 50.0,
+                "province_income_context_index": province_context[
+                    "province_income_context_index"
+                ],
+            }
+            score_status = "population_only_geospatial_evidence_unvalidated"
         else:
             feature_scores = {
                 "target_audience_index": 50.0,
@@ -548,11 +636,18 @@ def build_geo_analysis(
             "observed_poi_status": observed_status or "not_observed",
             "score_status": score_status,
             "score_weights": SCORE_WEIGHTS,
+            "resident_catchment_population_15m": (
+                int(round(resident_population))
+                if resident_population is not None
+                else None
+            ),
+            "resident_population_index": resident_population_index,
             **feature_scores,
         }
+        item.update(_footfall_opportunity(feature_scores, resident_population_index))
         item["site_score"] = _weighted_site_score(feature_scores)
         locations.append(item)
-        for catchment in evidence.get("catchments") or []:
+        for catchment in evidence_catchments:
             catchments.append(
                 {
                     **dict(catchment),
@@ -614,6 +709,7 @@ def build_geo_analysis(
         "综合机会分使用地点特征加权公式；除标记为客户门店校准外，权重尚未用真实门店业绩验证。",
         "购买倾向来自消费者选择模型，地点层只提供有界的可达性与机会修正，不代表真实成交率。",
         "需求热力图是模型可视化，不是手机信令、门店探针或真实到店记录。",
+        "到店机会指数结合步行商圈常住人口、交通、商业活跃和旅游设施；它不是实测客流，也不是白天流动人口。",
         (
             "小时访问曲线已使用客户经营记录校准，但仍需留店验证。"
             if operations["status"] == "customer_operations_calibrated_unvalidated"
@@ -626,13 +722,20 @@ def build_geo_analysis(
         warnings.append("至少一个候选点缺少可验证地理数据；该点仅显示中性占位，不应据此下最终选址结论。")
 
     return {
-        "schema_version": "2",
+        "schema_version": "3",
         "dataset_id": live.get("version") or catalog.get("dataset_id"),
         "geospatial_status": live.get("status") or "catalog_fallback",
         "score_method": (
             calibrated["method"]
             if calibrated
-            else "observed_feature_weighting_unvalidated"
+            else (
+                "observed_feature_population_weighting_unvalidated"
+                if any(
+                    item.get("resident_catchment_population_15m") is not None
+                    for item in locations
+                )
+                else "observed_feature_weighting_unvalidated"
+            )
         ),
         "score_calibration": calibrated,
         "venue_type": normalized_venue,

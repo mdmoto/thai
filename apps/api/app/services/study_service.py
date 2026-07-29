@@ -1722,6 +1722,15 @@ class StudyService:
                         )
                         else "partial_or_radial_proxy"
                     ),
+                    "population_status": (
+                        "worldpop_2025_residential_grid"
+                        if any(
+                            item.get("estimated_resident_population") is not None
+                            for item in geo_analysis["catchments"]
+                        )
+                        else "population_grid_unavailable"
+                    ),
+                    "footfall_status": "modeled_opportunity_not_measured_footfall",
                     "operations_status": geo_analysis["operations"][
                         "status"
                     ],

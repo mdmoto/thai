@@ -60,10 +60,11 @@ class GeoAnalysisTests(unittest.TestCase):
                         },
                         "catchments": [
                             {
-                                "minutes": 10,
+                                "minutes": 15,
                                 "mode": "walking_network_isochrone",
                                 "area_km2": 1.12,
                                 "data_class": "external_market_data",
+                                "estimated_resident_population": 32000,
                             }
                         ],
                     },
@@ -83,10 +84,11 @@ class GeoAnalysisTests(unittest.TestCase):
                         },
                         "catchments": [
                             {
-                                "minutes": 10,
+                                "minutes": 15,
                                 "mode": "walking_network_isochrone",
                                 "area_km2": 0.74,
                                 "data_class": "external_market_data",
+                                "estimated_resident_population": 12000,
                             }
                         ],
                     },
@@ -94,7 +96,7 @@ class GeoAnalysisTests(unittest.TestCase):
                 "sources": [{"name": "test source"}],
             },
         )
-        self.assertEqual(result["schema_version"], "2")
+        self.assertEqual(result["schema_version"], "3")
         self.assertNotEqual(
             result["locations"][0]["site_score"],
             result["locations"][1]["site_score"],
@@ -102,10 +104,53 @@ class GeoAnalysisTests(unittest.TestCase):
         self.assertTrue(
             all(
                 item["score_status"]
-                == "observed_geospatial_features_with_unvalidated_weights"
+                == "observed_geospatial_population_features_with_unvalidated_weights"
                 for item in result["locations"]
             )
         )
+        self.assertTrue(
+            all(
+                item["footfall_opportunity_status"]
+                == "modeled_opportunity_not_measured_footfall"
+                for item in result["locations"]
+            )
+        )
+        self.assertEqual(
+            result["score_method"],
+            "observed_feature_population_weighting_unvalidated",
+        )
+
+    def test_population_grid_remains_useful_when_poi_collection_is_unavailable(self):
+        result = build_geo_analysis(
+            study_type="SITE_COMPARISON",
+            venue_type="RETAIL",
+            inputs={"candidate_locations": [{"label": "Resolved population-only site"}]},
+            capacity=30,
+            average_check=250,
+            external_evidence={
+                "status": "partial",
+                "locations": {
+                    "resolved population-only site": {
+                        "latitude": 13.74,
+                        "longitude": 100.58,
+                        "catchments": [
+                            {
+                                "minutes": 15,
+                                "mode": "walking_network_isochrone",
+                                "estimated_resident_population": 25000,
+                            }
+                        ],
+                    }
+                },
+            },
+        )
+        location = result["locations"][0]
+        self.assertEqual(
+            location["score_status"],
+            "population_only_geospatial_evidence_unvalidated",
+        )
+        self.assertEqual(location["resident_catchment_population_15m"], 25000)
+        self.assertIsNotNone(location["footfall_opportunity_index"])
         self.assertTrue(
             all(
                 item["mode"] == "walking_network_isochrone"
