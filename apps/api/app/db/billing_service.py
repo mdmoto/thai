@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.models import (
@@ -25,8 +27,30 @@ CREDIT_PRICING = {
 }
 
 ENTITLEMENT_FIELDS = {
+    "PREVIEW": "free_preview_runs_balance",
     "BASIC_DECISION": "basic_decision_runs_balance",
     "PROFESSIONAL": "deep_decision_runs_balance",
+}
+
+PAYMENT_METHODS: Dict[str, Dict[str, Any]] = {
+    "ALIPAY": {
+        "code": "ALIPAY",
+        "name": "支付宝收款码",
+        "image_url": "/payments/alipay-qr.png",
+        "package_codes": ["STARTER", "GROWTH", "SCALE"],
+    },
+    "WECHAT_PAY": {
+        "code": "WECHAT_PAY",
+        "name": "微信收款码",
+        "image_url": "/payments/wechat-pay-qr.png",
+        "package_codes": ["STARTER", "GROWTH", "SCALE"],
+    },
+    "WECHAT_APPRECIATION": {
+        "code": "WECHAT_APPRECIATION",
+        "name": "微信赞赏码",
+        "image_url": "/payments/wechat-appreciation-qr.png",
+        "package_codes": ["BASIC_DECISION_SINGLE"],
+    },
 }
 
 PUBLIC_PLAN_CODES = (
@@ -121,6 +145,15 @@ def public_catalog() -> Dict[str, Any]:
                 "entitlement_per_run": 1,
             },
         },
+        "manual_payment": {
+            "enabled": True,
+            "automatic_callback": False,
+            "methods": list(PAYMENT_METHODS.values()),
+            "notice": (
+                "扫码付款后提交付款信息，订单进入人工核验；"
+                "只有管理员确认实际到账后才会发放次数和赠送积分。"
+            ),
+        },
     }
 
 
@@ -160,23 +193,36 @@ def check_and_reserve_run(
     """Atomically reserve either credits or one purchased decision run."""
     entitlement_field = ENTITLEMENT_FIELDS.get(plan_code)
     if entitlement_field:
-        locked_user = (
+        field_column = getattr(User, entitlement_field)
+        updated = (
             db.query(User)
-            .filter(User.id == user.id)
-            .with_for_update()
-            .one()
+            .filter(
+                User.id == user.id,
+                field_column >= 1,
+            )
+            .update(
+                {field_column: field_column - 1},
+                synchronize_session=False,
+            )
         )
-        balance = int(getattr(locked_user, entitlement_field) or 0)
-        if balance < 1:
-            raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail=(
+        if updated != 1:
+            if plan_code == "PREVIEW":
+                detail = (
+                    "每个账号包含 1 次免费预览，当前免费次数已使用。"
+                    "基础模拟需要 5 积分。"
+                )
+            else:
+                detail = (
                     f"运行{RUN_LABELS.get(plan_code, plan_code)}需要 1 次可用次数，"
                     "当前可用次数为 0。请先购买对应决策套餐。"
-                ),
+                )
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=detail,
             )
-        new_balance = balance - 1
-        setattr(locked_user, entitlement_field, new_balance)
+        db.expire_all()
+        locked_user = db.query(User).filter(User.id == user.id).one()
+        new_balance = int(getattr(locked_user, entitlement_field) or 0)
         db.add(
             RunEntitlementTransaction(
                 user_id=locked_user.id,
@@ -188,8 +234,7 @@ def check_and_reserve_run(
                 balance_after=new_balance,
             )
         )
-        db.commit()
-        db.refresh(locked_user)
+        db.flush()
         return {
             "deducted": 0,
             "deducted_credits": 0,
@@ -211,23 +256,34 @@ def check_and_reserve_run(
             "reference_id": reference_id,
         }
 
-    locked_user = (
+    updated = (
         db.query(User)
-        .filter(User.id == user.id)
-        .with_for_update()
-        .one()
+        .filter(
+            User.id == user.id,
+            User.credits_balance >= cost,
+        )
+        .update(
+            {User.credits_balance: User.credits_balance - cost},
+            synchronize_session=False,
+        )
     )
-    if int(locked_user.credits_balance) < cost:
+    if updated != 1:
+        current_balance = int(
+            db.query(User.credits_balance)
+            .filter(User.id == user.id)
+            .scalar()
+            or 0
+        )
         run_label = RUN_LABELS.get(plan_code, plan_code)
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=(
                 f"运行{run_label}需要 {cost} 积分，当前余额为 "
-                f"{locked_user.credits_balance} 积分。"
+                f"{current_balance} 积分。"
             ),
         )
-
-    locked_user.credits_balance = int(locked_user.credits_balance) - cost
+    db.expire_all()
+    locked_user = db.query(User).filter(User.id == user.id).one()
     transaction = CreditTransaction(
         user_id=locked_user.id,
         amount=-cost,
@@ -237,8 +293,7 @@ def check_and_reserve_run(
         balance_after=locked_user.credits_balance,
     )
     db.add(transaction)
-    db.commit()
-    db.refresh(locked_user)
+    db.flush()
     return {
         "deducted": cost,
         "deducted_credits": cost,
@@ -313,7 +368,84 @@ def refund_run_reservation(
                 balance_after=locked_user.credits_balance,
             )
         )
+    db.flush()
+
+
+def allowed_payment_methods(package_code: str) -> list[Dict[str, Any]]:
+    normalized = package_code.strip().upper()
+    return [
+        dict(method)
+        for method in PAYMENT_METHODS.values()
+        if normalized in method["package_codes"]
+    ]
+
+
+def submit_manual_payment(
+    db: Session,
+    *,
+    order: PurchaseOrder,
+    payment_method: str,
+    payer_name: str | None,
+    payment_claim_reference: str | None,
+    payment_time_text: str | None,
+    payment_claim_note: str | None,
+) -> PurchaseOrder:
+    """Record a customer's payment claim without granting any balance."""
+    if order.status == "PAID":
+        raise HTTPException(status_code=409, detail="订单已经完成入账")
+    if order.status not in {
+        "PENDING_PAYMENT",
+        "PAYMENT_REVIEW",
+        "PAYMENT_REJECTED",
+    }:
+        raise HTTPException(status_code=409, detail="订单状态不允许提交付款信息")
+    normalized_method = payment_method.strip().upper()
+    allowed_codes = {
+        method["code"] for method in allowed_payment_methods(order.package_code)
+    }
+    if normalized_method not in allowed_codes:
+        raise HTTPException(
+            status_code=400,
+            detail="该套餐不支持所选收款方式",
+        )
+    order.payment_method = normalized_method
+    order.payer_name = payer_name
+    order.payment_claim_reference = payment_claim_reference
+    order.payment_time_text = payment_time_text
+    order.payment_claim_note = payment_claim_note
+    order.payment_claimed_at = datetime.utcnow()
+    order.reviewed_at = None
+    order.review_note = None
+    order.status = "PAYMENT_REVIEW"
     db.commit()
+    db.refresh(order)
+    return order
+
+
+def reject_manual_payment(
+    db: Session,
+    *,
+    order_id: str,
+    review_note: str,
+) -> PurchaseOrder:
+    order = (
+        db.query(PurchaseOrder)
+        .filter(PurchaseOrder.id == order_id)
+        .with_for_update()
+        .first()
+    )
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    if order.status == "PAID":
+        raise HTTPException(status_code=409, detail="已入账订单不能退回核验")
+    if order.status not in {"PAYMENT_REVIEW", "PENDING_PAYMENT"}:
+        raise HTTPException(status_code=409, detail="订单状态不允许退回")
+    order.status = "PAYMENT_REJECTED"
+    order.reviewed_at = datetime.utcnow()
+    order.review_note = review_note
+    db.commit()
+    db.refresh(order)
+    return order
 
 
 def complete_purchase_order(
@@ -331,9 +463,31 @@ def complete_purchase_order(
     if not order:
         raise HTTPException(status_code=404, detail="订单不存在")
     if order.status == "PAID":
+        if order.payment_reference != payment_reference:
+            raise HTTPException(
+                status_code=409,
+                detail="该订单已使用其他付款凭证完成入账",
+            )
         return order
-    if order.status != "PENDING_PAYMENT":
+    if order.status not in {
+        "PENDING_PAYMENT",
+        "PAYMENT_REVIEW",
+        "PAYMENT_REJECTED",
+    }:
         raise HTTPException(status_code=409, detail="订单状态不允许入账")
+    duplicate_reference = (
+        db.query(PurchaseOrder)
+        .filter(
+            PurchaseOrder.payment_reference == payment_reference,
+            PurchaseOrder.id != order.id,
+        )
+        .first()
+    )
+    if duplicate_reference:
+        raise HTTPException(
+            status_code=409,
+            detail="该付款凭证编号已用于其他订单，请核对后重新提交",
+        )
 
     locked_user = (
         db.query(User)
@@ -373,6 +527,8 @@ def complete_purchase_order(
         )
     order.status = "PAID"
     order.payment_reference = payment_reference
+    order.reviewed_at = datetime.utcnow()
+    order.review_note = "管理员确认实际到账"
     if int(order.credits) > 0:
         db.add(
             CreditTransaction(
@@ -384,6 +540,13 @@ def complete_purchase_order(
                 balance_after=locked_user.credits_balance,
             )
         )
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="该付款凭证编号已用于其他订单，请核对后重新提交",
+        ) from error
     db.refresh(order)
     return order

@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Check, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  Check,
+  Clock3,
+  Loader2,
+  QrCode,
+  Send,
+} from "lucide-react";
 import {
   BillingPackage,
   createOrderApi,
@@ -11,7 +19,9 @@ import {
   getMeApi,
   getOrdersApi,
   getTransactionsApi,
+  PaymentMethod,
   PurchaseOrder,
+  submitPaymentClaimApi,
   UserProfile,
 } from "@/lib/api-client";
 import { Card } from "@/components/ui";
@@ -49,10 +59,10 @@ const PACKAGE_POPULATION: Record<string, string> = {
 };
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
-  PENDING: "待付款",
-  PAYMENT_PENDING: "等待付款核验",
-  PAID: "已付款",
-  VERIFIED: "已核验并入账",
+  PENDING_PAYMENT: "待扫码付款",
+  PAYMENT_REVIEW: "等待人工核验",
+  PAYMENT_REJECTED: "付款信息需补充",
+  PAID: "已核验并入账",
   CANCELLED: "已取消",
   EXPIRED: "已过期",
   FAILED: "处理失败",
@@ -102,6 +112,15 @@ export function BillingClient() {
   >([]);
   const [creating, setCreating] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<PurchaseOrder | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<
+    PaymentMethod["code"] | null
+  >(null);
+  const [payerName, setPayerName] = useState("");
+  const [paymentTime, setPaymentTime] = useState("");
+  const [claimReference, setClaimReference] = useState("");
+  const [claimNote, setClaimNote] = useState("");
+  const [qrLoaded, setQrLoaded] = useState<Record<string, boolean>>({});
+  const [submittingClaim, setSubmittingClaim] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = () =>
@@ -131,11 +150,63 @@ export function BillingClient() {
     try {
       const order = await createOrderApi(packageCode);
       setCreatedOrder(order);
+      setSelectedMethod(order.allowed_payment_methods[0]?.code ?? null);
+      setPayerName(user?.name || "");
+      setPaymentTime("");
+      setClaimReference("");
+      setClaimNote("");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "创建订单失败");
     } finally {
       setCreating(null);
+    }
+  };
+
+  const openOrder = (order: PurchaseOrder) => {
+    setCreatedOrder(order);
+    setSelectedMethod(
+      order.payment_method ??
+        order.allowed_payment_methods[0]?.code ??
+        null,
+    );
+    setPayerName(order.payer_name || user?.name || "");
+    setPaymentTime(order.payment_time_text || "");
+    setClaimReference(order.payment_claim_reference || "");
+    setClaimNote(order.payment_claim_note || "");
+    setError(null);
+  };
+
+  const submitPaymentClaim = async () => {
+    if (!createdOrder || !selectedMethod) return;
+    if (!qrLoaded[selectedMethod]) {
+      setError("正式收款码尚未配置，请先联系官方客服，不要向其他二维码付款。");
+      return;
+    }
+    if (payerName.trim().length < 2) {
+      setError("请填写付款人姓名，方便人工核对到账记录。");
+      return;
+    }
+    if (!paymentTime) {
+      setError("请选择大致付款时间，方便人工核对到账记录。");
+      return;
+    }
+    setSubmittingClaim(true);
+    setError(null);
+    try {
+      const updated = await submitPaymentClaimApi(createdOrder.id, {
+        payment_method: selectedMethod,
+        payer_name: payerName.trim(),
+        payment_claim_reference: claimReference.trim() || undefined,
+        payment_time_text: paymentTime,
+        note: claimNote.trim() || undefined,
+      });
+      setCreatedOrder(updated);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "付款信息提交失败");
+    } finally {
+      setSubmittingClaim(false);
     }
   };
 
@@ -157,7 +228,8 @@ export function BillingClient() {
           <span className="eyebrow">决策次数、赠送积分与已核验订单</span>
           <h1 className="text-2xl font-semibold text-white mt-2">购买决策服务</h1>
           <p className="text-sm text-neutral-400 mt-2 max-w-2xl">
-            选择一种套餐创建订单。付款由销售团队核验，到账后决策次数和赠送积分自动入账。
+            创建订单后使用页面上的固定收款码付款，再提交付款人和时间。
+            当前没有自动回调，只有人工确认实际到账后才会发放次数和赠送积分。
           </p>
         </div>
         <Card className="!p-4 min-w-64">
@@ -190,21 +262,159 @@ export function BillingClient() {
         <Card className="border-neutral-700">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">
-              <Check size={15} />
+              {createdOrder.status === "PAID" ? (
+                <Check size={15} />
+              ) : (
+                <QrCode size={15} />
+              )}
             </div>
             <div className="flex-1">
-              <h2 className="text-sm font-semibold text-white">订单已创建</h2>
+              <h2 className="text-sm font-semibold text-white">
+                {createdOrder.status === "PAID"
+                  ? "订单已核验并入账"
+                  : createdOrder.status === "PAYMENT_REVIEW"
+                    ? "付款信息已提交"
+                    : "请使用固定收款码付款"}
+              </h2>
               <p className="text-xs text-neutral-400 mt-1">
                 订单编号 <span className="font-mono text-white">{createdOrder.id}</span>。
-                联系销售时请附上该编号，到账核验后系统自动记入决策次数和赠送积分。
+                金额 <span className="text-white">฿{(createdOrder.amount_minor / 100).toLocaleString()}</span>。
               </p>
+              {createdOrder.review_note && createdOrder.status === "PAYMENT_REJECTED" && (
+                <p className="mt-3 rounded-lg border border-amber-900/60 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
+                  核验说明：{createdOrder.review_note}
+                </p>
+              )}
+
+              {createdOrder.status === "PAYMENT_REVIEW" ? (
+                <div className="mt-4 rounded-xl border border-amber-900/50 bg-amber-950/10 p-4">
+                  <div className="flex items-center gap-2 text-sm text-amber-200">
+                    <Clock3 size={15} />
+                    正在等待人工核验
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-2">
+                    核验前不会发放次数或积分。请勿重复付款；如需补充信息可联系官方客服。
+                  </p>
+                </div>
+              ) : createdOrder.status !== "PAID" ? (
+                <div className="mt-5 grid gap-5 lg:grid-cols-[280px_1fr]">
+                  <div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {createdOrder.allowed_payment_methods.map(method => (
+                        <button
+                          key={method.code}
+                          type="button"
+                          onClick={() => setSelectedMethod(method.code)}
+                          className={
+                            selectedMethod === method.code
+                              ? "rounded-lg border border-white bg-white px-3 py-2 text-xs text-black"
+                              : "rounded-lg border border-neutral-800 bg-black px-3 py-2 text-xs text-neutral-300"
+                          }
+                        >
+                          {method.name}
+                        </button>
+                      ))}
+                    </div>
+                    {createdOrder.allowed_payment_methods
+                      .filter(method => method.code === selectedMethod)
+                      .map(method => (
+                        <div key={method.code}>
+                          <div className="aspect-square rounded-xl border border-neutral-800 bg-white p-3 flex items-center justify-center overflow-hidden">
+                            <img
+                              src={method.image_url}
+                              alt={method.name}
+                              className="w-full h-full object-contain"
+                              onLoad={() =>
+                                setQrLoaded(current => ({
+                                  ...current,
+                                  [method.code]: true,
+                                }))
+                              }
+                              onError={() =>
+                                setQrLoaded(current => ({
+                                  ...current,
+                                  [method.code]: false,
+                                }))
+                              }
+                            />
+                          </div>
+                          {!qrLoaded[method.code] && (
+                            <div className="mt-3 flex gap-2 rounded-lg border border-amber-900/50 bg-amber-950/20 p-3 text-xs text-amber-200">
+                              <AlertTriangle size={15} className="shrink-0" />
+                              正式收款码暂未配置。请勿向其他二维码付款，先联系官方客服。
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-neutral-400">付款人姓名 *</label>
+                      <input
+                        value={payerName}
+                        onChange={event => setPayerName(event.target.value)}
+                        placeholder="请填写付款账户显示的姓名"
+                        className="mt-1 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-neutral-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-neutral-400">大致付款时间 *</label>
+                      <input
+                        type="datetime-local"
+                        value={paymentTime}
+                        onChange={event => setPaymentTime(event.target.value)}
+                        className="mt-1 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-neutral-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-neutral-400">交易单号后几位（可选）</label>
+                      <input
+                        value={claimReference}
+                        onChange={event => setClaimReference(event.target.value)}
+                        placeholder="例如：最后 6 位"
+                        className="mt-1 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-neutral-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-neutral-400">备注（可选）</label>
+                      <input
+                        value={claimNote}
+                        onChange={event => setClaimNote(event.target.value)}
+                        placeholder="例如：公司账户付款"
+                        className="mt-1 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-neutral-600"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={submitPaymentClaim}
+                      disabled={
+                        submittingClaim ||
+                        !selectedMethod ||
+                        !qrLoaded[selectedMethod]
+                      }
+                      className="btn-cmai-primary w-full"
+                    >
+                      {submittingClaim ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Send size={14} />
+                      )}
+                      我已付款，提交人工核验
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-4 text-xs text-emerald-300">
+                  决策次数和赠送积分已经发放，可返回项目页面开始运行。
+                </p>
+              )}
               <a
                 href={salesUrlForOrder(createdOrder)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-cmai-primary mt-4"
+                className="btn-cmai-secondary mt-4"
               >
-                通过 WhatsApp 联系官方销售 <ArrowUpRight size={14} />
+                付款遇到问题，联系官方客服 <ArrowUpRight size={14} />
               </a>
             </div>
           </div>
@@ -267,6 +477,15 @@ export function BillingClient() {
                 <div className="text-right">
                   <div className="text-neutral-300">฿{(order.amount_minor / 100).toLocaleString()}</div>
                   <div className="text-neutral-500 mt-1">{ORDER_STATUS_LABELS[order.status] ?? order.status}</div>
+                  {order.status !== "PAID" && (
+                    <button
+                      type="button"
+                      onClick={() => openOrder(order)}
+                      className="text-blue-300 mt-2 hover:text-blue-200"
+                    >
+                      {order.status === "PAYMENT_REVIEW" ? "查看核验状态" : "继续付款"}
+                    </button>
+                  )}
                 </div>
               </div>
             )) : <p className="text-xs text-neutral-500">暂无订单。</p>}

@@ -32,6 +32,7 @@ class User(Base):
     invite_commission_bps = Column(Integer, nullable=False, default=0)
     plan_tier = Column(String, default="FREE")  # FREE, PROFESSIONAL, ENTERPRISE
     credits_balance = Column(Integer, default=0)  # Bonuses are granted explicitly.
+    free_preview_runs_balance = Column(Integer, nullable=False, default=1)
     basic_decision_runs_balance = Column(Integer, nullable=False, default=0)
     deep_decision_runs_balance = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -235,7 +236,15 @@ class PurchaseOrder(Base):
     amount_minor = Column(Integer, nullable=False)
     currency = Column(String, nullable=False, default="THB")
     status = Column(String, nullable=False, default="PENDING_PAYMENT")
+    payment_method = Column(String, nullable=True)
+    payer_name = Column(String, nullable=True)
+    payment_claim_reference = Column(String, nullable=True)
+    payment_time_text = Column(String, nullable=True)
+    payment_claim_note = Column(String, nullable=True)
+    payment_claimed_at = Column(DateTime, nullable=True)
     payment_reference = Column(String, unique=True, nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    review_note = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(
         DateTime,
