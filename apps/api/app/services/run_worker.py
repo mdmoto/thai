@@ -282,13 +282,13 @@ async def execute_run_job(run_job_id: str) -> Optional[str]:
                 )
                 if study:
                     study.status = "FAILED_RECOVERABLE"
-                db.commit()
                 refund_run_reservation(
                     db,
                     job.user_id,
                     reservation,
                     billing_reference,
                 )
+                db.commit()
         finally:
             db.close()
         return None

@@ -90,6 +90,11 @@ def _upgrade_legacy_schema() -> None:
                 "ALTER TABLE users ADD COLUMN basic_decision_runs_balance "
                 "INTEGER NOT NULL DEFAULT 0"
             )
+        if "free_preview_runs_balance" not in columns:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN free_preview_runs_balance "
+                "INTEGER NOT NULL DEFAULT 1"
+            )
         if "deep_decision_runs_balance" not in columns:
             statements.append(
                 "ALTER TABLE users ADD COLUMN deep_decision_runs_balance "
@@ -102,6 +107,41 @@ def _upgrade_legacy_schema() -> None:
         if "entitlements_json" not in columns:
             statements.append(
                 "ALTER TABLE purchase_orders ADD COLUMN entitlements_json JSON"
+            )
+        if "payment_method" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN payment_method VARCHAR"
+            )
+        if "payer_name" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN payer_name VARCHAR"
+            )
+        if "payment_claim_reference" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN "
+                "payment_claim_reference VARCHAR"
+            )
+        if "payment_time_text" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN payment_time_text VARCHAR"
+            )
+        if "payment_claim_note" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN payment_claim_note VARCHAR"
+            )
+        if "payment_claimed_at" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN payment_claimed_at "
+                f"{datetime_type}"
+            )
+        if "reviewed_at" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN reviewed_at "
+                f"{datetime_type}"
+            )
+        if "review_note" not in columns:
+            statements.append(
+                "ALTER TABLE purchase_orders ADD COLUMN review_note VARCHAR"
             )
     if "simulation_runs" in tables:
         columns = {
@@ -183,6 +223,19 @@ def _upgrade_legacy_schema() -> None:
                     "(SELECT studies.user_id FROM studies "
                     "WHERE studies.id = reports.study_id) "
                     "WHERE user_id IS NULL"
+                )
+            )
+        if "users" in tables and "simulation_runs" in tables:
+            connection.execute(
+                text(
+                    "UPDATE users SET free_preview_runs_balance = 0 "
+                    "WHERE EXISTS ("
+                    "SELECT 1 FROM simulation_runs "
+                    "WHERE simulation_runs.user_id = users.id "
+                    "AND simulation_runs.plan_code = 'PREVIEW' "
+                    "AND simulation_runs.status IN "
+                    "('PENDING', 'QUEUED', 'RUNNING', 'COMPLETED')"
+                    ")"
                 )
             )
         connection.execute(

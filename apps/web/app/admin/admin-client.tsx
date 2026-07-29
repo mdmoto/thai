@@ -24,6 +24,7 @@ import {
   deactivateAdminInviteCodeApi,
   getAdminDashboardApi,
   getMeApi,
+  rejectAdminOrderPaymentApi,
 } from "@/lib/api-client";
 
 const PACKAGE_LABELS: Record<string, string> = {
@@ -34,7 +35,9 @@ const PACKAGE_LABELS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_PAYMENT: "待付款",
+  PENDING_PAYMENT: "客户尚未提交付款",
+  PAYMENT_REVIEW: "等待人工核验",
+  PAYMENT_REJECTED: "已退回客户补充",
   PAID: "已确认并入账",
   CANCELLED: "已取消",
   EXPIRED: "已过期",
@@ -44,9 +47,16 @@ const STATUS_LABELS: Record<string, string> = {
 const AUDIT_LABELS: Record<string, string> = {
   ADMIN_ACCOUNT_PROVISIONED: "创建或更新管理员账号",
   PAYMENT_CONFIRMED: "确认付款并入账",
+  PAYMENT_REJECTED: "退回付款信息",
   INVITE_CODE_CREATED: "创建邀请码",
   INVITE_CODE_REACTIVATED: "重新启用邀请码",
   INVITE_CODE_DEACTIVATED: "停用邀请码",
+};
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  ALIPAY: "支付宝收款码",
+  WECHAT_PAY: "微信收款码",
+  WECHAT_APPRECIATION: "微信赞赏码",
 };
 
 function formatMoney(amountMinor: number): string {
@@ -100,6 +110,7 @@ export function AdminClient() {
   const [query, setQuery] = useState("");
   const [references, setReferences] = useState<Record<string, string>>({});
   const [completing, setCompleting] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
   const [savingInvite, setSavingInvite] = useState(false);
   const [deactivatingInvite, setDeactivatingInvite] = useState<string | null>(
     null,
@@ -164,6 +175,9 @@ export function AdminClient() {
           order.user_name,
           order.company,
           order.payment_reference,
+          order.payment_claim_reference,
+          order.payer_name,
+          order.payment_method,
           order.invite_code,
           order.invite_owner,
         ]
@@ -195,6 +209,24 @@ export function AdminClient() {
       setError(err instanceof Error ? err.message : "付款核销失败");
     } finally {
       setCompleting(null);
+    }
+  };
+
+  const rejectPayment = async (orderId: string) => {
+    const note = window.prompt(
+      "请填写退回原因，客户会在订单页面看到这段说明。",
+      "暂未查到对应到账记录，请核对付款人姓名、付款时间或交易单号后重新提交。",
+    );
+    if (!note?.trim()) return;
+    setRejecting(orderId);
+    setError(null);
+    try {
+      await rejectAdminOrderPaymentApi(orderId, note.trim());
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "退回付款信息失败");
+    } finally {
+      setRejecting(null);
     }
   };
 
@@ -319,7 +351,8 @@ export function AdminClient() {
             客户与付款管理
           </h1>
           <p className="text-sm text-neutral-400 mt-2 max-w-2xl">
-            查看注册客户、套餐订单与运行情况。只有确认实际到账后，才能执行入账。
+            查看注册客户、套餐订单与运行情况。客户提交付款信息不会自动入账，
+            只有人工确认支付宝或微信实际到账后才能发放额度。
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
@@ -702,7 +735,12 @@ export function AdminClient() {
                     </span>
                     {order.payment_reference && (
                       <div className="text-neutral-600 font-mono mt-1">
-                        {order.payment_reference}
+                        管理核销号：{order.payment_reference}
+                      </div>
+                    )}
+                    {order.review_note && (
+                      <div className="text-amber-300/80 mt-1 max-w-52">
+                        {order.review_note}
                       </div>
                     )}
                   </td>
@@ -710,8 +748,30 @@ export function AdminClient() {
                     {formatDate(order.created_at)}
                   </td>
                   <td className="px-5 py-4">
-                    {order.status === "PENDING_PAYMENT" ? (
-                      <div className="flex items-center gap-2">
+                    {order.status !== "PAID" ? (
+                      <div className="space-y-2">
+                        {order.payment_claimed_at ? (
+                          <div className="rounded-lg border border-neutral-800 bg-black p-3 text-[11px] leading-5 text-neutral-400">
+                            <div className="text-white">
+                              {PAYMENT_METHOD_LABELS[order.payment_method || ""] ||
+                                order.payment_method ||
+                                "未选择收款方式"}
+                            </div>
+                            <div>付款人：{order.payer_name || "未填写"}</div>
+                            <div>付款时间：{order.payment_time_text || "未填写"}</div>
+                            <div>
+                              客户提供单号：{order.payment_claim_reference || "未填写"}
+                            </div>
+                            {order.payment_claim_note && (
+                              <div>备注：{order.payment_claim_note}</div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-neutral-600">
+                            客户尚未提交付款信息；如已线下确认到账，仍可直接核销。
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
                         <input
                           value={references[order.id] || ""}
                           onChange={event =>
@@ -720,7 +780,7 @@ export function AdminClient() {
                               [order.id]: event.target.value,
                             }))
                           }
-                          placeholder="银行流水号或收款凭证"
+                          placeholder="支付宝/微信交易单号"
                           className="w-52 rounded-lg border border-neutral-800 bg-black px-3 py-2 text-xs text-white outline-none focus:border-neutral-600"
                         />
                         <button
@@ -736,6 +796,21 @@ export function AdminClient() {
                           )}
                           确认到账
                         </button>
+                        {order.status === "PAYMENT_REVIEW" && (
+                          <button
+                            type="button"
+                            onClick={() => rejectPayment(order.id)}
+                            disabled={rejecting !== null}
+                            className="rounded-lg border border-neutral-800 px-3 py-2 text-xs text-neutral-300 hover:border-neutral-600"
+                          >
+                            {rejecting === order.id ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              "退回补充"
+                            )}
+                          </button>
+                        )}
+                        </div>
                       </div>
                     ) : (
                       <span className="text-neutral-600">已完成</span>

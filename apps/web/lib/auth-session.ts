@@ -5,6 +5,7 @@ export interface StoredUser {
   company?: string;
   plan_tier: string;
   credits_balance: number;
+  free_preview_runs_balance?: number;
   basic_decision_runs_balance?: number;
   deep_decision_runs_balance?: number;
   invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";

@@ -63,6 +63,7 @@ export interface UserProfile {
   company?: string;
   plan_tier: string;
   credits_balance: number;
+  free_preview_runs_balance: number;
   basic_decision_runs_balance: number;
   deep_decision_runs_balance: number;
   invite_status?: "VALID" | "INVALID" | "NOT_PROVIDED";
@@ -178,6 +179,13 @@ export interface BillingPackage {
   description: string;
 }
 
+export interface PaymentMethod {
+  code: "ALIPAY" | "WECHAT_PAY" | "WECHAT_APPRECIATION";
+  name: string;
+  image_url: string;
+  package_codes: string[];
+}
+
 export interface PurchaseOrder {
   id: string;
   package_code: string;
@@ -187,7 +195,16 @@ export interface PurchaseOrder {
   amount_minor: number;
   currency: string;
   status: string;
+  payment_method?: PaymentMethod["code"] | null;
+  payer_name?: string | null;
+  payment_claim_reference?: string | null;
+  payment_time_text?: string | null;
+  payment_claim_note?: string | null;
+  payment_claimed_at?: string | null;
   payment_reference?: string | null;
+  reviewed_at?: string | null;
+  review_note?: string | null;
+  allowed_payment_methods: PaymentMethod[];
   created_at: string;
   updated_at: string;
   next_step?: string;
@@ -314,6 +331,12 @@ export async function getCatalogApi() {
     credit_pricing: Record<string, number>;
     self_service_plans: string[];
     assisted_plans: string[];
+    manual_payment: {
+      enabled: boolean;
+      automatic_callback: boolean;
+      methods: PaymentMethod[];
+      notice: string;
+    };
   }>("/v1/catalog", {}, false);
 }
 
@@ -397,6 +420,25 @@ export async function createOrderApi(packageCode: string) {
   });
 }
 
+export async function submitPaymentClaimApi(
+  orderId: string,
+  payload: {
+    payment_method: PaymentMethod["code"];
+    payer_name?: string;
+    payment_claim_reference?: string;
+    payment_time_text?: string;
+    note?: string;
+  },
+) {
+  return apiJson<PurchaseOrder>(
+    `/v1/billing/orders/${encodeURIComponent(orderId)}/payment-claim`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
 export async function getAdminDashboardApi() {
   return apiJson<AdminDashboard>("/v1/admin/dashboard");
 }
@@ -410,6 +452,19 @@ export async function completeAdminOrderApi(
     {
       method: "POST",
       body: JSON.stringify({ payment_reference: paymentReference }),
+    },
+  );
+}
+
+export async function rejectAdminOrderPaymentApi(
+  orderId: string,
+  note: string,
+) {
+  return apiJson<PurchaseOrder>(
+    `/v1/admin/billing/orders/${encodeURIComponent(orderId)}/reject`,
+    {
+      method: "POST",
+      body: JSON.stringify({ note }),
     },
   );
 }

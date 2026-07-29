@@ -31,11 +31,14 @@ from app.db.auth import (
     verify_password,
 )
 from app.db.billing_service import (
+    allowed_payment_methods,
     check_and_reserve_run,
     complete_purchase_order,
     create_purchase_order,
     public_catalog,
+    reject_manual_payment,
     refund_run_reservation,
+    submit_manual_payment,
 )
 from app.db.database import (
     SessionLocal,
@@ -91,7 +94,6 @@ SELF_SERVICE_PLANS = {
 UNAVAILABLE_PLANS = {"DEEP", "ENTERPRISE"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_REQUEST_BYTES = int(os.environ.get("MAX_REQUEST_BYTES", "1048576"))
-FREE_PREVIEW_LIMIT = int(os.environ.get("FREE_PREVIEW_LIMIT", "1"))
 RUN_STALE_AFTER_SECONDS = int(
     os.environ.get("RUN_STALE_AFTER_SECONDS", "3900")
 )
@@ -251,6 +253,50 @@ class PurchaseOrderRequest(BaseModel):
 class CompleteOrderRequest(BaseModel):
     payment_reference: str = Field(min_length=4, max_length=160)
 
+    @field_validator("payment_reference")
+    @classmethod
+    def normalize_payment_reference(cls, value: str) -> str:
+        return value.strip()
+
+
+class ManualPaymentClaimRequest(BaseModel):
+    payment_method: str = Field(min_length=3, max_length=40)
+    payer_name: Optional[str] = Field(default=None, max_length=120)
+    payment_claim_reference: Optional[str] = Field(
+        default=None,
+        max_length=160,
+    )
+    payment_time_text: Optional[str] = Field(default=None, max_length=80)
+    note: Optional[str] = Field(default=None, max_length=500)
+
+    @field_validator("payment_method")
+    @classmethod
+    def normalize_payment_method(cls, value: str) -> str:
+        return value.strip().upper()
+
+    @field_validator(
+        "payer_name",
+        "payment_claim_reference",
+        "payment_time_text",
+        "note",
+    )
+    @classmethod
+    def normalize_optional_payment_text(
+        cls,
+        value: Optional[str],
+    ) -> Optional[str]:
+        normalized = (value or "").strip()
+        return normalized or None
+
+
+class RejectPaymentRequest(BaseModel):
+    note: str = Field(min_length=2, max_length=500)
+
+    @field_validator("note")
+    @classmethod
+    def normalize_rejection_note(cls, value: str) -> str:
+        return value.strip()
+
 
 class ProvisionAdminRequest(BaseModel):
     email: str = Field(min_length=5, max_length=254)
@@ -316,6 +362,7 @@ def _user_payload(user: User) -> Dict[str, Any]:
         "company": user.company,
         "plan_tier": user.plan_tier,
         "credits_balance": int(user.credits_balance),
+        "free_preview_runs_balance": int(user.free_preview_runs_balance),
         "basic_decision_runs_balance": int(
             user.basic_decision_runs_balance
         ),
@@ -527,7 +574,24 @@ def _order_payload(order: PurchaseOrder) -> Dict[str, Any]:
         "amount_minor": order.amount_minor,
         "currency": order.currency,
         "status": order.status,
+        "payment_method": order.payment_method,
+        "payer_name": order.payer_name,
+        "payment_claim_reference": order.payment_claim_reference,
+        "payment_time_text": order.payment_time_text,
+        "payment_claim_note": order.payment_claim_note,
+        "payment_claimed_at": (
+            order.payment_claimed_at.isoformat()
+            if order.payment_claimed_at
+            else None
+        ),
         "payment_reference": order.payment_reference,
+        "reviewed_at": (
+            order.reviewed_at.isoformat() if order.reviewed_at else None
+        ),
+        "review_note": order.review_note,
+        "allowed_payment_methods": allowed_payment_methods(
+            order.package_code
+        ),
         "created_at": order.created_at.isoformat(),
         "updated_at": order.updated_at.isoformat(),
     }
@@ -639,13 +703,13 @@ def _expire_stale_run(
     )
     if study:
         study.status = "FAILED_RECOVERABLE"
-    db.commit()
     refund_run_reservation(
         db,
         locked.user_id,
         reservation,
         billing_reference,
     )
+    db.commit()
     db.refresh(locked)
     return locked
 
@@ -1069,7 +1133,11 @@ def admin_dashboard(
     )
     pending_orders = (
         db.query(PurchaseOrder)
-        .filter(PurchaseOrder.status == "PENDING_PAYMENT")
+        .filter(
+            PurchaseOrder.status.in_(
+                ["PENDING_PAYMENT", "PAYMENT_REVIEW", "PAYMENT_REJECTED"]
+            )
+        )
         .count()
     )
     paid_revenue_minor = int(
@@ -1305,10 +1373,45 @@ def create_order(
     order = create_purchase_order(db, user, req.package_code)
     return {
         **_order_payload(order),
-        "payment_mode": "sales_verified_invoice",
+        "payment_mode": "manual_fixed_qr",
         "next_step": (
-            "请保存订单编号并通过 Lazzor 官方销售渠道完成付款；"
-            "确认到账后积分只会由受保护的管理接口入账。"
+            "请选择订单允许的固定收款码完成付款，再提交付款信息。"
+            "系统没有自动回调；管理员确认实际到账后才会入账。"
+        ),
+    }
+
+
+@app.post("/v1/billing/orders/{order_id}/payment-claim")
+def submit_order_payment_claim(
+    order_id: str,
+    req: ManualPaymentClaimRequest,
+    user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db),
+):
+    order = (
+        db.query(PurchaseOrder)
+        .filter(
+            PurchaseOrder.id == order_id,
+            PurchaseOrder.user_id == user.id,
+        )
+        .first()
+    )
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    order = submit_manual_payment(
+        db,
+        order=order,
+        payment_method=req.payment_method,
+        payer_name=req.payer_name,
+        payment_claim_reference=req.payment_claim_reference,
+        payment_time_text=req.payment_time_text,
+        payment_claim_note=req.note,
+    )
+    return {
+        **_order_payload(order),
+        "message": (
+            "付款信息已提交，订单正在等待人工核验。"
+            "核验前不会发放决策次数或积分。"
         ),
     }
 
@@ -1338,6 +1441,31 @@ def admin_complete_order(
             "amount_minor": order.amount_minor,
             "currency": order.currency,
         },
+    )
+    return _order_payload(order)
+
+
+@app.post("/v1/admin/billing/orders/{order_id}/reject")
+def admin_reject_order_payment(
+    order_id: str,
+    req: RejectPaymentRequest,
+    x_admin_key: Optional[str] = Header(default=None),
+    user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    _require_admin_access(x_admin_key, user)
+    order = reject_manual_payment(
+        db,
+        order_id=order_id,
+        review_note=req.note,
+    )
+    _record_admin_action(
+        db,
+        actor=user,
+        action="PAYMENT_REJECTED",
+        target_type="purchase_order",
+        target_id=order.id,
+        details={"note": req.note},
     )
     return _order_payload(order)
 
@@ -1477,28 +1605,6 @@ async def run_simulation(
     )
     if existing:
         return existing.report_data
-
-    if plan_code == "PREVIEW":
-        prior_reports = (
-            db.query(ReportRecord)
-            .filter(ReportRecord.user_id == user.id)
-            .order_by(ReportRecord.created_at.desc())
-            .limit(max(FREE_PREVIEW_LIMIT, 1) + 10)
-            .all()
-        )
-        preview_count = sum(
-            1
-            for item in prior_reports
-            if (item.report_data or {}).get("plan_code") == "PREVIEW"
-        )
-        if preview_count >= FREE_PREVIEW_LIMIT:
-            raise HTTPException(
-                status_code=402,
-                detail=(
-                    "每个账号包含 1 次免费预览。"
-                    "当前积分不足。请使用有效邀请码获得体验积分，或购买积分。"
-                ),
-            )
 
     existing_job = (
         db.query(SimulationRunRecord)
@@ -1676,13 +1782,13 @@ async def run_simulation(
             failed_job.completed_at = datetime.utcnow()
             record = _study_record(db, user, study_id)
             record.status = "FAILED_RECOVERABLE"
-            db.commit()
             refund_run_reservation(
                 db,
                 user.id,
                 reservation,
                 billing_reference,
             )
+            db.commit()
             LOGGER.exception(
                 "Cloud Run Job dispatch failed for study %s",
                 study_id,
@@ -1769,13 +1875,13 @@ async def run_simulation(
         failed_job.progress_percent = 100
         failed_job.error_code = type(error).__name__[:120]
         failed_job.completed_at = datetime.utcnow()
-        db.commit()
         refund_run_reservation(
             db,
             user.id,
             reservation,
             billing_reference,
         )
+        db.commit()
         LOGGER.exception("Simulation failed for study %s", study_id)
         if isinstance(error, HTTPException):
             raise

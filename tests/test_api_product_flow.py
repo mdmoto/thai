@@ -417,6 +417,161 @@ class ApiProductFlowTests(unittest.TestCase):
         )
         self.assertEqual(credited["deep_decision_runs_balance"], 1)
 
+    def test_manual_qr_payment_claim_requires_admin_verification(self):
+        account, headers = self._register("manual-qr-buyer@example.com")
+        starting_credits = account["user"]["credits_balance"]
+        order_response = self.client.post(
+            "/v1/billing/orders",
+            headers=headers,
+            json={"package_code": "BASIC_DECISION_SINGLE"},
+        )
+        self.assertEqual(order_response.status_code, 201, order_response.text)
+        order = order_response.json()
+        self.assertEqual(
+            [item["code"] for item in order["allowed_payment_methods"]],
+            ["WECHAT_APPRECIATION"],
+        )
+        self.assertEqual(order["payment_mode"], "manual_fixed_qr")
+
+        wrong_method = self.client.post(
+            f"/v1/billing/orders/{order['id']}/payment-claim",
+            headers=headers,
+            json={
+                "payment_method": "ALIPAY",
+                "payer_name": "测试客户",
+                "payment_time_text": "2026-07-29T12:30",
+            },
+        )
+        self.assertEqual(wrong_method.status_code, 400, wrong_method.text)
+
+        submitted = self.client.post(
+            f"/v1/billing/orders/{order['id']}/payment-claim",
+            headers=headers,
+            json={
+                "payment_method": "WECHAT_APPRECIATION",
+                "payer_name": "测试客户",
+                "payment_claim_reference": "123456",
+                "payment_time_text": "2026-07-29T12:30",
+                "note": "微信付款",
+            },
+        )
+        self.assertEqual(submitted.status_code, 200, submitted.text)
+        claim = submitted.json()
+        self.assertEqual(claim["status"], "PAYMENT_REVIEW")
+        self.assertEqual(claim["payment_method"], "WECHAT_APPRECIATION")
+        self.assertEqual(claim["payment_claim_reference"], "123456")
+
+        unchanged = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(unchanged["credits_balance"], starting_credits)
+        self.assertEqual(unchanged["basic_decision_runs_balance"], 0)
+
+        rejected = self.client.post(
+            f"/v1/admin/billing/orders/{order['id']}/reject",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={"note": "请补充付款时间后重新提交"},
+        )
+        self.assertEqual(rejected.status_code, 200, rejected.text)
+        self.assertEqual(rejected.json()["status"], "PAYMENT_REJECTED")
+        self.assertEqual(
+            rejected.json()["review_note"],
+            "请补充付款时间后重新提交",
+        )
+
+        resubmitted = self.client.post(
+            f"/v1/billing/orders/{order['id']}/payment-claim",
+            headers=headers,
+            json={
+                "payment_method": "WECHAT_APPRECIATION",
+                "payer_name": "测试客户",
+                "payment_claim_reference": "123456",
+                "payment_time_text": "2026-07-29T12:30",
+            },
+        )
+        self.assertEqual(resubmitted.status_code, 200, resubmitted.text)
+        self.assertEqual(resubmitted.json()["status"], "PAYMENT_REVIEW")
+        self.assertIsNone(resubmitted.json()["review_note"])
+
+        completed = self.client.post(
+            f"/v1/admin/billing/orders/{order['id']}/complete",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={"payment_reference": "wechat-real-transaction-001"},
+        )
+        self.assertEqual(completed.status_code, 200, completed.text)
+        credited = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(credited["credits_balance"], starting_credits + 1)
+        self.assertEqual(credited["basic_decision_runs_balance"], 1)
+
+    def test_duplicate_payment_reference_returns_conflict_without_credit(self):
+        account, headers = self._register("duplicate-payment@example.com")
+        starting_credits = account["user"]["credits_balance"]
+        first = self.client.post(
+            "/v1/billing/orders",
+            headers=headers,
+            json={"package_code": "STARTER"},
+        ).json()
+        second = self.client.post(
+            "/v1/billing/orders",
+            headers=headers,
+            json={"package_code": "STARTER"},
+        ).json()
+        first_complete = self.client.post(
+            f"/v1/admin/billing/orders/{first['id']}/complete",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={"payment_reference": "same-payment-reference"},
+        )
+        self.assertEqual(first_complete.status_code, 200, first_complete.text)
+        duplicate = self.client.post(
+            f"/v1/admin/billing/orders/{second['id']}/complete",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={"payment_reference": "same-payment-reference"},
+        )
+        self.assertEqual(duplicate.status_code, 409, duplicate.text)
+        profile = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(profile["credits_balance"], starting_credits + 10)
+        self.assertEqual(profile["deep_decision_runs_balance"], 1)
+
+    def test_free_preview_is_reserved_once_per_account(self):
+        account, headers = self._register(
+            "single-preview@example.com",
+            invite_code="",
+        )
+        self.assertEqual(account["user"]["free_preview_runs_balance"], 1)
+
+        for suffix in ("first", "second"):
+            study = self.client.post(
+                "/v1/studies",
+                headers=headers,
+                json={
+                    "name": f"免费预览 {suffix}",
+                    "study_type": "PRODUCT_VALIDATION",
+                    "plan_code": "PREVIEW",
+                    "product_name": "Preview Product",
+                    "category": "GENERIC_CONSUMER_PRODUCT",
+                    "price": 499,
+                },
+            ).json()
+            self.client.post(
+                f"/v1/studies/{study['id']}/confirm",
+                headers=headers,
+                json={"overrides": {}},
+            )
+            response = self.client.post(
+                f"/v1/studies/{study['id']}/runs",
+                headers=headers,
+                json={
+                    "study_id": study["id"],
+                    "plan_code": "PREVIEW",
+                    "idempotency_key": f"single-preview-{suffix}",
+                },
+            )
+            if suffix == "first":
+                self.assertEqual(response.status_code, 200, response.text)
+            else:
+                self.assertEqual(response.status_code, 402, response.text)
+
+        profile = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(profile["free_preview_runs_balance"], 0)
+
     def test_admin_account_and_dashboard_require_allowlisted_user(self):
         provisioned = self.client.post(
             "/v1/admin/accounts/provision",
