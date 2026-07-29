@@ -410,7 +410,7 @@ class StudyServiceTests(unittest.TestCase):
         self.assertTrue(report["geo_analysis"]["heatmap"])
         self.assertEqual(
             report["geo_analysis"]["locations"][0]["observed_poi_status"],
-            "public_snapshot",
+            "osm_versioned_snapshot",
         )
 
     def test_ecommerce_template_has_distinct_checkout_analysis(self):

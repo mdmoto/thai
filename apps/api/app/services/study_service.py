@@ -5,6 +5,7 @@ import sys
 import uuid
 import json
 import re
+import math
 import urllib.parse
 from datetime import datetime
 from pathlib import Path
@@ -22,6 +23,7 @@ sys.path.append(
 
 from agents.gemini_gateway import GeminiAgentGateway
 from data_pipeline.market_research import PublicMarketResearch
+from app.services.geospatial_research import GoogleGeospatialResearch
 from simulation_core.calibration import (
     get_study_model,
     load_calibration_profile,
@@ -188,11 +190,15 @@ class StudyService:
     def __init__(
         self,
         market_research: Optional[PublicMarketResearch] = None,
+        geospatial_research: Optional[GoogleGeospatialResearch] = None,
     ):
         self.studies_db: Dict[str, Dict[str, Any]] = {}
         self.runs_db: Dict[str, Dict[str, Any]] = {}
         self.reports_db: Dict[str, Dict[str, Any]] = {}
         self.market_research = market_research or PublicMarketResearch()
+        self.geospatial_research = (
+            geospatial_research or GoogleGeospatialResearch()
+        )
 
     def create_study(self, data: Dict[str, Any]) -> Dict[str, Any]:
         data = dict(data)
@@ -1573,6 +1579,21 @@ class StudyService:
                 study,
                 plan.code,
             )
+            if study["study_type"] in {
+                "VENUE_STUDY",
+                "SITE_COMPARISON",
+                "OPERATING_SCENARIO",
+            }:
+                update_progress("COLLECTING_GEOGRAPHIC_EVIDENCE", 25)
+                geospatial_research = (
+                    await self.geospatial_research.collect(study)
+                )
+            else:
+                geospatial_research = {
+                    "status": "not_applicable",
+                    "locations": {},
+                    "warnings": [],
+                }
             model_study_type = self._effective_model_type(study)
             profile, choice_estimation, calibration_warnings = (
                 self._calibration_profile_for_run(
@@ -1678,6 +1699,7 @@ class StudyService:
                 inputs={**study["inputs"], **study["facts"]},
                 capacity=study["facts"].get("capacity"),
                 average_check=study["facts"].get("average_check") or price,
+                external_evidence=geospatial_research,
             )
             if geo_analysis:
                 sim_results["geo_analysis"] = geo_analysis
@@ -1686,7 +1708,23 @@ class StudyService:
                     "dataset_id": geo_analysis["dataset_id"],
                     "observed_source_count": len(geo_analysis["sources"]),
                     "heatmap_status": "model_inference_not_measured_footfall",
-                    "catchment_status": "walking_radial_proxy",
+                    "geospatial_status": geo_analysis["geospatial_status"],
+                    "site_score_status": geo_analysis["score_method"],
+                    "site_score_calibration": geo_analysis[
+                        "score_calibration"
+                    ],
+                    "catchment_status": (
+                        "walking_network_isochrone"
+                        if geo_analysis["catchments"]
+                        and all(
+                            item["mode"] == "walking_network_isochrone"
+                            for item in geo_analysis["catchments"]
+                        )
+                        else "partial_or_radial_proxy"
+                    ),
+                    "operations_status": geo_analysis["operations"][
+                        "status"
+                    ],
                 }
                 if study["study_type"] == "SITE_COMPARISON" and geo_analysis[
                     "locations"
@@ -1699,12 +1737,42 @@ class StudyService:
                         float(item["site_score"])
                         for item in geo_analysis["locations"]
                     )
+                    median_score = float(
+                        np.median(
+                            [
+                                float(item["site_score"])
+                                for item in geo_analysis["locations"]
+                            ]
+                        )
+                    )
                     site_scenarios = []
                     for item in geo_analysis["locations"]:
                         score = float(item["site_score"])
-                        multiplier = 0.65 + score / 100.0 * 0.55
+                        has_observed_geo = item["score_status"] != (
+                            "insufficient_geospatial_evidence"
+                        )
+                        multiplier = (
+                            min(
+                                1.10,
+                                max(
+                                    0.90,
+                                    math.exp((score - median_score) / 250.0),
+                                ),
+                            )
+                            if has_observed_geo
+                            else 1.0
+                        )
                         rate = min(1.0, baseline_rate * multiplier)
-                        relative_index = score / max(1.0, top_score) * 100.0
+                        geo_relative_index = (
+                            score / max(1.0, top_score) * 100.0
+                        )
+                        conversion_index = (
+                            rate / max(0.000001, baseline_rate) * 100.0
+                        )
+                        relative_index = (
+                            conversion_index * 0.55
+                            + geo_relative_index * 0.45
+                        )
                         site_scenarios.append(
                             {
                                 "scenario_id": item["id"],
@@ -1722,7 +1790,26 @@ class StudyService:
                                 "revenue_idx": round(relative_index, 2),
                                 "margin_idx": round(relative_index, 2),
                                 "geo_site_score": score,
-                                "data_class": "model_inference",
+                                "product_model_purchase_rate": round(
+                                    baseline_rate,
+                                    6,
+                                ),
+                                "bounded_location_multiplier": round(
+                                    multiplier,
+                                    4,
+                                ),
+                                "location_opportunity_index": round(
+                                    geo_relative_index,
+                                    2,
+                                ),
+                                "fusion_method": (
+                                    "consumer_choice_55pct_plus_location_opportunity_45pct"
+                                ),
+                                "data_class": (
+                                    "external_market_data_plus_model_inference"
+                                    if has_observed_geo
+                                    else "insufficient_geospatial_evidence"
+                                ),
                             }
                         )
                     sim_results["scenarios"] = site_scenarios
