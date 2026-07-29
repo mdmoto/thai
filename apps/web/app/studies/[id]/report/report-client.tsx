@@ -339,6 +339,8 @@ const CALIBRATION_LABELS: Record<string, string> = {
   official_macro_calibrated_choice_prior: "泰国官方宏观校准；选择系数待验证",
   customer_override_unvalidated: "客户数据覆盖；尚未回测",
   observed_choice_fit_unvalidated: "真实选择数据拟合；尚未回测",
+  platform_category_benchmark_unvalidated:
+    "平台去标识化品类基准；尚未回测",
   validated: "已完成历史回测",
   unknown: "未知",
 };

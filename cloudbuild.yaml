@@ -24,6 +24,39 @@ steps:
     entrypoint: gcloud
     args:
       - run
+      - jobs
+      - deploy
+      - market-twin-runner
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID
+      - --region=${_REGION}
+      - --service-account=${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com
+      - --set-cloudsql-instances=$PROJECT_ID:${_REGION}:${_CLOUD_SQL_INSTANCE}
+      - --cpu=2
+      - --memory=4Gi
+      - --tasks=1
+      - --parallelism=1
+      - --max-retries=1
+      - --task-timeout=3300s
+      - --command=python
+      - --args=-m,app.worker
+      - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|MARKET_RESEARCH_ENABLED=true|FIRECRAWL_ENABLED=true|FIRECRAWL_API_URL=https://api.firecrawl.dev/v2|FIRECRAWL_SEARCH_LIMIT=10|MARKET_RESEARCH_QUERY_COUNT=16|MARKET_RESEARCH_MAX_PAGES=20|MARKET_RESEARCH_MAX_VIDEOS=8|MARKET_RESEARCH_EVIDENCE_LIMIT=180|MARKET_RESEARCH_SEARCH_CONCURRENCY=3|MARKET_RESEARCH_RETRY_ATTEMPTS=3|GEMINI_VERTEX_FALLBACK=true|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GOOGLE_CLOUD_LOCATION=global|PLATFORM_CALIBRATION_MIN_CONTRIBUTIONS=5|PLATFORM_CALIBRATION_MIN_CHOICE_SETS=500
+      - --set-secrets=DATABASE_URL=market-twin-database-url:latest,GEMINI_API_KEY_PRIMARY=market-twin-gemini-api-key-primary:latest,GEMINI_API_KEY_SECONDARY=market-twin-gemini-api-key-secondary:latest
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - add-iam-policy-binding
+      - market-twin-runner
+      - --region=${_REGION}
+      - --member=serviceAccount:${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com
+      - --role=roles/run.developer
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
       - deploy
       - market-twin-api
       - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID
@@ -42,7 +75,7 @@ steps:
       - --max-instances=5
       - --startup-probe=httpGet.path=/v1/health,initialDelaySeconds=2,timeoutSeconds=3,periodSeconds=5,failureThreshold=24
       - --liveness-probe=httpGet.path=/v1/health,initialDelaySeconds=30,timeoutSeconds=3,periodSeconds=30,failureThreshold=3
-      - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|CORS_ALLOWED_ORIGINS=${_CORS_ORIGINS}|FREE_PREVIEW_LIMIT=1|MARKET_RESEARCH_ENABLED=true|FIRECRAWL_ENABLED=true|FIRECRAWL_API_URL=https://api.firecrawl.dev/v2|FIRECRAWL_SEARCH_LIMIT=10|MARKET_RESEARCH_QUERY_COUNT=16|MARKET_RESEARCH_MAX_PAGES=20|MARKET_RESEARCH_MAX_VIDEOS=8|MARKET_RESEARCH_EVIDENCE_LIMIT=180|MARKET_RESEARCH_SEARCH_CONCURRENCY=3|MARKET_RESEARCH_RETRY_ATTEMPTS=3|GEMINI_VERTEX_FALLBACK=true|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GOOGLE_CLOUD_LOCATION=global|EMAIL_VERIFICATION_REQUIRED=true|TURNSTILE_SITE_KEY=0x4AAAAAAD_uL8PSUk9tWaMg|TURNSTILE_EXPECTED_HOSTNAMES=ai.lazzor.com|VERIFICATION_FROM_EMAIL=Chiang Mai AI Center <verify@auth.lazzor.com>|REGISTRATION_IP_HOURLY_LIMIT=3|REGISTRATION_EMAIL_HOURLY_LIMIT=3|REGISTRATION_SUBNET_DAILY_LIMIT=10|ADMIN_USER_EMAILS=mdmoto@gmail.com
+      - --set-env-vars=^|^APP_ENV=production|DATA_CATALOG_ROOT=/data_catalog|CORS_ALLOWED_ORIGINS=${_CORS_ORIGINS}|FREE_PREVIEW_LIMIT=1|MARKET_RESEARCH_ENABLED=true|FIRECRAWL_ENABLED=true|FIRECRAWL_API_URL=https://api.firecrawl.dev/v2|FIRECRAWL_SEARCH_LIMIT=10|MARKET_RESEARCH_QUERY_COUNT=16|MARKET_RESEARCH_MAX_PAGES=20|MARKET_RESEARCH_MAX_VIDEOS=8|MARKET_RESEARCH_EVIDENCE_LIMIT=180|MARKET_RESEARCH_SEARCH_CONCURRENCY=3|MARKET_RESEARCH_RETRY_ATTEMPTS=3|GEMINI_VERTEX_FALLBACK=true|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GOOGLE_CLOUD_LOCATION=global|ASYNC_RUN_PLAN_CODES=PROFESSIONAL|RUN_JOB_NAME=market-twin-runner|RUN_JOB_REGION=${_REGION}|RUN_STALE_AFTER_SECONDS=3900|PLATFORM_CALIBRATION_MIN_CONTRIBUTIONS=5|PLATFORM_CALIBRATION_MIN_CHOICE_SETS=500|EMAIL_VERIFICATION_REQUIRED=true|TURNSTILE_SITE_KEY=0x4AAAAAAD_uL8PSUk9tWaMg|TURNSTILE_EXPECTED_HOSTNAMES=ai.lazzor.com|VERIFICATION_FROM_EMAIL=Chiang Mai AI Center <verify@auth.lazzor.com>|REGISTRATION_IP_HOURLY_LIMIT=3|REGISTRATION_EMAIL_HOURLY_LIMIT=3|REGISTRATION_SUBNET_DAILY_LIMIT=10|ADMIN_USER_EMAILS=mdmoto@gmail.com
       - --set-secrets=DATABASE_URL=market-twin-database-url:latest,JWT_SECRET_KEY=market-twin-jwt-secret:latest,ADMIN_API_KEY=market-twin-admin-api-key:latest,INVITE_CODES_JSON=market-twin-invite-codes:latest,GEMINI_API_KEY_PRIMARY=market-twin-gemini-api-key-primary:latest,GEMINI_API_KEY_SECONDARY=market-twin-gemini-api-key-secondary:latest,REGISTRATION_SECURITY_KEY=market-twin-registration-security-key:latest,RESEND_API_KEY=market-twin-resend-api-key:latest,TURNSTILE_SECRET_KEY=market-twin-turnstile-secret-key:latest
 
 images:

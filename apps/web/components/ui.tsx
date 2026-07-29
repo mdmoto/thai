@@ -8,7 +8,8 @@ import { useState, useEffect } from "react";
 // ─────────────────────────────────────────
 type StatusType =
   | "DRAFT" | "PARSING" | "NEEDS_CONFIRMATION" | "READY"
-  | "QUEUED" | "PREPARING_POPULATION" | "RUNNING_AGENTS"
+  | "QUEUED" | "PREPARING_POPULATION" | "COLLECTING_PUBLIC_EVIDENCE"
+  | "GENERATING_POPULATION" | "RUNNING_AGENTS"
   | "RUNNING_SIMULATION" | "RUNNING_SCENARIOS" | "GENERATING_REPORT"
   | "COMPLETED" | "PAUSED" | "RETRYING" | "FAILED_RECOVERABLE"
   | "FAILED_FINAL" | "CANCEL_REQUESTED" | "CANCELLED" | "EXPIRED";
@@ -20,6 +21,8 @@ const STATUS_CONFIG: Record<StatusType, { label: string; dot: string; text: stri
   READY:                { label: "准备就绪",   dot: "bg-emerald-400", text: "text-emerald-400" },
   QUEUED:               { label: "排队中",     dot: "bg-sky-400", text: "text-sky-400" },
   PREPARING_POPULATION: { label: "构建AI人群", dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
+  COLLECTING_PUBLIC_EVIDENCE: { label: "采集市场证据", dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
+  GENERATING_POPULATION: { label: "生成AI人群", dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
   RUNNING_AGENTS:       { label: "AI人群分析", dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
   RUNNING_SIMULATION:   { label: "市场模拟",   dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },
   RUNNING_SCENARIOS:    { label: "情景对比",   dot: "bg-violet-400 animate-pulse", text: "text-violet-400" },

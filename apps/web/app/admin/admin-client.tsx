@@ -378,10 +378,48 @@ export function AdminClient() {
         <StatCard
           label="模拟任务"
           value={overview?.completed_runs ?? 0}
-          note={`总计 ${overview?.total_runs ?? 0} · 失败 ${overview?.failed_runs ?? 0}`}
+          note={`总计 ${overview?.total_runs ?? 0} · 运行中 ${overview?.active_runs ?? 0} · 失败 ${overview?.failed_runs ?? 0}`}
           icon={Workflow}
         />
       </div>
+
+      <Card>
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
+          <div>
+            <span className="eyebrow">长期平台校准</span>
+            <h2 className="text-sm font-semibold text-white mt-2">
+              去标识化品类基准
+            </h2>
+            <p className="text-xs text-neutral-400 mt-2 max-w-3xl leading-6">
+              当前累计 {overview?.calibration_contributions ?? 0} 个真实选择拟合贡献。
+              这里只保存品类、样本数量、拟合系数和误差，不保存客户账号、项目名称或原始选择数据。
+            </p>
+          </div>
+          <div className="text-xs text-neutral-400 lg:text-right">
+            {(data?.calibration_benchmarks.cohorts ?? []).length > 0
+              ? `${data?.calibration_benchmarks.cohorts.length} 个品类研究组合`
+              : "尚未达到聚合门槛"}
+          </div>
+        </div>
+        {(data?.calibration_benchmarks.cohorts ?? []).length > 0 && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            {data?.calibration_benchmarks.cohorts.map(cohort => (
+              <div
+                key={`${cohort.category_key}:${cohort.study_type}`}
+                className="rounded-xl border border-neutral-900 bg-neutral-950/50 px-4 py-3"
+              >
+                <div className="text-xs text-white">
+                  {cohort.category_key} · {cohort.study_type}
+                </div>
+                <div className="text-[11px] text-neutral-500 mt-1">
+                  {cohort.contribution_count} 个贡献 ·{" "}
+                  {cohort.choice_set_count.toLocaleString("zh-CN")} 个选择组
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <Card className="!p-0 overflow-hidden">
         <div className="px-5 py-4 border-b border-neutral-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

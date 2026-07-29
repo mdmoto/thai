@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import json
 import os
@@ -11,7 +12,7 @@ import time
 import uuid
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
@@ -60,6 +61,15 @@ from app.schemas.study import (
     StudyConfirmRequest,
 )
 from app.services.study_service import StudyService
+from app.services.platform_calibration import (
+    platform_calibration_override,
+    platform_calibration_summary,
+    record_platform_contribution,
+)
+from app.services.run_dispatcher import (
+    dispatch_run_job,
+    should_dispatch_asynchronously,
+)
 from app.services.registration_security import (
     consume_registration_challenge,
     create_registration_challenge,
@@ -82,7 +92,22 @@ UNAVAILABLE_PLANS = {"DEEP", "ENTERPRISE"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_REQUEST_BYTES = int(os.environ.get("MAX_REQUEST_BYTES", "1048576"))
 FREE_PREVIEW_LIMIT = int(os.environ.get("FREE_PREVIEW_LIMIT", "1"))
+RUN_STALE_AFTER_SECONDS = int(
+    os.environ.get("RUN_STALE_AFTER_SECONDS", "3900")
+)
 _rate_buckets: Dict[str, deque] = defaultdict(deque)
+
+RUN_STAGE_LABELS = {
+    "QUEUED": "任务已进入安全队列",
+    "PREPARING_POPULATION": "正在准备模型与校准数据",
+    "COLLECTING_PUBLIC_EVIDENCE": "正在采集公开市场证据",
+    "GENERATING_POPULATION": "正在生成 AI 模拟消费人群",
+    "RUNNING_AGENTS": "正在分析代表性消费人群",
+    "RUNNING_SIMULATION": "正在运行市场情景模拟",
+    "GENERATING_REPORT": "正在整理决策报告",
+    "COMPLETED": "报告已完成",
+    "FAILED_RECOVERABLE": "任务未完成，额度已安排退回",
+}
 
 
 @asynccontextmanager
@@ -542,6 +567,89 @@ def _hydrate_service_study(record: StudyRecord) -> Dict[str, Any]:
     )
 
 
+def _run_job_payload(job: SimulationRunRecord) -> Dict[str, Any]:
+    return {
+        "run_job_id": job.id,
+        "study_id": job.study_id,
+        "status": job.status,
+        "stage": job.progress_stage or job.status,
+        "stage_label": RUN_STAGE_LABELS.get(
+            job.progress_stage or job.status,
+            "后台任务正在运行",
+        ),
+        "progress_percent": int(job.progress_percent or 0),
+        "plan_code": job.plan_code,
+        "calibration_tier": job.calibration_tier,
+        "report_id": job.report_id,
+        "error_code": job.error_code,
+        "can_close_page": job.status in {
+            "PENDING",
+            "QUEUED",
+            "RUNNING",
+        },
+        "created_at": job.created_at.isoformat(),
+        "updated_at": job.updated_at.isoformat(),
+        "started_at": (
+            job.started_at.isoformat() if job.started_at else None
+        ),
+        "completed_at": (
+            job.completed_at.isoformat() if job.completed_at else None
+        ),
+    }
+
+
+def _reservation_from_job(job: SimulationRunRecord) -> Dict[str, Any]:
+    return {
+        "deducted_credits": int(job.credits_reserved or 0),
+        "entitlement_code": job.entitlement_code,
+        "entitlement_deducted": int(job.entitlement_reserved or 0),
+    }
+
+
+def _expire_stale_run(
+    db: Session,
+    job: SimulationRunRecord,
+) -> SimulationRunRecord:
+    if job.status not in {"PENDING", "QUEUED", "RUNNING"}:
+        return job
+    cutoff = datetime.utcnow() - timedelta(
+        seconds=max(900, RUN_STALE_AFTER_SECONDS)
+    )
+    if not job.updated_at or job.updated_at >= cutoff:
+        return job
+    locked = (
+        db.query(SimulationRunRecord)
+        .filter(SimulationRunRecord.id == job.id)
+        .with_for_update()
+        .one()
+    )
+    if locked.status not in {"PENDING", "QUEUED", "RUNNING"}:
+        return locked
+    reservation = _reservation_from_job(locked)
+    billing_reference = f"{locked.user_id}:{locked.request_key}"
+    locked.status = "FAILED"
+    locked.progress_stage = "FAILED_RECOVERABLE"
+    locked.progress_percent = 100
+    locked.error_code = "RUN_TIMEOUT"
+    locked.completed_at = datetime.utcnow()
+    study = (
+        db.query(StudyRecord)
+        .filter(StudyRecord.id == locked.study_id)
+        .first()
+    )
+    if study:
+        study.status = "FAILED_RECOVERABLE"
+    db.commit()
+    refund_run_reservation(
+        db,
+        locked.user_id,
+        reservation,
+        billing_reference,
+    )
+    db.refresh(locked)
+    return locked
+
+
 def _require_admin_key(value: Optional[str]) -> None:
     expected = os.environ.get("ADMIN_API_KEY")
     if not expected:
@@ -981,6 +1089,12 @@ def admin_dashboard(
         .filter(SimulationRunRecord.status == "FAILED")
         .count()
     )
+    active_runs = (
+        db.query(SimulationRunRecord)
+        .filter(SimulationRunRecord.status.in_(["QUEUED", "RUNNING"]))
+        .count()
+    )
+    calibration_summary = platform_calibration_summary(db)
     audit_logs = (
         db.query(AdminAuditLog)
         .order_by(AdminAuditLog.created_at.desc())
@@ -997,10 +1111,15 @@ def admin_dashboard(
             "total_runs": total_runs,
             "completed_runs": completed_runs,
             "failed_runs": failed_runs,
+            "active_runs": active_runs,
             "active_invite_codes": sum(
                 1 for item in invite_codes if item.active
             ),
+            "calibration_contributions": calibration_summary[
+                "total_contributions"
+            ],
         },
+        "calibration_benchmarks": calibration_summary,
         "users": [
             {
                 **_user_payload(user),
@@ -1322,7 +1441,13 @@ async def run_simulation(
     db: Session = Depends(get_db),
 ):
     record = _study_record(db, user, study_id)
-    if record.status not in {"READY", "FAILED_RECOVERABLE", "COMPLETED"}:
+    if record.status not in {
+        "READY",
+        "FAILED_RECOVERABLE",
+        "COMPLETED",
+        "QUEUED",
+        "RUNNING",
+    }:
         raise HTTPException(
             status_code=409,
             detail="请先确认研究输入后再运行",
@@ -1395,27 +1520,89 @@ async def run_simulation(
             )
             if completed_report:
                 return completed_report.report_data
+        existing_job = _expire_stale_run(db, existing_job)
+        if existing_job.status in {"PENDING", "QUEUED", "RUNNING"}:
+            return JSONResponse(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=_run_job_payload(existing_job),
+            )
         raise HTTPException(
             status_code=409,
-            detail=(
-                "相同请求正在执行，请稍后读取研究报告。"
-                if existing_job.status in {"PENDING", "RUNNING"}
-                else "上次请求已失败，请使用新的请求编号重试。"
-            ),
+            detail="上次请求已失败，请使用新的请求编号重试。",
         )
 
+    active_study_job = (
+        db.query(SimulationRunRecord)
+        .filter(
+            SimulationRunRecord.user_id == user.id,
+            SimulationRunRecord.study_id == study_id,
+            SimulationRunRecord.plan_code == plan_code,
+            SimulationRunRecord.status.in_(
+                ["PENDING", "QUEUED", "RUNNING"]
+            ),
+        )
+        .order_by(SimulationRunRecord.created_at.desc())
+        .first()
+    )
+    if active_study_job:
+        active_study_job = _expire_stale_run(db, active_study_job)
+        if active_study_job.status in {"PENDING", "QUEUED", "RUNNING"}:
+            return JSONResponse(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=_run_job_payload(active_study_job),
+            )
+    if record.status in {"QUEUED", "RUNNING"}:
+        raise HTTPException(
+            status_code=409,
+            detail="项目仍标记为运行中，但未找到可恢复的后台任务，请联系管理员。",
+        )
+
+    requested_population = (
+        None
+        if plan_code in SELF_SERVICE_PLANS
+        else req.population_size
+    )
+    calibration_tier = (
+        "CUSTOMER_OBSERVED_CHOICE"
+        if (record.inputs_json or {}).get("observed_choice_data")
+        else "PUBLIC_EVIDENCE"
+    )
     run_job = SimulationRunRecord(
         user_id=user.id,
         study_id=study_id,
         request_key=request_key,
         plan_code=plan_code,
         status="PENDING",
+        requested_population=requested_population,
+        requested_mc_rounds=req.mc_rounds,
+        seed=req.seed,
+        progress_stage="QUEUED",
+        progress_percent=0,
+        calibration_tier=calibration_tier,
     )
     db.add(run_job)
     try:
         db.commit()
     except IntegrityError as error:
         db.rollback()
+        active_study_job = (
+            db.query(SimulationRunRecord)
+            .filter(
+                SimulationRunRecord.user_id == user.id,
+                SimulationRunRecord.study_id == study_id,
+                SimulationRunRecord.plan_code == plan_code,
+                SimulationRunRecord.status.in_(
+                    ["PENDING", "QUEUED", "RUNNING"]
+                ),
+            )
+            .order_by(SimulationRunRecord.created_at.desc())
+            .first()
+        )
+        if active_study_job:
+            return JSONResponse(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=_run_job_payload(active_study_job),
+            )
         raise HTTPException(
             status_code=409,
             detail="相同请求已经被接收，请稍后读取研究报告。",
@@ -1445,21 +1632,94 @@ async def run_simulation(
         .filter(SimulationRunRecord.id == run_job.id)
         .one()
     )
-    run_job.status = "RUNNING"
     run_job.credits_reserved = int(reservation["deducted_credits"])
     run_job.entitlement_code = reservation.get("entitlement_code")
     run_job.entitlement_reserved = int(
         reservation.get("entitlement_deducted") or 0
     )
+    if should_dispatch_asynchronously(plan_code):
+        run_job.status = "QUEUED"
+        run_job.progress_stage = "QUEUED"
+        run_job.progress_percent = 0
+        record.status = "QUEUED"
+        db.commit()
+        try:
+            dispatch_result = await asyncio.to_thread(
+                dispatch_run_job,
+                run_job.id,
+            )
+            run_job = (
+                db.query(SimulationRunRecord)
+                .filter(SimulationRunRecord.id == run_job.id)
+                .one()
+            )
+            run_job.provider_execution_name = dispatch_result.get(
+                "operation_name"
+            )
+            db.commit()
+            db.refresh(run_job)
+            return JSONResponse(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=_run_job_payload(run_job),
+            )
+        except Exception as error:
+            db.rollback()
+            failed_job = (
+                db.query(SimulationRunRecord)
+                .filter(SimulationRunRecord.id == run_job.id)
+                .one()
+            )
+            failed_job.status = "FAILED"
+            failed_job.progress_stage = "FAILED_RECOVERABLE"
+            failed_job.progress_percent = 100
+            failed_job.error_code = "DISPATCH_FAILED"
+            failed_job.completed_at = datetime.utcnow()
+            record = _study_record(db, user, study_id)
+            record.status = "FAILED_RECOVERABLE"
+            db.commit()
+            refund_run_reservation(
+                db,
+                user.id,
+                reservation,
+                billing_reference,
+            )
+            LOGGER.exception(
+                "Cloud Run Job dispatch failed for study %s",
+                study_id,
+            )
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "后台任务暂时无法启动，预留的积分或决策次数"
+                    "已自动退回，请稍后重试。"
+                ),
+            ) from error
+
+    run_job.status = "RUNNING"
+    run_job.progress_stage = "PREPARING_POPULATION"
+    run_job.progress_percent = 5
+    run_job.started_at = datetime.utcnow()
     db.commit()
 
     try:
+        model_study_type = service._effective_model_type(
+            service.studies_db[study_id]
+        )
+        pooled_override = platform_calibration_override(
+            db,
+            (record.facts_json or {}).get("category"),
+            model_study_type,
+        )
+        if pooled_override and calibration_tier == "PUBLIC_EVIDENCE":
+            run_job.calibration_tier = "PLATFORM_CATEGORY_BENCHMARK"
+            db.commit()
         report = await service.execute_run(
             study_id=study_id,
-            pop_size=None if plan_code in SELF_SERVICE_PLANS else req.population_size,
+            pop_size=requested_population,
             mc_rounds=req.mc_rounds,
             seed=req.seed,
             plan_code=plan_code,
+            platform_calibration_override=pooled_override,
         )
         report_record = ReportRecord(
             id=report["report_id"],
@@ -1472,6 +1732,7 @@ async def run_simulation(
             report_data=report,
         )
         db.add(report_record)
+        record_platform_contribution(db, report)
         # PostgreSQL enforces the simulation_runs.report_id foreign key.
         # Flush the new report before linking the durable run record to it;
         # assigning only the scalar ID does not give SQLAlchemy an ORM
@@ -1483,6 +1744,9 @@ async def run_simulation(
             .one()
         )
         run_job.status = "COMPLETED"
+        run_job.progress_stage = "COMPLETED"
+        run_job.progress_percent = 100
+        run_job.completed_at = datetime.utcnow()
         run_job.report_id = report["report_id"]
         record.status = "COMPLETED"
         record.plan_code = plan_code
@@ -1501,7 +1765,10 @@ async def run_simulation(
             .one()
         )
         failed_job.status = "FAILED"
+        failed_job.progress_stage = "FAILED_RECOVERABLE"
+        failed_job.progress_percent = 100
         failed_job.error_code = type(error).__name__[:120]
+        failed_job.completed_at = datetime.utcnow()
         db.commit()
         refund_run_reservation(
             db,
@@ -1518,6 +1785,26 @@ async def run_simulation(
             status_code=500,
             detail="模拟失败，预留的积分或决策次数已自动退回；项目可以重新运行。",
         ) from error
+
+
+@app.get("/v1/runs/{run_job_id}")
+def get_run_status(
+    run_job_id: str,
+    user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db),
+):
+    job = (
+        db.query(SimulationRunRecord)
+        .filter(
+            SimulationRunRecord.id == run_job_id,
+            SimulationRunRecord.user_id == user.id,
+        )
+        .first()
+    )
+    if not job:
+        raise HTTPException(status_code=404, detail="后台任务不存在")
+    job = _expire_stale_run(db, job)
+    return _run_job_payload(job)
 
 
 @app.get("/v1/reports/{report_id}")

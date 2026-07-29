@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import asyncio
 import tempfile
 import unittest
 from pathlib import Path
@@ -29,6 +30,7 @@ os.environ["INVITE_CODES_JSON"] = (
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.main import app, service  # noqa: E402
+from app.services.run_worker import execute_run_job  # noqa: E402
 
 
 class ApiProductFlowTests(unittest.TestCase):
@@ -660,6 +662,7 @@ class ApiProductFlowTests(unittest.TestCase):
             mc_rounds=None,
             seed=None,
             plan_code=None,
+            **_kwargs,
         ):
             self.assertIsNone(
                 pop_size,
@@ -751,6 +754,126 @@ class ApiProductFlowTests(unittest.TestCase):
             if item["type"] == "RUN_RESERVATION"
         ]
         self.assertEqual(reservations, [-5])
+
+    def test_professional_run_is_durable_and_not_double_charged(self):
+        _, headers = self._register("durable-professional@example.com")
+        order = self.client.post(
+            "/v1/billing/orders",
+            headers=headers,
+            json={"package_code": "STARTER"},
+        ).json()
+        completed = self.client.post(
+            f"/v1/admin/billing/orders/{order['id']}/complete",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={"payment_reference": "durable-professional-payment"},
+        )
+        self.assertEqual(completed.status_code, 200, completed.text)
+
+        study = self.client.post(
+            "/v1/studies",
+            headers=headers,
+            json={
+                "name": "后台深度决策测试",
+                "study_type": "PRODUCT_VALIDATION",
+                "plan_code": "PROFESSIONAL",
+                "product_name": "Test Product",
+                "category": "PET_WATER_FOUNTAIN",
+                "price": 1290,
+            },
+        ).json()
+        confirmed = self.client.post(
+            f"/v1/studies/{study['id']}/confirm",
+            headers=headers,
+            json={"overrides": {}},
+        )
+        self.assertEqual(confirmed.status_code, 200, confirmed.text)
+
+        with (
+            patch.dict(
+                os.environ,
+                {"ASYNC_RUN_PLAN_CODES": "PROFESSIONAL"},
+            ),
+            patch(
+                "app.main.dispatch_run_job",
+                return_value={
+                    "operation_name": "operations/test-durable-run",
+                    "done": False,
+                },
+            ) as dispatcher,
+        ):
+            accepted = self.client.post(
+                f"/v1/studies/{study['id']}/runs",
+                headers=headers,
+                json={
+                    "study_id": study["id"],
+                    "plan_code": "PROFESSIONAL",
+                    "idempotency_key": "durable-professional-request",
+                },
+            )
+            self.assertEqual(accepted.status_code, 202, accepted.text)
+            task = accepted.json()
+            self.assertEqual(task["status"], "QUEUED")
+            self.assertTrue(task["can_close_page"])
+
+            duplicate = self.client.post(
+                f"/v1/studies/{study['id']}/runs",
+                headers=headers,
+                json={
+                    "study_id": study["id"],
+                    "plan_code": "PROFESSIONAL",
+                    "idempotency_key": "new-key-same-study-run",
+                },
+            )
+            self.assertEqual(duplicate.status_code, 202, duplicate.text)
+            self.assertEqual(
+                duplicate.json()["run_job_id"],
+                task["run_job_id"],
+            )
+            dispatcher.assert_called_once()
+
+        account = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(account["deep_decision_runs_balance"], 0)
+        self.assertEqual(account["credits_balance"], 15)
+
+        report = {
+            "report_id": "rpt_durable_professional",
+            "run_id": "run_durable_professional",
+            "study_id": study["id"],
+            "plan_code": "PROFESSIONAL",
+            "population_size": 300_000,
+            "mc_rounds": 220,
+            "category_key": "PET_WATER_FOUNTAIN",
+            "study_type": "PRODUCT_VALIDATION",
+            "model_lineage": {
+                "choice_estimation": {"status": "prior_only"}
+            },
+        }
+        with patch(
+            "app.services.run_worker.StudyService.execute_run",
+            new=AsyncMock(return_value=report),
+        ):
+            report_id = asyncio.run(execute_run_job(task["run_job_id"]))
+        self.assertEqual(report_id, report["report_id"])
+
+        status_response = self.client.get(
+            f"/v1/runs/{task['run_job_id']}",
+            headers=headers,
+        )
+        self.assertEqual(status_response.status_code, 200)
+        status_body = status_response.json()
+        self.assertEqual(status_body["status"], "COMPLETED")
+        self.assertEqual(status_body["progress_percent"], 100)
+        self.assertEqual(status_body["report_id"], report["report_id"])
+
+        second_account, second_headers = self._register(
+            "other-run-owner@example.com"
+        )
+        self.assertIsNotNone(second_account["user"]["id"])
+        hidden = self.client.get(
+            f"/v1/runs/{task['run_job_id']}",
+            headers=second_headers,
+        )
+        self.assertEqual(hidden.status_code, 404)
 
     def test_basic_decision_package_grants_one_run_and_one_bonus_credit(self):
         account, headers = self._register("basic-decision@example.com")

@@ -273,6 +273,20 @@ class SimulationRunRecord(Base):
     entitlement_reserved = Column(Integer, nullable=False, default=0)
     report_id = Column(String, ForeignKey("reports.id"), nullable=True)
     error_code = Column(String, nullable=True)
+    requested_population = Column(Integer, nullable=True)
+    requested_mc_rounds = Column(Integer, nullable=True)
+    seed = Column(Integer, nullable=False, default=42)
+    progress_stage = Column(String, nullable=False, default="QUEUED")
+    progress_percent = Column(Integer, nullable=False, default=0)
+    provider_execution_name = Column(String, nullable=True)
+    attempt_count = Column(Integer, nullable=False, default=0)
+    calibration_tier = Column(
+        String,
+        nullable=False,
+        default="PUBLIC_EVIDENCE",
+    )
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(
         DateTime,
@@ -281,3 +295,28 @@ class SimulationRunRecord(Base):
     )
 
     user = relationship("User", back_populates="simulation_runs")
+
+
+class CalibrationContribution(Base):
+    """De-identified fitted-choice statistics for pooled category calibration."""
+
+    __tablename__ = "calibration_contributions"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"cal_{uuid.uuid4().hex[:12]}",
+    )
+    source_digest = Column(String, unique=True, nullable=False, index=True)
+    category_key = Column(String, nullable=False, index=True)
+    study_type = Column(String, nullable=False, index=True)
+    choice_set_count = Column(Integer, nullable=False)
+    observation_count = Column(Integer, nullable=False)
+    coefficients_json = Column(JSON, nullable=False)
+    standard_errors_json = Column(JSON, nullable=False)
+    source_status = Column(
+        String,
+        nullable=False,
+        default="OBSERVED_CHOICE_FIT_UNVALIDATED",
+    )
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)

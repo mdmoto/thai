@@ -2030,14 +2030,24 @@ class SimulationEngine:
                         "fitted_model_predictive_p10_p90_unvalidated"
                         if self.profile.get("status")
                         == "observed_choice_fit_unvalidated"
-                        else "prior_predictive_p10_p90"
+                        else (
+                            "platform_benchmark_predictive_p10_p90_unvalidated"
+                            if self.profile.get("status")
+                            == "platform_category_benchmark_unvalidated"
+                            else "prior_predictive_p10_p90"
+                        )
                     ),
                     "components": [
                         (
                             "estimated_coefficient_uncertainty"
                             if self.profile.get("status")
                             == "observed_choice_fit_unvalidated"
-                            else "coefficient_prior_uncertainty"
+                            else (
+                                "pooled_platform_coefficient_uncertainty"
+                                if self.profile.get("status")
+                                == "platform_category_benchmark_unvalidated"
+                                else "coefficient_prior_uncertainty"
+                            )
                         ),
                         "observed_population_heterogeneity",
                         "random_taste_heterogeneity"
