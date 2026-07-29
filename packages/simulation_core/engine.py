@@ -2026,9 +2026,19 @@ class SimulationEngine:
                 "agent_signal": adjustments,
                 "competitors": competitor_quality,
                 "uncertainty": {
-                    "interval_type": "prior_predictive_p10_p90",
+                    "interval_type": (
+                        "fitted_model_predictive_p10_p90_unvalidated"
+                        if self.profile.get("status")
+                        == "observed_choice_fit_unvalidated"
+                        else "prior_predictive_p10_p90"
+                    ),
                     "components": [
-                        "coefficient_prior_uncertainty",
+                        (
+                            "estimated_coefficient_uncertainty"
+                            if self.profile.get("status")
+                            == "observed_choice_fit_unvalidated"
+                            else "coefficient_prior_uncertainty"
+                        ),
                         "observed_population_heterogeneity",
                         "random_taste_heterogeneity"
                         if "mixed_logit" in plan.model_family

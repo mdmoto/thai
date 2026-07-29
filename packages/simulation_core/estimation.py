@@ -31,12 +31,19 @@ class ConditionalLogitFit:
     def calibration_override(self, study_type: str) -> Dict[str, Any]:
         return {
             "status": "observed_choice_fit_unvalidated",
+            "claim": (
+                "Discrete-choice coefficients were fitted from supplied "
+                "observed choice sets. The fit has not yet passed out-of-sample "
+                "or time-based validation and must not be presented as a sales "
+                "guarantee."
+            ),
             "study_models": {
                 study_type.upper(): {
                     "coefficients": {
                         name: {
                             "mean": value,
                             "sd": max(self.standard_errors.get(name, 0.0), 1e-6),
+                            "source": "observed_choice_fit_unvalidated",
                         }
                         for name, value in self.coefficients.items()
                     }
@@ -50,6 +57,7 @@ class ConditionalLogitFit:
                 "choice_sets": self.choice_sets,
                 "observations": self.observations,
                 "l2_penalty": self.l2_penalty,
+                "source_status": self.source_status,
             },
         }
 

@@ -774,6 +774,47 @@ class ApiProductFlowTests(unittest.TestCase):
         self.assertEqual(profile["credits_balance"], starting_credits + 1)
         self.assertEqual(profile["basic_decision_runs_balance"], 1)
 
+        study = self.client.post(
+            "/v1/studies",
+            headers=headers,
+            json={
+                "name": "基础决策真实运行验证",
+                "study_type": "PRODUCT_VALIDATION",
+                "plan_code": "BASIC_DECISION",
+                "product_name": "Test Product",
+                "category": "GENERIC_CONSUMER_PRODUCT",
+                "price": 990,
+            },
+        ).json()
+        confirmed = self.client.post(
+            f"/v1/studies/{study['id']}/confirm",
+            headers=headers,
+            json={"overrides": {}},
+        )
+        self.assertEqual(confirmed.status_code, 200, confirmed.text)
+        disabled_ai = {
+            "GEMINI_API_KEY_PRIMARY": "",
+            "GEMINI_API_KEY_SECONDARY": "",
+            "GEMINI_API_KEY": "",
+            "GEMINI_VERTEX_FALLBACK": "false",
+        }
+        with patch.dict(os.environ, disabled_ai):
+            run = self.client.post(
+                f"/v1/studies/{study['id']}/runs",
+                headers=headers,
+                json={
+                    "study_id": study["id"],
+                    "plan_code": "BASIC_DECISION",
+                    "population_size": 123,
+                    "idempotency_key": "basic-decision-real-run-test",
+                },
+            )
+        self.assertEqual(run.status_code, 200, run.text)
+        self.assertEqual(run.json()["plan_code"], "BASIC_DECISION")
+        self.assertEqual(run.json()["population_size"], 20_000)
+        after_run = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(after_run["basic_decision_runs_balance"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
