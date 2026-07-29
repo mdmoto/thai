@@ -145,6 +145,27 @@ export interface RunSimulationPayload {
   idempotency_key?: string;
 }
 
+export interface SimulationRunStatus {
+  run_job_id: string;
+  study_id: string;
+  status: "PENDING" | "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
+  stage: string;
+  stage_label: string;
+  progress_percent: number;
+  plan_code: string;
+  calibration_tier:
+    | "PUBLIC_EVIDENCE"
+    | "PLATFORM_CATEGORY_BENCHMARK"
+    | "CUSTOMER_OBSERVED_CHOICE";
+  report_id?: string | null;
+  error_code?: string | null;
+  can_close_page: boolean;
+  created_at: string;
+  updated_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+}
+
 export interface BillingPackage {
   code: string;
   name: string;
@@ -181,7 +202,19 @@ export interface AdminDashboard {
     total_runs: number;
     completed_runs: number;
     failed_runs: number;
+    active_runs: number;
     active_invite_codes: number;
+    calibration_contributions: number;
+  };
+  calibration_benchmarks: {
+    total_contributions: number;
+    privacy_status: string;
+    cohorts: Array<{
+      category_key: string;
+      study_type: string;
+      contribution_count: number;
+      choice_set_count: number;
+    }>;
   };
   users: Array<UserProfile & {
     created_at: string;
@@ -305,9 +338,15 @@ export async function confirmStudyApi(
 }
 
 export async function runSimulationApi(payload: RunSimulationPayload) {
-  return apiJson<{ report_id?: string }>(
+  return apiJson<{ report_id?: string; run_job_id?: string } & Partial<SimulationRunStatus>>(
     `/v1/studies/${payload.study_id}/runs`,
     { method: "POST", body: JSON.stringify(payload) },
+  );
+}
+
+export async function getRunStatusApi(runJobId: string) {
+  return apiJson<SimulationRunStatus>(
+    `/v1/runs/${encodeURIComponent(runJobId)}`,
   );
 }
 

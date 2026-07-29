@@ -8,7 +8,7 @@ import re
 import urllib.parse
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -124,6 +124,11 @@ OBSERVED_CHOICE_FEATURES = (
     "distance_friction",
 )
 MARKETPLACE_PLATFORMS = {"Shopee", "Lazada"}
+CALIBRATED_CHOICE_STATUSES = {
+    "applied_unvalidated",
+    "platform_benchmark_applied_unvalidated",
+}
+ProgressCallback = Callable[[str, int], None]
 
 
 def _utc_now() -> str:
@@ -379,6 +384,7 @@ class StudyService:
         study: Mapping[str, Any],
         plan: Any,
         model_study_type: str,
+        platform_override: Optional[Mapping[str, Any]] = None,
     ) -> tuple[Dict[str, Any], Dict[str, Any], List[str]]:
         inputs = study.get("inputs") or {}
         observed_rows = list(inputs.get("observed_choice_data") or [])
@@ -391,8 +397,60 @@ class StudyService:
                 warnings.append(
                     f"{plan.code} 不支持客户校准覆盖，已使用平台基础模型。"
                 )
+            selected_override = use_overrides or platform_override
+            profile = load_calibration_profile(overrides=selected_override)
+            if platform_override and not use_overrides:
+                benchmark = dict(
+                    platform_override.get("platform_benchmark") or {}
+                )
+                profile.setdefault("sources", []).append(
+                    {
+                        "source_id": "POOLED_PLATFORM_CHOICE_BENCHMARK",
+                        "source_type": (
+                            "deidentified_observed_choice_fit_aggregate"
+                        ),
+                        "observed": True,
+                        "record_count": benchmark.get(
+                            "contribution_count",
+                            0,
+                        ),
+                        "choice_set_count": benchmark.get(
+                            "choice_set_count",
+                            0,
+                        ),
+                        "note": (
+                            "Only pooled coefficient summaries and sample "
+                            "counts are used; no raw customer rows or customer "
+                            "identifiers are included."
+                        ),
+                    }
+                )
+                profile.setdefault("limitations", []).append(
+                    "The pooled category benchmark has not passed "
+                    "out-of-sample or time-based validation."
+                )
+                return (
+                    profile,
+                    {
+                        "status": (
+                            "platform_benchmark_applied_unvalidated"
+                        ),
+                        "method": (
+                            "privacy_thresholded_weighted_robust_pooling"
+                        ),
+                        "coefficient_effect": (
+                            "pooled_platform_coefficients_replaced_priors"
+                        ),
+                        "study_type": model_study_type,
+                        "diagnostics": benchmark,
+                        "validation_status": (
+                            "out_of_sample_validation_required"
+                        ),
+                    },
+                    warnings,
+                )
             return (
-                load_calibration_profile(overrides=use_overrides),
+                profile,
                 {
                     "status": "not_supplied",
                     "method": "conditional_multinomial_logit_newton",
@@ -988,8 +1046,10 @@ class StudyService:
         category = lineage.get("category", {})
         competitors = lineage.get("competitors", [])
         choice_estimation = lineage.get("choice_estimation", {})
-        fitted_choices = (
-            choice_estimation.get("status") == "applied_unvalidated"
+        choice_status = choice_estimation.get("status")
+        customer_fitted_choices = choice_status == "applied_unvalidated"
+        calibrated_choices = (
+            choice_status in CALIBRATED_CHOICE_STATUSES
         )
         social = sim_results.get("social_dynamics", [])
         final_period = max(
@@ -1013,21 +1073,36 @@ class StudyService:
                 "topic": "购买 / 到店选择",
                 "result": (
                     f"{float(purchase['mean']):.2%}，"
-                    f"{'拟合后模型预测区间' if fitted_choices else '先验预测区间'} "
+                    f"{'校准后模型预测区间' if calibrated_choices else '先验预测区间'} "
                     f"{float(purchase['p10']):.2%}–"
                     f"{float(purchase['p90']):.2%}"
                 ),
-                "grade": "B" if fitted_choices else "C",
+                "grade": "B" if calibrated_choices else "C",
                 "basis": (
                     "官方宏观校准人口 + 真实选择组条件多项 Logit 拟合 + "
                     "竞品与不选择选项"
-                    if fitted_choices
-                    else "官方宏观校准人口 + 行业选择模型 + 竞品与不选择选项"
+                    if customer_fitted_choices
+                    else (
+                        "官方宏观校准人口 + 去标识化品类选择基准 + "
+                        "竞品与不选择选项"
+                        if calibrated_choices
+                        else (
+                            "官方宏观校准人口 + 行业选择模型 + "
+                            "竞品与不选择选项"
+                        )
+                    )
                 ),
                 "limitation": (
                     "选择系数已经拟合，但尚未完成时间外或样本外回测。"
-                    if fitted_choices
-                    else "选择系数尚未由真实订单、选择实验或 A/B 数据拟合。"
+                    if customer_fitted_choices
+                    else (
+                        "品类基准来自多项目聚合，尚未完成当前项目的样本外回测。"
+                        if calibrated_choices
+                        else (
+                            "选择系数尚未由真实订单、选择实验或 "
+                            "A/B 数据拟合。"
+                        )
+                    )
                 ),
             },
             {
@@ -1099,8 +1174,10 @@ class StudyService:
             "choice_estimation",
             {},
         )
-        choice_fit_applied = (
-            choice_estimation.get("status") == "applied_unvalidated"
+        choice_status = choice_estimation.get("status")
+        choice_fit_applied = choice_status == "applied_unvalidated"
+        platform_benchmark_applied = (
+            choice_status == "platform_benchmark_applied_unvalidated"
         )
         geo = sim_results.get("geo_analysis")
         public_collectors = list(market_research.get("collectors") or [])
@@ -1140,6 +1217,25 @@ class StudyService:
                         None
                         if choice_fit_applied
                         else "disclosed_choice_coefficient_prior"
+                    ),
+                },
+                {
+                    "collector": "Pooled platform category calibration",
+                    "status": (
+                        "succeeded"
+                        if platform_benchmark_applied
+                        else "threshold_not_met_or_customer_fit_used"
+                    ),
+                    "result_count": int(
+                        choice_estimation.get("diagnostics", {}).get(
+                            "contribution_count"
+                        )
+                        or 0
+                    ),
+                    "fallback_result": (
+                        None
+                        if platform_benchmark_applied
+                        else "customer_or_disclosed_choice_model"
                     ),
                 },
                 {
@@ -1206,8 +1302,13 @@ class StudyService:
             "choice_estimation",
             {},
         )
-        fitted_choices = (
-            choice_estimation.get("status") == "applied_unvalidated"
+        choice_status = choice_estimation.get("status")
+        fitted_choices = choice_status == "applied_unvalidated"
+        platform_calibrated = (
+            choice_status == "platform_benchmark_applied_unvalidated"
+        )
+        calibrated_choices = (
+            choice_status in CALIBRATED_CHOICE_STATUSES
         )
         has_official_macro = any(
             source.get("source_type") == "official_public_aggregate"
@@ -1228,6 +1329,8 @@ class StudyService:
             choice_calibration_label = "选择系数已完成历史回测"
         elif calibration_status == "observed_choice_fit_unvalidated":
             choice_calibration_label = "选择系数已由观测选择拟合但尚未回测"
+        elif calibration_status == "platform_category_benchmark_unvalidated":
+            choice_calibration_label = "选择系数已采用平台品类基准但尚未回测"
         else:
             choice_calibration_label = "选择系数仍为先验"
         purchase = metrics["purchase_rate"]
@@ -1267,7 +1370,7 @@ class StudyService:
 
         validation_warning = (
             "在完成样本外或时间外回测前，"
-            if fitted_choices
+            if calibrated_choices
             else "在接入真实订单、选择实验或 A/B 选择数据并完成回测前，"
         )
         recommendation = (
@@ -1283,8 +1386,12 @@ class StudyService:
             (
                 "扩大真实选择样本，并执行时间外或样本外回测。"
                 if fitted_choices
-                else "导入客户历史订单、选择实验或 A/B 选择数据，"
-                "拟合并替换当前系数先验。"
+                else (
+                    "补充当前产品的真实选择数据，验证平台品类基准。"
+                    if platform_calibrated
+                    else "导入客户历史订单、选择实验或 A/B 选择数据，"
+                    "拟合并替换当前系数先验。"
+                )
             ),
             f"优先验证“{best_scenario['name']}”，同时保留基准方案作为对照组。",
             "上线前执行时间外回测，并记录预测误差、数据版本与模型版本。",
@@ -1395,7 +1502,11 @@ class StudyService:
                     *(
                         ["observed_choice_conditional_logit_fit"]
                         if fitted_choices
-                        else ["disclosed_choice_coefficient_prior"]
+                        else (
+                            ["pooled_platform_category_choice_benchmark"]
+                            if platform_calibrated
+                            else ["disclosed_choice_coefficient_prior"]
+                        )
                     ),
                     "study_specific_discrete_choice_model",
                     "public_evidence_choice_set_attribute_enrichment",
@@ -1420,6 +1531,10 @@ class StudyService:
         mc_rounds: Optional[int] = None,
         seed: int = 42,
         plan_code: Optional[str] = None,
+        platform_calibration_override: Optional[
+            Mapping[str, Any]
+        ] = None,
+        progress_callback: Optional[ProgressCallback] = None,
     ) -> Dict[str, Any]:
         if study_id not in self.studies_db:
             raise KeyError("Study not found")
@@ -1437,15 +1552,23 @@ class StudyService:
                 f"{plan.code} execution backend is not deployed"
             )
         run_id = f"run_{uuid.uuid4().hex[:8]}"
-        study["status"] = "PREPARING_POPULATION"
         self.runs_db[run_id] = {
             "status": "PREPARING_POPULATION",
             "study_id": study_id,
         }
 
+        def update_progress(stage: str, percent: int) -> None:
+            study["status"] = stage
+            self.runs_db[run_id]["status"] = stage
+            if progress_callback:
+                try:
+                    progress_callback(stage, percent)
+                except Exception:
+                    pass
+
+        update_progress("PREPARING_POPULATION", 5)
         try:
-            study["status"] = "COLLECTING_PUBLIC_EVIDENCE"
-            self.runs_db[run_id]["status"] = "COLLECTING_PUBLIC_EVIDENCE"
+            update_progress("COLLECTING_PUBLIC_EVIDENCE", 10)
             market_research = await self.market_research.collect(
                 study,
                 plan.code,
@@ -1456,6 +1579,7 @@ class StudyService:
                     study,
                     plan,
                     model_study_type,
+                    platform_calibration_override,
                 )
             )
             research_choice_inputs = self._research_enriched_choice_inputs(
@@ -1463,6 +1587,7 @@ class StudyService:
                 market_research,
                 plan.competitor_limit,
             )
+            update_progress("GENERATING_POPULATION", 35)
             generator = PopulationGenerator(
                 seed=seed,
                 calibration_profile=profile,
@@ -1473,8 +1598,7 @@ class StudyService:
                 category=study["facts"].get("category"),
             )
 
-            study["status"] = "RUNNING_AGENTS"
-            self.runs_db[run_id]["status"] = "RUNNING_AGENTS"
+            update_progress("RUNNING_AGENTS", 45)
             representatives = self._representative_records(
                 generator,
                 population_df,
@@ -1521,8 +1645,7 @@ class StudyService:
                 plan_code=plan.code,
             )
 
-            study["status"] = "RUNNING_SIMULATION"
-            self.runs_db[run_id]["status"] = "RUNNING_SIMULATION"
+            update_progress("RUNNING_SIMULATION", 60)
             price = float(
                 study["facts"].get("price")
                 or study["facts"].get("average_check")
@@ -1630,8 +1753,7 @@ class StudyService:
             sim_results["warnings"].extend(
                 market_research.get("warnings") or []
             )
-            study["status"] = "GENERATING_REPORT"
-            self.runs_db[run_id]["status"] = "GENERATING_REPORT"
+            update_progress("GENERATING_REPORT", 92)
             report = self._report(
                 study,
                 run_id,
@@ -1650,9 +1772,19 @@ class StudyService:
                 "report_id": report["report_id"],
                 "study_id": study_id,
             }
+            if progress_callback:
+                try:
+                    progress_callback("COMPLETED", 100)
+                except Exception:
+                    pass
             return report
         except Exception:
             study["status"] = "FAILED_RECOVERABLE"
             study["updated_at"] = _utc_now()
             self.runs_db[run_id]["status"] = "FAILED_RECOVERABLE"
+            if progress_callback:
+                try:
+                    progress_callback("FAILED_RECOVERABLE", 100)
+                except Exception:
+                    pass
             raise

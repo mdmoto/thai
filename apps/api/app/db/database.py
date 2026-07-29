@@ -45,6 +45,11 @@ def _upgrade_legacy_schema() -> None:
     inspector = inspect(engine)
     tables = set(inspector.get_table_names())
     statements = []
+    datetime_type = (
+        "DATETIME"
+        if engine.dialect.name == "sqlite"
+        else "TIMESTAMP WITHOUT TIME ZONE"
+    )
     if "credit_transactions" in tables:
         columns = {
             item["name"] for item in inspector.get_columns("credit_transactions")
@@ -111,6 +116,56 @@ def _upgrade_legacy_schema() -> None:
                 "ALTER TABLE simulation_runs ADD COLUMN entitlement_reserved "
                 "INTEGER NOT NULL DEFAULT 0"
             )
+        if "requested_population" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN requested_population "
+                "INTEGER"
+            )
+        if "requested_mc_rounds" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN requested_mc_rounds "
+                "INTEGER"
+            )
+        if "seed" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN seed "
+                "INTEGER NOT NULL DEFAULT 42"
+            )
+        if "progress_stage" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN progress_stage "
+                "VARCHAR NOT NULL DEFAULT 'QUEUED'"
+            )
+        if "progress_percent" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN progress_percent "
+                "INTEGER NOT NULL DEFAULT 0"
+            )
+        if "provider_execution_name" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN "
+                "provider_execution_name VARCHAR"
+            )
+        if "attempt_count" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN attempt_count "
+                "INTEGER NOT NULL DEFAULT 0"
+            )
+        if "calibration_tier" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN calibration_tier "
+                "VARCHAR NOT NULL DEFAULT 'PUBLIC_EVIDENCE'"
+            )
+        if "started_at" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN started_at "
+                f"{datetime_type}"
+            )
+        if "completed_at" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN completed_at "
+                f"{datetime_type}"
+            )
     if "reports" in tables:
         columns = {item["name"] for item in inspector.get_columns("reports")}
         if "user_id" not in columns:
@@ -150,6 +205,15 @@ def _upgrade_legacy_schema() -> None:
                 "ON reports (user_id, request_key)"
             )
         )
+        if "simulation_runs" in tables:
+            connection.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS "
+                    "ix_simulation_runs_active_study "
+                    "ON simulation_runs (user_id, study_id, plan_code) "
+                    "WHERE status IN ('PENDING', 'QUEUED', 'RUNNING')"
+                )
+            )
 
 
 def database_is_healthy() -> bool:

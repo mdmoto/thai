@@ -36,6 +36,15 @@ export function StudyViewClient() {
 
   const facts = study.facts || {};
   const canRun = ["READY", "FAILED_RECOVERABLE", "COMPLETED"].includes(study.status);
+  const isRunning = [
+    "QUEUED",
+    "PREPARING_POPULATION",
+    "COLLECTING_PUBLIC_EVIDENCE",
+    "GENERATING_POPULATION",
+    "RUNNING_AGENTS",
+    "RUNNING_SIMULATION",
+    "GENERATING_REPORT",
+  ].includes(study.status);
 
   return (
     <div className="p-5 sm:p-8 max-w-4xl mx-auto space-y-6">
@@ -55,6 +64,15 @@ export function StudyViewClient() {
               className="btn-cmai-secondary"
             >
               查看最近报告
+            </Link>
+          )}
+          {isRunning && (
+            <Link
+              href={`/studies/run?id=${encodeURIComponent(study.id)}&plan=${encodeURIComponent(study.plan_code)}`}
+              className="btn-cmai-primary"
+            >
+              <ArrowRight size={14} />
+              查看后台进度
             </Link>
           )}
           {canRun && (

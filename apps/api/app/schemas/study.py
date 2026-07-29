@@ -100,14 +100,31 @@ class CreateStudyRequest(BaseModel):
             "localization",
             "distance_friction",
         }
-        return [
-            {
+        group_ids: Dict[str, str] = {}
+        alternative_counts: Dict[str, int] = {}
+        cleaned: List[Dict[str, Any]] = []
+        for row in rows:
+            raw_group = str(row.get("choice_set_id") or "").strip()
+            if not raw_group:
+                raise ValueError("真实选择数据的每一行都需要 choice_set_id")
+            if raw_group not in group_ids:
+                group_ids[raw_group] = f"set-{len(group_ids) + 1:05d}"
+            group_id = group_ids[raw_group]
+            alternative_counts[group_id] = (
+                alternative_counts.get(group_id, 0) + 1
+            )
+            item = {
                 key: value
                 for key, value in row.items()
                 if key in allowed
             }
-            for row in rows
-        ]
+            item["choice_set_id"] = group_id
+            if "alternative" in item:
+                item["alternative"] = (
+                    f"option-{alternative_counts[group_id]}"
+                )
+            cleaned.append(item)
+        return cleaned
 
 class StudyConfirmRequest(BaseModel):
     overrides: Dict[str, Any] = Field(default_factory=dict)
