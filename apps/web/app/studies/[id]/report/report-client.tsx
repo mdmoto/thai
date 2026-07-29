@@ -189,6 +189,9 @@ interface ReportData {
       coordinate_status: string;
       observed_poi: Record<string, number>;
       observed_poi_status: string;
+      score_status?: string;
+      formatted_address?: string | null;
+      province?: string | null;
       target_audience_index: number;
       tourism_index: number;
       access_index: number;
@@ -206,9 +209,12 @@ interface ReportData {
     }>;
     catchments: Array<{
       minutes: number;
-      radius_km: number;
+      radius_km?: number;
+      area_km2?: number | null;
       mode: string;
       data_class: string;
+      location_id?: string;
+      location_name?: string;
     }>;
     operations: {
       daily_visit_prior: number;
@@ -1091,7 +1097,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
         <div className="eyebrow mb-1">地理需求与门店经营</div>
         <h2 className="text-base font-semibold text-white tracking-tight">地理需求热力图与小时经营模型</h2>
         <p className="text-xs text-neutral-400 mt-2">
-          蓝色 POI 为公开观测记录；橙色热区和小时访问量为模型推算，不代表真实手机信令或门店客流。
+          地点数量来自公开地图聚合数据；橙色热区为模型可视化，不代表手机信令。综合机会分的权重只有在报告明确标记时才使用客户真实门店数据校准。
         </p>
       </div>
 
@@ -1146,8 +1152,11 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
           )}
           <div className="px-5 py-3 border-t border-blue-400/10 flex flex-wrap gap-2">
             {geo.catchments.map(item => (
-              <span key={item.minutes} className="text-[10px] px-2.5 py-1 rounded-full bg-orange-400/10 text-orange-200 border border-orange-300/10">
-                步行 {item.minutes} 分钟 ≈ {item.radius_km} km · 半径代理
+              <span key={`${item.location_id ?? "site"}-${item.minutes}`} className="text-[10px] px-2.5 py-1 rounded-full bg-orange-400/10 text-orange-200 border border-orange-300/10">
+                {item.location_name ? `${item.location_name} · ` : ""}步行 {item.minutes} 分钟
+                {item.mode === "walking_network_isochrone"
+                  ? ` · 路网覆盖 ${item.area_km2 ?? "—"} km²`
+                  : ` ≈ ${item.radius_km} km · 半径代理`}
               </span>
             ))}
           </div>
@@ -1161,7 +1170,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
                   <span className="eyebrow">综合排名第 {location.rank} 名</span>
                   <h3 className="text-sm font-semibold text-white mt-1">{location.name}</h3>
                   <p className="text-[10px] text-neutral-500 mt-1">
-                    {location.coordinate_status === "resolved" ? `${location.latitude}, ${location.longitude}` : "坐标缺失"}
+                    {location.formatted_address || (location.coordinate_status === "resolved" ? `${location.latitude}, ${location.longitude}` : "坐标缺失")}
                   </p>
                 </div>
                 <div className="text-2xl font-semibold text-blue-200">{location.site_score}</div>
@@ -1173,9 +1182,18 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
                 <div className="rounded-lg bg-black/40 p-2 text-neutral-400">竞争饱和 <strong className="block text-white text-xs mt-0.5">{location.competition_saturation_index}</strong></div>
               </div>
               <div className="mt-3 text-[10px] text-neutral-500">
-                周边设施（POI）：{location.observed_poi_status === "public_snapshot"
+                周边 1 公里营业地点：{["public_snapshot", "osm_versioned_snapshot", "google_places_aggregate_live", "partial_external_observation"].includes(location.observed_poi_status)
                   ? Object.entries(location.observed_poi).map(([key, value]) => `${key} ${value}`).join(" · ")
-                  : "未观测，当前使用行业先验"}
+                  : "数据不足，当前仅显示中性占位"}
+              </div>
+              <div className="mt-2 text-[10px] text-neutral-500">
+                {location.score_status === "customer_branch_traffic_fit_unvalidated"
+                  ? "选址权重：已用客户多店日均客流拟合（仍需留店验证）"
+                  : location.score_status === "observed_geospatial_features_with_unvalidated_weights"
+                    ? "选址权重：真实地点特征 + 未校准行业权重"
+                    : location.score_status === "legacy_engineering_prior_unvalidated"
+                      ? "选址权重：旧版工程先验，可信度较低"
+                      : "选址证据不足，不建议据此定址"}
               </div>
             </Card>
           ))}
@@ -1184,7 +1202,9 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
 
       <div className="grid lg:grid-cols-[1.5fr_.5fr] gap-4">
         <Card>
-          <div className="eyebrow mb-1">小时需求先验估计</div>
+          <div className="eyebrow mb-1">
+            {geo.operations.status === "customer_operations_calibrated_unvalidated" ? "客户客流校准" : "小时需求先验估计"}
+          </div>
           <h3 className="text-sm font-semibold text-white">小时访问与容量占用</h3>
           <div className="h-64 mt-5">
             <ResponsiveContainer width="100%" height="100%">

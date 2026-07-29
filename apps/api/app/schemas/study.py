@@ -27,6 +27,15 @@ class CreateStudyRequest(BaseModel):
         default_factory=list,
         max_length=5000,
     )
+    venue_history: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        max_length=5000,
+        description=(
+            "Optional historical venue rows. Supported fields include "
+            "location_label, date, hour, visits, average_daily_visits, "
+            "average_daily_revenue, and service_minutes."
+        ),
+    )
     business_questions: List[str] = Field(default_factory=list, max_length=20)
     scenarios: List[Dict[str, Any]] = Field(default_factory=list, max_length=20)
     product_attributes: Dict[str, float] = Field(default_factory=dict)
@@ -123,6 +132,31 @@ class CreateStudyRequest(BaseModel):
                 item["alternative"] = (
                     f"option-{alternative_counts[group_id]}"
                 )
+            cleaned.append(item)
+        return cleaned
+
+    @field_validator("venue_history")
+    @classmethod
+    def validate_venue_history(
+        cls,
+        rows: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        allowed = {
+            "location_label",
+            "date",
+            "hour",
+            "visits",
+            "average_daily_visits",
+            "average_daily_revenue",
+            "service_minutes",
+        }
+        cleaned: List[Dict[str, Any]] = []
+        for row in rows:
+            item = {key: value for key, value in row.items() if key in allowed}
+            if not item:
+                continue
+            if "location_label" in item:
+                item["location_label"] = str(item["location_label"]).strip()[:200]
             cleaned.append(item)
         return cleaned
 

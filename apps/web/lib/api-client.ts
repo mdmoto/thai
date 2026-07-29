@@ -119,6 +119,7 @@ export interface CreateStudyPayload {
   competitors?: string[];
   competitor_data?: Array<Record<string, unknown>>;
   observed_choice_data?: Array<Record<string, unknown>>;
+  venue_history?: Array<Record<string, unknown>>;
   business_questions?: string[];
   venue_type?: string;
   average_check?: number;

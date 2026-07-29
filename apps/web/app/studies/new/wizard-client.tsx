@@ -40,6 +40,7 @@ interface WizardState {
   delivery_days: string;
   cod_available: boolean;
   official_store: boolean;
+  venue_history_text: string;
 }
 
 const INIT_STATE: WizardState = {
@@ -70,7 +71,34 @@ const INIT_STATE: WizardState = {
   delivery_days: "4",
   cod_available: true,
   official_store: false,
+  venue_history_text: "",
 };
+
+function parseVenueHistory(value: string) {
+  return value
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => line.split(/[,，\t]+/).map(item => item.trim()))
+    .map(parts => {
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(parts[0] || "")) {
+        return {
+          date: parts[0],
+          hour: Number(String(parts[1] || "").replace(/:00$/, "")),
+          visits: Number(parts[2]),
+          service_minutes: parts[3] ? Number(parts[3]) : undefined,
+        };
+      }
+      return {
+        location_label: parts[0],
+        average_daily_visits: Number(parts[1]),
+      };
+    })
+    .filter(row => (
+      ("visits" in row && Number.isFinite(row.visits))
+      || ("average_daily_visits" in row && Number.isFinite(row.average_daily_visits))
+    ));
+}
 
 const BUSINESS_QUESTIONS = {
   PRODUCT_VALIDATION: [
@@ -203,6 +231,9 @@ export function NewStudyWizard() {
             }
           : undefined,
         candidate_locations: candidateLocations.map(label => ({ label })),
+        venue_history: isOffline
+          ? parseVenueHistory(state.venue_history_text)
+          : undefined,
         scenarios: candidateLocations.length
           ? candidateLocations.map(label => ({
               name: label,
@@ -623,6 +654,20 @@ function Step2({ state, update, onNext, onBack }: {
                 onChange={e => update({ opening_hours: e.target.value })}
               />
             </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-neutral-400 tracking-wide">
+                既有门店数据（选填，用来提高准确度）
+              </label>
+              <textarea
+                className="input-lazzor min-h-24 resize-y"
+                placeholder={"多店校准：门店地址,日均客流\n小时校准：2026-07-01,10,35,60\n每行一条；没有数据可以留空"}
+                value={state.venue_history_text}
+                onChange={event => update({ venue_history_text: event.target.value })}
+              />
+              <p className="text-[10px] text-neutral-500">
+                多店数据至少 4 个地址才能校准选址权重；小时客流至少覆盖 4 个时段并达到基本样本量。系统会明确标记为“客户数据校准”，不会和公开数据混在一起。
+              </p>
+            </div>
           </>
         )}
 
@@ -720,11 +765,11 @@ function Step3({ state, onNext, onBack }: {
     {
       label: isOffline ? "地理与客流参照" : isCreative ? "广告效果参照" : "价格参照",
       value: isOffline
-        ? "当前使用区域与出行阻力先验，尚未接入实时客流"
+        ? "运行时解析泰国地址、周边营业地点和步行路网；无历史数据时小时客流仍为先验"
         : isCreative
           ? "当前使用结构化反应先验，尚未接入真实曝光与点击"
           : isPetWater ? `${pricePosition}（公开样本 ฿435–฿3,290）` : "尚无该品类实证价格面板",
-      grade: isPetWater ? "B" : "D",
+      grade: isOffline || isPetWater ? "B" : "D",
     },
     {
       label: "竞品选择集",
@@ -739,7 +784,9 @@ function Step3({ state, onNext, onBack }: {
     {
       label: "转化基准",
       value: isOffline
-        ? "无真实到店、订单或试营业数据，不宣称为可验证客流预测"
+        ? state.venue_history_text.trim()
+          ? "将使用输入的门店数据校准；结果仍需通过留店或新店试营业验证"
+          : "无真实到店、订单或试营业数据，不宣称为可验证客流预测"
         : isCreative
           ? "无真实曝光、点击或 A/B 数据，不宣称为可验证广告转化率"
           : "无真实销售或 A/B 数据，不宣称为可验证销量预测",

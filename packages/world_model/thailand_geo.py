@@ -99,6 +99,20 @@ def point_in_thailand(longitude: float, latitude: float) -> bool:
     )
 
 
+def province_for_point(
+    longitude: float,
+    latitude: float,
+) -> Mapping[str, Any] | None:
+    """Return the ADM1 record containing a point, if it is in Thailand."""
+    for province in load_thailand_boundaries()["provinces"]:
+        if any(
+            _point_in_ring(longitude, latitude, ring)
+            for ring in province["rings"]
+        ):
+            return province
+    return None
+
+
 def sample_point_in_province(
     province_name: str,
     rng: Any,
