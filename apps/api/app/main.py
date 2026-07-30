@@ -46,6 +46,7 @@ from app.db.database import (
     get_db,
     initialize_database,
 )
+from app.datetime_utils import utc_isoformat
 from app.db.models import (
     AdminAuditLog,
     CreditTransaction,
@@ -579,21 +580,15 @@ def _order_payload(order: PurchaseOrder) -> Dict[str, Any]:
         "payment_claim_reference": order.payment_claim_reference,
         "payment_time_text": order.payment_time_text,
         "payment_claim_note": order.payment_claim_note,
-        "payment_claimed_at": (
-            order.payment_claimed_at.isoformat()
-            if order.payment_claimed_at
-            else None
-        ),
+        "payment_claimed_at": utc_isoformat(order.payment_claimed_at),
         "payment_reference": order.payment_reference,
-        "reviewed_at": (
-            order.reviewed_at.isoformat() if order.reviewed_at else None
-        ),
+        "reviewed_at": utc_isoformat(order.reviewed_at),
         "review_note": order.review_note,
         "allowed_payment_methods": allowed_payment_methods(
             order.package_code
         ),
-        "created_at": order.created_at.isoformat(),
-        "updated_at": order.updated_at.isoformat(),
+        "created_at": utc_isoformat(order.created_at),
+        "updated_at": utc_isoformat(order.updated_at),
     }
 
 
@@ -626,8 +621,8 @@ def _hydrate_service_study(record: StudyRecord) -> Dict[str, Any]:
         plan_code=record.plan_code,
         inputs=record.inputs_json,
         facts=record.facts_json,
-        created_at=record.created_at.isoformat() if record.created_at else None,
-        updated_at=record.updated_at.isoformat() if record.updated_at else None,
+        created_at=utc_isoformat(record.created_at),
+        updated_at=utc_isoformat(record.updated_at),
     )
 
 
@@ -651,14 +646,10 @@ def _run_job_payload(job: SimulationRunRecord) -> Dict[str, Any]:
             "QUEUED",
             "RUNNING",
         },
-        "created_at": job.created_at.isoformat(),
-        "updated_at": job.updated_at.isoformat(),
-        "started_at": (
-            job.started_at.isoformat() if job.started_at else None
-        ),
-        "completed_at": (
-            job.completed_at.isoformat() if job.completed_at else None
-        ),
+        "created_at": utc_isoformat(job.created_at),
+        "updated_at": utc_isoformat(job.updated_at),
+        "started_at": utc_isoformat(job.started_at),
+        "completed_at": utc_isoformat(job.completed_at),
     }
 
 
@@ -919,7 +910,7 @@ def admin_acquisition_users(
                 "deep_decision_runs_balance": int(
                     user.deep_decision_runs_balance
                 ),
-                "created_at": user.created_at.isoformat(),
+                "created_at": utc_isoformat(user.created_at),
             }
             for user in users
         ],
@@ -1020,8 +1011,8 @@ def create_invite_code(
         "bonus_credits": record.bonus_credits,
         "notes": record.notes,
         "active": bool(record.active),
-        "created_at": record.created_at.isoformat(),
-        "updated_at": record.updated_at.isoformat(),
+        "created_at": utc_isoformat(record.created_at),
+        "updated_at": utc_isoformat(record.updated_at),
     }
 
 
@@ -1191,7 +1182,7 @@ def admin_dashboard(
         "users": [
             {
                 **_user_payload(user),
-                "created_at": user.created_at.isoformat(),
+                "created_at": utc_isoformat(user.created_at),
                 "order_count": order_metrics.get(user.id, {}).get(
                     "order_count",
                     0,
@@ -1259,8 +1250,8 @@ def admin_dashboard(
                     "commission_due_minor",
                     0,
                 ),
-                "created_at": item.created_at.isoformat(),
-                "updated_at": item.updated_at.isoformat(),
+                "created_at": utc_isoformat(item.created_at),
+                "updated_at": utc_isoformat(item.updated_at),
             }
             for item in invite_codes
         ],
@@ -1272,7 +1263,7 @@ def admin_dashboard(
                 "target_type": item.target_type,
                 "target_id": item.target_id,
                 "details": dict(item.details_json or {}),
-                "created_at": item.created_at.isoformat(),
+                "created_at": utc_isoformat(item.created_at),
             }
             for item in audit_logs
         ],
@@ -1317,7 +1308,7 @@ def get_user_transactions(
             "type": item.transaction_type,
             "description": item.description,
             "balance_after": item.balance_after,
-            "created_at": item.created_at.isoformat(),
+            "created_at": utc_isoformat(item.created_at),
         }
         for item in transactions
     ]
@@ -1343,7 +1334,7 @@ def get_user_entitlement_transactions(
             "type": item.transaction_type,
             "description": item.description,
             "balance_after": item.balance_after,
-            "created_at": item.created_at.isoformat(),
+            "created_at": utc_isoformat(item.created_at),
         }
         for item in transactions
     ]
@@ -1515,8 +1506,8 @@ def list_studies(
             "status": record.status,
             "plan_code": record.plan_code,
             "category": (record.facts_json or {}).get("category"),
-            "created_at": record.created_at.isoformat(),
-            "updated_at": record.updated_at.isoformat(),
+            "created_at": utc_isoformat(record.created_at),
+            "updated_at": utc_isoformat(record.updated_at),
         }
         for record in records
     ]
@@ -1537,8 +1528,8 @@ def get_study(
         "plan_code": record.plan_code,
         "inputs": record.inputs_json,
         "facts": record.facts_json,
-        "created_at": record.created_at.isoformat(),
-        "updated_at": record.updated_at.isoformat(),
+        "created_at": utc_isoformat(record.created_at),
+        "updated_at": utc_isoformat(record.updated_at),
     }
 
 

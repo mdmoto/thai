@@ -17,6 +17,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { Card } from "@/components/ui";
+import { parseApiDate } from "@/lib/utils";
 import {
   AdminDashboard,
   completeAdminOrderApi,
@@ -64,7 +65,7 @@ function formatMoney(amountMinor: number): string {
 }
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleString("zh-CN", {
+  return parseApiDate(value).toLocaleString("zh-CN", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
