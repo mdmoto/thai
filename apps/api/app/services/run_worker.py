@@ -16,6 +16,7 @@ from app.db.models import (
     SimulationRunRecord,
     StudyRecord,
 )
+from app.datetime_utils import utc_isoformat
 from app.services.platform_calibration import (
     platform_calibration_override,
     record_platform_contribution,
@@ -46,8 +47,8 @@ def _hydrate(
         plan_code=record.plan_code,
         inputs=record.inputs_json,
         facts=record.facts_json,
-        created_at=record.created_at.isoformat() if record.created_at else None,
-        updated_at=record.updated_at.isoformat() if record.updated_at else None,
+        created_at=utc_isoformat(record.created_at),
+        updated_at=utc_isoformat(record.updated_at),
     )
 
 
@@ -183,16 +184,8 @@ async def execute_run_job(run_job_id: str) -> Optional[str]:
         plan_code=study_data["plan_code"],
         inputs=study_data["inputs_json"],
         facts=study_data["facts_json"],
-        created_at=(
-            study_data["created_at"].isoformat()
-            if study_data["created_at"]
-            else None
-        ),
-        updated_at=(
-            study_data["updated_at"].isoformat()
-            if study_data["updated_at"]
-            else None
-        ),
+        created_at=utc_isoformat(study_data["created_at"]),
+        updated_at=utc_isoformat(study_data["updated_at"]),
     )
 
     try:

@@ -5,19 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function parseApiDate(iso: string) {
+  const value = iso.trim();
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
+  return new Date(hasTimezone ? value : `${value}Z`);
+}
+
 export function formatDate(iso: string, locale = "zh-CN") {
   return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(iso));
+  }).format(parseApiDate(iso));
 }
 
 export function formatRelativeTime(iso: string) {
   const now = Date.now();
-  const then = new Date(iso).getTime();
-  const diff = now - then;
+  const then = parseApiDate(iso).getTime();
+  if (!Number.isFinite(then)) return "时间未知";
+
+  const diff = Math.max(0, now - then);
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);

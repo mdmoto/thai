@@ -25,6 +25,7 @@ import {
   UserProfile,
 } from "@/lib/api-client";
 import { Card } from "@/components/ui";
+import { parseApiDate } from "@/lib/utils";
 
 type Transaction = {
   id: string;
@@ -512,7 +513,7 @@ export function BillingClient() {
                 <div>
                   <div className="text-neutral-300">{item.description || TRANSACTION_TYPE_LABELS[item.type] || item.type}</div>
                   <div className="text-neutral-500 mt-1">
-                    {new Date(item.created_at).toLocaleString()}
+                    {parseApiDate(item.created_at).toLocaleString()}
                   </div>
                 </div>
                 <div className={item.amount >= 0 ? "text-emerald-400" : "text-neutral-300"}>
@@ -532,7 +533,7 @@ export function BillingClient() {
                 <div>
                   <div className="text-neutral-300">{item.description || TRANSACTION_TYPE_LABELS[item.type] || item.type}</div>
                   <div className="text-neutral-500 mt-1">
-                    {PACKAGE_LABELS[item.plan_code] ?? item.plan_code} · {new Date(item.created_at).toLocaleString()}
+                    {PACKAGE_LABELS[item.plan_code] ?? item.plan_code} · {parseApiDate(item.created_at).toLocaleString()}
                   </div>
                 </div>
                 <div className={item.amount >= 0 ? "text-emerald-400" : "text-neutral-300"}>
