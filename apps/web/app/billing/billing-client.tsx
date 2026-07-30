@@ -297,7 +297,7 @@ export function BillingClient() {
                   </p>
                 </div>
               ) : createdOrder.status !== "PAID" ? (
-                <div className="mt-5 grid gap-5 lg:grid-cols-[280px_1fr]">
+                <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
                   <div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {createdOrder.allowed_payment_methods.map(method => (
@@ -319,11 +319,17 @@ export function BillingClient() {
                       .filter(method => method.code === selectedMethod)
                       .map(method => (
                         <div key={method.code}>
-                          <div className="aspect-square rounded-xl border border-neutral-800 bg-white p-3 flex items-center justify-center overflow-hidden">
+                          <a
+                            href={method.image_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`打开大图查看${method.name}`}
+                            className="block rounded-xl border border-neutral-800 bg-white p-2 overflow-hidden"
+                          >
                             <img
                               src={method.image_url}
                               alt={method.name}
-                              className="w-full h-full object-contain"
+                              className="mx-auto w-full max-h-[620px] object-contain"
                               onLoad={() =>
                                 setQrLoaded(current => ({
                                   ...current,
@@ -337,7 +343,12 @@ export function BillingClient() {
                                 }))
                               }
                             />
-                          </div>
+                          </a>
+                          {qrLoaded[method.code] && (
+                            <p className="mt-2 text-center text-[11px] text-neutral-500">
+                              扫码困难时，点击图片打开清晰大图
+                            </p>
+                          )}
                           {!qrLoaded[method.code] && (
                             <div className="mt-3 flex gap-2 rounded-lg border border-amber-900/50 bg-amber-950/20 p-3 text-xs text-amber-200">
                               <AlertTriangle size={15} className="shrink-0" />
