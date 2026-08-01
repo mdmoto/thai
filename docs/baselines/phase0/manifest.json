@@ -84,7 +84,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/nimman_cafe_venue.report.json",
-      "report_sha256": "ad4d51f258df4535f79b4cf6c09d64d9e3c110aa1f641ad683a651c80111064d",
+      "report_sha256": "c151e017b3d8bac2e1cdbf4f7bf004f31fff8380ba2e9c66546bcd706cbf40fa",
       "seed": 42
     }
   ],

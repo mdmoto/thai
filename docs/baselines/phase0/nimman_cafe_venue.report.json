@@ -18,32 +18,32 @@
   "category_key": "GENERIC_CONSUMER_PRODUCT",
   "channels": [
     {
-      "channel": "Shopee Thailand",
-      "fit_score": 71,
-      "method": "population_affinity_index",
-      "recommendation": "进入渠道 A/B 测试优先级",
-      "relative_purchase_index": 112.7
-    },
-    {
-      "channel": "Lazada Thailand",
-      "fit_score": 67,
-      "method": "population_affinity_index",
-      "recommendation": "作为补充测试渠道",
-      "relative_purchase_index": 110.4
-    },
-    {
-      "channel": "线下零售 / 门店",
-      "fit_score": 55,
-      "method": "population_affinity_index",
-      "recommendation": "作为补充测试渠道",
-      "relative_purchase_index": 103.2
-    },
-    {
-      "channel": "TikTok Shop Thailand",
+      "channel": "Google Maps / 本地搜索",
       "fit_score": 54,
-      "method": "population_affinity_index",
-      "recommendation": "作为补充测试渠道",
-      "relative_purchase_index": 102.6
+      "method": "offline_visit_acquisition_affinity_index",
+      "recommendation": "作为补充到店获客路径",
+      "relative_purchase_index": 102.2
+    },
+    {
+      "channel": "Facebook / LINE 本地社群",
+      "fit_score": 46,
+      "method": "offline_visit_acquisition_affinity_index",
+      "recommendation": "作为补充到店获客路径",
+      "relative_purchase_index": 97.8
+    },
+    {
+      "channel": "商圈自然到店 / 周边可见性",
+      "fit_score": 45,
+      "method": "offline_visit_acquisition_affinity_index",
+      "recommendation": "作为补充到店获客路径",
+      "relative_purchase_index": 97.2
+    },
+    {
+      "channel": "TikTok 探店内容",
+      "fit_score": 44,
+      "method": "offline_visit_acquisition_affinity_index",
+      "recommendation": "作为补充到店获客路径",
+      "relative_purchase_index": 96.4
     }
   ],
   "commerce_analysis": null,

@@ -35,6 +35,7 @@ from app.db.billing_service import (
     check_and_reserve_run,
     complete_purchase_order,
     create_purchase_order,
+    grant_admin_entitlements,
     public_catalog,
     reject_manual_payment,
     refund_run_reservation,
@@ -323,6 +324,27 @@ class ProvisionAdminRequest(BaseModel):
         if not EMAIL_PATTERN.match(normalized):
             raise ValueError("请输入有效邮箱")
         return normalized
+
+
+class AdminEntitlementGrantRequest(BaseModel):
+    email: str = Field(min_length=5, max_length=254)
+    credits: int = Field(default=0, ge=0, le=100_000)
+    basic_decision_runs: int = Field(default=0, ge=0, le=1_000)
+    deep_decision_runs: int = Field(default=0, ge=0, le=1_000)
+    reason: str = Field(min_length=3, max_length=500)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not EMAIL_PATTERN.match(normalized):
+            raise ValueError("请输入有效邮箱")
+        return normalized
+
+    @field_validator("reason")
+    @classmethod
+    def normalize_reason(cls, value: str) -> str:
+        return value.strip()
 
 
 class InviteCodeRequest(BaseModel):
@@ -979,6 +1001,46 @@ def provision_admin_account(
         details={"created": created},
     )
     return _user_payload(user)
+
+
+@app.post("/v1/admin/accounts/entitlements")
+def grant_admin_account_entitlements(
+    req: AdminEntitlementGrantRequest,
+    x_admin_key: Optional[str] = Header(default=None),
+    user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    if not any(
+        (req.credits, req.basic_decision_runs, req.deep_decision_runs)
+    ):
+        raise HTTPException(status_code=400, detail="请至少填写一项赠送额度")
+    _require_admin_access(x_admin_key, user)
+    granted = grant_admin_entitlements(
+        db,
+        email=req.email,
+        credits=req.credits,
+        basic_decision_runs=req.basic_decision_runs,
+        deep_decision_runs=req.deep_decision_runs,
+        reason=req.reason,
+    )
+    _record_admin_action(
+        db,
+        actor=user,
+        action="ADMIN_ENTITLEMENT_GRANTED",
+        target_type="user",
+        target_id=granted.id,
+        details={
+            "credits": req.credits,
+            "basic_decision_runs": req.basic_decision_runs,
+            "deep_decision_runs": req.deep_decision_runs,
+            "reason": req.reason,
+            "non_revenue": True,
+        },
+    )
+    return {
+        **_user_payload(granted),
+        "message": "已发放内部测试额度；该操作不会产生付款订单或计入营业收入。",
+    }
 
 
 @app.post("/v1/admin/invite-codes", status_code=status.HTTP_201_CREATED)

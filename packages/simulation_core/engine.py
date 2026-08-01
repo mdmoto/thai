@@ -1158,6 +1158,7 @@ class SimulationEngine:
     def _channel_results(
         self,
         frame: pd.DataFrame,
+        study_type: str,
     ) -> List[Dict[str, Any]]:
         weights = frame["model_weight"].to_numpy(dtype=float)
         online = _weighted_mean(
@@ -1180,12 +1181,62 @@ class SimulationEngine:
             frame["review_sensitivity"].to_numpy(dtype=float),
             weights,
         )
-        scores = {
-            "Shopee Thailand": 0.45 * online + 0.35 * review + 0.2,
-            "Lazada Thailand": 0.5 * online + 0.25 * trust + 0.2,
-            "TikTok Shop Thailand": 0.42 * social + 0.38 * novelty + 0.15,
-            "线下零售 / 门店": 0.48 * trust + 0.35 * (1.0 - online) + 0.15,
+        normalized_study_type = str(study_type or "").upper()
+        is_offline = normalized_study_type in {
+            "VENUE_STUDY",
+            "SITE_COMPARISON",
+            "OPERATING_SCENARIO",
+            "RESTAURANT",
+            "CAFE",
+            "BAR",
+            "RETAIL",
         }
+        if is_offline:
+            search = _weighted_mean(
+                frame["search_intensity"].to_numpy(dtype=float),
+                weights,
+            )
+            creator_trust = _weighted_mean(
+                frame["creator_trust"].to_numpy(dtype=float),
+                weights,
+            )
+            family_influence = _weighted_mean(
+                frame["family_influence"].to_numpy(dtype=float),
+                weights,
+            )
+            impulse = _weighted_mean(
+                frame["impulse_tendency"].to_numpy(dtype=float),
+                weights,
+            )
+            scores = {
+                "商圈自然到店 / 周边可见性": (
+                    0.42 * trust + 0.3 * (1.0 - online) + 0.28 * impulse
+                ),
+                "Google Maps / 本地搜索": (
+                    0.5 * search + 0.3 * trust + 0.2 * (1.0 - online)
+                ),
+                "Facebook / LINE 本地社群": (
+                    0.45 * social + 0.3 * family_influence + 0.25 * trust
+                ),
+                "TikTok 探店内容": (
+                    0.48 * social + 0.32 * creator_trust + 0.2 * novelty
+                ),
+            }
+            recommendation = (
+                "优先作为到店获客路径做小范围验证"
+                if is_offline
+                else "进入渠道 A/B 测试优先级"
+            )
+            method = "offline_visit_acquisition_affinity_index"
+        else:
+            scores = {
+                "Shopee Thailand": 0.45 * online + 0.35 * review + 0.2,
+                "Lazada Thailand": 0.5 * online + 0.25 * trust + 0.2,
+                "TikTok Shop Thailand": 0.42 * social + 0.38 * novelty + 0.15,
+                "线下零售 / 门店": 0.48 * trust + 0.35 * (1.0 - online) + 0.15,
+            }
+            recommendation = "进入渠道 A/B 测试优先级"
+            method = "population_affinity_index"
         output = []
         for channel, raw_score in scores.items():
             score = _clamp(raw_score, 0.0, 1.0)
@@ -1198,11 +1249,15 @@ class SimulationEngine:
                         1,
                     ),
                     "recommendation": (
-                        "进入渠道 A/B 测试优先级"
+                        recommendation
                         if score >= 0.68
-                        else "作为补充测试渠道"
+                        else (
+                            "作为补充到店获客路径"
+                            if is_offline
+                            else "作为补充测试渠道"
+                        )
                     ),
-                    "method": "population_affinity_index",
+                    "method": method,
                 }
             )
         return sorted(output, key=lambda item: item["fit_score"], reverse=True)
@@ -1961,6 +2016,7 @@ class SimulationEngine:
             ),
             "channels": self._channel_results(
                 model_frame,
+                normalized_study_type,
             ),
             "scenarios": scenario_results,
             "price_elasticity": elasticity_results,

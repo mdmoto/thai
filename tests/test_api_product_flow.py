@@ -31,7 +31,7 @@ from fastapi import HTTPException  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app import worker as worker_entrypoint  # noqa: E402
-from app.main import app, cancel_run, service  # noqa: E402
+from app.main import _rate_buckets, app, cancel_run, service  # noqa: E402
 from app.db.database import SessionLocal  # noqa: E402
 from app.db.models import (  # noqa: E402
     ModelArtifactRecord,
@@ -60,6 +60,9 @@ class ApiProductFlowTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.client_context.__exit__(None, None, None)
         Path(_DATABASE_FILE.name).unlink(missing_ok=True)
+
+    def setUp(self):
+        _rate_buckets.clear()
 
     def _register(self, email: str, invite_code: str = "TEST-INVITE"):
         response = self.client.post(
@@ -667,6 +670,29 @@ class ApiProductFlowTests(unittest.TestCase):
                 for item in payload["audit_logs"]
             )
         )
+
+    def test_admin_can_grant_non_revenue_internal_capacity(self):
+        account, headers = self._register("internal-capacity@example.com")
+        response = self.client.post(
+            "/v1/admin/accounts/entitlements",
+            headers={"X-Admin-Key": "test-admin-key"},
+            json={
+                "email": account["user"]["email"],
+                "credits": 10,
+                "basic_decision_runs": 1,
+                "deep_decision_runs": 3,
+                "reason": "市场样例报告",
+            },
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(payload["credits_balance"], 15)
+        self.assertEqual(payload["basic_decision_runs_balance"], 1)
+        self.assertEqual(payload["deep_decision_runs_balance"], 3)
+        self.assertIn("不会产生付款订单", payload["message"])
+
+        profile = self.client.get("/v1/auth/me", headers=headers).json()
+        self.assertEqual(profile["deep_decision_runs_balance"], 3)
 
     def test_admin_manages_invite_codes_and_preserves_commission_history(self):
         provisioned = self.client.post(

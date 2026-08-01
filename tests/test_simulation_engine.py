@@ -87,6 +87,19 @@ class SimulationEngineTests(unittest.TestCase):
             places=4,
         )
 
+    def test_offline_study_uses_offline_acquisition_paths(self):
+        result = self.run_engine(study_type="SITE_COMPARISON")
+        channels = [item["channel"] for item in result["channels"]]
+
+        self.assertIn("商圈自然到店 / 周边可见性", channels)
+        self.assertTrue(
+            all(
+                marketplace not in channel
+                for channel in channels
+                for marketplace in ("Shopee", "Lazada", "TikTok Shop")
+            )
+        )
+
     def test_all_first_release_study_models_execute(self):
         expected_funnel_labels = {
             "PRODUCT_VALIDATION": "预计选择购买",

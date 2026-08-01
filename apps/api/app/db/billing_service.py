@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import uuid
 from typing import Any, Dict
 
 from fastapi import HTTPException, status
@@ -550,3 +551,69 @@ def complete_purchase_order(
         ) from error
     db.refresh(order)
     return order
+
+
+def grant_admin_entitlements(
+    db: Session,
+    *,
+    email: str,
+    credits: int,
+    basic_decision_runs: int,
+    deep_decision_runs: int,
+    reason: str,
+) -> User:
+    """Grant non-revenue internal/demo capacity with an auditable ledger trail."""
+    user = (
+        db.query(User)
+        .filter(User.email == email.strip().lower())
+        .with_for_update()
+        .first()
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="未找到指定账号")
+
+    grant_reference = f"admin-grant:{uuid.uuid4().hex}"
+    normalized_reason = reason.strip()
+    if credits:
+        user.credits_balance = int(user.credits_balance) + int(credits)
+        db.add(
+            CreditTransaction(
+                user_id=user.id,
+                amount=int(credits),
+                transaction_type="ADMIN_COMP",
+                description=f"管理员赠送额度：{normalized_reason}",
+                reference_id=f"{grant_reference}:credits",
+                balance_after=int(user.credits_balance),
+            )
+        )
+
+    for plan_code, quantity, field in (
+        (
+            "BASIC_DECISION",
+            int(basic_decision_runs),
+            "basic_decision_runs_balance",
+        ),
+        (
+            "PROFESSIONAL",
+            int(deep_decision_runs),
+            "deep_decision_runs_balance",
+        ),
+    ):
+        if not quantity:
+            continue
+        new_balance = int(getattr(user, field) or 0) + quantity
+        setattr(user, field, new_balance)
+        db.add(
+            RunEntitlementTransaction(
+                user_id=user.id,
+                plan_code=plan_code,
+                amount=quantity,
+                transaction_type="ADMIN_COMP",
+                description=f"管理员赠送次数：{normalized_reason}",
+                reference_id=f"{grant_reference}:{plan_code}",
+                balance_after=new_balance,
+            )
+        )
+    db.commit()
+    db.refresh(user)
+    return user
