@@ -162,6 +162,20 @@ CONSUMER_SIGNAL_TERMS = (
 
 def _is_offline_study(study: Mapping[str, Any]) -> bool:
     return str(study.get("study_type") or "").upper() in OFFLINE_STUDY_TYPES
+
+
+def _is_marketplace_evidence(item: Mapping[str, Any]) -> bool:
+    """Avoid letting a redirect or title hide an e-commerce result as TikTok."""
+    platform = str(item.get("platform") or "").casefold()
+    if platform in {"shopee", "lazada", "tiktok shop"}:
+        return True
+    text = " ".join(
+        str(item.get(field) or "")
+        for field in ("url", "title", "excerpt", "description")
+    ).casefold()
+    return any(marker in text for marker in ("shopee", "lazada", "tiktok shop"))
+
+
 URL_TOKEN_STOPWORDS = {
     "collection",
     "collections",
@@ -1048,7 +1062,7 @@ class PublicMarketResearch:
             seen_urls.add(canonical_url)
             item["url"] = canonical_url
             platform = str(item.get("platform") or "公开网页")
-            if is_offline and platform in MARKETPLACE_PLATFORMS:
+            if is_offline and _is_marketplace_evidence(item):
                 skipped_marketplace_evidence += 1
                 continue
             priority, role = PLATFORM_PRIORITY.get(
