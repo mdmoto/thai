@@ -1,0 +1,2506 @@
+{
+  "agent_research": {
+    "aggregate": {},
+    "errors": [
+      "Representative LLM research is disabled for this plan."
+    ],
+    "model_id": "gemini-3.5-flash-lite",
+    "plan_code": "PREVIEW",
+    "prompt_version": "P-AGENT-STRUCTURED-2026.07.2",
+    "quantitative_policy": "No LLM output was used. The quantitative model remains driven by the calibration profile and discrete-choice engine.",
+    "sample_size_completed": 0,
+    "sample_size_requested": 0,
+    "source_type": "none",
+    "status": "disabled"
+  },
+  "calibration_status": "official_macro_calibrated_choice_prior",
+  "category_eligible_population": 40,
+  "category_key": "PET_WATER_FOUNTAIN",
+  "channels": [
+    {
+      "channel": "Shopee Thailand",
+      "fit_score": 71,
+      "method": "population_affinity_index",
+      "recommendation": "进入渠道 A/B 测试优先级",
+      "relative_purchase_index": 112.7
+    },
+    {
+      "channel": "Lazada Thailand",
+      "fit_score": 67,
+      "method": "population_affinity_index",
+      "recommendation": "作为补充测试渠道",
+      "relative_purchase_index": 110.4
+    },
+    {
+      "channel": "线下零售 / 门店",
+      "fit_score": 55,
+      "method": "population_affinity_index",
+      "recommendation": "作为补充测试渠道",
+      "relative_purchase_index": 103.2
+    },
+    {
+      "channel": "TikTok Shop Thailand",
+      "fit_score": 54,
+      "method": "population_affinity_index",
+      "recommendation": "作为补充测试渠道",
+      "relative_purchase_index": 102.6
+    }
+  ],
+  "commerce_analysis": null,
+  "consumer_voices": [],
+  "evidence_acquisition": {
+    "collectors": [
+      {
+        "collector": "Thailand NSO versioned snapshots",
+        "fallback_result": null,
+        "result_count": 4,
+        "status": "succeeded"
+      },
+      {
+        "collector": "Category competitor public evidence",
+        "fallback_result": null,
+        "result_count": 1,
+        "status": "succeeded"
+      },
+      {
+        "collector": "Customer observed choice calibration",
+        "fallback_result": "disclosed_choice_coefficient_prior",
+        "result_count": 0,
+        "status": "not_supplied"
+      },
+      {
+        "collector": "Pooled platform category calibration",
+        "fallback_result": "customer_or_disclosed_choice_model",
+        "result_count": 0,
+        "status": "threshold_not_met_or_customer_fit_used"
+      },
+      {
+        "collector": "Open geospatial / POI evidence",
+        "fallback_result": "synthetic_region_distribution",
+        "result_count": 0,
+        "status": "not_applicable"
+      },
+      {
+        "collector": "Structured LLM research",
+        "fallback_result": "model_segment_summary",
+        "result_count": 0,
+        "status": "disabled"
+      },
+      {
+        "collector": "Social platform evidence",
+        "fallback_result": "disclosed_social_propagation_scenarios",
+        "result_count": 0,
+        "status": "public_only"
+      }
+    ],
+    "execution_policy": "independent_collectors_fail_open"
+  },
+  "evidence_estimates": [
+    {
+      "basis": "官方宏观校准人口 + 行业选择模型 + 竞品与不选择选项",
+      "grade": "C",
+      "limitation": "选择系数尚未由真实订单、选择实验或 A/B 数据拟合。",
+      "result": "2.17%，先验预测区间 1.45%–2.96%",
+      "topic": "购买 / 到店选择"
+    },
+    {
+      "basis": "behavioral_prior_not_officially_calibrated",
+      "grade": "C",
+      "limitation": "没有官方品类渗透率时使用已披露的行为先验。",
+      "result": "40.0% 的 AI 模拟消费人群符合当前品类资格规则",
+      "topic": "品类目标人群"
+    },
+    {
+      "basis": "选择模型细分摘要；未虚构访谈原话",
+      "grade": "D",
+      "limitation": "LLM 或真人定性研究不可用时，仍输出模型摘要，但不得称为消费者原话。",
+      "result": "使用五类模型细分的驱动因素、阻碍与渠道偏好摘要",
+      "topic": "消费者理由与阻碍"
+    },
+    {
+      "basis": "公开报价、商家功能声明与显式字段先验",
+      "grade": "B",
+      "limitation": "公开页面价格和评价不等于成交量或真实转化率。",
+      "result": "纳入 1 个竞品选择项并记录缺失字段",
+      "topic": "竞品证据"
+    },
+    {
+      "basis": "晒单、好评、创作者推广与差评冲击的动态传播先验",
+      "grade": "D",
+      "limitation": "未接入平台曝光—互动—归因成交前，只用于压力测试。",
+      "result": "期末相对销售指数范围 70.3–122.6（自然传播 = 100）",
+      "topic": "传播影响"
+    }
+  ],
+  "executive_summary": {
+    "best_audience": "年轻潮流探索人群（模型购买率 4.2%）",
+    "best_scenario": "首发降价 12%",
+    "key_metrics": [
+      {
+        "ci": [
+          0.014503,
+          0.029596
+        ],
+        "interval_type": "prior_predictive_p10_p90",
+        "label": "总体购买概率",
+        "value": 0.021654
+      },
+      {
+        "ci": [
+          0.049594,
+          0.049594
+        ],
+        "interval_type": "prior_predictive_p10_p90",
+        "label": "品牌认知概率",
+        "value": 0.049594
+      },
+      {
+        "ci": [
+          0.027149,
+          0.049594
+        ],
+        "interval_type": "prior_predictive_p10_p90",
+        "label": "进入考虑概率",
+        "value": 0.040597
+      },
+      {
+        "ci": [
+          0.429651,
+          0.433773
+        ],
+        "interval_type": "prior_predictive_p10_p90",
+        "label": "购买后复购倾向",
+        "value": 0.431345
+      }
+    ],
+    "main_barrier": "当前基线的主要约束是品牌认知不足；此判断来自选择模型漏斗，不是 LLM 投票。",
+    "next_steps": [
+      "补充至少一个可验证的竞品价格、评价、渠道和品牌认知基准。",
+      "导入客户历史订单、选择实验或 A/B 选择数据，拟合并替换当前系数先验。",
+      "优先验证“首发降价 12%”，同时保留基准方案作为对照组。",
+      "上线前执行时间外回测，并记录预测误差、数据版本与模型版本。"
+    ],
+    "recommendation": "当前宏观人口已校准、选择系数仍为先验的 product_mnl_prior_v1 模型中，“首发降价 12%”的相对收入指数最高（105.3）。在接入真实订单、选择实验或 A/B 选择数据并完成回测前，该结果应作为方案筛选依据，而不是销量承诺。"
+  },
+  "funnel": [
+    {
+      "label": "符合品类条件的目标人群",
+      "rate": 0.4,
+      "stage": "eligible",
+      "value": 40
+    },
+    {
+      "label": "已注意到产品",
+      "rate": 0.049594,
+      "stage": "aware",
+      "value": 5
+    },
+    {
+      "label": "已理解产品卖点",
+      "rate": 0.040667,
+      "stage": "understood",
+      "value": 4
+    },
+    {
+      "label": "已纳入购买考虑",
+      "rate": 0.040597,
+      "stage": "considered",
+      "value": 4
+    },
+    {
+      "label": "预计选择购买",
+      "rate": 0.021654,
+      "stage": "purchased",
+      "value": 2
+    },
+    {
+      "label": "购买后预计复购",
+      "rate": 0.00934,
+      "stage": "repeated",
+      "value": 1
+    },
+    {
+      "label": "购买后预计推荐",
+      "rate": 0.006033,
+      "stage": "referred",
+      "value": 1
+    }
+  ],
+  "generated_at": "BASELINE_GENERATED_AT",
+  "geo_analysis": null,
+  "implied_wtp": [
+    {
+      "attribute": "quality_score",
+      "implied_wtp_thb": 91.12,
+      "score_increase": 0.1,
+      "status": "prior_implied_not_empirically_estimated"
+    },
+    {
+      "attribute": "review_score",
+      "implied_wtp_thb": 55.79,
+      "score_increase": 0.1,
+      "status": "prior_implied_not_empirically_estimated"
+    },
+    {
+      "attribute": "convenience_score",
+      "implied_wtp_thb": 34.78,
+      "score_increase": 0.1,
+      "status": "prior_implied_not_empirically_estimated"
+    },
+    {
+      "attribute": "localization_score",
+      "implied_wtp_thb": 49.25,
+      "score_increase": 0.1,
+      "status": "prior_implied_not_empirically_estimated"
+    }
+  ],
+  "market_dynamics": [
+    {
+      "awareness_rate": 0.04959,
+      "cumulative_adoption_rate": 0.02165,
+      "new_adoption_rate": 0.02165,
+      "period": 0,
+      "repeat_rate": 0.43134
+    },
+    {
+      "awareness_rate": 0.07608,
+      "cumulative_adoption_rate": 0.03397,
+      "new_adoption_rate": 0.01231,
+      "period": 1,
+      "repeat_rate": 0.43134
+    },
+    {
+      "awareness_rate": 0.10333,
+      "cumulative_adoption_rate": 0.04704,
+      "new_adoption_rate": 0.01307,
+      "period": 2,
+      "repeat_rate": 0.43134
+    },
+    {
+      "awareness_rate": 0.13133,
+      "cumulative_adoption_rate": 0.06089,
+      "new_adoption_rate": 0.01385,
+      "period": 3,
+      "repeat_rate": 0.43134
+    }
+  ],
+  "market_research": {
+    "candidate_count": 0,
+    "collectors": [],
+    "completed_at": "BASELINE_COMPLETED_AT",
+    "consumer_search_queries": [],
+    "consumer_search_query": "QuietFlow PET_WATER_FOUNTAIN Thailand รีวิว review ราคา ข้อดี ข้อเสีย ใช้จริง ซื้อที่ไหน Shopee Lazada TikTok Thailand",
+    "evidence": [],
+    "platform_counts": {},
+    "query": "QuietFlow PET_WATER_FOUNTAIN Thailand รีวิว review",
+    "source_count": 0,
+    "source_strategy": {
+      "discovery_channel": "Firecrawl 消费者公开检索；只作为公开线索，不代表平台后台数据",
+      "priority_order": [
+        {
+          "priority": 1,
+          "role": "价格、销量提示、评价与竞品证据",
+          "sources": [
+            "Shopee",
+            "Lazada",
+            "TikTok Shop"
+          ]
+        },
+        {
+          "priority": 2,
+          "role": "泰国本地讨论、社群情绪、短视频与直播反馈",
+          "sources": [
+            "Facebook",
+            "TikTok",
+            "Instagram"
+          ]
+        },
+        {
+          "priority": 3,
+          "role": "需求场景、问题词、趋势与第三方验证",
+          "sources": [
+            "Google 搜索",
+            "泰国媒体",
+            "论坛",
+            "公开评测页"
+          ]
+        },
+        {
+          "priority": 4,
+          "role": "长测评、安装体验与耐用性补充证据",
+          "sources": [
+            "YouTube"
+          ]
+        },
+        {
+          "priority": 5,
+          "role": "产品规格与官方主张基线",
+          "sources": [
+            "品牌官网"
+          ]
+        }
+      ],
+      "ranking_basis": "购买决策价值，不按采集便利度或单纯访问量排序"
+    },
+    "started_at": "BASELINE_STARTED_AT",
+    "status": "not_applicable",
+    "usage_policy": {
+      "allowed": [
+        "竞品与价格证据",
+        "公开评价主题",
+        "可验证公开价格与评分用于补充产品和竞品属性",
+        "传播素材与市场风险",
+        "后续调研问题"
+      ],
+      "not_allowed": [
+        "把点赞、播放或页面销量文案直接当成成交量",
+        "绕过登录、验证码或平台访问限制",
+        "使用个人浏览器 Cookie 进行商业批量采集"
+      ],
+      "quantitative_effect": "verified_public_price_rating_fields_may_update_choice_set_attributes_but_never_choice_coefficients"
+    },
+    "version": "TH-MARKET-RESEARCH-2026.07.6",
+    "warnings": [
+      "公开市场深度扫描仅在深度决策中执行。"
+    ]
+  },
+  "mc_rounds": 40,
+  "methodology": {
+    "calibration_status": "official_macro_calibrated_choice_prior",
+    "llm_policy": "LLM responses are qualitative weak labels and cannot be directly averaged into market size or purchase rate.",
+    "quantitative_path": [
+      "official_macro_calibrated_population",
+      "disclosed_choice_coefficient_prior",
+      "study_specific_discrete_choice_model",
+      "public_evidence_choice_set_attribute_enrichment",
+      "competitor_and_outside_option_choice_set",
+      "bounded_llm_weak_signal",
+      "prior_predictive_monte_carlo",
+      "dynamic_diffusion_scenario"
+    ]
+  },
+  "metric_intervals": {
+    "awareness_rate": {
+      "mean": 0.049594,
+      "median": 0.049594,
+      "p10": 0.049594,
+      "p25": 0.049594,
+      "p75": 0.049594,
+      "p90": 0.049594,
+      "standard_deviation": 0.0
+    },
+    "checkout_readiness_rate": {
+      "mean": 0.021618,
+      "median": 0.020313,
+      "p10": 0.014503,
+      "p25": 0.01784,
+      "p75": 0.026471,
+      "p90": 0.029576,
+      "standard_deviation": 0.005397
+    },
+    "comparison_rate": {
+      "mean": 0.036039,
+      "median": 0.040059,
+      "p10": 0.027149,
+      "p25": 0.033398,
+      "p75": 0.040667,
+      "p90": 0.040667,
+      "standard_deviation": 0.006323
+    },
+    "consideration_rate": {
+      "mean": 0.040597,
+      "median": 0.045301,
+      "p10": 0.027149,
+      "p25": 0.03366,
+      "p75": 0.049512,
+      "p90": 0.049594,
+      "standard_deviation": 0.009699
+    },
+    "information_search_rate": {
+      "mean": 0.036039,
+      "median": 0.040059,
+      "p10": 0.027149,
+      "p25": 0.033398,
+      "p75": 0.040667,
+      "p90": 0.040667,
+      "standard_deviation": 0.006323
+    },
+    "purchase_rate": {
+      "mean": 0.021654,
+      "median": 0.020313,
+      "p10": 0.014503,
+      "p25": 0.01784,
+      "p75": 0.026577,
+      "p90": 0.029596,
+      "standard_deviation": 0.005464
+    },
+    "referral_rate": {
+      "mean": 0.278614,
+      "median": 0.27867,
+      "p10": 0.278005,
+      "p25": 0.278335,
+      "p75": 0.278927,
+      "p90": 0.279106,
+      "standard_deviation": 0.000431
+    },
+    "repeat_rate": {
+      "mean": 0.431345,
+      "median": 0.430822,
+      "p10": 0.429651,
+      "p25": 0.430062,
+      "p75": 0.432087,
+      "p90": 0.433773,
+      "standard_deviation": 0.001717
+    },
+    "trust_rate": {
+      "mean": 0.036039,
+      "median": 0.040059,
+      "p10": 0.027149,
+      "p25": 0.033398,
+      "p75": 0.040667,
+      "p90": 0.040667,
+      "standard_deviation": 0.006323
+    }
+  },
+  "model_lineage": {
+    "agent_signal": {
+      "awareness_multiplier": 1.0,
+      "coefficient_multiplier": {},
+      "effective_weight": 0.0,
+      "sample_size": 0,
+      "status": "disabled"
+    },
+    "calibration": {
+      "claim": "Thailand regional population, binary sex margins, household-income bands, province income, expenditure residual and household size are calibrated from versioned NSO public aggregates. Age, behavioral traits and all discrete-choice coefficients remain unvalidated priors.",
+      "limitations": [
+        "Official inputs are aggregate margins, not household microdata; joint dependencies are synthesized.",
+        "Registered-population regional shares cover all ages while the simulated decision population starts at age 18.",
+        "NSO reports binary sex; the 1% non-binary share remains an explicit engineering prior.",
+        "Income and expenditure describe households, not individual wages.",
+        "Behavioral traits and category engagement remain development priors.",
+        "Choice coefficients, WTP and conversion rates have not been fitted to observed product choices or sales.",
+        "Marketplace page prices and review metadata are evidence, not transaction volume or conversion data.",
+        "Forecast intervals remain prior-predictive and are not validated forecast intervals."
+      ],
+      "profile_version": "TH-CONSUMER-MACRO-2026.07.1",
+      "sources": [
+        {
+          "api_url": "https://catalogapi.nso.go.th/api/index?table=OS_0405_01_0005_01&format=json",
+          "dataset_id": "0405_01_0005",
+          "dataset_page": "https://catalog.nso.go.th/dataset/0405_01_0005",
+          "fetched_at": "2026-07-24T10:05:10.638022+00:00",
+          "license": "Creative Commons Attribution",
+          "observed": true,
+          "pipeline_key": "registered_population",
+          "record_count": 15090,
+          "sha256": "655d596dfd9bb4a1f78baf25a4c7c62a8c42f5f3d9a5de9ea86ac9200283acf1",
+          "snapshot_path": "data_catalog/raw/nso/2026-07-24/OS_0405_01_0005_01.json.gz",
+          "source_id": "NSO_REGISTERED_POPULATION",
+          "source_type": "official_public_aggregate"
+        },
+        {
+          "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_41_03&format=json",
+          "dataset_id": "ns_08_20241",
+          "dataset_page": "https://catalog.nso.go.th/dataset/ns_08_20241",
+          "fetched_at": "2026-07-24T10:05:10.872120+00:00",
+          "license": "Creative Commons Attribution",
+          "observed": true,
+          "pipeline_key": "household_income_distribution",
+          "record_count": 42,
+          "sha256": "4928161da72d549f72d68cbc14a867b3e4ea88104c4b9479c9bd5499f99f1f96",
+          "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_41_03.json.gz",
+          "source_id": "NSO_SES_HOUSEHOLD_INCOME_DISTRIBUTION",
+          "source_type": "official_public_aggregate"
+        },
+        {
+          "api_url": "https://catalogapi.nso.go.th/api/index?table=SFD_SPB0801&format=json",
+          "dataset_id": "0705_08_0031",
+          "dataset_page": "https://catalog.nso.go.th/dataset/0705_08_0031",
+          "fetched_at": "2026-07-24T10:05:11.817719+00:00",
+          "license": "Creative Commons Attribution",
+          "observed": true,
+          "pipeline_key": "province_income_expense",
+          "record_count": 3388,
+          "sha256": "883be00883b73d0b5f65127e54a5abf5a0144741e3fc6bd09524522a98e67f87",
+          "snapshot_path": "data_catalog/raw/nso/2026-07-24/SFD_SPB0801.json.gz",
+          "source_id": "NSO_SES_PROVINCE_INCOME_EXPENSE",
+          "source_type": "official_public_aggregate"
+        },
+        {
+          "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_0705_08_0049_01&format=json",
+          "dataset_id": "0705_08_0017",
+          "dataset_page": "https://catalog.nso.go.th/dataset/0705_08_0017",
+          "fetched_at": "2026-07-24T10:05:12.239233+00:00",
+          "license": "Creative Commons Attribution",
+          "observed": true,
+          "pipeline_key": "household_size",
+          "record_count": 1161,
+          "sha256": "f193d50a66fefa280c0780298189256ba36f0127c86e67609a8f028bc753d0ad",
+          "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_0705_08_0049_01.json.gz",
+          "source_id": "NSO_SES_HOUSEHOLD_SIZE",
+          "source_type": "official_public_aggregate"
+        },
+        {
+          "note": "Migrated from the prototype into an explicit replaceable profile; it must not be presented as empirical calibration.",
+          "observed": false,
+          "source_id": "PROJECT_ENGINEERING_PRIOR",
+          "source_type": "assumption"
+        }
+      ],
+      "status": "official_macro_calibrated_choice_prior"
+    },
+    "category": {
+      "category_key": "PET_WATER_FOUNTAIN",
+      "eligibility_status": "behavioral_prior_not_officially_calibrated",
+      "eligible_population_share": 0.4,
+      "profile_version": "TH-CATEGORY-PET-WATER-2026.07.1"
+    },
+    "choice_estimation": {
+      "coefficient_effect": "none",
+      "method": "conditional_multinomial_logit_newton",
+      "reason": "未提供真实订单、选择实验或 A/B 选择数据。",
+      "status": "not_supplied"
+    },
+    "coefficient_priors": {
+      "affordability": {
+        "mean": 0.48,
+        "sd": 0.12,
+        "source": "calibration_profile_prior"
+      },
+      "brand_trust": {
+        "mean": 0.72,
+        "sd": 0.16,
+        "source": "calibration_profile_prior"
+      },
+      "category_engagement": {
+        "mean": 0.52,
+        "sd": 0.14,
+        "source": "calibration_profile_prior"
+      },
+      "convenience": {
+        "mean": 0.38,
+        "sd": 0.1,
+        "source": "calibration_profile_prior"
+      },
+      "distance_friction": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "source": "calibration_profile_prior"
+      },
+      "intercept": {
+        "mean": -1.9,
+        "sd": 0.35,
+        "source": "calibration_profile_prior"
+      },
+      "localization": {
+        "mean": 0.58,
+        "sd": 0.14,
+        "source": "calibration_profile_prior"
+      },
+      "novelty": {
+        "mean": 0.42,
+        "sd": 0.12,
+        "source": "calibration_profile_prior"
+      },
+      "price_log_ratio": {
+        "mean": -1.35,
+        "sd": 0.28,
+        "source": "calibration_profile_prior"
+      },
+      "quality_fit": {
+        "mean": 1.05,
+        "sd": 0.2,
+        "source": "calibration_profile_prior"
+      },
+      "review_proof": {
+        "mean": 0.62,
+        "sd": 0.14,
+        "source": "calibration_profile_prior"
+      },
+      "social_influence": {
+        "mean": 0.3,
+        "sd": 0.1,
+        "source": "calibration_profile_prior"
+      }
+    },
+    "competitors": [
+      {
+        "assumed_fields": [
+          "awareness",
+          "brand_strength",
+          "clarity_score",
+          "delivery_score",
+          "distance_km",
+          "payment_flexibility_score",
+          "return_policy_score",
+          "social_proof_score",
+          "sustainability_score",
+          "warranty_score"
+        ],
+        "data_quality": "public_price_and_seller_claims_with_unvalidated_category_attribute_mapping",
+        "name": "PET WATER FOUNTAIN THAI SUN SPORT MODEL PET0044",
+        "provided_fields": [
+          "convenience_score",
+          "design_score",
+          "localization_score",
+          "price",
+          "quality_score",
+          "review_score"
+        ]
+      }
+    ],
+    "decision_journey": {
+      "advanced_choice_parameter_count": 12,
+      "consumer_parameter_count": 27,
+      "enabled": false,
+      "stages": [
+        "eligible",
+        "aware",
+        "understood",
+        "searched",
+        "compared",
+        "trusted",
+        "checkout",
+        "purchased",
+        "repeated",
+        "referred"
+      ],
+      "status": "disclosed_prior_not_observed_individual_behavior",
+      "version": "consumer-journey-2026.07.1"
+    },
+    "effective_model_type": "PRODUCT_VALIDATION",
+    "market_research": {
+      "choice_set_enrichment": {
+        "choice_set_effect": "public_price_rating_fields_update_offer_attributes",
+        "coefficient_effect": "none",
+        "competitor_field_updates": 0,
+        "focal_fields_enriched": [],
+        "limitation": "公开价格、评分和评论量只更新产品与竞品属性；不会被当作真实成交选择，也不会重新拟合购买系数。",
+        "source_ids": [],
+        "status": "no_usable_quantitative_fields"
+      },
+      "quantitative_effect": "verified_public_price_rating_fields_may_update_choice_set_attributes_but_never_choice_coefficients",
+      "source_count": 0,
+      "status": "not_applicable",
+      "version": "TH-MARKET-RESEARCH-2026.07.6"
+    },
+    "model_family": "mnl_prior",
+    "plan": {
+      "agent_signal_weight": 0.0,
+      "code": "PREVIEW",
+      "competitor_limit": 1,
+      "customer_calibration": false,
+      "data_depth": "versioned_public_prior",
+      "default_mc_rounds": 40,
+      "default_population": 100,
+      "dynamic_periods": 3,
+      "elasticity_points": 3,
+      "execution_backend": "inline",
+      "maximum_mc_rounds": 60,
+      "maximum_population": 100,
+      "model_family": "mnl_prior",
+      "model_sample_size": 100,
+      "representative_agents": 0
+    },
+    "plan_config_version": "PLAN-CONFIG-2026.07.4",
+    "requested_study_type": "PRODUCT_VALIDATION",
+    "study_model_key": "product_mnl_prior_v1",
+    "uncertainty": {
+      "components": [
+        "coefficient_prior_uncertainty",
+        "observed_population_heterogeneity",
+        "fixed_taste_mnl",
+        "single_stage_choice_journey",
+        "no_llm_quantitative_effect"
+      ],
+      "interval_type": "prior_predictive_p10_p90",
+      "validated_forecast_error": null
+    }
+  },
+  "model_sample_size": 100,
+  "plan_code": "PREVIEW",
+  "population_size": 100,
+  "price_elasticity": [
+    {
+      "price": 903.0,
+      "price_ratio": 0.7,
+      "purchase_p10": 0.021693,
+      "purchase_p90": 0.038835,
+      "purchase_rate": 0.029383,
+      "revenue_idx": 94.98
+    },
+    {
+      "price": 1290.0,
+      "price_ratio": 1.0,
+      "purchase_p10": 0.014503,
+      "purchase_p90": 0.029596,
+      "purchase_rate": 0.021654,
+      "revenue_idx": 100.0
+    },
+    {
+      "price": 1677.0,
+      "price_ratio": 1.3,
+      "purchase_p10": 0.011358,
+      "purchase_p90": 0.024506,
+      "purchase_rate": 0.01742,
+      "revenue_idx": 104.58
+    }
+  ],
+  "regional_breakdown": [
+    {
+      "purchase_rate": 0.0313,
+      "readiness": "低",
+      "region": "East / EEC",
+      "share": "3.0%"
+    },
+    {
+      "purchase_rate": 0.0268,
+      "readiness": "低",
+      "region": "Bangkok Metro",
+      "share": "21.0%"
+    },
+    {
+      "purchase_rate": 0.0257,
+      "readiness": "低",
+      "region": "Central",
+      "share": "16.0%"
+    },
+    {
+      "purchase_rate": 0.0193,
+      "readiness": "低",
+      "region": "North",
+      "share": "19.0%"
+    },
+    {
+      "purchase_rate": 0.0178,
+      "readiness": "低",
+      "region": "Northeast",
+      "share": "28.0%"
+    },
+    {
+      "purchase_rate": 0.0178,
+      "readiness": "低",
+      "region": "South",
+      "share": "13.0%"
+    }
+  ],
+  "report_id": "BASELINE_REPORT_ID",
+  "run_id": "BASELINE_RUN_ID",
+  "sample_profile": {
+    "age_distribution": [
+      {
+        "label": "35-44",
+        "share": 0.32
+      },
+      {
+        "label": "25-34",
+        "share": 0.32
+      },
+      {
+        "label": "18-24",
+        "share": 0.22
+      },
+      {
+        "label": "45-54",
+        "share": 0.09
+      },
+      {
+        "label": "55+",
+        "share": 0.05
+      }
+    ],
+    "display_sample_size": 100,
+    "income_distribution": [
+      {
+        "label": "MID_LOW",
+        "share": 0.53
+      },
+      {
+        "label": "LOW",
+        "share": 0.18
+      },
+      {
+        "label": "MID_HIGH",
+        "share": 0.15
+      },
+      {
+        "label": "HIGH",
+        "share": 0.12
+      },
+      {
+        "label": "LUXURY",
+        "share": 0.02
+      }
+    ],
+    "location_disclosure": "点位依据 AI 模拟消费人群所属府，在真实泰国府界多边形内确定性抽样，仅展示地域分布；不是个人住址、设备定位或实测客流。",
+    "location_status": "synthetic_province_polygon_sample",
+    "points": [
+      {
+        "age": 39,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 62060.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 18.4001,
+        "longitude": 98.1781,
+        "person_id": "TH_0000001",
+        "province": "Chiang Mai",
+        "region": "North"
+      },
+      {
+        "age": 31,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 12519.0,
+        "income_tier": "MID_LOW",
+        "latitude": 5.8876,
+        "longitude": 101.7433,
+        "person_id": "TH_0000002",
+        "province": "Narathiwat",
+        "region": "South"
+      },
+      {
+        "age": 51,
+        "age_group": "45-54",
+        "category_eligible": false,
+        "household_income_thb": 17605.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.1643,
+        "longitude": 102.5148,
+        "person_id": "TH_0000003",
+        "province": "Khon Kaen",
+        "region": "Northeast"
+      },
+      {
+        "age": 41,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 4945.0,
+        "income_tier": "LOW",
+        "latitude": 14.0069,
+        "longitude": 102.4289,
+        "person_id": "TH_0000004",
+        "province": "Sa Kaeo",
+        "region": "Central"
+      },
+      {
+        "age": 18,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 17543.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.9497,
+        "longitude": 100.38,
+        "person_id": "TH_0000005",
+        "province": "Nonthaburi",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 36,
+        "age_group": "55+",
+        "category_eligible": true,
+        "household_income_thb": 8721.0,
+        "income_tier": "LOW",
+        "latitude": 12.7442,
+        "longitude": 101.832,
+        "person_id": "TH_0000006",
+        "province": "Chanthaburi",
+        "region": "Central"
+      },
+      {
+        "age": 42,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 81789.0,
+        "income_tier": "HIGH",
+        "latitude": 13.6718,
+        "longitude": 100.6906,
+        "person_id": "TH_0000007",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 39,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 6670.0,
+        "income_tier": "LOW",
+        "latitude": 15.9676,
+        "longitude": 100.9698,
+        "person_id": "TH_0000008",
+        "province": "Phetchabun",
+        "region": "North"
+      },
+      {
+        "age": 20,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 86134.0,
+        "income_tier": "HIGH",
+        "latitude": 13.7648,
+        "longitude": 100.5782,
+        "person_id": "TH_0000009",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 29,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 21022.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.8476,
+        "longitude": 103.7713,
+        "person_id": "TH_0000010",
+        "province": "Sakon Nakhon",
+        "region": "Northeast"
+      },
+      {
+        "age": 33,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 22530.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.2236,
+        "longitude": 99.5621,
+        "person_id": "TH_0000011",
+        "province": "Sukhothai",
+        "region": "North"
+      },
+      {
+        "age": 42,
+        "age_group": "55+",
+        "category_eligible": false,
+        "household_income_thb": 7841.0,
+        "income_tier": "LOW",
+        "latitude": 14.7653,
+        "longitude": 102.187,
+        "person_id": "TH_0000012",
+        "province": "Nakhon Ratchasima",
+        "region": "Northeast"
+      },
+      {
+        "age": 38,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 8182.0,
+        "income_tier": "LOW",
+        "latitude": 13.6651,
+        "longitude": 99.5851,
+        "person_id": "TH_0000013",
+        "province": "Ratchaburi",
+        "region": "Central"
+      },
+      {
+        "age": 46,
+        "age_group": "45-54",
+        "category_eligible": false,
+        "household_income_thb": 6274.0,
+        "income_tier": "LOW",
+        "latitude": 15.3549,
+        "longitude": 100.2191,
+        "person_id": "TH_0000014",
+        "province": "Nakhon Sawan",
+        "region": "North"
+      },
+      {
+        "age": 29,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 25535.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.3986,
+        "longitude": 99.726,
+        "person_id": "TH_0000015",
+        "province": "Sukhothai",
+        "region": "North"
+      },
+      {
+        "age": 31,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 13892.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.0639,
+        "longitude": 99.7803,
+        "person_id": "TH_0000016",
+        "province": "Sukhothai",
+        "region": "North"
+      },
+      {
+        "age": 35,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 18428.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.8382,
+        "longitude": 100.7795,
+        "person_id": "TH_0000017",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 20,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 76400.0,
+        "income_tier": "LUXURY",
+        "latitude": 13.9191,
+        "longitude": 100.474,
+        "person_id": "TH_0000018",
+        "province": "Nonthaburi",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 49,
+        "age_group": "45-54",
+        "category_eligible": true,
+        "household_income_thb": 16095.0,
+        "income_tier": "MID_LOW",
+        "latitude": 8.1488,
+        "longitude": 99.8358,
+        "person_id": "TH_0000019",
+        "province": "Nakhon Si Thammarat",
+        "region": "South"
+      },
+      {
+        "age": 39,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 112721.0,
+        "income_tier": "HIGH",
+        "latitude": 15.3801,
+        "longitude": 102.4202,
+        "person_id": "TH_0000020",
+        "province": "Nakhon Ratchasima",
+        "region": "Northeast"
+      },
+      {
+        "age": 39,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 25467.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.0455,
+        "longitude": 101.6576,
+        "person_id": "TH_0000021",
+        "province": "Rayong",
+        "region": "East / EEC"
+      },
+      {
+        "age": 29,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 19007.0,
+        "income_tier": "MID_LOW",
+        "latitude": 14.7697,
+        "longitude": 101.908,
+        "person_id": "TH_0000022",
+        "province": "Nakhon Ratchasima",
+        "region": "Northeast"
+      },
+      {
+        "age": 35,
+        "age_group": "55+",
+        "category_eligible": true,
+        "household_income_thb": 12219.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.6969,
+        "longitude": 102.0436,
+        "person_id": "TH_0000023",
+        "province": "Udon Thani",
+        "region": "Northeast"
+      },
+      {
+        "age": 52,
+        "age_group": "45-54",
+        "category_eligible": true,
+        "household_income_thb": 6895.0,
+        "income_tier": "MID_LOW",
+        "latitude": 6.7507,
+        "longitude": 101.1485,
+        "person_id": "TH_0000024",
+        "province": "Pattani",
+        "region": "South"
+      },
+      {
+        "age": 40,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 15585.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.7066,
+        "longitude": 100.2993,
+        "person_id": "TH_0000025",
+        "province": "Samut Sakhon",
+        "region": "Central"
+      },
+      {
+        "age": 21,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 53457.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 6.9943,
+        "longitude": 99.8792,
+        "person_id": "TH_0000026",
+        "province": "Satun",
+        "region": "South"
+      },
+      {
+        "age": 27,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 81871.0,
+        "income_tier": "HIGH",
+        "latitude": 13.7483,
+        "longitude": 100.3512,
+        "person_id": "TH_0000027",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 22,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 17323.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.1858,
+        "longitude": 104.2587,
+        "person_id": "TH_0000028",
+        "province": "Yasothon",
+        "region": "Northeast"
+      },
+      {
+        "age": 24,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 18799.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.0444,
+        "longitude": 103.2442,
+        "person_id": "TH_0000029",
+        "province": "Maha Sarakham",
+        "region": "Northeast"
+      },
+      {
+        "age": 43,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 14074.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.8135,
+        "longitude": 100.6575,
+        "person_id": "TH_0000030",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 40,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 56139.0,
+        "income_tier": "HIGH",
+        "latitude": 13.6039,
+        "longitude": 100.6704,
+        "person_id": "TH_0000031",
+        "province": "Samut Prakan",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 42,
+        "age_group": "55+",
+        "category_eligible": true,
+        "household_income_thb": 65182.0,
+        "income_tier": "HIGH",
+        "latitude": 16.9889,
+        "longitude": 103.1293,
+        "person_id": "TH_0000032",
+        "province": "Udon Thani",
+        "region": "Northeast"
+      },
+      {
+        "age": 32,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 21944.0,
+        "income_tier": "MID_LOW",
+        "latitude": 7.903,
+        "longitude": 99.8358,
+        "person_id": "TH_0000033",
+        "province": "Nakhon Si Thammarat",
+        "region": "South"
+      },
+      {
+        "age": 25,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 7269.0,
+        "income_tier": "LOW",
+        "latitude": 15.1822,
+        "longitude": 104.9926,
+        "person_id": "TH_0000034",
+        "province": "Ubon Ratchathani",
+        "region": "Northeast"
+      },
+      {
+        "age": 30,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 17280.0,
+        "income_tier": "MID_LOW",
+        "latitude": 7.244,
+        "longitude": 100.4367,
+        "person_id": "TH_0000035",
+        "province": "Songkhla",
+        "region": "South"
+      },
+      {
+        "age": 23,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 93181.0,
+        "income_tier": "HIGH",
+        "latitude": 16.7462,
+        "longitude": 101.3665,
+        "person_id": "TH_0000036",
+        "province": "Phetchabun",
+        "region": "North"
+      },
+      {
+        "age": 20,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 14230.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.5978,
+        "longitude": 103.7107,
+        "person_id": "TH_0000037",
+        "province": "Sakon Nakhon",
+        "region": "Northeast"
+      },
+      {
+        "age": 28,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 23517.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.6737,
+        "longitude": 100.5377,
+        "person_id": "TH_0000038",
+        "province": "Uttaradit",
+        "region": "North"
+      },
+      {
+        "age": 33,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 28391.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.8783,
+        "longitude": 100.7154,
+        "person_id": "TH_0000039",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 38,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 104176.0,
+        "income_tier": "LUXURY",
+        "latitude": 13.7715,
+        "longitude": 100.7819,
+        "person_id": "TH_0000040",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 32,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 5524.0,
+        "income_tier": "LOW",
+        "latitude": 15.7988,
+        "longitude": 100.3693,
+        "person_id": "TH_0000041",
+        "province": "Nakhon Sawan",
+        "region": "North"
+      },
+      {
+        "age": 47,
+        "age_group": "45-54",
+        "category_eligible": true,
+        "household_income_thb": 30372.0,
+        "income_tier": "MID_LOW",
+        "latitude": 19.0567,
+        "longitude": 98.8723,
+        "person_id": "TH_0000042",
+        "province": "Chiang Mai",
+        "region": "North"
+      },
+      {
+        "age": 38,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 29841.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 13.9533,
+        "longitude": 99.7721,
+        "person_id": "TH_0000043",
+        "province": "Kanchanaburi",
+        "region": "Central"
+      },
+      {
+        "age": 29,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 23112.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.1955,
+        "longitude": 103.0454,
+        "person_id": "TH_0000044",
+        "province": "Maha Sarakham",
+        "region": "Northeast"
+      },
+      {
+        "age": 50,
+        "age_group": "45-54",
+        "category_eligible": true,
+        "household_income_thb": 14443.0,
+        "income_tier": "MID_LOW",
+        "latitude": 14.7817,
+        "longitude": 104.7487,
+        "person_id": "TH_0000045",
+        "province": "Si Sa Ket",
+        "region": "Northeast"
+      },
+      {
+        "age": 51,
+        "age_group": "45-54",
+        "category_eligible": false,
+        "household_income_thb": 26076.0,
+        "income_tier": "MID_LOW",
+        "latitude": 7.7146,
+        "longitude": 99.6453,
+        "person_id": "TH_0000046",
+        "province": "Trang",
+        "region": "South"
+      },
+      {
+        "age": 31,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 6287.0,
+        "income_tier": "LOW",
+        "latitude": 15.0128,
+        "longitude": 104.958,
+        "person_id": "TH_0000047",
+        "province": "Ubon Ratchathani",
+        "region": "Northeast"
+      },
+      {
+        "age": 25,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 6319.0,
+        "income_tier": "LOW",
+        "latitude": 14.8544,
+        "longitude": 104.421,
+        "person_id": "TH_0000048",
+        "province": "Si Sa Ket",
+        "region": "Northeast"
+      },
+      {
+        "age": 43,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 24841.0,
+        "income_tier": "MID_LOW",
+        "latitude": 14.8524,
+        "longitude": 103.0361,
+        "person_id": "TH_0000049",
+        "province": "Buri Ram",
+        "region": "Northeast"
+      },
+      {
+        "age": 21,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 16259.0,
+        "income_tier": "MID_LOW",
+        "latitude": 14.4821,
+        "longitude": 102.8667,
+        "person_id": "TH_0000050",
+        "province": "Buri Ram",
+        "region": "Northeast"
+      },
+      {
+        "age": 21,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 13460.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.5026,
+        "longitude": 103.761,
+        "person_id": "TH_0000051",
+        "province": "Sakon Nakhon",
+        "region": "Northeast"
+      },
+      {
+        "age": 23,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 40524.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 8.0401,
+        "longitude": 99.85,
+        "person_id": "TH_0000052",
+        "province": "Nakhon Si Thammarat",
+        "region": "South"
+      },
+      {
+        "age": 43,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 20172.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.1608,
+        "longitude": 101.6932,
+        "person_id": "TH_0000053",
+        "province": "Chaiyaphum",
+        "region": "Northeast"
+      },
+      {
+        "age": 38,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 14582.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.9461,
+        "longitude": 100.2257,
+        "person_id": "TH_0000054",
+        "province": "Nakhon Pathom",
+        "region": "Central"
+      },
+      {
+        "age": 39,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 45435.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 13.5314,
+        "longitude": 99.6363,
+        "person_id": "TH_0000055",
+        "province": "Ratchaburi",
+        "region": "Central"
+      },
+      {
+        "age": 40,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 5312.0,
+        "income_tier": "LOW",
+        "latitude": 15.3747,
+        "longitude": 99.574,
+        "person_id": "TH_0000056",
+        "province": "Uthai Thani",
+        "region": "North"
+      },
+      {
+        "age": 28,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 50878.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 18.3195,
+        "longitude": 98.918,
+        "person_id": "TH_0000057",
+        "province": "Lamphun",
+        "region": "North"
+      },
+      {
+        "age": 36,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 23433.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 13.6573,
+        "longitude": 100.6405,
+        "person_id": "TH_0000058",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 19,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 33375.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 13.8305,
+        "longitude": 100.5813,
+        "person_id": "TH_0000059",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 20,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 11239.0,
+        "income_tier": "MID_LOW",
+        "latitude": 15.1192,
+        "longitude": 105.1051,
+        "person_id": "TH_0000060",
+        "province": "Ubon Ratchathani",
+        "region": "Northeast"
+      },
+      {
+        "age": 36,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 4866.0,
+        "income_tier": "LOW",
+        "latitude": 14.5355,
+        "longitude": 99.7897,
+        "person_id": "TH_0000061",
+        "province": "Kanchanaburi",
+        "region": "Central"
+      },
+      {
+        "age": 30,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 18910.0,
+        "income_tier": "MID_LOW",
+        "latitude": 15.9264,
+        "longitude": 100.3577,
+        "person_id": "TH_0000062",
+        "province": "Nakhon Sawan",
+        "region": "North"
+      },
+      {
+        "age": 42,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 43545.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 13.3907,
+        "longitude": 101.0556,
+        "person_id": "TH_0000063",
+        "province": "Chon Buri",
+        "region": "East / EEC"
+      },
+      {
+        "age": 43,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 52218.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 12.9562,
+        "longitude": 101.9511,
+        "person_id": "TH_0000064",
+        "province": "Chanthaburi",
+        "region": "Central"
+      },
+      {
+        "age": 38,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 20889.0,
+        "income_tier": "MID_LOW",
+        "latitude": 10.9121,
+        "longitude": 99.2495,
+        "person_id": "TH_0000065",
+        "province": "Chumphon",
+        "region": "South"
+      },
+      {
+        "age": 35,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 53176.0,
+        "income_tier": "HIGH",
+        "latitude": 14.8524,
+        "longitude": 99.9231,
+        "person_id": "TH_0000066",
+        "province": "Suphan Buri",
+        "region": "Central"
+      },
+      {
+        "age": 35,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 27774.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 14.9377,
+        "longitude": 99.9807,
+        "person_id": "TH_0000067",
+        "province": "Chai Nat",
+        "region": "Central"
+      },
+      {
+        "age": 29,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 31682.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 14.7491,
+        "longitude": 100.0818,
+        "person_id": "TH_0000068",
+        "province": "Suphan Buri",
+        "region": "Central"
+      },
+      {
+        "age": 22,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 22954.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.8844,
+        "longitude": 100.6034,
+        "person_id": "TH_0000069",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 28,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 80978.0,
+        "income_tier": "HIGH",
+        "latitude": 13.6475,
+        "longitude": 100.3976,
+        "person_id": "TH_0000070",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 33,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 22424.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.7346,
+        "longitude": 100.5913,
+        "person_id": "TH_0000071",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 30,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 37497.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 13.5203,
+        "longitude": 100.1628,
+        "person_id": "TH_0000072",
+        "province": "Samut Sakhon",
+        "region": "Central"
+      },
+      {
+        "age": 52,
+        "age_group": "45-54",
+        "category_eligible": false,
+        "household_income_thb": 31045.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.7206,
+        "longitude": 100.5619,
+        "person_id": "TH_0000073",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 25,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 20607.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.9576,
+        "longitude": 103.1433,
+        "person_id": "TH_0000074",
+        "province": "Nong Khai",
+        "region": "Northeast"
+      },
+      {
+        "age": 22,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 6277.0,
+        "income_tier": "LOW",
+        "latitude": 15.6561,
+        "longitude": 99.5392,
+        "person_id": "TH_0000075",
+        "province": "Nakhon Sawan",
+        "region": "North"
+      },
+      {
+        "age": 32,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 13127.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.4028,
+        "longitude": 102.8811,
+        "person_id": "TH_0000076",
+        "province": "Khon Kaen",
+        "region": "Northeast"
+      },
+      {
+        "age": 34,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 14619.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.7223,
+        "longitude": 100.8738,
+        "person_id": "TH_0000077",
+        "province": "Chachoengsao",
+        "region": "East / EEC"
+      },
+      {
+        "age": 37,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 4722.0,
+        "income_tier": "LOW",
+        "latitude": 17.1665,
+        "longitude": 103.9024,
+        "person_id": "TH_0000078",
+        "province": "Sakon Nakhon",
+        "region": "Northeast"
+      },
+      {
+        "age": 39,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 10886.0,
+        "income_tier": "MID_LOW",
+        "latitude": 6.5741,
+        "longitude": 101.4055,
+        "person_id": "TH_0000079",
+        "province": "Pattani",
+        "region": "South"
+      },
+      {
+        "age": 41,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 4499.0,
+        "income_tier": "LOW",
+        "latitude": 20.3105,
+        "longitude": 99.5932,
+        "person_id": "TH_0000080",
+        "province": "Chiang Rai",
+        "region": "North"
+      },
+      {
+        "age": 38,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 21354.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.7935,
+        "longitude": 100.6018,
+        "person_id": "TH_0000081",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 32,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 6187.0,
+        "income_tier": "LOW",
+        "latitude": 15.129,
+        "longitude": 101.0549,
+        "person_id": "TH_0000082",
+        "province": "Lopburi",
+        "region": "Central"
+      },
+      {
+        "age": 54,
+        "age_group": "45-54",
+        "category_eligible": true,
+        "household_income_thb": 13150.0,
+        "income_tier": "MID_LOW",
+        "latitude": 14.9318,
+        "longitude": 99.2995,
+        "person_id": "TH_0000083",
+        "province": "Kanchanaburi",
+        "region": "Central"
+      },
+      {
+        "age": 19,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 21426.0,
+        "income_tier": "MID_LOW",
+        "latitude": 14.5839,
+        "longitude": 100.3343,
+        "person_id": "TH_0000084",
+        "province": "Ang Thong",
+        "region": "Central"
+      },
+      {
+        "age": 21,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 19969.0,
+        "income_tier": "MID_LOW",
+        "latitude": 15.5137,
+        "longitude": 103.1342,
+        "person_id": "TH_0000085",
+        "province": "Maha Sarakham",
+        "region": "Northeast"
+      },
+      {
+        "age": 19,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 17631.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.0126,
+        "longitude": 102.0303,
+        "person_id": "TH_0000086",
+        "province": "Chaiyaphum",
+        "region": "Northeast"
+      },
+      {
+        "age": 43,
+        "age_group": "35-44",
+        "category_eligible": true,
+        "household_income_thb": 51914.0,
+        "income_tier": "HIGH",
+        "latitude": 13.5356,
+        "longitude": 100.5296,
+        "person_id": "TH_0000087",
+        "province": "Samut Prakan",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 31,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 6891.0,
+        "income_tier": "LOW",
+        "latitude": 15.6569,
+        "longitude": 105.0965,
+        "person_id": "TH_0000088",
+        "province": "Ubon Ratchathani",
+        "region": "Northeast"
+      },
+      {
+        "age": 18,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 20826.0,
+        "income_tier": "MID_LOW",
+        "latitude": 16.6626,
+        "longitude": 104.4898,
+        "person_id": "TH_0000089",
+        "province": "Mukdahan",
+        "region": "Northeast"
+      },
+      {
+        "age": 28,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 14427.0,
+        "income_tier": "MID_LOW",
+        "latitude": 13.7551,
+        "longitude": 100.7327,
+        "person_id": "TH_0000090",
+        "province": "Bangkok",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 23,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 5292.0,
+        "income_tier": "LOW",
+        "latitude": 18.846,
+        "longitude": 97.892,
+        "person_id": "TH_0000091",
+        "province": "Mae Hong Son",
+        "region": "North"
+      },
+      {
+        "age": 37,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 89990.0,
+        "income_tier": "HIGH",
+        "latitude": 13.9572,
+        "longitude": 100.6827,
+        "person_id": "TH_0000092",
+        "province": "Pathum Thani",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 29,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 18407.0,
+        "income_tier": "MID_LOW",
+        "latitude": 8.9055,
+        "longitude": 99.2499,
+        "person_id": "TH_0000093",
+        "province": "Surat Thani",
+        "region": "South"
+      },
+      {
+        "age": 32,
+        "age_group": "25-34",
+        "category_eligible": true,
+        "household_income_thb": 47238.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 14.0381,
+        "longitude": 100.4985,
+        "person_id": "TH_0000094",
+        "province": "Pathum Thani",
+        "region": "Bangkok Metro"
+      },
+      {
+        "age": 27,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 56595.0,
+        "income_tier": "HIGH",
+        "latitude": 17.3479,
+        "longitude": 99.75,
+        "person_id": "TH_0000095",
+        "province": "Sukhothai",
+        "region": "North"
+      },
+      {
+        "age": 40,
+        "age_group": "35-44",
+        "category_eligible": false,
+        "household_income_thb": 29027.0,
+        "income_tier": "MID_LOW",
+        "latitude": 10.6294,
+        "longitude": 99.2412,
+        "person_id": "TH_0000096",
+        "province": "Chumphon",
+        "region": "South"
+      },
+      {
+        "age": 29,
+        "age_group": "25-34",
+        "category_eligible": false,
+        "household_income_thb": 28469.0,
+        "income_tier": "MID_LOW",
+        "latitude": 9.9902,
+        "longitude": 99.0655,
+        "person_id": "TH_0000097",
+        "province": "Chumphon",
+        "region": "South"
+      },
+      {
+        "age": 22,
+        "age_group": "18-24",
+        "category_eligible": true,
+        "household_income_thb": 19662.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.7136,
+        "longitude": 99.7496,
+        "person_id": "TH_0000098",
+        "province": "Sukhothai",
+        "region": "North"
+      },
+      {
+        "age": 20,
+        "age_group": "18-24",
+        "category_eligible": false,
+        "household_income_thb": 26399.0,
+        "income_tier": "MID_HIGH",
+        "latitude": 19.6733,
+        "longitude": 99.7344,
+        "person_id": "TH_0000099",
+        "province": "Chiang Rai",
+        "region": "North"
+      },
+      {
+        "age": 43,
+        "age_group": "55+",
+        "category_eligible": false,
+        "household_income_thb": 11213.0,
+        "income_tier": "MID_LOW",
+        "latitude": 17.3984,
+        "longitude": 101.786,
+        "person_id": "TH_0000100",
+        "province": "Loei",
+        "region": "Northeast"
+      }
+    ],
+    "population_size": 100,
+    "region_distribution": [
+      {
+        "label": "Northeast",
+        "share": 0.28
+      },
+      {
+        "label": "Bangkok Metro",
+        "share": 0.21
+      },
+      {
+        "label": "North",
+        "share": 0.19
+      },
+      {
+        "label": "Central",
+        "share": 0.16
+      },
+      {
+        "label": "South",
+        "share": 0.13
+      },
+      {
+        "label": "East / EEC",
+        "share": 0.03
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "margin_idx": 100.0,
+      "name": "基准方案",
+      "price": 1290.0,
+      "purchase_p10": 0.014503,
+      "purchase_p90": 0.029596,
+      "purchase_rate": 0.021654,
+      "revenue_idx": 100.0,
+      "scenario_id": "baseline"
+    },
+    {
+      "margin_idx": 90.98,
+      "name": "首发降价 12%",
+      "price": 1135.2,
+      "purchase_p10": 0.018018,
+      "purchase_p90": 0.034871,
+      "purchase_rate": 0.025923,
+      "revenue_idx": 105.35,
+      "scenario_id": "value_launch"
+    }
+  ],
+  "schema_version": "2",
+  "segments": [
+    {
+      "barriers": [
+        "口碑不足",
+        "预算波动"
+      ],
+      "category_engagement": 0.458,
+      "drivers": [
+        "设计新颖",
+        "社交推荐",
+        "尝鲜动机"
+      ],
+      "name": "年轻潮流探索人群",
+      "population": 3,
+      "preferred_channel": "TikTok Shop / 社交电商",
+      "price_sensitivity": 0.589,
+      "purchase_rate": 0.0424,
+      "segment_id": "TREND_EXPLORER",
+      "size": 0.03
+    },
+    {
+      "barriers": [
+        "本地售后证据不足"
+      ],
+      "category_engagement": 0.394,
+      "drivers": [
+        "品质与保障",
+        "品牌可信度",
+        "线上购买便利"
+      ],
+      "name": "高收入数字消费人群",
+      "population": 11,
+      "preferred_channel": "Lazada / 品牌旗舰店",
+      "price_sensitivity": 0.34,
+      "purchase_rate": 0.0384,
+      "segment_id": "AFFLUENT_DIGITAL",
+      "size": 0.11
+    },
+    {
+      "barriers": [
+        "新品牌信任",
+        "售后与物流"
+      ],
+      "category_engagement": 0.24,
+      "drivers": [
+        "本地认证",
+        "线下体验",
+        "熟人推荐"
+      ],
+      "name": "本地信任线下人群",
+      "population": 4,
+      "preferred_channel": "线下零售 / 门店",
+      "price_sensitivity": 0.38,
+      "purchase_rate": 0.026,
+      "segment_id": "LOCAL_TRUST_OFFLINE",
+      "size": 0.04
+    },
+    {
+      "barriers": [
+        "品牌认知",
+        "决策惯性"
+      ],
+      "category_engagement": 0.27,
+      "drivers": [
+        "评价证据",
+        "稳定品质",
+        "购买便利"
+      ],
+      "name": "主流谨慎消费人群",
+      "population": 34,
+      "preferred_channel": "Shopee / Lazada",
+      "price_sensitivity": 0.624,
+      "purchase_rate": 0.0249,
+      "segment_id": "MAINSTREAM",
+      "size": 0.34
+    },
+    {
+      "barriers": [
+        "价格",
+        "替代品丰富"
+      ],
+      "category_engagement": 0.183,
+      "drivers": [
+        "折扣",
+        "包邮",
+        "明确性价比"
+      ],
+      "name": "价格敏感价值人群",
+      "population": 33,
+      "preferred_channel": "Shopee Thailand",
+      "price_sensitivity": 0.824,
+      "purchase_rate": 0.0147,
+      "segment_id": "VALUE_SEEKER",
+      "size": 0.33
+    },
+    {
+      "barriers": [
+        "信息不完整",
+        "品牌可信度不足",
+        "售后不确定"
+      ],
+      "category_engagement": 0.148,
+      "drivers": [
+        "可验证评价",
+        "保修与退货保障",
+        "详细对比信息"
+      ],
+      "name": "谨慎查证型人群",
+      "population": 13,
+      "preferred_channel": "品牌官网 / Lazada 官方店",
+      "price_sensitivity": 0.807,
+      "purchase_rate": 0.0139,
+      "segment_id": "EVIDENCE_SEEKER",
+      "size": 0.13
+    },
+    {
+      "barriers": [
+        "广告感过强",
+        "缺少长期评价",
+        "冲动购买顾虑"
+      ],
+      "category_engagement": 0.0,
+      "drivers": [
+        "创作者演示",
+        "真实使用场景",
+        "社交口碑"
+      ],
+      "name": "社交电商影响人群",
+      "population": 2,
+      "preferred_channel": "TikTok Shop / Facebook 内容",
+      "price_sensitivity": 0.727,
+      "purchase_rate": 0.0,
+      "segment_id": "SOCIAL_COMMERCE",
+      "size": 0.02
+    }
+  ],
+  "simulation_model_version": "SIM-3.0.0",
+  "social_dynamics": [
+    {
+      "awareness_rate": 0.049594,
+      "cumulative_adoption_rate": 0.021654,
+      "name": "自然传播基准",
+      "period": 0,
+      "relative_sales_index": 100.0,
+      "scenario_id": "baseline",
+      "sentiment_balance": 0.0,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.076079,
+      "cumulative_adoption_rate": 0.033965,
+      "name": "自然传播基准",
+      "period": 1,
+      "relative_sales_index": 100.0,
+      "scenario_id": "baseline",
+      "sentiment_balance": 0.0,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.103332,
+      "cumulative_adoption_rate": 0.047037,
+      "name": "自然传播基准",
+      "period": 2,
+      "relative_sales_index": 100.0,
+      "scenario_id": "baseline",
+      "sentiment_balance": 0.0,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.131333,
+      "cumulative_adoption_rate": 0.060886,
+      "name": "自然传播基准",
+      "period": 3,
+      "relative_sales_index": 100.0,
+      "scenario_id": "baseline",
+      "sentiment_balance": 0.0,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.055545,
+      "cumulative_adoption_rate": 0.022953,
+      "name": "客户晒单扩散",
+      "period": 0,
+      "relative_sales_index": 106.0,
+      "scenario_id": "ugc_showcase",
+      "sentiment_balance": 0.28,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.085865,
+      "cumulative_adoption_rate": 0.037825,
+      "name": "客户晒单扩散",
+      "period": 1,
+      "relative_sales_index": 111.36,
+      "scenario_id": "ugc_showcase",
+      "sentiment_balance": 0.28,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.117641,
+      "cumulative_adoption_rate": 0.053916,
+      "name": "客户晒单扩散",
+      "period": 2,
+      "relative_sales_index": 114.62,
+      "scenario_id": "ugc_showcase",
+      "sentiment_balance": 0.28,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.15085,
+      "cumulative_adoption_rate": 0.071258,
+      "name": "客户晒单扩散",
+      "period": 3,
+      "relative_sales_index": 117.04,
+      "scenario_id": "ugc_showcase",
+      "sentiment_balance": 0.28,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.052074,
+      "cumulative_adoption_rate": 0.023819,
+      "name": "持续好评累积",
+      "period": 0,
+      "relative_sales_index": 110.0,
+      "scenario_id": "positive_reviews",
+      "sentiment_balance": 0.42,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.080694,
+      "cumulative_adoption_rate": 0.038469,
+      "name": "持续好评累积",
+      "period": 1,
+      "relative_sales_index": 113.26,
+      "scenario_id": "positive_reviews",
+      "sentiment_balance": 0.42,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.110678,
+      "cumulative_adoption_rate": 0.054331,
+      "name": "持续好评累积",
+      "period": 2,
+      "relative_sales_index": 115.51,
+      "scenario_id": "positive_reviews",
+      "sentiment_balance": 0.42,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.14202,
+      "cumulative_adoption_rate": 0.071446,
+      "name": "持续好评累积",
+      "period": 3,
+      "relative_sales_index": 117.34,
+      "scenario_id": "positive_reviews",
+      "sentiment_balance": 0.42,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.066952,
+      "cumulative_adoption_rate": 0.022304,
+      "name": "Facebook / Instagram 创作者推广",
+      "period": 0,
+      "relative_sales_index": 103.0,
+      "scenario_id": "creator_campaign",
+      "sentiment_balance": 0.18,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.101694,
+      "cumulative_adoption_rate": 0.038721,
+      "name": "Facebook / Instagram 创作者推广",
+      "period": 1,
+      "relative_sales_index": 114.0,
+      "scenario_id": "creator_campaign",
+      "sentiment_balance": 0.18,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.137446,
+      "cumulative_adoption_rate": 0.056175,
+      "name": "Facebook / Instagram 创作者推广",
+      "period": 2,
+      "relative_sales_index": 119.43,
+      "scenario_id": "creator_campaign",
+      "sentiment_balance": 0.18,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.174127,
+      "cumulative_adoption_rate": 0.074668,
+      "name": "Facebook / Instagram 创作者推广",
+      "period": 3,
+      "relative_sales_index": 122.64,
+      "scenario_id": "creator_campaign",
+      "sentiment_balance": 0.18,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.053562,
+      "cumulative_adoption_rate": 0.015591,
+      "name": "集中差评冲击",
+      "period": 0,
+      "relative_sales_index": 72.0,
+      "scenario_id": "negative_review_shock",
+      "sentiment_balance": -0.55,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.080483,
+      "cumulative_adoption_rate": 0.024442,
+      "name": "集中差评冲击",
+      "period": 1,
+      "relative_sales_index": 71.96,
+      "scenario_id": "negative_review_shock",
+      "sentiment_balance": -0.55,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.107393,
+      "cumulative_adoption_rate": 0.033508,
+      "name": "集中差评冲击",
+      "period": 2,
+      "relative_sales_index": 71.24,
+      "scenario_id": "negative_review_shock",
+      "sentiment_balance": -0.55,
+      "status": "uncalibrated_social_propagation_prior"
+    },
+    {
+      "awareness_rate": 0.134265,
+      "cumulative_adoption_rate": 0.042789,
+      "name": "集中差评冲击",
+      "period": 3,
+      "relative_sales_index": 70.28,
+      "scenario_id": "negative_review_shock",
+      "sentiment_balance": -0.55,
+      "status": "uncalibrated_social_propagation_prior"
+    }
+  ],
+  "social_evidence": {
+    "effective_date": "2026-07-28",
+    "model_usage": {
+      "allowed": [
+        "声量趋势",
+        "主题与购买阻碍",
+        "情绪与评价星级",
+        "分享率与互动率",
+        "曝光到互动漏斗",
+        "时间衰减",
+        "可验证的公开渠道差异"
+      ],
+      "not_allowed_as_direct_sales_truth": [
+        "点赞量",
+        "单条爆款播放量",
+        "未经校准的情绪分数",
+        "抓取页面展示的销量文案"
+      ]
+    },
+    "platforms": [
+      {
+        "official_reference": "https://developers.facebook.com/docs/",
+        "platform": "Facebook / Instagram",
+        "public_market_scan": "restricted_for_commercial_use",
+        "recommended_path": "公开搜索索引、公开广告资料与第三方公开讨论",
+        "status": "public_index_only_no_customer_login"
+      },
+      {
+        "official_reference": "https://developers.tiktok.com/products/research-api/",
+        "platform": "TikTok",
+        "public_market_scan": "research_api_not_available_for_general_commercial_market_research",
+        "recommended_path": "公开视频发现、官方 oEmbed 验证与合规数据供应商",
+        "status": "public_embed_or_provider_no_customer_login"
+      },
+      {
+        "official_reference": "https://developer.x.com/",
+        "platform": "X",
+        "public_market_scan": "paid_official_api_required",
+        "recommended_path": "官方 X API 按批准权限和实际读取量采集",
+        "status": "paid_api_access_required"
+      },
+      {
+        "official_reference": "https://developers.google.com/youtube/v3/docs/commentThreads/list",
+        "platform": "YouTube",
+        "public_market_scan": "official_api_with_quota",
+        "recommended_path": "YouTube Data API 获取公开视频与评论线程",
+        "status": "api_key_and_quota_required"
+      },
+      {
+        "official_reference": null,
+        "platform": "Shopee / Lazada / TikTok Shop",
+        "public_market_scan": "transaction_and_conversion_not_public",
+        "recommended_path": "公开商品与评价证据、联盟接口或合规数据供应商",
+        "status": "public_commerce_evidence_no_customer_login"
+      }
+    ],
+    "policy": "cloud_public_research_without_customer_authorization",
+    "version": "TH-SOCIAL-ACCESS-2026.07.2"
+  },
+  "study_id": "BASELINE_STUDY_ID",
+  "study_name": "Phase 0 · 宠物智能饮水机产品验证",
+  "study_type": "PRODUCT_VALIDATION",
+  "warnings": [
+    "Official inputs are aggregate margins, not household microdata; joint dependencies are synthesized.",
+    "Registered-population regional shares cover all ages while the simulated decision population starts at age 18.",
+    "NSO reports binary sex; the 1% non-binary share remains an explicit engineering prior.",
+    "Income and expenditure describe households, not individual wages.",
+    "Behavioral traits and category engagement remain development priors.",
+    "Choice coefficients, WTP and conversion rates have not been fitted to observed product choices or sales.",
+    "Marketplace page prices and review metadata are evidence, not transaction volume or conversion data.",
+    "Forecast intervals remain prior-predictive and are not validated forecast intervals.",
+    "Some competitor model fields were not observed and used disclosed priors; see model_lineage.competitors.assumed_fields.",
+    "Category eligibility uses an uncalibrated pet-ownership prior; purchase probability is not a validated category sales forecast.",
+    "LLM weak signals were unavailable or disabled and had zero effect on quantitative outputs.",
+    "公开市场深度扫描仅在深度决策中执行。"
+  ],
+  "world_model_version": "TH-WORLD-2026.07.5"
+}

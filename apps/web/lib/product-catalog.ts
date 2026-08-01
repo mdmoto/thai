@@ -1,37 +1,37 @@
 export const STUDY_TYPE_META = {
   PRODUCT_VALIDATION: {
     label: "消费品验证",
-    desc: "比较新品的购买概率、目标人群、价格弹性与竞品替代。",
+    desc: "新品能爆吗？投产前精准测算目标客群买单率与竞品替代率。",
     icon: "📦",
     color: "#4f8cff",
   },
   PRICING_STUDY: {
     label: "消费品定价",
-    desc: "比较不同价格对选择概率、相对收入和利润的影响。",
+    desc: "卖多贵最赚钱？寻找高转化与高毛利的黄金交叉点。",
     icon: "฿",
     color: "#78a7ff",
   },
   VENUE_STUDY: {
     label: "线下门店验证",
-    desc: "评估餐厅、咖啡馆、酒吧和零售门店的到店意向、客群与经营约束。",
+    desc: "评估餐厅、咖啡馆、酒吧和零售门店的到店意向、翻台率与客单价上限。",
     icon: "🏪",
     color: "#62c6ff",
   },
   SITE_COMPARISON: {
     label: "商圈与选址比较",
-    desc: "对比候选点位的目标客群覆盖、出行阻力、竞争强度与相对排序。",
+    desc: "对比候选点位的流量穿透力、出行阻力、竞争强度与选址优劣。",
     icon: "📍",
     color: "#9b8cff",
   },
   CREATIVE_TEST: {
     label: "广告与素材测试",
-    desc: "比较广告图片、文案、视频脚本或落地页的理解、信任与行动倾向。",
+    desc: "比较广告图片、文案、视频脚本或落地页的理解力与行动购买倾向。",
     icon: "🎯",
     color: "#ff8ab3",
   },
   OPERATING_SCENARIO: {
     label: "门店经营情景",
-    desc: "比较营业时间、容量、活动、客单价和服务配置对结果的影响。",
+    desc: "推演营业时间、容量、促销活动与客单价对最终盈利的影响。",
     icon: "🧭",
     color: "#5dd8c1",
   },
@@ -48,7 +48,7 @@ export const PLAN_META = {
     billing_label: "免费",
     price_thb: 0,
     availability: "self_service",
-    desc: "每个账号 1 次，快速检查输入是否完整，帮助确认研究方向。",
+    desc: "每个账号 1 次，零成本快速校验产品逻辑与研究方向。",
   },
   STANDARD: {
     label: "基础模拟",
@@ -60,7 +60,7 @@ export const PLAN_META = {
     billing_label: "5 积分 / 次",
     price_thb: 0,
     availability: "self_service",
-    desc: "用 5,000 人的 AI 模拟消费人群，快速比较价格、卖点和方案方向。",
+    desc: "调动 5,000 名高仿真数字消费者，快速测算价格弹性与核心卖点。",
   },
   BASIC_DECISION: {
     label: "基础决策",
@@ -72,7 +72,7 @@ export const PLAN_META = {
     billing_label: "1 次基础决策",
     price_thb: 990,
     availability: "self_service",
-    desc: "用 20,000 人的进阶 AI 模拟消费人群，生成基础决策报告。",
+    desc: "调动 20,000 名进阶 AI 模拟消费人群，生成核心决策研报。",
   },
   PROFESSIONAL: {
     label: "深度决策",
@@ -84,7 +84,7 @@ export const PLAN_META = {
     billing_label: "1 次深度决策",
     price_thb: 7_900,
     availability: "self_service",
-    desc: "用 30 万人的 AI 模拟消费人群，生成完整市场决策报告。",
+    desc: "调动 30 万名全仿真 AI 消费人群，生成完整企业级商业决策报告。",
   },
 } as const;
 

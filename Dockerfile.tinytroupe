@@ -1,0 +1,27 @@
+FROM python:3.12-slim-bookworm
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+COPY apps/api/requirements-tinytroupe-job.lock ./requirements-tinytroupe-job.lock
+RUN python -m pip install --no-cache-dir --require-hashes -r requirements-tinytroupe-job.lock
+RUN python -m pip install --no-cache-dir --no-deps \
+    "tinytroupe @ https://github.com/microsoft/TinyTroupe/archive/a6244b358a1fe1c71bf751f7ba0f8dfa368ec5a4.tar.gz#sha256=f997a126be5d29273377baeee67a77b3f60f3f8d1efe21ffebd3668a85a48543"
+
+COPY packages /packages
+COPY data_catalog /data_catalog
+COPY docs/third-party-notices/TinyTroupe-LICENSE.txt /licenses/TinyTroupe-LICENSE.txt
+COPY scripts/validate_tinytroupe_backend.py ./validate_tinytroupe_backend.py
+
+ENV PYTHONPATH="/app:/packages" \
+    DATA_CATALOG_ROOT="/data_catalog" \
+    HOME="/home/appuser"
+
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
+WORKDIR /tmp
+
+CMD ["python", "/app/validate_tinytroupe_backend.py", "--output", "/tmp/tinytroupe-validation.json"]

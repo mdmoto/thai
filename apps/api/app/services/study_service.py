@@ -21,6 +21,11 @@ sys.path.append(
     )
 )
 
+from agents.backends.base import (
+    RepresentativeResearchBackend,
+    RepresentativeResearchRequest,
+)
+from agents.backends.gemini import get_representative_research_backend
 from agents.gemini_gateway import GeminiAgentGateway
 from data_pipeline.market_research import PublicMarketResearch
 from app.services.geospatial_research import GoogleGeospatialResearch
@@ -33,10 +38,19 @@ from simulation_core.config import (
     normalize_plan_code,
     resolve_execution_config,
 )
+from simulation_core.choice_backends.base import (
+    ChoiceFitRequest,
+    ChoiceModelBackend,
+)
+from simulation_core.choice_backends.native import get_choice_model_backend
 from simulation_core.engine import SIMULATION_MODEL_VERSION, SimulationEngine
-from simulation_core.estimation import ConditionalLogitEstimator
 from simulation_core.geo import build_geo_analysis
-from world_model.generator import PopulationGenerator, WORLD_MODEL_VERSION
+from world_model.backends.base import (
+    PopulationSynthesisBackend,
+    PopulationSynthesisRequest,
+    PopulationSynthesisResult,
+)
+from world_model.backends.native import get_population_backend
 from world_model.category_profiles import load_category_profile
 from world_model.thailand_geo import sample_point_in_province
 
@@ -191,6 +205,11 @@ class StudyService:
         self,
         market_research: Optional[PublicMarketResearch] = None,
         geospatial_research: Optional[GoogleGeospatialResearch] = None,
+        population_backend: Optional[PopulationSynthesisBackend] = None,
+        choice_backend: Optional[ChoiceModelBackend] = None,
+        representative_backend: Optional[
+            RepresentativeResearchBackend
+        ] = None,
     ):
         self.studies_db: Dict[str, Dict[str, Any]] = {}
         self.runs_db: Dict[str, Dict[str, Any]] = {}
@@ -198,6 +217,14 @@ class StudyService:
         self.market_research = market_research or PublicMarketResearch()
         self.geospatial_research = (
             geospatial_research or GoogleGeospatialResearch()
+        )
+        self.population_backend = (
+            population_backend or get_population_backend()
+        )
+        self.choice_backend = choice_backend or get_choice_model_backend()
+        self.representative_backend = (
+            representative_backend
+            or get_representative_research_backend()
         )
 
     def create_study(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -390,6 +417,7 @@ class StudyService:
         study: Mapping[str, Any],
         plan: Any,
         model_study_type: str,
+        seed: int,
         platform_override: Optional[Mapping[str, Any]] = None,
     ) -> tuple[Dict[str, Any], Dict[str, Any], List[str]]:
         inputs = study.get("inputs") or {}
@@ -514,15 +542,16 @@ class StudyService:
             for name in feature_columns
             if name in base_model["coefficients"]
         }
-        fit = ConditionalLogitEstimator(
-            l2_penalty=0.05,
-            max_iterations=150,
-            tolerance=1e-7,
-        ).fit(
-            frame,
-            feature_columns,
-            initial_coefficients=initial_coefficients,
+        fit_result = self.choice_backend.fit(
+            ChoiceFitRequest(
+                frame=frame,
+                feature_columns=feature_columns,
+                study_type=model_study_type,
+                seed=seed,
+                initial_coefficients=initial_coefficients,
+            )
         )
+        fit = fit_result.fit
         if not fit.converged:
             raise ValueError(
                 "真实选择模型未收敛，未替换生产系数；请检查选择组和特征尺度。"
@@ -556,16 +585,24 @@ class StudyService:
             for key, value in fit.to_dict().items()
             if key != "covariance"
         }
+        diagnostics.update(dict(fit_result.diagnostics))
         return (
             profile,
             {
                 "status": "applied_unvalidated",
-                "method": "conditional_multinomial_logit_newton",
+                "method": (
+                    "conditional_multinomial_logit_newton"
+                    if fit_result.backend_id == "native"
+                    else "choice_learn_conditional_logit_lbfgs"
+                ),
+                "backend": fit_result.backend_id,
+                "backend_version": fit_result.backend_version,
                 "coefficient_effect": "fitted_coefficients_replaced_priors",
                 "study_type": model_study_type,
                 "feature_columns": feature_columns,
                 "diagnostics": diagnostics,
-                "validation_status": "out_of_sample_validation_required",
+                "artifact": dict(fit_result.artifact_metadata),
+                "validation_status": fit_result.validation_status,
             },
             warnings,
         )
@@ -858,11 +895,11 @@ class StudyService:
 
     def _representative_records(
         self,
-        generator: PopulationGenerator,
-        population_df: Any,
+        population_result: PopulationSynthesisResult,
         sample_size: int,
         seed: int,
     ) -> List[Dict[str, Any]]:
+        population_df = population_result.population
         if sample_size <= 0:
             return []
         representative_population = population_df
@@ -873,10 +910,20 @@ class StudyService:
             representative_population = population_df[
                 population_df["category_eligible"]
             ].copy()
-        sampled = generator.stratified_sample(
-            representative_population,
+        sampling_result = PopulationSynthesisResult(
+            population=representative_population,
+            backend_id=population_result.backend_id,
+            backend_version=population_result.backend_version,
+            status=population_result.status,
+            diagnostics=population_result.diagnostics,
+            artifacts=population_result.artifacts,
+            limitations=population_result.limitations,
+            runtime_context=population_result.runtime_context,
+        )
+        sampled = self.population_backend.stratified_sample(
+            sampling_result,
             min(sample_size, len(representative_population)),
-            seed=seed,
+            seed,
         )
         records = []
         for row in sampled.to_dict(orient="records"):
@@ -932,16 +979,16 @@ class StudyService:
 
     def _sample_profile(
         self,
-        generator: PopulationGenerator,
-        population_df: Any,
+        population_result: PopulationSynthesisResult,
         seed: int,
     ) -> Dict[str, Any]:
         """Build a bounded visualization sample without exposing real locations."""
+        population_df = population_result.population
         display_size = min(600, len(population_df))
-        sampled = generator.stratified_sample(
-            population_df,
+        sampled = self.population_backend.stratified_sample(
+            population_result,
             display_size,
-            seed=seed + 1109,
+            seed + 1109,
         )
         rng = np.random.default_rng(seed + 2203)
         points = []
@@ -1600,6 +1647,7 @@ class StudyService:
                     study,
                     plan,
                     model_study_type,
+                    seed,
                     platform_calibration_override,
                 )
             )
@@ -1609,29 +1657,28 @@ class StudyService:
                 plan.competitor_limit,
             )
             update_progress("GENERATING_POPULATION", 35)
-            generator = PopulationGenerator(
-                seed=seed,
-                calibration_profile=profile,
+            population_result = self.population_backend.generate(
+                PopulationSynthesisRequest(
+                    population_size=execution["population_size"],
+                    study_type=model_study_type,
+                    category=study["facts"].get("category"),
+                    seed=seed,
+                    calibration_profile=profile,
+                    control_totals_version=str(profile.get("version") or ""),
+                )
             )
-            population_df = generator.generate(
-                size=execution["population_size"],
-                study_type=model_study_type,
-                category=study["facts"].get("category"),
-            )
+            population_df = population_result.population
 
             update_progress("RUNNING_AGENTS", 45)
             representatives = self._representative_records(
-                generator,
-                population_df,
+                population_result,
                 plan.representative_agents,
                 seed,
             )
             sample_profile = self._sample_profile(
-                generator,
-                population_df,
+                population_result,
                 seed,
             )
-            gateway = GeminiAgentGateway()
             product_context = {
                 **study["facts"],
                 "study_type": study["study_type"],
@@ -1656,15 +1703,19 @@ class StudyService:
                     0,
                 ),
             }
-            agent_research = await gateway.generate_research_signals(
-                product_info=product_context,
-                business_questions=study["inputs"].get(
-                    "business_questions",
-                    [],
-                ),
-                representatives=representatives,
-                plan_code=plan.code,
+            representative_result = await self.representative_backend.research(
+                RepresentativeResearchRequest(
+                    product_info=product_context,
+                    business_questions=study["inputs"].get(
+                        "business_questions",
+                        [],
+                    ),
+                    representatives=representatives,
+                    plan_code=plan.code,
+                    seed=seed,
+                )
             )
+            agent_research = representative_result.payload
 
             update_progress("RUNNING_SIMULATION", 60)
             price = float(
@@ -1693,6 +1744,10 @@ class StudyService:
                 agent_signals=agent_research,
                 variable_cost=study["facts"].get("variable_cost"),
             )
+            if representative_result.backend_id != "gemini":
+                sim_results["model_lineage"][
+                    "representative_research"
+                ] = representative_result.lineage()
             geo_analysis = build_geo_analysis(
                 study_type=study["study_type"],
                 venue_type=study["facts"].get("venue_type") or model_study_type,

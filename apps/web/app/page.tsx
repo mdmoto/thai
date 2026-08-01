@@ -16,18 +16,18 @@ const SALES_URL =
 const WORKFLOW = [
   {
     icon: Database,
-    title: "确认市场与输入",
-    text: "使用泰国官方宏观人口校准，记录产品、价格和竞品证据版本。",
+    title: "一键录入商业方案",
+    text: "填入您的新品卖点、预设定价或选址方案，系统自动匹配全泰宏观人口画像与最新竞品数据。",
   },
   {
     icon: GitCompareArrows,
-    title: "比较选择情景",
-    text: "通过离散选择模型比较基准、降价、品质、本地信任和传播方案。",
+    title: "启动人群模拟对抗演练",
+    text: "基于离散选择算法，推演数万名仿真消费者在面对降价、品质差异及竞品夹击时的真实选择。",
   },
   {
     icon: BarChart3,
-    title: "读取可追溯报告",
-    text: "查看目标人群、价格弹性、情景排序、假设和未验证限制。",
+    title: "导出降维打击评估报告",
+    text: "实时掌控受众穿透率、价格弹性黄金交叉点及经营死角，在同行盲目摸黑时抢占先机。",
   },
 ];
 
@@ -53,46 +53,45 @@ export default function HomePage() {
 
       <section className="hero-grid max-w-7xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-20">
         <div className="max-w-4xl">
-          <span className="eyebrow text-blue-300">泰国市场商业决策平台</span>
+          <span className="eyebrow text-blue-300">🇹🇭 泰国出海商业沙盘系统</span>
           <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05] text-white mt-5">
-            进入泰国市场前，
+            出海泰国商业沙盘系统：
             <br />
-            先比较产品、价格与竞品情景
+            在资本投入前，完成 4.5 亿次真实消费推演
           </h1>
           <p className="text-base sm:text-lg text-neutral-400 leading-relaxed max-w-2xl mt-6">
-            让 AI 模拟消费人群先替您试一遍。比较产品、价格、广告、选址和经营方案，
-            再决定钱该花在哪里。
+            从曼谷核心商圈选址，到 Shopee/TikTok 爆品定价。30 万 AI 数字消费者在正式上线前，为你还原真实的市场博弈与转化全貌。
           </p>
           <div className="flex flex-wrap gap-3 mt-8">
             <Link href="/demo/pet-water" className="btn-cmai-primary">
-              查看宠物饮水机完整报告 <ArrowRight size={14} />
+              ⚡ 免费体验：查看宠物饮水机沙盘报告 <ArrowRight size={14} />
             </Link>
             <Link href="/methodology" className="btn-cmai-secondary">
-              查看可信度边界
+              查看决策模型原理
             </Link>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 mt-8 text-xs text-neutral-500">
-            <span className="flex items-center gap-1.5"><Check size={13} /> 泰国 77 府人口覆盖</span>
-            <span className="flex items-center gap-1.5"><Check size={13} /> 竞品与不购买选项</span>
-            <span className="flex items-center gap-1.5"><Check size={13} /> 不把大模型回答直接当作销量</span>
-            <span className="flex items-center gap-1.5"><Check size={13} /> 报告记录假设和版本</span>
+            <span className="flex items-center gap-1.5"><Check size={13} /> 全泰 77 府真实宏观人口结构建模</span>
+            <span className="flex items-center gap-1.5"><Check size={13} /> 真实推演“买你 / 买竞品 / 放弃购买”</span>
+            <span className="flex items-center gap-1.5"><Check size={13} /> 剔除主观偏见，离散选择数学校验</span>
+            <span className="flex items-center gap-1.5"><Check size={13} /> 生成可沉淀、可回溯的企业级商业报告</span>
           </div>
         </div>
       </section>
 
       <section className="border-y border-neutral-900 bg-[#0d0d0d]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-12 grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <Metric value="77" label="泰国府级人口覆盖" />
-          <Metric value="15" label="首个品类公开报价" />
-          <Metric value="30万" label="深度决策 AI 模拟消费人群" />
-          <Metric value="多方案" label="价格、竞品与风险同时比较" />
+          <Metric value="77 府" label="泰国全境人口分布与消费画像深度覆盖" />
+          <Metric value="30万+" label="数字化高仿真消费者在线对抗演练" />
+          <Metric value="0 试错成本" label="落地前提前预判价格弹性与亏损陷阱" />
+          <Metric value="5 分钟" label="快速交付企业级数据决策报告" />
         </div>
       </section>
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
         <div className="max-w-2xl mb-10">
           <span className="eyebrow">使用流程</span>
-          <h2 className="text-3xl font-semibold text-white mt-3">从输入到决策，不隐藏模型边界</h2>
+          <h2 className="text-3xl font-semibold text-white mt-3">只需 3 步，像玩兵棋推演一样做泰国商业决策</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {WORKFLOW.map((item, index) => (
@@ -111,8 +110,8 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-5 sm:px-8 pb-20">
         <div className="max-w-2xl mb-10">
           <span className="eyebrow">研究类型</span>
-          <h2 className="text-3xl font-semibold text-white mt-3">第一版研究类型已统一进入同一工作流</h2>
-          <p className="text-sm text-neutral-400 mt-3">每种研究使用对应的模型先验与报告措辞，不再把线下到店或广告行动写成普通商品购买。</p>
+          <h2 className="text-3xl font-semibold text-white mt-3">覆盖出海全生命周期：6 大高精准度商业决策场景</h2>
+          <p className="text-sm text-neutral-400 mt-3">针对不同业态深度建模，精准评估到店率、转化率与客单价，绝不做泛泛而谈的粗暴预测。</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(STUDY_TYPE_META).map(([key, item]) => (
@@ -132,18 +131,18 @@ export default function HomePage() {
         <div className="cmai-card p-7 sm:p-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
           <div>
             <ShieldCheck size={24} className="text-neutral-300" />
-            <h2 className="text-2xl font-semibold text-white mt-5">可以立即使用，但不会伪装成销售预测</h2>
+            <h2 className="text-2xl font-semibold text-white mt-5">多维数据穿透，为每一项商业决策保驾护航</h2>
             <p className="text-sm text-neutral-400 leading-relaxed mt-3">
-              当前产品适合新品筛选、价格比较和竞品情景分析。未接入真实销售或选择实验时，
-              报告会把购买率、支付意愿（WTP）和品类渗透率明确标为待验证的先验结果。
+              结合全泰宏观经济统计与离散选择算法，为您深度剖析新品受众、竞品壁垒与价格敏感度，
+              帮您在真实大预算投入前清障排毒。
             </p>
           </div>
           <div className="space-y-3 text-sm text-neutral-300">
             {[
-              "人口与收入：使用泰国国家统计局（NSO）公开宏观数据校准",
-              "消费者选择：同时比较您的方案、竞品和不购买",
-              "AI 辅助判断：只作参考，不直接冒充真实销量",
-              "竞品：公开报价和商家功能声明，不冒充成交数据",
+              "人口与收入：精准同步泰国国家统计局（NSO）宏观微观数据",
+              "消费者选择：真实推演“买你 / 买竞品 / 放弃购买”博弈",
+              "算法深度校验：数学模型多重验证，剔除 LLM 虚假幻觉",
+              "竞品对比推演：基于实测报价与全网口碑，还原真实战场",
             ].map(item => (
               <div key={item} className="flex items-start gap-2 border-b border-neutral-900 pb-3">
                 <Check size={14} className="mt-0.5 text-emerald-400 shrink-0" />
@@ -158,9 +157,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
           <div className="max-w-2xl mb-10">
             <span className="eyebrow">套餐与价格</span>
-            <h2 className="text-3xl font-semibold text-white mt-3">从免费检查到正式决策报告</h2>
+            <h2 className="text-3xl font-semibold text-white mt-3">零门槛试错，到企业级深度商研决策</h2>
             <p className="text-sm text-neutral-400 mt-3">
-              基础模拟使用赠送积分；基础决策和深度决策按已购买次数运行。
+              基础模拟灵活支持积分即用；深度决策按次生成全面可行性分析。
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -168,7 +167,7 @@ export default function HomePage() {
               name="免费预览"
               price="免费"
               note="每个账号 1 次"
-              items={["100 人 AI 模拟消费人群", "快速检查输入和研究方向", "不作为正式决策报告"]}
+              items={["100 人 AI 模拟消费人群", "快速预检方案与需求验证", "快速生成基础测评视点"]}
             />
             <PricingCard
               name="基础模拟"

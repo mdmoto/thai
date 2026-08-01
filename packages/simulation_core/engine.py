@@ -21,6 +21,13 @@ from simulation_core.config import (
     PlanConfig,
     get_plan_config,
 )
+from simulation_core.social_backends.base import (
+    SocialSimulationBackend,
+    SocialSimulationRequest,
+)
+from simulation_core.social_backends.prior import (
+    get_social_simulation_backend,
+)
 
 
 SIMULATION_MODEL_VERSION = "SIM-3.0.0"
@@ -118,6 +125,7 @@ class SimulationEngine:
         self,
         seed: int = 42,
         calibration_profile: Optional[Mapping[str, Any]] = None,
+        social_backend: Optional[SocialSimulationBackend] = None,
     ):
         self.seed = seed
         self.rng = np.random.default_rng(seed)
@@ -125,6 +133,9 @@ class SimulationEngine:
             dict(calibration_profile)
             if calibration_profile is not None
             else load_calibration_profile()
+        )
+        self.social_backend = (
+            social_backend or get_social_simulation_backend()
         )
 
     def _model_population(
@@ -1887,6 +1898,26 @@ class SimulationEngine:
                 "Creative-test action probability is a structured response prior, not an observed impression, click-through or conversion rate."
             )
 
+        social_result = self.social_backend.simulate(
+            SocialSimulationRequest(
+                seed=self.seed,
+                plan_code=plan.code,
+                frozen_inputs={
+                    "purchase_rate": purchase_rate,
+                    "awareness_rate": awareness_rate,
+                    "repeat_rate": repeat_rate,
+                    "population_rows": len(model_frame),
+                },
+                native_runner=lambda: self._social_dynamics(
+                    purchase_rate,
+                    awareness_rate,
+                    repeat_rate,
+                    model_frame,
+                    plan,
+                ),
+            )
+        )
+
         return {
             "simulation_model_version": SIMULATION_MODEL_VERSION,
             "world_model_version": str(
@@ -1940,13 +1971,7 @@ class SimulationEngine:
                 model_frame,
                 plan,
             ),
-            "social_dynamics": self._social_dynamics(
-                purchase_rate,
-                awareness_rate,
-                repeat_rate,
-                model_frame,
-                plan,
-            ),
+            "social_dynamics": list(social_result.events),
             "implied_wtp": self._implied_wtp(
                 coefficient_priors,
                 model_frame,

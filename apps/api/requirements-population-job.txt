@@ -1,0 +1,6 @@
+# PopulationSim validation is a compute-only image. It is isolated because its
+# released dependency range requires NumPy 1.x while the API stays on 2.0.2.
+numpy==1.26.4
+pandas==2.2.3
+pyarrow==21.0.0
+populationsim==0.10.0

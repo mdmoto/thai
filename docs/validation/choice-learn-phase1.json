@@ -1,0 +1,378 @@
+{
+  "schema_version": "choice-backend-validation-v1",
+  "dataset": {
+    "status": "synthetic_recovery_test_not_customer_evidence",
+    "choice_sets_per_seed": 600,
+    "alternatives_per_set": 3,
+    "features": [
+      "price_log_ratio",
+      "quality_fit",
+      "brand_trust"
+    ],
+    "true_coefficients": {
+      "price_log_ratio": -1.35,
+      "quality_fit": 1.05,
+      "brand_trust": 0.55
+    }
+  },
+  "comparisons": [
+    {
+      "seed": 20260730,
+      "training_choice_sets": 480,
+      "holdout_choice_sets": 120,
+      "native": {
+        "backend": "native",
+        "backend_version": "native-conditional-logit-1",
+        "fit_seconds": 0.10455937500228174,
+        "converged": true,
+        "coefficients": {
+          "price_log_ratio": -1.30510064,
+          "quality_fit": 0.77273416,
+          "brand_trust": 0.59853741
+        },
+        "standard_errors": {
+          "price_log_ratio": 0.18855897,
+          "quality_fit": 0.26626592,
+          "brand_trust": 0.27636773
+        },
+        "log_likelihood": -491.01805547,
+        "fit_diagnostics": {
+          "seed": 20260730,
+          "choice_sets": 480,
+          "observations": 1440,
+          "converged": true,
+          "outside_option_status": "present_in_every_choice_set",
+          "choice_set_probability_sum_max_error": 2.220446049250313e-16,
+          "minimum_probability": 0.08047283236209779,
+          "maximum_probability": 0.7161684173938719
+        },
+        "holdout": {
+          "log_loss": 1.1006712605409537,
+          "accuracy": 0.425,
+          "probability_sum_max_error": 2.220446049250313e-16
+        },
+        "artifact": {
+          "component_run_id": "choice_validation_20260730_native",
+          "artifact_type": "choice_coefficients",
+          "uri": "choice_validation_20260730_native/choice_coefficients/c4ef1b54a23414e1614e9f6639f4c40e85faa722903ad35a422fd9eb1c34b342.json",
+          "sha256": "c4ef1b54a23414e1614e9f6639f4c40e85faa722903ad35a422fd9eb1c34b342",
+          "size_bytes": 1289,
+          "media_type": "application/json",
+          "schema_version": "choice-fit-v1",
+          "created_at": "2026-07-30T10:03:33.773096+00:00",
+          "object_path": "choice_validation_20260730_native/choice_coefficients/c4ef1b54a23414e1614e9f6639f4c40e85faa722903ad35a422fd9eb1c34b342.json",
+          "metadata": {
+            "artifact_type": "choice_coefficients",
+            "schema_version": "choice-fit-v1",
+            "media_type": "application/json",
+            "sha256": "c4ef1b54a23414e1614e9f6639f4c40e85faa722903ad35a422fd9eb1c34b342",
+            "size_bytes": 1289,
+            "training_data_sha256": "14100124c49ebccc52e46275ee9ac31eddeca70e56d094825042884eaf3d8a7d"
+          },
+          "uri_type": "relative_to_artifact_directory"
+        }
+      },
+      "choice_learn": {
+        "backend": "choice_learn",
+        "backend_version": "choice-learn-adapter-1",
+        "fit_seconds": 4.6331067079736385,
+        "converged": true,
+        "coefficients": {
+          "price_log_ratio": -1.30508947,
+          "quality_fit": 0.7727294,
+          "brand_trust": 0.59853417
+        },
+        "standard_errors": {
+          "price_log_ratio": 0.1885586,
+          "quality_fit": 0.26626561,
+          "brand_trust": 0.2763674
+        },
+        "log_likelihood": -491.01805547,
+        "fit_diagnostics": {
+          "seed": 20260730,
+          "choice_sets": 480,
+          "observations": 1440,
+          "converged": true,
+          "gradient_max_abs": 0.0009255712454174225,
+          "gradient_mean_abs_per_choice_set": 1.9282734279529634e-06,
+          "choice_learn_version": "1.3.2",
+          "tensorflow_version": "2.19.1",
+          "optimizer": "lbfgs",
+          "maximum_iterations": 150,
+          "iterations": 20,
+          "outside_option_status": "present_in_every_choice_set",
+          "choice_set_probability_sum_max_error": 1.1102230246251565e-16,
+          "minimum_probability": 0.08047388210370829,
+          "maximum_probability": 0.7161654518233721
+        },
+        "holdout": {
+          "log_loss": 1.1006703512356697,
+          "accuracy": 0.425,
+          "probability_sum_max_error": 1.1102230246251565e-16
+        },
+        "artifact": {
+          "component_run_id": "choice_validation_20260730_choice_learn",
+          "artifact_type": "choice_coefficients",
+          "uri": "choice_validation_20260730_choice_learn/choice_coefficients/c433a9f06434d23ff173d6563756ee806c1260e0857637eded72d35f28559278.json",
+          "sha256": "c433a9f06434d23ff173d6563756ee806c1260e0857637eded72d35f28559278",
+          "size_bytes": 1523,
+          "media_type": "application/json",
+          "schema_version": "choice-fit-v1",
+          "created_at": "2026-07-30T10:03:38.420917+00:00",
+          "object_path": "choice_validation_20260730_choice_learn/choice_coefficients/c433a9f06434d23ff173d6563756ee806c1260e0857637eded72d35f28559278.json",
+          "metadata": {
+            "artifact_type": "choice_coefficients",
+            "schema_version": "choice-fit-v1",
+            "media_type": "application/json",
+            "sha256": "c433a9f06434d23ff173d6563756ee806c1260e0857637eded72d35f28559278",
+            "size_bytes": 1523,
+            "training_data_sha256": "14100124c49ebccc52e46275ee9ac31eddeca70e56d094825042884eaf3d8a7d"
+          },
+          "uri_type": "relative_to_artifact_directory"
+        }
+      },
+      "choice_learn_log_loss_improvement": 9.093052839581617e-07
+    },
+    {
+      "seed": 20260731,
+      "training_choice_sets": 480,
+      "holdout_choice_sets": 120,
+      "native": {
+        "backend": "native",
+        "backend_version": "native-conditional-logit-1",
+        "fit_seconds": 0.09541341700241901,
+        "converged": true,
+        "coefficients": {
+          "price_log_ratio": -1.22337558,
+          "quality_fit": 0.9996739,
+          "brand_trust": 0.24583836
+        },
+        "standard_errors": {
+          "price_log_ratio": 0.19165261,
+          "quality_fit": 0.26582412,
+          "brand_trust": 0.28543697
+        },
+        "log_likelihood": -494.17897061,
+        "fit_diagnostics": {
+          "seed": 20260731,
+          "choice_sets": 480,
+          "observations": 1440,
+          "converged": true,
+          "outside_option_status": "present_in_every_choice_set",
+          "choice_set_probability_sum_max_error": 2.220446049250313e-16,
+          "minimum_probability": 0.09402506166852544,
+          "maximum_probability": 0.6670372152478383
+        },
+        "holdout": {
+          "log_loss": 1.0256685045862257,
+          "accuracy": 0.49166666666666664,
+          "probability_sum_max_error": 2.220446049250313e-16
+        },
+        "artifact": {
+          "component_run_id": "choice_validation_20260731_native",
+          "artifact_type": "choice_coefficients",
+          "uri": "choice_validation_20260731_native/choice_coefficients/63ea5eb78fa3d49012a5f4a392aef70909d7f593b5e221d5ca0ac0f23805e93e.json",
+          "sha256": "63ea5eb78fa3d49012a5f4a392aef70909d7f593b5e221d5ca0ac0f23805e93e",
+          "size_bytes": 1286,
+          "media_type": "application/json",
+          "schema_version": "choice-fit-v1",
+          "created_at": "2026-07-30T10:03:38.607141+00:00",
+          "object_path": "choice_validation_20260731_native/choice_coefficients/63ea5eb78fa3d49012a5f4a392aef70909d7f593b5e221d5ca0ac0f23805e93e.json",
+          "metadata": {
+            "artifact_type": "choice_coefficients",
+            "schema_version": "choice-fit-v1",
+            "media_type": "application/json",
+            "sha256": "63ea5eb78fa3d49012a5f4a392aef70909d7f593b5e221d5ca0ac0f23805e93e",
+            "size_bytes": 1286,
+            "training_data_sha256": "fb5cc185d5c2f77c369f6079bde76624cf7b52125f7e383a3baed52021268622"
+          },
+          "uri_type": "relative_to_artifact_directory"
+        }
+      },
+      "choice_learn": {
+        "backend": "choice_learn",
+        "backend_version": "choice-learn-adapter-1",
+        "fit_seconds": 0.4165858750056941,
+        "converged": true,
+        "coefficients": {
+          "price_log_ratio": -1.22336614,
+          "quality_fit": 0.99966782,
+          "brand_trust": 0.24583906
+        },
+        "standard_errors": {
+          "price_log_ratio": 0.19165228,
+          "quality_fit": 0.26582379,
+          "brand_trust": 0.28543669
+        },
+        "log_likelihood": -494.17897062,
+        "fit_diagnostics": {
+          "seed": 20260731,
+          "choice_sets": 480,
+          "observations": 1440,
+          "converged": true,
+          "gradient_max_abs": 0.0008469041691607782,
+          "gradient_mean_abs_per_choice_set": 1.7643836857516213e-06,
+          "choice_learn_version": "1.3.2",
+          "tensorflow_version": "2.19.1",
+          "optimizer": "lbfgs",
+          "maximum_iterations": 150,
+          "iterations": 21,
+          "outside_option_status": "present_in_every_choice_set",
+          "choice_set_probability_sum_max_error": 1.1102230246251565e-16,
+          "minimum_probability": 0.09402609397895394,
+          "maximum_probability": 0.6670344794454025
+        },
+        "holdout": {
+          "log_loss": 1.025668581978857,
+          "accuracy": 0.49166666666666664,
+          "probability_sum_max_error": 1.1102230246251565e-16
+        },
+        "artifact": {
+          "component_run_id": "choice_validation_20260731_choice_learn",
+          "artifact_type": "choice_coefficients",
+          "uri": "choice_validation_20260731_choice_learn/choice_coefficients/bf5065fd02034ae1f92c141b18041609d1a5c9e7f38e2dda5104f97b124f7015.json",
+          "sha256": "bf5065fd02034ae1f92c141b18041609d1a5c9e7f38e2dda5104f97b124f7015",
+          "size_bytes": 1528,
+          "media_type": "application/json",
+          "schema_version": "choice-fit-v1",
+          "created_at": "2026-07-30T10:03:39.038544+00:00",
+          "object_path": "choice_validation_20260731_choice_learn/choice_coefficients/bf5065fd02034ae1f92c141b18041609d1a5c9e7f38e2dda5104f97b124f7015.json",
+          "metadata": {
+            "artifact_type": "choice_coefficients",
+            "schema_version": "choice-fit-v1",
+            "media_type": "application/json",
+            "sha256": "bf5065fd02034ae1f92c141b18041609d1a5c9e7f38e2dda5104f97b124f7015",
+            "size_bytes": 1528,
+            "training_data_sha256": "fb5cc185d5c2f77c369f6079bde76624cf7b52125f7e383a3baed52021268622"
+          },
+          "uri_type": "relative_to_artifact_directory"
+        }
+      },
+      "choice_learn_log_loss_improvement": -7.739263119255213e-08
+    },
+    {
+      "seed": 20260732,
+      "training_choice_sets": 480,
+      "holdout_choice_sets": 120,
+      "native": {
+        "backend": "native",
+        "backend_version": "native-conditional-logit-1",
+        "fit_seconds": 0.0932078339974396,
+        "converged": true,
+        "coefficients": {
+          "price_log_ratio": -1.40828573,
+          "quality_fit": 1.00732785,
+          "brand_trust": 1.03630653
+        },
+        "standard_errors": {
+          "price_log_ratio": 0.19236373,
+          "quality_fit": 0.26883497,
+          "brand_trust": 0.26993186
+        },
+        "log_likelihood": -496.33108341,
+        "fit_diagnostics": {
+          "seed": 20260732,
+          "choice_sets": 480,
+          "observations": 1440,
+          "converged": true,
+          "outside_option_status": "present_in_every_choice_set",
+          "choice_set_probability_sum_max_error": 2.220446049250313e-16,
+          "minimum_probability": 0.0727139106849964,
+          "maximum_probability": 0.6453887445110834
+        },
+        "holdout": {
+          "log_loss": 1.05548149615102,
+          "accuracy": 0.44166666666666665,
+          "probability_sum_max_error": 2.220446049250313e-16
+        },
+        "artifact": {
+          "component_run_id": "choice_validation_20260732_native",
+          "artifact_type": "choice_coefficients",
+          "uri": "choice_validation_20260732_native/choice_coefficients/c691aebd2f5aa6536410711df733ed10fb3d87d5ed66db3e056c6d8bb7e9292a.json",
+          "sha256": "c691aebd2f5aa6536410711df733ed10fb3d87d5ed66db3e056c6d8bb7e9292a",
+          "size_bytes": 1287,
+          "media_type": "application/json",
+          "schema_version": "choice-fit-v1",
+          "created_at": "2026-07-30T10:03:39.221639+00:00",
+          "object_path": "choice_validation_20260732_native/choice_coefficients/c691aebd2f5aa6536410711df733ed10fb3d87d5ed66db3e056c6d8bb7e9292a.json",
+          "metadata": {
+            "artifact_type": "choice_coefficients",
+            "schema_version": "choice-fit-v1",
+            "media_type": "application/json",
+            "sha256": "c691aebd2f5aa6536410711df733ed10fb3d87d5ed66db3e056c6d8bb7e9292a",
+            "size_bytes": 1287,
+            "training_data_sha256": "e4cee5b30fbfdb1ca67f259990c709c8c088eeecc64771aa2fc67849e2c3ae95"
+          },
+          "uri_type": "relative_to_artifact_directory"
+        }
+      },
+      "choice_learn": {
+        "backend": "choice_learn",
+        "backend_version": "choice-learn-adapter-1",
+        "fit_seconds": 0.46050691601703875,
+        "converged": true,
+        "coefficients": {
+          "price_log_ratio": -1.40827107,
+          "quality_fit": 1.00731981,
+          "brand_trust": 1.0362978
+        },
+        "standard_errors": {
+          "price_log_ratio": 0.19236331,
+          "quality_fit": 0.26883464,
+          "brand_trust": 0.26993155
+        },
+        "log_likelihood": -496.33108342,
+        "fit_diagnostics": {
+          "seed": 20260732,
+          "choice_sets": 480,
+          "observations": 1440,
+          "converged": true,
+          "gradient_max_abs": 0.0008070052314961274,
+          "gradient_mean_abs_per_choice_set": 1.6812608989502652e-06,
+          "choice_learn_version": "1.3.2",
+          "tensorflow_version": "2.19.1",
+          "optimizer": "lbfgs",
+          "maximum_iterations": 150,
+          "iterations": 17,
+          "outside_option_status": "present_in_every_choice_set",
+          "choice_set_probability_sum_max_error": 1.1102230246251565e-16,
+          "minimum_probability": 0.07271514351841976,
+          "maximum_probability": 0.6453854936991891
+        },
+        "holdout": {
+          "log_loss": 1.055481219178261,
+          "accuracy": 0.44166666666666665,
+          "probability_sum_max_error": 1.1102230246251565e-16
+        },
+        "artifact": {
+          "component_run_id": "choice_validation_20260732_choice_learn",
+          "artifact_type": "choice_coefficients",
+          "uri": "choice_validation_20260732_choice_learn/choice_coefficients/33ba153a2243a2d4dbbd11dd31775f59b140f8ab79844cf154e2f6d7e8b9a6b7.json",
+          "sha256": "33ba153a2243a2d4dbbd11dd31775f59b140f8ab79844cf154e2f6d7e8b9a6b7",
+          "size_bytes": 1520,
+          "media_type": "application/json",
+          "schema_version": "choice-fit-v1",
+          "created_at": "2026-07-30T10:03:39.696878+00:00",
+          "object_path": "choice_validation_20260732_choice_learn/choice_coefficients/33ba153a2243a2d4dbbd11dd31775f59b140f8ab79844cf154e2f6d7e8b9a6b7.json",
+          "metadata": {
+            "artifact_type": "choice_coefficients",
+            "schema_version": "choice-fit-v1",
+            "media_type": "application/json",
+            "sha256": "33ba153a2243a2d4dbbd11dd31775f59b140f8ab79844cf154e2f6d7e8b9a6b7",
+            "size_bytes": 1520,
+            "training_data_sha256": "e4cee5b30fbfdb1ca67f259990c709c8c088eeecc64771aa2fc67849e2c3ae95"
+          },
+          "uri_type": "relative_to_artifact_directory"
+        }
+      },
+      "choice_learn_log_loss_improvement": 2.7697275895022244e-07
+    }
+  ],
+  "gate": {
+    "functional_validation_passed": true,
+    "choice_learn_materially_better": false,
+    "mean_holdout_log_loss_improvement": 3.69628470571944e-07,
+    "production_recommendation": "retain_native_default",
+    "limitation": "Synthetic recovery proves implementation behavior only. Production promotion requires customer observed-choice holdout and time-based validation."
+  }
+}

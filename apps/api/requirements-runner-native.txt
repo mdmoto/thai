@@ -1,0 +1,5 @@
+# The native runner is intentionally pinned independently from the API image.
+# It currently shares the same runtime libraries because Standard studies can
+# still execute inline, but future compute-only dependencies belong here.
+-r requirements-api.txt
+google-cloud-storage==3.3.1

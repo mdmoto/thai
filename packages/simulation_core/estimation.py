@@ -24,6 +24,7 @@ class ConditionalLogitFit:
     observations: int
     l2_penalty: float
     source_status: str = "estimated_from_observed_choices"
+    estimation_method: str = "conditional_multinomial_logit_newton"
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -50,7 +51,7 @@ class ConditionalLogitFit:
                 }
             },
             "fit_diagnostics": {
-                "method": "conditional_multinomial_logit_newton",
+                "method": self.estimation_method,
                 "log_likelihood": self.log_likelihood,
                 "converged": self.converged,
                 "iterations": self.iterations,

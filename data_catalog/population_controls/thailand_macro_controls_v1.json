@@ -1,0 +1,38 @@
+{
+  "schema_version": "population-controls-v1",
+  "dataset_id": "TH-CONSUMER-MACRO-2026.07.1-controls",
+  "status": "mixed_official_aggregate_and_disclosed_prior",
+  "geographic_scope": "Thailand national",
+  "geography_level": "national_with_region_controls",
+  "source_profile": "data_catalog/thailand_consumer_products_macro_v1.json",
+  "source_profile_sha256": "cf08c5be9ec7b49a68ad66b7b9902c4a3a80c03688a5ad010b9ed42153d35df8",
+  "variable_mapping_version": "population-controls-v1",
+  "controls": {
+    "region": {
+      "Bangkok Metro": 0.1424551722863606,
+      "Central": 0.15733310442851056,
+      "East / EEC": 0.048156247174114195,
+      "Northeast": 0.32730783630831345,
+      "North": 0.1800373812030088,
+      "South": 0.14471025859969236
+    },
+    "gender": {
+      "Female": 0.5079286751475417,
+      "Male": 0.48207132485245824,
+      "Non-binary": 0.01
+    },
+    "income_tier": {
+      "LOW": 0.14614614614614616,
+      "MID_LOW": 0.5385385385385385,
+      "MID_HIGH": 0.1901901901901902,
+      "HIGH": 0.10410410410410412,
+      "LUXURY": 0.021021021021021023
+    }
+  },
+  "permission": "Derived from the versioned project profile. Underlying observed aggregate sources retain their listed Creative Commons Attribution permissions; engineering priors remain explicitly marked as assumptions in the source profile.",
+  "limitations": [
+    "These are aggregate margins, not Thai household microdata.",
+    "The controls do not identify the true joint distribution.",
+    "Gender and some modeled mappings include disclosed engineering priors."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": "human-ai-response-comparison-v1",
+  "human_dataset_status": "observed_human_survey",
+  "human_dataset_id": "customer-survey-or-panel-id",
+  "human_dataset_version": "immutable-version",
+  "model_version": "tinytroupe-backend-version",
+  "prompt_version": "prompt-version",
+  "questions": [
+    {
+      "question_id": "purchase_intent",
+      "allowed_answers": ["definitely_yes", "maybe", "no"],
+      "maximum_total_variation_distance": 0.1
+    }
+  ],
+  "human_responses": [
+    {
+      "respondent_id": "anonymized-human-id",
+      "question_id": "purchase_intent",
+      "answer": "maybe",
+      "survey_weight": 1.0
+    }
+  ],
+  "ai_responses": [
+    {
+      "representative_id": "synthetic-persona-id",
+      "question_id": "purchase_intent",
+      "answer": "maybe",
+      "expansion_weight": 3125.0
+    }
+  ]
+}

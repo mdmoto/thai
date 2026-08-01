@@ -1,0 +1,24 @@
+# Minimal runtime used by the CMAI adapter. The official TinyTroupe package is
+# installed separately with --no-deps from a commit- and SHA-pinned archive,
+# because its declared dependencies include notebooks, plotting and test tools
+# that are not imported by the bounded qualitative runner.
+numpy==2.0.2
+pandas==2.3.3
+pydantic==2.13.4
+openai>=1.65
+httpx==0.28.1
+tiktoken
+msal
+rich
+requests
+chevron
+llama-index-core
+llama-index-readers-web
+llama-index-embeddings-openai
+llama-index-embeddings-azure-openai
+textdistance
+scipy
+# TinyTroupe imports its notebook experiment helper while constructing a
+# TinyPerson even though the bounded CMAI runner does not display notebooks.
+ipython
+google-auth

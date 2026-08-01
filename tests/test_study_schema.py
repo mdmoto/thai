@@ -77,8 +77,34 @@ class StudySchemaTests(unittest.TestCase):
         self.assertEqual(rows[1]["choice_set_id"], "set-00001")
         self.assertEqual(rows[0]["alternative"], "option-1")
         self.assertEqual(rows[1]["alternative"], "option-2")
+        self.assertNotIn("is_outside_option", rows[0])
+        self.assertNotIn("is_outside_option", rows[1])
         self.assertNotIn("customer_email", rows[0])
         self.assertNotIn("order_id", rows[0])
+
+    def test_outside_option_semantics_survive_deidentification(self):
+        request = CreateStudyRequest(
+            name="Outside option",
+            study_type="PRICING_STUDY",
+            observed_choice_data=[
+                {
+                    "choice_set_id": "customer-one",
+                    "alternative": "outside",
+                    "chosen": 1,
+                    "price_log_ratio": 0.0,
+                },
+                {
+                    "choice_set_id": "customer-one",
+                    "alternative": "focal product",
+                    "chosen": 0,
+                    "price_log_ratio": 1.1,
+                },
+            ],
+        )
+        rows = request.observed_choice_data
+        self.assertTrue(rows[0]["is_outside_option"])
+        self.assertNotIn("is_outside_option", rows[1])
+        self.assertEqual(rows[0]["alternative"], "option-1")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,97 @@
+{
+  "baseline_id": "PHASE0-2026-07-30",
+  "cases": [
+    {
+      "case_id": "pet_water_product_validation",
+      "input": {
+        "category": "PET_WATER_FOUNTAIN",
+        "name": "Phase 0 · 宠物智能饮水机产品验证",
+        "plan_code": "PREVIEW",
+        "price": 1290,
+        "product_name": "QuietFlow",
+        "selling_points": [
+          "静音",
+          "本地保修"
+        ],
+        "study_type": "PRODUCT_VALIDATION"
+      },
+      "key_metrics": {
+        "best_scenario": "首发降价 12%",
+        "purchase_p10": 0.014503,
+        "purchase_p90": 0.029596,
+        "purchase_rate": 0.021654
+      },
+      "mc_rounds": 40,
+      "population_size": 100,
+      "report_path": "docs/baselines/phase0/pet_water_product_validation.report.json",
+      "report_sha256": "7792d11cbec595e1107832b5e7f90ba9a65d8d8bcdb60a7d338453bcbc119ca8",
+      "seed": 42
+    },
+    {
+      "case_id": "generic_pricing_study",
+      "input": {
+        "category": "GENERIC_CONSUMER_PRODUCT",
+        "competitor_data": [
+          {
+            "awareness": 0.55,
+            "name": "Reference Competitor",
+            "price": 459,
+            "quality_score": 0.6
+          }
+        ],
+        "name": "Phase 0 · 通用消费品定价研究",
+        "plan_code": "PREVIEW",
+        "price": 499,
+        "product_name": "Everyday Product",
+        "reference_price": 499,
+        "study_type": "PRICING_STUDY"
+      },
+      "key_metrics": {
+        "best_scenario": "首发降价 12%",
+        "purchase_p10": 0.036236,
+        "purchase_p90": 0.085396,
+        "purchase_rate": 0.060055
+      },
+      "mc_rounds": 40,
+      "population_size": 100,
+      "report_path": "docs/baselines/phase0/generic_pricing_study.report.json",
+      "report_sha256": "79433a9555614bf87f0b196446ff1256711f44ee2d860a02160fec7a027bce7d",
+      "seed": 42
+    },
+    {
+      "case_id": "nimman_cafe_venue",
+      "input": {
+        "average_check": 220,
+        "capacity": 48,
+        "category": "GENERIC_CONSUMER_PRODUCT",
+        "location": {
+          "label": "Chiang Mai, Nimman Road",
+          "latitude": 18.7966,
+          "longitude": 98.9677
+        },
+        "name": "Phase 0 · 宁曼路咖啡馆研究",
+        "plan_code": "PREVIEW",
+        "product_name": "CMAI Cafe",
+        "study_type": "VENUE_STUDY",
+        "venue_type": "CAFE"
+      },
+      "key_metrics": {
+        "best_scenario": "基准经营方案",
+        "purchase_p10": 0.037823,
+        "purchase_p90": 0.168772,
+        "purchase_rate": 0.101653
+      },
+      "mc_rounds": 40,
+      "population_size": 100,
+      "report_path": "docs/baselines/phase0/nimman_cafe_venue.report.json",
+      "report_sha256": "ad4d51f258df4535f79b4cf6c09d64d9e3c110aa1f641ad683a651c80111064d",
+      "seed": 42
+    }
+  ],
+  "external_research": "disabled",
+  "llm_research": "disabled",
+  "plan_config_version": "PLAN-CONFIG-2026.07.4",
+  "schema_version": "1",
+  "simulation_model_version": "SIM-3.0.0",
+  "world_model_version": "TH-WORLD-2026.07.5"
+}

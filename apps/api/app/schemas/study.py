@@ -96,6 +96,7 @@ class CreateStudyRequest(BaseModel):
         allowed = {
             "choice_set_id",
             "alternative",
+            "is_outside_option",
             "chosen",
             "price_log_ratio",
             "affordability",
@@ -112,6 +113,17 @@ class CreateStudyRequest(BaseModel):
         group_ids: Dict[str, str] = {}
         alternative_counts: Dict[str, int] = {}
         cleaned: List[Dict[str, Any]] = []
+        outside_labels = {
+            "outside",
+            "outside option",
+            "no choice",
+            "no purchase",
+            "none",
+            "ไม่ซื้อ",
+            "ไม่เลือก",
+            "不购买",
+            "不选择",
+        }
         for row in rows:
             raw_group = str(row.get("choice_set_id") or "").strip()
             if not raw_group:
@@ -128,6 +140,18 @@ class CreateStudyRequest(BaseModel):
                 if key in allowed
             }
             item["choice_set_id"] = group_id
+            raw_alternative = str(
+                row.get("alternative") or ""
+            ).strip().lower()
+            if (
+                "is_outside_option" in row
+                or raw_alternative in outside_labels
+            ):
+                item["is_outside_option"] = bool(
+                    row.get("is_outside_option")
+                    if "is_outside_option" in row
+                    else True
+                )
             if "alternative" in item:
                 item["alternative"] = (
                     f"option-{alternative_counts[group_id]}"

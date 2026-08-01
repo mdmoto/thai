@@ -1,0 +1,1199 @@
+{
+  "schema_version": "population-backend-validation-v1",
+  "dataset": {
+    "status": "synthetic_technical_validation_not_observed_thai_microdata",
+    "calibration_profile_version": "TH-CONSUMER-MACRO-2026.07.1",
+    "calibration_profile_status": "official_macro_calibrated_choice_prior",
+    "target_population": 300000,
+    "population_rows_per_candidate": 300000,
+    "controls": [
+      "region",
+      "gender",
+      "income_tier"
+    ],
+    "joint_diagnostic": [
+      "region",
+      "gender",
+      "income_tier"
+    ],
+    "seeds": [
+      20260730,
+      20260731,
+      20260732
+    ]
+  },
+  "dependency_versions": {
+    "populationsim": "0.10.0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.3",
+    "pyarrow": "21.0.0"
+  },
+  "comparisons": [
+    {
+      "seed": 20260730,
+      "target_population": 300000,
+      "native": {
+        "backend": "native",
+        "backend_version": "TH-WORLD-2026.07.5",
+        "runtime_seconds": 0.9432467919832561,
+        "population_rows": 300000,
+        "margins": {
+          "total_weight": 300000.0,
+          "maximum_absolute_percentage_point_error": 1.7933853853853847,
+          "mean_absolute_percentage_point_error": 0.39426136344199764,
+          "controls": [
+            {
+              "dimension": "region",
+              "value": "Bangkok Metro",
+              "target_share": 0.1424551722863606,
+              "generated_share": 0.14391,
+              "absolute_percentage_point_error": 0.14548277136394172
+            },
+            {
+              "dimension": "region",
+              "value": "Central",
+              "target_share": 0.15733310442851056,
+              "generated_share": 0.15689333333333333,
+              "absolute_percentage_point_error": 0.04397710951772327
+            },
+            {
+              "dimension": "region",
+              "value": "East / EEC",
+              "target_share": 0.048156247174114195,
+              "generated_share": 0.04828,
+              "absolute_percentage_point_error": 0.012375282588580894
+            },
+            {
+              "dimension": "region",
+              "value": "Northeast",
+              "target_share": 0.32730783630831345,
+              "generated_share": 0.32694666666666666,
+              "absolute_percentage_point_error": 0.03611696416467858
+            },
+            {
+              "dimension": "region",
+              "value": "North",
+              "target_share": 0.1800373812030088,
+              "generated_share": 0.17879333333333333,
+              "absolute_percentage_point_error": 0.12440478696754687
+            },
+            {
+              "dimension": "region",
+              "value": "South",
+              "target_share": 0.14471025859969236,
+              "generated_share": 0.14517666666666668,
+              "absolute_percentage_point_error": 0.04664080669743165
+            },
+            {
+              "dimension": "gender",
+              "value": "Female",
+              "target_share": 0.5079286751475417,
+              "generated_share": 0.5085833333333334,
+              "absolute_percentage_point_error": 0.065465818579169
+            },
+            {
+              "dimension": "gender",
+              "value": "Male",
+              "target_share": 0.48207132485245824,
+              "generated_share": 0.48145666666666664,
+              "absolute_percentage_point_error": 0.06146581857915945
+            },
+            {
+              "dimension": "gender",
+              "value": "Non-binary",
+              "target_share": 0.01,
+              "generated_share": 0.00996,
+              "absolute_percentage_point_error": 0.0040000000000000105
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LOW",
+              "target_share": 0.14614614614614616,
+              "generated_share": 0.16408,
+              "absolute_percentage_point_error": 1.7933853853853847
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_LOW",
+              "target_share": 0.5385385385385385,
+              "generated_share": 0.5455033333333333,
+              "absolute_percentage_point_error": 0.6964794794794837
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_HIGH",
+              "target_share": 0.1901901901901902,
+              "generated_share": 0.17775666666666667,
+              "absolute_percentage_point_error": 1.2433523523523533
+            },
+            {
+              "dimension": "income_tier",
+              "value": "HIGH",
+              "target_share": 0.10410410410410412,
+              "generated_share": 0.09353333333333333,
+              "absolute_percentage_point_error": 1.0570770770770788
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LUXURY",
+              "target_share": 0.021021021021021023,
+              "generated_share": 0.019126666666666667,
+              "absolute_percentage_point_error": 0.18943543543543556
+            }
+          ]
+        }
+      },
+      "population_sim": {
+        "backend": "population_sim",
+        "backend_version": "populationsim-adapter-1",
+        "runtime_seconds": 3.719651874998817,
+        "population_rows": 300000,
+        "status": "synthetic_seed_joint_calibration",
+        "diagnostics": {
+          "synthetic_population_rows": 300000,
+          "represented_population_weight": 299999.999999611,
+          "target_population": 300000,
+          "seed_sample_status": "synthetic_seed_not_observed_microdata",
+          "control_totals_version": "TH-CONSUMER-MACRO-2026.07.1",
+          "seed_sample_version": "synthetic_seed_93f66c64641d87a3",
+          "geography_level": "province",
+          "output_schema_version": "population-v1",
+          "seed": 20260730,
+          "converged": true,
+          "iterations": 4,
+          "maximum_absolute_percentage_point_error": 1.8654252033835897e-05,
+          "weighted_mean_absolute_percentage_point_error": 7.146073497970795e-06,
+          "total_population_error_percent": 1.2966726596156757e-10,
+          "minimum_weight": 0.8406926506182958,
+          "median_weight": 1.0013076038641218,
+          "maximum_weight": 1.1531726803204012,
+          "maximum_to_median_weight_ratio": 1.1516667564195264,
+          "effective_sample_size": 298569.3031926046,
+          "effective_sample_share": 0.9952310106420155,
+          "zero_weight_rows": 0,
+          "zero_control_cells": 0,
+          "regional_control_errors_pp": {
+            "region__Bangkok_Metro": 1.5399959052350217e-05,
+            "region__Central": 3.928754633913437e-06,
+            "region__East_EEC": 1.59817143745992e-06,
+            "region__Northeast": 1.4266791646756851e-05,
+            "region__North": 8.001964318585428e-06,
+            "region__South": 1.341741175565403e-06
+          },
+          "runtime_seconds_before_artifact_write": 2.904925666982308,
+          "process_peak_rss_bytes": 905330688,
+          "households_rows": 0,
+          "persons_rows": 300000,
+          "persons_without_household": 300000,
+          "household_person_consistency_status": "not_available_synthetic_decision_unit_seed",
+          "unmet_constraints": [
+            "No household identifier or household-member relationship exists in the synthetic seed.",
+            "No observed Thai joint microdistribution is available for validation."
+          ]
+        },
+        "margins": {
+          "total_weight": 299999.999999611,
+          "maximum_absolute_percentage_point_error": 1.8654270986240284e-05,
+          "mean_absolute_percentage_point_error": 7.249802254422959e-06,
+          "controls": [
+            {
+              "dimension": "region",
+              "value": "Bangkok Metro",
+              "target_share": 0.1424551722863606,
+              "generated_share": 0.1424553262861358,
+              "absolute_percentage_point_error": 1.53999775209801e-05
+            },
+            {
+              "dimension": "region",
+              "value": "Central",
+              "target_share": 0.15733310442851056,
+              "generated_share": 0.15733314371626092,
+              "absolute_percentage_point_error": 3.928775035855203e-06
+            },
+            {
+              "dimension": "region",
+              "value": "East / EEC",
+              "target_share": 0.048156247174114195,
+              "generated_share": 0.048156263155891006,
+              "absolute_percentage_point_error": 1.598177681166879e-06
+            },
+            {
+              "dimension": "region",
+              "value": "Northeast",
+              "target_share": 0.32730783630831345,
+              "generated_share": 0.32730769364082135,
+              "absolute_percentage_point_error": 1.426674920979032e-05
+            },
+            {
+              "dimension": "region",
+              "value": "North",
+              "target_share": 0.1800373812030088,
+              "generated_share": 0.18003730118359912,
+              "absolute_percentage_point_error": 8.001940968171972e-06
+            },
+            {
+              "dimension": "region",
+              "value": "South",
+              "target_share": 0.14471025859969236,
+              "generated_share": 0.14471027201729175,
+              "absolute_percentage_point_error": 1.3417599392662183e-06
+            },
+            {
+              "dimension": "gender",
+              "value": "Female",
+              "target_share": 0.5079286751475417,
+              "generated_share": 0.5079286838663017,
+              "absolute_percentage_point_error": 8.718760047266016e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Male",
+              "target_share": 0.48207132485245824,
+              "generated_share": 0.4820713167289192,
+              "absolute_percentage_point_error": 8.123539063653595e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Non-binary",
+              "target_share": 0.01,
+              "generated_share": 0.009999999404779004,
+              "absolute_percentage_point_error": 5.952209957554855e-08
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LOW",
+              "target_share": 0.14614614614614616,
+              "generated_share": 0.14614633268885602,
+              "absolute_percentage_point_error": 1.8654270986240284e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_LOW",
+              "target_share": 0.5385385385385385,
+              "generated_share": 0.5385386280763247,
+              "absolute_percentage_point_error": 8.953778618536745e-06
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_HIGH",
+              "target_share": 0.1901901901901902,
+              "generated_share": 0.19019005481292078,
+              "absolute_percentage_point_error": 1.3537726942236539e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "HIGH",
+              "target_share": 0.10410410410410412,
+              "generated_share": 0.10410398480889725,
+              "absolute_percentage_point_error": 1.1929520686571049e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LUXURY",
+              "target_share": 0.021021021021021023,
+              "generated_share": 0.021020999613001398,
+              "absolute_percentage_point_error": 2.1408019624385988e-06
+            }
+          ]
+        },
+        "joint_against_native_synthetic_reference": {
+          "dimensions": [
+            "region",
+            "gender",
+            "income_tier"
+          ],
+          "reference_status": "native_synthetic_reference_not_observed_joint_truth",
+          "cell_count": 90,
+          "candidate_missing_reference_cells": 0,
+          "total_variation_distance": 0.026095376234956183,
+          "maximum_cell_percentage_point_difference": 0.38153739026512357
+        },
+        "limitations": [
+          "The seed is synthetic and is not Thai household microdata.",
+          "Controls calibrate decision-unit margins, not household-person relationships.",
+          "Joint distributions remain dependent on the synthetic seed assumptions."
+        ],
+        "artifacts": [
+          {
+            "component_run_id": "population_20260730_bb37172525e1a5cb",
+            "artifact_type": "population",
+            "uri": "population_20260730_bb37172525e1a5cb/population/13b460180c42908f4ba2d74cb86dbd708611fc9bf477d1387aefd4fe026cb472.parquet",
+            "sha256": "13b460180c42908f4ba2d74cb86dbd708611fc9bf477d1387aefd4fe026cb472",
+            "size_bytes": 24242651,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "population-v1",
+            "created_at": "2026-07-30T10:14:08.463975+00:00",
+            "object_path": "population_20260730_bb37172525e1a5cb/population/13b460180c42908f4ba2d74cb86dbd708611fc9bf477d1387aefd4fe026cb472.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260730_bb37172525e1a5cb",
+            "artifact_type": "persons",
+            "uri": "population_20260730_bb37172525e1a5cb/persons/39fab99a401be827fac60a947a4a3e095289aec7ac514c6025cf1fb041bfb14a.parquet",
+            "sha256": "39fab99a401be827fac60a947a4a3e095289aec7ac514c6025cf1fb041bfb14a",
+            "size_bytes": 3689835,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "persons-v1",
+            "created_at": "2026-07-30T10:14:08.500270+00:00",
+            "object_path": "population_20260730_bb37172525e1a5cb/persons/39fab99a401be827fac60a947a4a3e095289aec7ac514c6025cf1fb041bfb14a.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260730_bb37172525e1a5cb",
+            "artifact_type": "households",
+            "uri": "population_20260730_bb37172525e1a5cb/households/7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764.parquet",
+            "sha256": "7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764",
+            "size_bytes": 3430,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "households-v1",
+            "created_at": "2026-07-30T10:14:08.505521+00:00",
+            "object_path": "population_20260730_bb37172525e1a5cb/households/7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260730_bb37172525e1a5cb",
+            "artifact_type": "control_comparison",
+            "uri": "population_20260730_bb37172525e1a5cb/control_comparison/7b7085fcf5b8d85409fa42e273ae4087876386a6da34c11320c5c83c403e3fb5.csv",
+            "sha256": "7b7085fcf5b8d85409fa42e273ae4087876386a6da34c11320c5c83c403e3fb5",
+            "size_bytes": 1513,
+            "media_type": "text/csv",
+            "schema_version": "population-controls-v1",
+            "created_at": "2026-07-30T10:14:08.506017+00:00",
+            "object_path": "population_20260730_bb37172525e1a5cb/control_comparison/7b7085fcf5b8d85409fa42e273ae4087876386a6da34c11320c5c83c403e3fb5.csv",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260730_bb37172525e1a5cb",
+            "artifact_type": "calibration_diagnostics",
+            "uri": "population_20260730_bb37172525e1a5cb/calibration_diagnostics/ecea95a92b7fc7b8250d1a6adf5629d11176b21317bdc69830f086e9bae9675f.json",
+            "sha256": "ecea95a92b7fc7b8250d1a6adf5629d11176b21317bdc69830f086e9bae9675f",
+            "size_bytes": 1594,
+            "media_type": "application/json",
+            "schema_version": "population-diagnostics-v1",
+            "created_at": "2026-07-30T10:14:08.506473+00:00",
+            "object_path": "population_20260730_bb37172525e1a5cb/calibration_diagnostics/ecea95a92b7fc7b8250d1a6adf5629d11176b21317bdc69830f086e9bae9675f.json",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260730_bb37172525e1a5cb",
+            "artifact_type": "population_run_manifest",
+            "uri": "population_20260730_bb37172525e1a5cb/population_run_manifest/908dda6125c7fca1237684774c0712f9849d099d3278c64e27da04c45a0b7c55.json",
+            "sha256": "908dda6125c7fca1237684774c0712f9849d099d3278c64e27da04c45a0b7c55",
+            "size_bytes": 5215,
+            "media_type": "application/json",
+            "schema_version": "population-input-manifest-v1",
+            "created_at": "2026-07-30T10:14:08.506941+00:00",
+            "object_path": "population_20260730_bb37172525e1a5cb/population_run_manifest/908dda6125c7fca1237684774c0712f9849d099d3278c64e27da04c45a0b7c55.json",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          }
+        ]
+      }
+    },
+    {
+      "seed": 20260731,
+      "target_population": 300000,
+      "native": {
+        "backend": "native",
+        "backend_version": "TH-WORLD-2026.07.5",
+        "runtime_seconds": 0.8802133749995846,
+        "population_rows": 300000,
+        "margins": {
+          "total_weight": 300000.0,
+          "maximum_absolute_percentage_point_error": 1.8360520520520507,
+          "mean_absolute_percentage_point_error": 0.41869090647003465,
+          "controls": [
+            {
+              "dimension": "region",
+              "value": "Bangkok Metro",
+              "target_share": 0.1424551722863606,
+              "generated_share": 0.14295666666666668,
+              "absolute_percentage_point_error": 0.05014943803060834
+            },
+            {
+              "dimension": "region",
+              "value": "Central",
+              "target_share": 0.15733310442851056,
+              "generated_share": 0.15861,
+              "absolute_percentage_point_error": 0.12768955714894392
+            },
+            {
+              "dimension": "region",
+              "value": "East / EEC",
+              "target_share": 0.048156247174114195,
+              "generated_share": 0.04808333333333333,
+              "absolute_percentage_point_error": 0.007291384078086244
+            },
+            {
+              "dimension": "region",
+              "value": "Northeast",
+              "target_share": 0.32730783630831345,
+              "generated_share": 0.3262833333333333,
+              "absolute_percentage_point_error": 0.10245029749801349
+            },
+            {
+              "dimension": "region",
+              "value": "North",
+              "target_share": 0.1800373812030088,
+              "generated_share": 0.17972666666666667,
+              "absolute_percentage_point_error": 0.03107145363421271
+            },
+            {
+              "dimension": "region",
+              "value": "South",
+              "target_share": 0.14471025859969236,
+              "generated_share": 0.14434,
+              "absolute_percentage_point_error": 0.03702585996923635
+            },
+            {
+              "dimension": "gender",
+              "value": "Female",
+              "target_share": 0.5079286751475417,
+              "generated_share": 0.5090666666666667,
+              "absolute_percentage_point_error": 0.11379915191249701
+            },
+            {
+              "dimension": "gender",
+              "value": "Male",
+              "target_share": 0.48207132485245824,
+              "generated_share": 0.48091,
+              "absolute_percentage_point_error": 0.11613248524582342
+            },
+            {
+              "dimension": "gender",
+              "value": "Non-binary",
+              "target_share": 0.01,
+              "generated_share": 0.010023333333333334,
+              "absolute_percentage_point_error": 0.002333333333333354
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LOW",
+              "target_share": 0.14614614614614616,
+              "generated_share": 0.16450666666666666,
+              "absolute_percentage_point_error": 1.8360520520520507
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_LOW",
+              "target_share": 0.5385385385385385,
+              "generated_share": 0.5465466666666666,
+              "absolute_percentage_point_error": 0.8008128128128122
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_HIGH",
+              "target_share": 0.1901901901901902,
+              "generated_share": 0.17722666666666667,
+              "absolute_percentage_point_error": 1.2963523523523535
+            },
+            {
+              "dimension": "income_tier",
+              "value": "HIGH",
+              "target_share": 0.10410410410410412,
+              "generated_share": 0.09285,
+              "absolute_percentage_point_error": 1.1254104104104115
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LUXURY",
+              "target_share": 0.021021021021021023,
+              "generated_share": 0.01887,
+              "absolute_percentage_point_error": 0.21510210210210212
+            }
+          ]
+        }
+      },
+      "population_sim": {
+        "backend": "population_sim",
+        "backend_version": "populationsim-adapter-1",
+        "runtime_seconds": 2.7955800839990843,
+        "population_rows": 300000,
+        "status": "synthetic_seed_joint_calibration",
+        "diagnostics": {
+          "synthetic_population_rows": 300000,
+          "represented_population_weight": 299999.99999954924,
+          "target_population": 300000,
+          "seed_sample_status": "synthetic_seed_not_observed_microdata",
+          "control_totals_version": "TH-CONSUMER-MACRO-2026.07.1",
+          "seed_sample_version": "synthetic_seed_d25e6add8c4adb67",
+          "geography_level": "province",
+          "output_schema_version": "population-v1",
+          "seed": 20260731,
+          "converged": true,
+          "iterations": 4,
+          "maximum_absolute_percentage_point_error": 1.9043586064071863e-05,
+          "weighted_mean_absolute_percentage_point_error": 7.581326839219634e-06,
+          "total_population_error_percent": 1.502533753712972e-10,
+          "minimum_weight": 0.8422472508675114,
+          "median_weight": 1.00175793166355,
+          "maximum_weight": 1.1567411896499888,
+          "maximum_to_median_weight_ratio": 1.1547112861178637,
+          "effective_sample_size": 298449.89902459463,
+          "effective_sample_share": 0.9948329967486488,
+          "zero_weight_rows": 0,
+          "zero_control_cells": 0,
+          "regional_control_errors_pp": {
+            "region__Bangkok_Metro": 1.5055114202065548e-05,
+            "region__Central": 5.907534187523804e-06,
+            "region__East_EEC": 1.2991863889813734e-06,
+            "region__Northeast": 1.573569976123205e-05,
+            "region__North": 7.082926364091691e-06,
+            "region__South": 5.566410691244528e-07
+          },
+          "runtime_seconds_before_artifact_write": 2.039731125027174,
+          "process_peak_rss_bytes": 1137524736,
+          "households_rows": 0,
+          "persons_rows": 300000,
+          "persons_without_household": 300000,
+          "household_person_consistency_status": "not_available_synthetic_decision_unit_seed",
+          "unmet_constraints": [
+            "No household identifier or household-member relationship exists in the synthetic seed.",
+            "No observed Thai joint microdistribution is available for validation."
+          ]
+        },
+        "margins": {
+          "total_weight": 299999.99999954924,
+          "maximum_absolute_percentage_point_error": 1.9043608026625414e-05,
+          "mean_absolute_percentage_point_error": 7.541585204679652e-06,
+          "controls": [
+            {
+              "dimension": "region",
+              "value": "Bangkok Metro",
+              "target_share": 0.1424551722863606,
+              "generated_share": 0.1424553228377167,
+              "absolute_percentage_point_error": 1.505513561039784e-05
+            },
+            {
+              "dimension": "region",
+              "value": "Central",
+              "target_share": 0.15733310442851056,
+              "generated_share": 0.15733316350408882,
+              "absolute_percentage_point_error": 5.9075578262568484e-06
+            },
+            {
+              "dimension": "region",
+              "value": "East / EEC",
+              "target_share": 0.048156247174114195,
+              "generated_share": 0.04815626016605043,
+              "absolute_percentage_point_error": 1.2991936235162704e-06
+            },
+            {
+              "dimension": "region",
+              "value": "Northeast",
+              "target_share": 0.32730783630831345,
+              "generated_share": 0.3273076789518076,
+              "absolute_percentage_point_error": 1.5735650582549e-05
+            },
+            {
+              "dimension": "region",
+              "value": "North",
+              "target_share": 0.1800373812030088,
+              "generated_share": 0.18003731037401566,
+              "absolute_percentage_point_error": 7.082899314281299e-06
+            },
+            {
+              "dimension": "region",
+              "value": "South",
+              "target_share": 0.14471025859969236,
+              "generated_share": 0.14471026416632055,
+              "absolute_percentage_point_error": 5.566628186182143e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Female",
+              "target_share": 0.5079286751475417,
+              "generated_share": 0.5079286837625754,
+              "absolute_percentage_point_error": 8.615033686432128e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Male",
+              "target_share": 0.48207132485245824,
+              "generated_share": 0.482071316293622,
+              "absolute_percentage_point_error": 8.558836250838198e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Non-binary",
+              "target_share": 0.01,
+              "generated_share": 0.009999999943802351,
+              "absolute_percentage_point_error": 5.619764896491741e-09
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LOW",
+              "target_share": 0.14614614614614616,
+              "generated_share": 0.14614633658222642,
+              "absolute_percentage_point_error": 1.9043608026625414e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_LOW",
+              "target_share": 0.5385385385385385,
+              "generated_share": 0.5385386392128897,
+              "absolute_percentage_point_error": 1.0067435118887857e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_HIGH",
+              "target_share": 0.1901901901901902,
+              "generated_share": 0.19019004902359754,
+              "absolute_percentage_point_error": 1.4116659266538711e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "HIGH",
+              "target_share": 0.10410410410410412,
+              "generated_share": 0.10410397820182427,
+              "absolute_percentage_point_error": 1.2590227985165292e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LUXURY",
+              "target_share": 0.021021021021021023,
+              "generated_share": 0.021020996979461682,
+              "absolute_percentage_point_error": 2.4041559340548524e-06
+            }
+          ]
+        },
+        "joint_against_native_synthetic_reference": {
+          "dimensions": [
+            "region",
+            "gender",
+            "income_tier"
+          ],
+          "reference_status": "native_synthetic_reference_not_observed_joint_truth",
+          "cell_count": 90,
+          "candidate_missing_reference_cells": 0,
+          "total_variation_distance": 0.02718166611443082,
+          "maximum_cell_percentage_point_difference": 0.3913131393422593
+        },
+        "limitations": [
+          "The seed is synthetic and is not Thai household microdata.",
+          "Controls calibrate decision-unit margins, not household-person relationships.",
+          "Joint distributions remain dependent on the synthetic seed assumptions."
+        ],
+        "artifacts": [
+          {
+            "component_run_id": "population_20260731_1d915cbf659c483d",
+            "artifact_type": "population",
+            "uri": "population_20260731_1d915cbf659c483d/population/ec57d65735ea44c0c1fca767f7fa01a822d23c4caa0615472c0c0aec3be3fb39.parquet",
+            "sha256": "ec57d65735ea44c0c1fca767f7fa01a822d23c4caa0615472c0c0aec3be3fb39",
+            "size_bytes": 24254296,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "population-v1",
+            "created_at": "2026-07-30T10:14:12.532123+00:00",
+            "object_path": "population_20260731_1d915cbf659c483d/population/ec57d65735ea44c0c1fca767f7fa01a822d23c4caa0615472c0c0aec3be3fb39.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260731_1d915cbf659c483d",
+            "artifact_type": "persons",
+            "uri": "population_20260731_1d915cbf659c483d/persons/3f2b2d8606021b9dfb1bdeaba1b04ba115733efa954dacde643819113a99aa3e.parquet",
+            "sha256": "3f2b2d8606021b9dfb1bdeaba1b04ba115733efa954dacde643819113a99aa3e",
+            "size_bytes": 3689191,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "persons-v1",
+            "created_at": "2026-07-30T10:14:12.576148+00:00",
+            "object_path": "population_20260731_1d915cbf659c483d/persons/3f2b2d8606021b9dfb1bdeaba1b04ba115733efa954dacde643819113a99aa3e.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260731_1d915cbf659c483d",
+            "artifact_type": "households",
+            "uri": "population_20260731_1d915cbf659c483d/households/7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764.parquet",
+            "sha256": "7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764",
+            "size_bytes": 3430,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "households-v1",
+            "created_at": "2026-07-30T10:14:12.583229+00:00",
+            "object_path": "population_20260731_1d915cbf659c483d/households/7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260731_1d915cbf659c483d",
+            "artifact_type": "control_comparison",
+            "uri": "population_20260731_1d915cbf659c483d/control_comparison/f7354b1beb42cf60607bc475a26260c663bad4202805da87d0bab0cd13d601e9.csv",
+            "sha256": "f7354b1beb42cf60607bc475a26260c663bad4202805da87d0bab0cd13d601e9",
+            "size_bytes": 1510,
+            "media_type": "text/csv",
+            "schema_version": "population-controls-v1",
+            "created_at": "2026-07-30T10:14:12.583813+00:00",
+            "object_path": "population_20260731_1d915cbf659c483d/control_comparison/f7354b1beb42cf60607bc475a26260c663bad4202805da87d0bab0cd13d601e9.csv",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260731_1d915cbf659c483d",
+            "artifact_type": "calibration_diagnostics",
+            "uri": "population_20260731_1d915cbf659c483d/calibration_diagnostics/74ab2e406a367466fa9c40d98f991131751d5d2d2ca9eb1b36fe2b976cb3f156.json",
+            "sha256": "74ab2e406a367466fa9c40d98f991131751d5d2d2ca9eb1b36fe2b976cb3f156",
+            "size_bytes": 1596,
+            "media_type": "application/json",
+            "schema_version": "population-diagnostics-v1",
+            "created_at": "2026-07-30T10:14:12.584264+00:00",
+            "object_path": "population_20260731_1d915cbf659c483d/calibration_diagnostics/74ab2e406a367466fa9c40d98f991131751d5d2d2ca9eb1b36fe2b976cb3f156.json",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260731_1d915cbf659c483d",
+            "artifact_type": "population_run_manifest",
+            "uri": "population_20260731_1d915cbf659c483d/population_run_manifest/cdfc46794ba9381d457800f53ff8f626ff91eeffa4b5dbd76df51a6218384b07.json",
+            "sha256": "cdfc46794ba9381d457800f53ff8f626ff91eeffa4b5dbd76df51a6218384b07",
+            "size_bytes": 5215,
+            "media_type": "application/json",
+            "schema_version": "population-input-manifest-v1",
+            "created_at": "2026-07-30T10:14:12.584735+00:00",
+            "object_path": "population_20260731_1d915cbf659c483d/population_run_manifest/cdfc46794ba9381d457800f53ff8f626ff91eeffa4b5dbd76df51a6218384b07.json",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          }
+        ]
+      }
+    },
+    {
+      "seed": 20260732,
+      "target_population": 300000,
+      "native": {
+        "backend": "native",
+        "backend_version": "TH-WORLD-2026.07.5",
+        "runtime_seconds": 0.8606495000130963,
+        "population_rows": 300000,
+        "margins": {
+          "total_weight": 300000.0,
+          "maximum_absolute_percentage_point_error": 1.79105205205205,
+          "mean_absolute_percentage_point_error": 0.3856455858918459,
+          "controls": [
+            {
+              "dimension": "region",
+              "value": "Bangkok Metro",
+              "target_share": 0.1424551722863606,
+              "generated_share": 0.14283666666666667,
+              "absolute_percentage_point_error": 0.03814943803060744
+            },
+            {
+              "dimension": "region",
+              "value": "Central",
+              "target_share": 0.15733310442851056,
+              "generated_share": 0.15749333333333335,
+              "absolute_percentage_point_error": 0.01602289048227845
+            },
+            {
+              "dimension": "region",
+              "value": "East / EEC",
+              "target_share": 0.048156247174114195,
+              "generated_share": 0.04867,
+              "absolute_percentage_point_error": 0.051375282588580345
+            },
+            {
+              "dimension": "region",
+              "value": "Northeast",
+              "target_share": 0.32730783630831345,
+              "generated_share": 0.3269533333333333,
+              "absolute_percentage_point_error": 0.035450297498013095
+            },
+            {
+              "dimension": "region",
+              "value": "North",
+              "target_share": 0.1800373812030088,
+              "generated_share": 0.17930666666666667,
+              "absolute_percentage_point_error": 0.07307145363421308
+            },
+            {
+              "dimension": "region",
+              "value": "South",
+              "target_share": 0.14471025859969236,
+              "generated_share": 0.14474,
+              "absolute_percentage_point_error": 0.0029741400307647936
+            },
+            {
+              "dimension": "gender",
+              "value": "Female",
+              "target_share": 0.5079286751475417,
+              "generated_share": 0.50806,
+              "absolute_percentage_point_error": 0.013132485245825887
+            },
+            {
+              "dimension": "gender",
+              "value": "Male",
+              "target_share": 0.48207132485245824,
+              "generated_share": 0.4820066666666667,
+              "absolute_percentage_point_error": 0.006465818579154403
+            },
+            {
+              "dimension": "gender",
+              "value": "Non-binary",
+              "target_share": 0.01,
+              "generated_share": 0.009933333333333334,
+              "absolute_percentage_point_error": 0.006666666666666626
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LOW",
+              "target_share": 0.14614614614614616,
+              "generated_share": 0.16405666666666666,
+              "absolute_percentage_point_error": 1.79105205205205
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_LOW",
+              "target_share": 0.5385385385385385,
+              "generated_share": 0.5464066666666667,
+              "absolute_percentage_point_error": 0.7868128128128205
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_HIGH",
+              "target_share": 0.1901901901901902,
+              "generated_share": 0.17651333333333333,
+              "absolute_percentage_point_error": 1.3676856856856878
+            },
+            {
+              "dimension": "income_tier",
+              "value": "HIGH",
+              "target_share": 0.10410410410410412,
+              "generated_share": 0.09384,
+              "absolute_percentage_point_error": 1.026410410410411
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LUXURY",
+              "target_share": 0.021021021021021023,
+              "generated_share": 0.019183333333333333,
+              "absolute_percentage_point_error": 0.1837687687687689
+            }
+          ]
+        }
+      },
+      "population_sim": {
+        "backend": "population_sim",
+        "backend_version": "populationsim-adapter-1",
+        "runtime_seconds": 2.723928292019991,
+        "population_rows": 300000,
+        "status": "synthetic_seed_joint_calibration",
+        "diagnostics": {
+          "synthetic_population_rows": 300000,
+          "represented_population_weight": 299999.999999567,
+          "target_population": 300000,
+          "seed_sample_status": "synthetic_seed_not_observed_microdata",
+          "control_totals_version": "TH-CONSUMER-MACRO-2026.07.1",
+          "seed_sample_version": "synthetic_seed_b053fa71889dd05a",
+          "geography_level": "province",
+          "output_schema_version": "population-v1",
+          "seed": 20260732,
+          "converged": true,
+          "iterations": 5,
+          "maximum_absolute_percentage_point_error": 1.854109621005288e-05,
+          "weighted_mean_absolute_percentage_point_error": 5.435305810967812e-06,
+          "total_population_error_percent": 1.4433559651176135e-10,
+          "minimum_weight": 0.8481129553949945,
+          "median_weight": 1.0012988690887301,
+          "maximum_weight": 1.1479972667775542,
+          "maximum_to_median_weight_ratio": 1.146508102842793,
+          "effective_sample_size": 298555.43753680156,
+          "effective_sample_share": 0.9951847917893385,
+          "zero_weight_rows": 0,
+          "zero_control_cells": 0,
+          "regional_control_errors_pp": {
+            "region__Bangkok_Metro": 6.308898441299485e-06,
+            "region__Central": 2.0482610634644513e-06,
+            "region__East_EEC": 1.1129854210594203e-06,
+            "region__Northeast": 6.383509816563068e-06,
+            "region__North": 3.5276233926803496e-06,
+            "region__South": 4.4084391993237654e-07
+          },
+          "runtime_seconds_before_artifact_write": 1.998902665975038,
+          "process_peak_rss_bytes": 1217347584,
+          "households_rows": 0,
+          "persons_rows": 300000,
+          "persons_without_household": 300000,
+          "household_person_consistency_status": "not_available_synthetic_decision_unit_seed",
+          "unmet_constraints": [
+            "No household identifier or household-member relationship exists in the synthetic seed.",
+            "No observed Thai joint microdistribution is available for validation."
+          ]
+        },
+        "margins": {
+          "total_weight": 299999.999999567,
+          "maximum_absolute_percentage_point_error": 1.854111730259511e-05,
+          "mean_absolute_percentage_point_error": 5.499952887938277e-06,
+          "controls": [
+            {
+              "dimension": "region",
+              "value": "Bangkok Metro",
+              "target_share": 0.1424551722863606,
+              "generated_share": 0.14245523537555066,
+              "absolute_percentage_point_error": 6.308919006658975e-06
+            },
+            {
+              "dimension": "region",
+              "value": "Central",
+              "target_share": 0.15733310442851056,
+              "generated_share": 0.15733312491134827,
+              "absolute_percentage_point_error": 2.048283770372805e-06
+            },
+            {
+              "dimension": "region",
+              "value": "East / EEC",
+              "target_share": 0.048156247174114195,
+              "generated_share": 0.04815625830403792,
+              "absolute_percentage_point_error": 1.1129923725705648e-06
+            },
+            {
+              "dimension": "region",
+              "value": "Northeast",
+              "target_share": 0.32730783630831345,
+              "generated_share": 0.32730777247368775,
+              "absolute_percentage_point_error": 6.383462569647946e-06
+            },
+            {
+              "dimension": "region",
+              "value": "North",
+              "target_share": 0.1800373812030088,
+              "generated_share": 0.18003734592703471,
+              "absolute_percentage_point_error": 3.5275974086257378e-06
+            },
+            {
+              "dimension": "region",
+              "value": "South",
+              "target_share": 0.14471025859969236,
+              "generated_share": 0.14471026300834045,
+              "absolute_percentage_point_error": 4.408648085485467e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Female",
+              "target_share": 0.5079286751475417,
+              "generated_share": 0.5079286773380652,
+              "absolute_percentage_point_error": 2.1905235403352208e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Male",
+              "target_share": 0.48207132485245824,
+              "generated_share": 0.4820713234150175,
+              "absolute_percentage_point_error": 1.4374407220074659e-07
+            },
+            {
+              "dimension": "gender",
+              "value": "Non-binary",
+              "target_share": 0.01,
+              "generated_share": 0.009999999246917109,
+              "absolute_percentage_point_error": 7.530828911861409e-08
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LOW",
+              "target_share": 0.14614614614614616,
+              "generated_share": 0.14614633155731918,
+              "absolute_percentage_point_error": 1.854111730259511e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_LOW",
+              "target_share": 0.5385385385385385,
+              "generated_share": 0.5385386368229443,
+              "absolute_percentage_point_error": 9.82844058361465e-06
+            },
+            {
+              "dimension": "income_tier",
+              "value": "MID_HIGH",
+              "target_share": 0.1901901901901902,
+              "generated_share": 0.19019004184953525,
+              "absolute_percentage_point_error": 1.4834065495406001e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "HIGH",
+              "target_share": 0.10410410410410412,
+              "generated_share": 0.10410398936900553,
+              "absolute_percentage_point_error": 1.147350985886142e-05
+            },
+            {
+              "dimension": "income_tier",
+              "value": "LUXURY",
+              "target_share": 0.021021021021021023,
+              "generated_share": 0.021021000401195634,
+              "absolute_percentage_point_error": 2.061982538881235e-06
+            }
+          ]
+        },
+        "joint_against_native_synthetic_reference": {
+          "dimensions": [
+            "region",
+            "gender",
+            "income_tier"
+          ],
+          "reference_status": "native_synthetic_reference_not_observed_joint_truth",
+          "cell_count": 90,
+          "candidate_missing_reference_cells": 0,
+          "total_variation_distance": 0.026315311015867805,
+          "maximum_cell_percentage_point_difference": 0.37977052157512003
+        },
+        "limitations": [
+          "The seed is synthetic and is not Thai household microdata.",
+          "Controls calibrate decision-unit margins, not household-person relationships.",
+          "Joint distributions remain dependent on the synthetic seed assumptions."
+        ],
+        "artifacts": [
+          {
+            "component_run_id": "population_20260732_26e6d9831c1d2784",
+            "artifact_type": "population",
+            "uri": "population_20260732_26e6d9831c1d2784/population/8316c62c7452e96775043da39ad658cea5604c342680a4a238461fa53cc42519.parquet",
+            "sha256": "8316c62c7452e96775043da39ad658cea5604c342680a4a238461fa53cc42519",
+            "size_bytes": 24278738,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "population-v1",
+            "created_at": "2026-07-30T10:14:16.487220+00:00",
+            "object_path": "population_20260732_26e6d9831c1d2784/population/8316c62c7452e96775043da39ad658cea5604c342680a4a238461fa53cc42519.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260732_26e6d9831c1d2784",
+            "artifact_type": "persons",
+            "uri": "population_20260732_26e6d9831c1d2784/persons/4897dd905ca8604354d9f4798e831c46f0397244feb2f4a2f56541929a516d4f.parquet",
+            "sha256": "4897dd905ca8604354d9f4798e831c46f0397244feb2f4a2f56541929a516d4f",
+            "size_bytes": 3691346,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "persons-v1",
+            "created_at": "2026-07-30T10:14:16.536495+00:00",
+            "object_path": "population_20260732_26e6d9831c1d2784/persons/4897dd905ca8604354d9f4798e831c46f0397244feb2f4a2f56541929a516d4f.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260732_26e6d9831c1d2784",
+            "artifact_type": "households",
+            "uri": "population_20260732_26e6d9831c1d2784/households/7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764.parquet",
+            "sha256": "7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764",
+            "size_bytes": 3430,
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "households-v1",
+            "created_at": "2026-07-30T10:14:16.542587+00:00",
+            "object_path": "population_20260732_26e6d9831c1d2784/households/7376c02cebc04e292a23d8a43c2a40d751d0eabd438612c26e89ca68e6d8a764.parquet",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260732_26e6d9831c1d2784",
+            "artifact_type": "control_comparison",
+            "uri": "population_20260732_26e6d9831c1d2784/control_comparison/17d992d82e9ce07a87b020e69bbdbd916f5ca5e0e480b6f31876cf72330b73fb.csv",
+            "sha256": "17d992d82e9ce07a87b020e69bbdbd916f5ca5e0e480b6f31876cf72330b73fb",
+            "size_bytes": 1519,
+            "media_type": "text/csv",
+            "schema_version": "population-controls-v1",
+            "created_at": "2026-07-30T10:14:16.543087+00:00",
+            "object_path": "population_20260732_26e6d9831c1d2784/control_comparison/17d992d82e9ce07a87b020e69bbdbd916f5ca5e0e480b6f31876cf72330b73fb.csv",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260732_26e6d9831c1d2784",
+            "artifact_type": "calibration_diagnostics",
+            "uri": "population_20260732_26e6d9831c1d2784/calibration_diagnostics/f9ab3cdd2fc898be516a8ce410b020c0ed7c09fd29c48ab080493cd23f1980ea.json",
+            "sha256": "f9ab3cdd2fc898be516a8ce410b020c0ed7c09fd29c48ab080493cd23f1980ea",
+            "size_bytes": 1597,
+            "media_type": "application/json",
+            "schema_version": "population-diagnostics-v1",
+            "created_at": "2026-07-30T10:14:16.543572+00:00",
+            "object_path": "population_20260732_26e6d9831c1d2784/calibration_diagnostics/f9ab3cdd2fc898be516a8ce410b020c0ed7c09fd29c48ab080493cd23f1980ea.json",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          },
+          {
+            "component_run_id": "population_20260732_26e6d9831c1d2784",
+            "artifact_type": "population_run_manifest",
+            "uri": "population_20260732_26e6d9831c1d2784/population_run_manifest/87f3ce5588c411011c599a07dda9626b182bb99372448333b9a8cc82b403a29c.json",
+            "sha256": "87f3ce5588c411011c599a07dda9626b182bb99372448333b9a8cc82b403a29c",
+            "size_bytes": 5215,
+            "media_type": "application/json",
+            "schema_version": "population-input-manifest-v1",
+            "created_at": "2026-07-30T10:14:16.544015+00:00",
+            "object_path": "population_20260732_26e6d9831c1d2784/population_run_manifest/87f3ce5588c411011c599a07dda9626b182bb99372448333b9a8cc82b403a29c.json",
+            "metadata": {
+              "backend": "population_sim",
+              "backend_version": "populationsim-adapter-1"
+            },
+            "uri_type": "relative_to_artifact_directory"
+          }
+        ]
+      }
+    }
+  ],
+  "gate": {
+    "functional_validation_passed": true,
+    "marginal_calibration_materially_better": true,
+    "joint_distribution_preserved_against_synthetic_reference": true,
+    "mean_max_margin_error_native_pp": 1.8068298298298284,
+    "mean_max_margin_error_population_sim_pp": 1.8746332105153602e-05,
+    "mean_max_margin_error_improvement_pp": 1.8068110834977233,
+    "household_person_consistency_validated": false,
+    "observed_microdata_validated": false,
+    "production_ready": false,
+    "production_recommendation": "retain_native_default_until_authorized_microdata_validation",
+    "decision_basis": "Effect quality gates only; runtime and compute cost are reported but are not rejection criteria.",
+    "limitation": "PopulationSim can force aggregate margins to match, but the available seed contains independent synthetic decision units. It cannot validate household-person relationships or recover real Thai joint distributions without authorized microdata."
+  }
+}

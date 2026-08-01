@@ -1,0 +1,21 @@
+FROM python:3.12-slim-bookworm
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+COPY apps/api/requirements-choice-job.lock ./requirements-choice-job.lock
+RUN python -m pip install --no-cache-dir --require-hashes -r requirements-choice-job.lock
+
+COPY packages /packages
+COPY scripts/validate_choice_backends.py ./validate_choice_backends.py
+
+ENV PYTHONPATH="/packages" \
+    HOME="/home/appuser"
+
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
+
+CMD ["python", "/app/validate_choice_backends.py", "--output", "/tmp/choice-validation.json"]

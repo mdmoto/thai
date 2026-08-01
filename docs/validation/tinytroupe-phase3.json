@@ -1,0 +1,110 @@
+{
+  "schema_version": "tinytroupe-backend-validation-v1",
+  "technical_validation": {
+    "status": "passed",
+    "checks": {
+      "official_package_imported": true,
+      "structured_output_accepted": true,
+      "persona_input_whitelisted": true,
+      "product_input_whitelisted": true,
+      "sensitive_persona_field_removed": true,
+      "sensitive_product_field_removed": true,
+      "quantitative_signal_disabled": true,
+      "usage_accounting_present": true,
+      "seeded_randomization_recorded": true
+    },
+    "backend_version": "tinytroupe-0.7.0-a6244b358a1f",
+    "tinytroupe_commit": "a6244b358a1fe1c71bf751f7ba0f8dfa368ec5a4",
+    "tinytroupe_package_version": "0.7.0",
+    "result_lineage": {
+      "component": "representative_research",
+      "backend": "tinytroupe",
+      "backend_version": "tinytroupe-0.7.0-a6244b358a1f",
+      "status": "available",
+      "diagnostics": {
+        "wall_time_seconds": 0.0026317920128349215,
+        "persona_fields": [
+          "representative_id",
+          "age_group",
+          "gender",
+          "region",
+          "province",
+          "income_tier",
+          "household_size",
+          "online_affinity",
+          "category_engagement",
+          "price_sensitivity",
+          "local_brand_trust",
+          "promptpay_preference",
+          "cod_preference",
+          "expansion_weight"
+        ],
+        "persona_fields_immutable": true,
+        "maximum_agents": 1,
+        "usage": {
+          "input_tokens": 500,
+          "output_tokens": 250,
+          "total_tokens": 750,
+          "model_calls": 2,
+          "cached_calls": 0
+        }
+      }
+    }
+  },
+  "live_provider_validation": {
+    "status": "available",
+    "credential_source": "gcp_secret_manager",
+    "credential_value_recorded": false,
+    "wall_time_seconds": 27.569723291002447,
+    "provider": {
+      "type": "gemini_openai",
+      "model": "gemini-3.6-flash",
+      "selected_endpoint": "vertex_openai",
+      "vertex_fallback_used": true
+    },
+    "sample_size_completed": 2,
+    "sample_size_requested": 2,
+    "usage": {
+      "input_tokens": 13107,
+      "output_tokens": 944,
+      "total_tokens": 17681,
+      "model_calls": 2,
+      "cached_calls": 0
+    },
+    "paid_list_price_estimate_usd": 0.053965,
+    "billable_output_tokens_for_cost_estimate": 4574,
+    "errors": [],
+    "structured_response_fields": [
+      "attribute_importance",
+      "awareness_probability",
+      "confidence",
+      "consideration_probability",
+      "preferred_channel",
+      "preferred_competitor",
+      "purchase_barriers",
+      "qualitative_reason",
+      "representative_id",
+      "sentiment"
+    ],
+    "quantitative_signal_weight": 0.0,
+    "quality_diagnostics": {
+      "schema_valid_response_rate": 1.0,
+      "persona_id_coverage_rate": 1.0,
+      "duplicate_persona_response_count": 0,
+      "average_qualitative_reason_characters": 348.5,
+      "unique_response_signature_rate": 1.0,
+      "distinct_purchase_barrier_count": 6,
+      "distinct_preferred_channel_count": 1,
+      "consideration_probability_standard_deviation": 0.0,
+      "empirical_validation_status": "not_run_no_human_dataset",
+      "human_comparison_input_schema": "human-ai-response-comparison-v1"
+    }
+  },
+  "gate": {
+    "technical_validation_passed": true,
+    "live_provider_validation_passed": true,
+    "production_enabled": false,
+    "production_recommendation": "retain_gemini_default_pending_quality_holdout",
+    "limitation": "TinyTroupe responses remain qualitative hypotheses with zero quantitative signal weight. Promotion requires a blinded quality comparison and repeated live reliability."
+  }
+}
