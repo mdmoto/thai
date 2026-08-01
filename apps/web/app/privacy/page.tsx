@@ -9,7 +9,7 @@ export default function PrivacyPage() {
         <Link href="/" className="text-xs hover:text-white">← 返回首页</Link>
         <h1 className="text-3xl font-semibold text-white mt-8 mb-8">隐私与企业商业数据安全说明</h1>
         <p>更新日期：2026 年 8 月 1 日</p>
-        
+
         <h2 className="text-white font-semibold mt-8">🔒 企业商业机密隔离与脱敏演算承诺</h2>
         <p className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl text-neutral-200 mt-2">
           客户提交的所有商业产品方案、定价策略、核心卖点、选址位置与竞品参数均属于最高保密级别。

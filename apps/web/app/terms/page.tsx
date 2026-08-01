@@ -9,10 +9,10 @@ export default function TermsPage() {
         <Link href="/" className="text-xs hover:text-white">← 返回首页</Link>
         <h1 className="text-3xl font-semibold text-white mt-8 mb-8">服务条款与算力消费规范</h1>
         <p>更新日期：2026 年 8 月 1 日</p>
-        
+
         <h2 className="text-white font-semibold mt-8">1. 商业推演服务性质</h2>
         <p>本平台基于泰国全域宏观人口建模与离散选择算法，为企业出海东南亚提供科学的市场可行性、产品定价与商圈选址推演服务。推演研报旨在协助决策团队评估风险与机会，建立控错红线。</p>
-        
+
         <h2 className="text-white font-semibold mt-8">2. 算力包与计费规则</h2>
         <p>基础模拟消耗积分，基础决策与深度决策消耗对应订阅次数。若遇到系统性错误导致推演未完成，系统将自动原路退回消耗的算力积分或次数。</p>
 
