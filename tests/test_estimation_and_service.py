@@ -124,6 +124,9 @@ class StudyServiceTests(unittest.TestCase):
                         "representative_id": "rep_1",
                         "purchase_barriers": [],
                         "preferred_channel": "Shopee Thailand",
+                        "qualitative_reason": (
+                            "我会先在 Shopee 查看评论，再决定是否去门店。"
+                        ),
                     }
                 ],
             },
@@ -148,6 +151,7 @@ class StudyServiceTests(unittest.TestCase):
             voices[0]["preferred_channel"],
             "商圈自然到店 / 周边可见性",
         )
+        self.assertNotIn("Shopee", voices[0]["quote"])
 
     def test_service_runs_without_mock_personas(self):
         previous_key = os.environ.get("GEMINI_API_KEY")

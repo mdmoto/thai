@@ -93,6 +93,7 @@ OFFLINE_SEGMENT_CHANNELS = {
     "LOCAL_TRUST_OFFLINE": "商圈自然到店 / 周边可见性",
     "MAINSTREAM": "Google Maps / 本地搜索",
 }
+OFFLINE_MARKETPLACE_TERMS = ("shopee", "lazada", "tiktok shop")
 
 
 SEGMENT_COPY = {
@@ -1009,6 +1010,7 @@ class StudyService:
             )
             barriers = response.get("purchase_barriers", [])
             segment_id = str(profile.get("segment_id") or "MAINSTREAM")
+            quote = str(response.get("qualitative_reason") or "")
             preferred_channel = response.get(
                 "preferred_channel",
                 "unspecified",
@@ -1018,12 +1020,20 @@ class StudyService:
                     segment_id,
                     OFFLINE_SEGMENT_CHANNELS["MAINSTREAM"],
                 )
+                if any(
+                    term in quote.casefold()
+                    for term in OFFLINE_MARKETPLACE_TERMS
+                ):
+                    quote = (
+                        "该受访者的定性意见已按线下到店研究范围归类；"
+                        "不把线上平台购买路径作为本研究证据。"
+                    )
             voices.append(
                 {
                     "persona": persona,
                     "segment": profile.get("segment_id", "UNCLASSIFIED"),
                     "sentiment": response.get("sentiment", "neutral"),
-                    "quote": response.get("qualitative_reason", ""),
+                    "quote": quote,
                     "reasoning": (
                         "结构化 LLM 弱标签，仅用于小权重调整属性先验；"
                         "未直接计入购买率。"
