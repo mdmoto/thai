@@ -2,6 +2,7 @@
 
 from simulation_core.social_backends.base import (
     SocialSimulationBackend,
+    OasisExperimentLimits,
     SocialSimulationRequest,
     SocialSimulationResult,
 )
@@ -12,6 +13,7 @@ from simulation_core.social_backends.prior import (
 
 __all__ = [
     "PriorSocialSimulationBackend",
+    "OasisExperimentLimits",
     "SocialSimulationBackend",
     "SocialSimulationRequest",
     "SocialSimulationResult",

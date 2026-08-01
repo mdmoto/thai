@@ -81,16 +81,16 @@ export function DashboardClient() {
     <div className="p-5 sm:p-8 space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-8 border-b border-neutral-900">
         <div className="max-w-2xl">
-          <span className="eyebrow mb-3">泰国消费者决策研究</span>
+          <span className="eyebrow mb-3">🇹🇭 泰国出海商业沙盘控制台</span>
           <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
-            先比较泰国市场方案，再决定投入哪一个
+            在资本投入前，完成数万次真实消费推演
           </h1>
           <p className="text-sm text-neutral-400 font-light mt-3 leading-relaxed">
-            现已覆盖消费品、定价、线下门店、商圈选址、广告素材与经营情景；结果用于决策筛选，并明确披露未回测部分。
+            全面覆盖消费品验证、动态定价、门店选址、广告素材与经营优化，掌控商业出海风控全景。
           </p>
         </div>
         <Link href="/studies/new" className="btn-cmai-primary shrink-0">
-          <Plus size={15} /> 新建研究项目
+          <Plus size={15} /> 启动新推演 🚀
         </Link>
       </div>
 

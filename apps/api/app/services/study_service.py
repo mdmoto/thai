@@ -631,6 +631,7 @@ class StudyService:
         used_sources: List[str] = []
         focal_fields: List[str] = []
         competitor_fields = 0
+        qualitative_only_sources = 0
 
         def competitor_urls(item: Mapping[str, Any]) -> set[str]:
             return {
@@ -645,6 +646,26 @@ class StudyService:
 
         for evidence in market_research.get("evidence") or []:
             if not isinstance(evidence, Mapping):
+                continue
+            evidence_grade = str(
+                evidence.get("evidence_grade") or ""
+            ).upper()
+            source_type = str(evidence.get("source_type") or "")
+            if (
+                source_type == "google_search_grounded_public"
+                or evidence_grade == "D"
+                or (evidence.get("quality_checks") or {}).get(
+                    "direct_page_retrieved"
+                )
+                is False
+            ):
+                # Search-grounded summaries are useful for discovery and
+                # qualitative risk themes, but they are not the page body.
+                # Prices such as accessories or replacement filters can be
+                # misattributed to the focal product, so they must never alter
+                # the quantitative choice set until the page is fetched and
+                # independently validated at grade C or above.
+                qualitative_only_sources += 1
                 continue
             signals = evidence.get("market_signals") or {}
             price_values = _signal_numbers(signals.get("prices") or [])
@@ -778,9 +799,23 @@ class StudyService:
                 "source_ids": list(dict.fromkeys(used_sources)),
                 "focal_fields_enriched": sorted(set(focal_fields)),
                 "competitor_field_updates": competitor_fields,
+                **(
+                    {
+                        "qualitative_only_source_count": (
+                            qualitative_only_sources
+                        )
+                    }
+                    if qualitative_only_sources
+                    else {}
+                ),
                 "limitation": (
                     "公开价格、评分和评论量只更新产品与竞品属性；"
                     "不会被当作真实成交选择，也不会重新拟合购买系数。"
+                    + (
+                        "D 级搜索引用摘要只进入定性报告，不进入数值选择集。"
+                        if qualitative_only_sources
+                        else ""
+                    )
                 ),
             },
         }

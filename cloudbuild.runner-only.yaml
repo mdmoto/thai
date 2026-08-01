@@ -1,0 +1,31 @@
+substitutions:
+  _REGION: asia-southeast1
+  _REPOSITORY: market-twin
+  _IMAGE_TAG: staging-runner
+  _CACHE_TAG: phase4-grounding-20260801-0915
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - pull
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_CACHE_TAG}
+    allowFailure: true
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --cache-from
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_CACHE_TAG}
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_IMAGE_TAG}
+      - -f
+      - Dockerfile.runner
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_IMAGE_TAG}
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_IMAGE_TAG}

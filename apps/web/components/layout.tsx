@@ -32,7 +32,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "控制台", icon: LayoutDashboard },
   { href: "/studies", label: "研究项目", icon: FlaskConical },
   { href: "/templates", label: "模板库", icon: FileText },
-  { href: "/billing", label: "额度与订单", icon: CreditCard },
+  { href: "/billing", label: "算力与订阅", icon: CreditCard },
 ];
 
 export function Sidebar() {
@@ -163,7 +163,7 @@ export function Sidebar() {
                   href="/billing"
                   className="w-full btn-cmai-secondary text-[10px] py-1 px-2 rounded-lg justify-center font-mono"
                 >
-                  <PlusCircle size={12} /> 购买额度
+                  <PlusCircle size={12} /> 充值/订阅算力 ⚡
                 </Link>
               )}
             </div>

@@ -103,7 +103,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm mx-4 animate-fade-in-up">
         <Link href="/" className="block text-center mb-8">
           <BrandMark full className="w-64 h-auto mx-auto mb-4" priority />
-          <p className="text-sm text-neutral-400">泰国商业与消费者决策平台</p>
+          <p className="text-sm text-neutral-400">🇹🇭 泰国出海商业沙盘决策平台</p>
         </Link>
 
         <div className="cmai-card p-6">
@@ -118,8 +118,8 @@ export default function LoginPage() {
             {challengeId
               ? `六位验证码已发送到 ${email}，10 分钟内有效。`
               : registering
-              ? "填写有效邀请码赠送 5 积分；未填写或邀请码无效时初始积分为 0。"
-              : "继续访问您保存的项目、报告和订单。"}
+              ? "注册即刻免费体验商业沙盘推演；填写有效邀请码直接赠送 5 积分体验包。"
+              : "继续访问您保存的商业沙盘评估研报与订单。"}
           </p>
 
           {error && (

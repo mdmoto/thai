@@ -257,11 +257,27 @@ class ComputeImageIsolationTests(unittest.TestCase):
             "dockerfile.choice": "requirements-choice-job.lock",
             "dockerfile.population": "requirements-population-job.lock",
             "dockerfile.tinytroupe": "requirements-tinytroupe-job.lock",
+            "dockerfile.oasis": "requirements-oasis-job.lock",
         }
         for dockerfile, lock_file in expected.items():
             content = self._text(dockerfile)
             self.assertIn(lock_file, content)
             self.assertIn("--require-hashes", content)
+
+    def test_oasis_isolated_image_pins_compatible_research_runtime(self) -> None:
+        requirements = self._text("apps/api/requirements-oasis-job.txt")
+        dockerfile = self._text("dockerfile.oasis")
+        api_requirements = self._text("apps/api/requirements-api.txt")
+        validation = self._text("scripts/validate_oasis_backend.py")
+
+        self.assertIn("camel-ai==0.2.78", requirements)
+        self.assertIn("mcp==1.9.4", requirements)
+        self.assertIn("from python:3.11", dockerfile)
+        self.assertIn("camel-oasis @ https://github.com/camel-ai/oasis/archive/", dockerfile)
+        self.assertNotIn("camel-oasis", api_requirements)
+        self.assertIn("production_enabled\": false", validation)
+        self.assertIn("manual_action_technical_validation", validation)
+        self.assertIn("technical validation must not call an llm", validation)
 
     def test_image_audit_records_size_sbom_and_licenses(self) -> None:
         script = self._text("scripts/audit_compute_images.sh")

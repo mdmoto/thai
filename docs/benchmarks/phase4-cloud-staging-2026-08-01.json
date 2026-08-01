@@ -1,0 +1,129 @@
+{
+  "schema_version": "phase4-cloud-staging-acceptance-v1",
+  "recorded_at": "2026-08-01T09:08:00Z",
+  "project": "thai-503312",
+  "region": "asia-southeast1",
+  "environment": "isolated_staging",
+  "production_revision_unchanged": "market-twin-api-00034-97x",
+  "private_artifact_store": {
+    "bucket": "thai-503312-market-twin-model-artifacts",
+    "uniform_bucket_level_access": true,
+    "public_access_prevention": "enforced",
+    "versioning": true,
+    "soft_delete_days": 7,
+    "staging_object_count": 3,
+    "staging_total_bytes": 1636,
+    "content_policy": "hash_manifests_and_technical_ids_only_no_customer_raw_text"
+  },
+  "failure_retry_acceptance": {
+    "run_job_id": "runjob_f00f79dcd33e",
+    "final_status": "FAILED",
+    "checkpoint_stage": "FAILED_RECOVERABLE",
+    "attempt_count": 2,
+    "checkpoint_sha256": "370fc226b0e3f148a104a7ba0238644b965375fe23b5a04ba1248496abbc3273",
+    "deep_decision_balance_restored": true,
+    "duplicate_charge_observed": false
+  },
+  "cancellation_acceptance": {
+    "run_job_id": "runjob_34981c484222",
+    "cancelled_from_stage": "COLLECTING_PUBLIC_EVIDENCE",
+    "final_status": "CANCELLED",
+    "attempt_count": 1,
+    "provider_cancel_requested": true,
+    "cloud_execution": "market-twin-runner-staging-gxr2r",
+    "cloud_execution_status": "Cancelled by user",
+    "deep_decision_balance_restored": true
+  },
+  "full_professional_run": {
+    "run_job_id": "runjob_a27ca5e9a378",
+    "report_id": "rpt_226864f2",
+    "cloud_execution": "market-twin-runner-staging-gvfnr",
+    "started_at": "2026-08-01T08:53:11.790960Z",
+    "completed_at": "2026-08-01T09:07:45.444472Z",
+    "cloud_execution_seconds": 873.65,
+    "population_size": 300000,
+    "mc_rounds": 220,
+    "attempt_count": 1,
+    "calibration_status": "official_macro_calibrated_choice_prior",
+    "valid_evidence_count": 11,
+    "warning_count": 23,
+    "checkpoint_sha256": "fc48e8d198cee9ac86bd7b46bf66efb0282358b03f6df1fbb7c3e54532f1a4c6",
+    "input_snapshot_sha256": "186f811d987877cf375ebc5bdfd3941a00f1a3ff915c9048c73b01092424fcc4",
+    "input_manifest_sha256": "839b4fd622882cc58733cd4a95be0202de5d87d9df9d55cdf92e878f7bb580ac",
+    "output_manifest_sha256": "b393a69d46f750bff0716ee334fd1e4917b6b6bdffd7e2fac269ba97bf79cb5b",
+    "memory_peak_mean_mib": 832.94921875,
+    "cpu_allocation_seconds": 1761.6488146929978,
+    "memory_allocation_gib_seconds": 3523.2976255459434,
+    "billable_instance_seconds": 880.8244083065118,
+    "estimated_cloud_run_compute_usd_before_free_tier": 0.03875627391556593
+  },
+  "data_quality_finding": {
+    "firecrawl_requests": 41,
+    "firecrawl_http_200": 2,
+    "firecrawl_http_429": 38,
+    "firecrawl_http_502": 1,
+    "decision": "do_not_promote_keyless_firecrawl_to_production",
+    "remediation": "disable_keyless_firecrawl_and_use_vertex_gemini_google_search_grounding_with_citations",
+    "remediation_staging_validation": "passed"
+  },
+  "grounded_search_full_run": {
+    "run_job_id": "runjob_7f3433119803",
+    "report_id": "rpt_208d1eef",
+    "cloud_execution": "market-twin-runner-staging-4mf98",
+    "cloud_execution_seconds": 1080.27,
+    "population_size": 300000,
+    "mc_rounds": 220,
+    "attempt_count": 1,
+    "market_research_version": "TH-MARKET-RESEARCH-2026.08.1",
+    "valid_evidence_count": 76,
+    "candidate_evidence_count": 76,
+    "platform_counts": {
+      "Shopee": 13,
+      "Lazada": 12,
+      "TikTok": 1,
+      "public_web": 30,
+      "YouTube": 20
+    },
+    "grounded_query_clusters_completed": 15,
+    "grounded_provider_requests": 5,
+    "grounded_provider_used": "api_key_2_gemini_developer",
+    "firecrawl_requests": 0,
+    "market_research_warnings": 0,
+    "memory_peak_mean_mib": 828.53125,
+    "cpu_allocation_seconds": 2099.9843039859998,
+    "memory_allocation_gib_seconds": 4199.968607972,
+    "billable_instance_seconds": 1049.992151993,
+    "estimated_cloud_run_compute_usd_before_free_tier": 0.046199654687694,
+    "quality_audit": {
+      "meaningful_topics_observed": [
+        "Thai marketplace prices and ratings",
+        "noise and cleaning complaints",
+        "warranty and delivery",
+        "materials and filtration",
+        "Xiaomi and PETKIT comparisons",
+        "lack of direct QuietFlow brand evidence"
+      ],
+      "quantitative_guardrail": "D_grade_grounded_summaries_are_qualitative_only",
+      "direct_page_required_for_choice_set_enrichment": true
+    }
+  },
+  "final_guardrail_image": {
+    "build_id": "766d51d8-c201-4a0b-a759-740cc0c66783",
+    "tag": "phase4-grounding-guardrail-20260801-0950",
+    "digest": "sha256:8f9be7341ac5f0da0f7eec88109a24126fccac3b53ab7fb4282f933cf3b7562e",
+    "build_status": "SUCCESS",
+    "deployed_target": "market-twin-runner-staging",
+    "production_deployed": false
+  },
+  "final_quantitative_guardrail_cloud_audit": {
+    "execution": "market-twin-staging-audit-shgbn",
+    "status": "PASS",
+    "source_report_id": "rpt_208d1eef",
+    "evidence_count": 76,
+    "qualitative_only_source_count": 75,
+    "choice_set_status": "no_usable_quantitative_fields",
+    "competitor_count": 3,
+    "fake_domain_competitor_count": 0,
+    "implausible_sub_300_price_count": 0
+  }
+}

@@ -11,7 +11,7 @@ export default function PetWaterDemoPage() {
   return (
     <AppShell>
       <TopBar
-        title="宠物智能饮水机 · 完整样例报告"
+        title="📊 泰国宠物智能饮水机 · 出海可行性评估报告"
         actions={(
           <Link
             href="/studies/new?type=PRODUCT_VALIDATION&category=PET_WATER_FOUNTAIN"
@@ -22,7 +22,7 @@ export default function PetWaterDemoPage() {
         )}
       />
       <div className="border-b border-blue-400/15 bg-blue-500/5 px-5 sm:px-8 py-3 text-xs text-blue-100/80">
-        早期固定样例 · 10,000 人 AI 模拟消费人群。打开不消耗积分，也不会重新运行。
+        💡 企业级精选案例报告：基于 10,000 名高仿真数字消费者在泰国宠物智能饮水机市场的真实对抗推演。
       </div>
       <ReportClient publicReportUrl="/demo/pet-water-standard-v1.json" />
     </AppShell>

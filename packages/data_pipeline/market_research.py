@@ -26,6 +26,7 @@ import httpx
 
 
 RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.6"
+PROFESSIONAL_RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.08.1"
 USER_AGENT = "ThailandMarketTwin/2.1 (+public-market-research)"
 PLATFORM_HOSTS = {
     "facebook.com": "Facebook",
@@ -138,6 +139,10 @@ URL_TOKEN_STOPWORDS = {
 PageReader = Callable[[List[str]], Awaitable[List[Dict[str, Any]]]]
 VideoSearcher = Callable[[str, int], Awaitable[List[Dict[str, Any]]]]
 ConsumerSearcher = Callable[[str, int], Awaitable[List[Dict[str, Any]]]]
+GroundedSearcher = Callable[
+    [List[str], int],
+    Awaitable[Dict[str, Any]],
+]
 
 
 def _utc_now() -> str:
@@ -154,6 +159,19 @@ def _hostname_platform(hostname: str) -> str:
     for suffix, platform in PLATFORM_HOSTS.items():
         if normalized == suffix or normalized.endswith(f".{suffix}"):
             return platform
+    return "公开网页"
+
+
+def _grounded_platform(title: str, url: str) -> str:
+    """Recover the source platform when Google returns a redirect URL."""
+    parsed = urllib.parse.urlsplit(url)
+    platform = _hostname_platform(parsed.hostname or "")
+    if platform != "公开网页":
+        return platform
+    title_host = _clean_text(title, 200).lower()
+    for hostname, label in PLATFORM_HOSTS.items():
+        if hostname in title_host:
+            return label
     return "公开网页"
 
 
@@ -316,6 +334,8 @@ class PublicMarketResearch:
         max_search_results: Optional[int] = None,
         max_search_queries: Optional[int] = None,
         max_evidence: Optional[int] = None,
+        grounded_searcher: Optional[GroundedSearcher] = None,
+        google_grounded_search_enabled: Optional[bool] = None,
     ):
         configured = os.environ.get("MARKET_RESEARCH_ENABLED", "").lower()
         self.enabled = (
@@ -329,13 +349,48 @@ class PublicMarketResearch:
             "FIRECRAWL_ENABLED",
             "",
         ).lower()
-        self.firecrawl_enabled = (
+        firecrawl_requested = (
             firecrawl_enabled
             if firecrawl_enabled is not None
             else bool(consumer_searcher)
             or firecrawl_configured in {"1", "true", "yes", "on"}
         )
+        firecrawl_url = os.environ.get(
+            "FIRECRAWL_API_URL",
+            "https://api.firecrawl.dev/v2",
+        ).rstrip("/")
+        firecrawl_has_access = bool(consumer_searcher) or bool(
+            os.environ.get("FIRECRAWL_API_KEY", "").strip()
+        )
+        if firecrawl_url != "https://api.firecrawl.dev/v2":
+            firecrawl_has_access = True
+        if os.environ.get("FIRECRAWL_ALLOW_KEYLESS", "").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }:
+            firecrawl_has_access = True
+        # Firecrawl Cloud's keyless endpoint is not a dependable production
+        # data source.  It may briefly answer before returning a wall of 429s.
+        self.firecrawl_enabled = bool(
+            firecrawl_requested and firecrawl_has_access
+        )
+        self.firecrawl_requested = bool(firecrawl_requested)
         self.consumer_searcher = consumer_searcher or self._search_firecrawl
+        grounded_configured = os.environ.get(
+            "GOOGLE_GROUNDED_SEARCH_ENABLED",
+            "",
+        ).lower()
+        self.google_grounded_search_enabled = (
+            google_grounded_search_enabled
+            if google_grounded_search_enabled is not None
+            else bool(grounded_searcher)
+            or grounded_configured in {"1", "true", "yes", "on"}
+        )
+        self.grounded_searcher = (
+            grounded_searcher or self._search_google_grounded
+        )
         configured_page_limit = max_pages or os.environ.get(
             "MARKET_RESEARCH_MAX_PAGES",
             "20",
@@ -586,6 +641,11 @@ class PublicMarketResearch:
         if str(plan_code).upper() != "PROFESSIONAL":
             base["warnings"] = ["公开市场深度扫描仅在深度决策中执行。"]
             return base
+        base["version"] = PROFESSIONAL_RESEARCH_VERSION
+        base["source_strategy"]["discovery_channel"] = (
+            "Gemini Google Search Grounding 与已配置的 Firecrawl；"
+            "只作为公开线索，不代表平台后台数据"
+        )
         if not self.enabled:
             base["status"] = "disabled"
             base["warnings"] = ["公开市场采集在当前环境未启用。"]
@@ -605,19 +665,49 @@ class PublicMarketResearch:
             search_task = asyncio.create_task(
                 self._search_consumer_queries(consumer_queries)
             )
-            page_results, video_results, search_results = await asyncio.gather(
-                page_task,
-                video_task,
-                search_task,
-                return_exceptions=True,
+        else:
+            search_task = asyncio.create_task(
+                asyncio.sleep(
+                    0,
+                    result={
+                        "items": [],
+                        "completed_queries": 0,
+                        "failed_queries": [],
+                    },
+                )
+            )
+        if self.google_grounded_search_enabled:
+            grounded_task = asyncio.create_task(
+                self.grounded_searcher(
+                    consumer_queries,
+                    self.max_search_results,
+                )
             )
         else:
-            page_results, video_results = await asyncio.gather(
-                page_task,
-                video_task,
-                return_exceptions=True,
+            grounded_task = asyncio.create_task(
+                asyncio.sleep(
+                    0,
+                    result={
+                        "items": [],
+                        "completed_queries": 0,
+                        "failed_queries": [],
+                        "request_count": 0,
+                        "providers_used": [],
+                    },
+                )
             )
-            search_results = []
+        (
+            page_results,
+            video_results,
+            search_results,
+            grounded_results,
+        ) = await asyncio.gather(
+            page_task,
+            video_task,
+            search_task,
+            grounded_task,
+            return_exceptions=True,
+        )
 
         evidence: List[Dict[str, Any]] = []
         collectors: List[Dict[str, Any]] = []
@@ -657,9 +747,11 @@ class PublicMarketResearch:
             search_items = search_results["items"]
             search_status = "succeeded" if search_items else "partial"
             evidence.extend(search_items)
-            for failed in search_results["failed_queries"]:
+            failed_searches = search_results["failed_queries"]
+            if failed_searches:
                 warnings.append(
-                    f"公开检索主题失败：{failed['error']}"
+                    f"Firecrawl 有 {len(failed_searches)} 个检索主题失败；"
+                    "系统已保留其他成功来源。"
                 )
         collectors.append(
             {
@@ -685,12 +777,67 @@ class PublicMarketResearch:
                 "access_mode": (
                     "api_key"
                     if os.environ.get("FIRECRAWL_API_KEY")
-                    else "keyless"
+                    else "self_hosted_or_injected"
+                    if self.firecrawl_enabled
+                    else "not_configured"
                 ),
                 "fallback_result": (
                     None
                     if search_items
                     else "public_pages_and_official_public_apis"
+                ),
+            }
+        )
+
+        if not self.google_grounded_search_enabled:
+            grounded_items: List[Dict[str, Any]] = []
+            grounded_status = "disabled"
+        elif isinstance(grounded_results, Exception):
+            grounded_items = []
+            grounded_status = "unavailable"
+            warnings.append(
+                "Google 公开检索失败："
+                f"{type(grounded_results).__name__}"
+            )
+        else:
+            grounded_items = list(grounded_results.get("items") or [])
+            grounded_status = "succeeded" if grounded_items else "partial"
+            evidence.extend(grounded_items)
+            failed_grounded = list(
+                grounded_results.get("failed_queries") or []
+            )
+            if failed_grounded:
+                warnings.append(
+                    f"Google 公开检索有 {len(failed_grounded)} 个主题失败；"
+                    "系统已保留带引用的成功结果。"
+                )
+        collectors.append(
+            {
+                "collector": "Gemini Grounding with Google Search",
+                "status": grounded_status,
+                "requested": len(consumer_queries),
+                "result_count": len(grounded_items),
+                "query_count": len(consumer_queries),
+                "completed_queries": (
+                    int(grounded_results.get("completed_queries", 0))
+                    if isinstance(grounded_results, Mapping)
+                    else 0
+                ),
+                "request_count": (
+                    int(grounded_results.get("request_count", 0))
+                    if isinstance(grounded_results, Mapping)
+                    else 0
+                ),
+                "providers_used": (
+                    list(grounded_results.get("providers_used") or [])
+                    if isinstance(grounded_results, Mapping)
+                    else []
+                ),
+                "access_mode": "google_search_grounding",
+                "fallback_result": (
+                    None
+                    if grounded_items
+                    else "customer_urls_and_public_page_reader"
                 ),
             }
         )
@@ -920,6 +1067,270 @@ class PublicMarketResearch:
                     items.append(item)
                     accepted_urls.add(str(item.get("url")))
         return items
+
+    @staticmethod
+    def _grounded_providers() -> List[Dict[str, Any]]:
+        providers: List[Dict[str, Any]] = []
+        keys: List[str] = []
+        for name in (
+            "GEMINI_API_KEY_PRIMARY",
+            "GEMINI_API_KEY_SECONDARY",
+            "GEMINI_API_KEY",
+        ):
+            value = os.environ.get(name, "").strip()
+            if value and value not in keys:
+                keys.append(value)
+        for index, key in enumerate(keys, start=1):
+            providers.append(
+                {
+                    "id": f"api_key_{index}",
+                    "mode": (
+                        "vertex_express"
+                        if key.startswith("AQ.")
+                        else "gemini_developer"
+                    ),
+                    "api_key": key,
+                }
+            )
+        vertex_enabled = os.environ.get(
+            "GEMINI_VERTEX_FALLBACK",
+            "",
+        ).lower() in {"1", "true", "yes", "on"}
+        project = os.environ.get("GOOGLE_CLOUD_PROJECT", "").strip()
+        if vertex_enabled and project:
+            providers.append(
+                {
+                    "id": "vertex_service_account",
+                    "mode": "vertex_adc",
+                    "project": project,
+                    "location": os.environ.get(
+                        "GOOGLE_CLOUD_LOCATION",
+                        "global",
+                    ).strip(),
+                }
+            )
+        return providers
+
+    @staticmethod
+    async def _call_grounded_provider(
+        provider: Mapping[str, Any],
+        model: str,
+        prompt: str,
+    ) -> Any:
+        from google import genai
+        from google.genai import types
+
+        mode = str(provider["mode"])
+        http_options = types.HttpOptions(api_version="v1")
+        if mode == "vertex_express":
+            client = genai.Client(
+                vertexai=True,
+                api_key=str(provider["api_key"]),
+                http_options=http_options,
+            )
+        elif mode == "gemini_developer":
+            client = genai.Client(api_key=str(provider["api_key"]))
+        elif mode == "vertex_adc":
+            client = genai.Client(
+                vertexai=True,
+                project=str(provider["project"]),
+                location=str(provider["location"]),
+                http_options=http_options,
+            )
+        else:
+            raise ValueError("Unsupported grounded-search provider")
+        async with client.aio as async_client:
+            return await async_client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                    temperature=0.0,
+                    max_output_tokens=4_096,
+                ),
+            )
+
+    @staticmethod
+    def _grounded_items(
+        response: Any,
+        queries: List[str],
+        limit: int,
+    ) -> List[Dict[str, Any]]:
+        candidates = list(getattr(response, "candidates", None) or [])
+        if not candidates:
+            return []
+        candidate = candidates[0]
+        metadata = getattr(candidate, "grounding_metadata", None)
+        if not metadata:
+            return []
+        chunks = list(getattr(metadata, "grounding_chunks", None) or [])
+        supports = list(getattr(metadata, "grounding_supports", None) or [])
+        supported_text: Dict[int, List[str]] = {}
+        for support in supports:
+            segment = getattr(support, "segment", None)
+            text = _clean_text(getattr(segment, "text", ""), 1_200)
+            if not text:
+                continue
+            for index in (
+                getattr(support, "grounding_chunk_indices", None) or []
+            ):
+                supported_text.setdefault(int(index), []).append(text)
+
+        items: List[Dict[str, Any]] = []
+        seen = set()
+        for index, chunk in enumerate(chunks):
+            web = getattr(chunk, "web", None)
+            if not web:
+                continue
+            url = str(getattr(web, "uri", "") or "").strip()
+            title = _clean_text(getattr(web, "title", ""), 220)
+            if not _is_public_http_url(url):
+                continue
+            excerpts = _unique(supported_text.get(index, []))
+            excerpt = _clean_text(" ".join(excerpts), 1_500)
+            identity = (title.lower(), excerpt.lower())
+            if identity in seen:
+                continue
+            seen.add(identity)
+            digest_payload = json.dumps(
+                {
+                    "title": title,
+                    "url": url,
+                    "excerpt": excerpt,
+                    "queries": queries,
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            digest = _content_hash(digest_payload)
+            items.append(
+                {
+                    "source_id": _source_id(
+                        "google_search_grounded_public",
+                        url,
+                        digest,
+                    ),
+                    "source_type": "google_search_grounded_public",
+                    "collector": "Gemini Google Search Grounding",
+                    "platform": _grounded_platform(title, url),
+                    "title": title or "Google Search 公开引用来源",
+                    "url": url,
+                    "collected_at": _utc_now(),
+                    "evidence_grade": "D",
+                    "content_sha256": digest,
+                    "excerpt": excerpt,
+                    "observed_fields": [
+                        "citation_title",
+                        *( ["grounded_summary_segment"] if excerpt else [] ),
+                    ],
+                    "market_signals": _market_signals(excerpt),
+                    "quality_checks": {
+                        "grounded_citation": True,
+                        "direct_page_retrieved": False,
+                        "query_clusters": queries,
+                    },
+                    "evidence_role": "Google 检索引用与消费者公开线索",
+                    "limitation": (
+                        "来自 Gemini Grounding with Google Search 返回的"
+                        "可点击引用与受支持文本片段；不是平台后台数据，"
+                        "也不等同于已独立抓取并核验的页面全文或成交数据。"
+                    ),
+                }
+            )
+            if len(items) >= limit:
+                break
+        return items
+
+    async def _search_google_grounded(
+        self,
+        queries: List[str],
+        limit: int,
+    ) -> Dict[str, Any]:
+        providers = self._grounded_providers()
+        if not providers:
+            return {
+                "items": [],
+                "completed_queries": 0,
+                "failed_queries": [
+                    {"query": "all", "error": "ProviderNotConfigured"}
+                ],
+                "request_count": 0,
+                "providers_used": [],
+            }
+        group_size = max(
+            1,
+            min(
+                int(os.environ.get("GOOGLE_GROUNDED_QUERY_GROUP_SIZE", "4")),
+                8,
+            ),
+        )
+        model = os.environ.get(
+            "GEMINI_GROUNDED_SEARCH_MODEL",
+            "gemini-2.5-flash",
+        ).strip()
+        provider_index = 0
+        request_count = 0
+        completed_queries = 0
+        items: List[Dict[str, Any]] = []
+        failures: List[Dict[str, str]] = []
+        providers_used: List[Dict[str, str]] = []
+        for start in range(0, len(queries), group_size):
+            group = queries[start : start + group_size]
+            prompt = (
+                "Search the public web for current, decision-useful Thailand "
+                "market evidence for the query clusters below. Prioritize "
+                "Thai-language sources, Shopee, Lazada, TikTok, Facebook, "
+                "Instagram, Pantip, Thai review sites, and official brand "
+                "pages. Look for prices, ratings, recurring complaints, "
+                "warranty, delivery, product comparisons, and real usage "
+                "contexts. Cite every factual claim. Do not claim that public "
+                "likes, views, reviews, or displayed sold counts equal verified "
+                "sales or conversion. Return a concise Thai evidence summary.\n\n"
+                + "\n".join(f"- {query}" for query in group)
+            )
+            response: Any = None
+            last_error = "ProviderUnavailable"
+            for candidate_index in range(provider_index, len(providers)):
+                provider = providers[candidate_index]
+                request_count += 1
+                try:
+                    response = await self._call_grounded_provider(
+                        provider,
+                        model,
+                        prompt,
+                    )
+                    provider_index = candidate_index
+                    public_provider = {
+                        "id": str(provider["id"]),
+                        "mode": str(provider["mode"]),
+                    }
+                    if public_provider not in providers_used:
+                        providers_used.append(public_provider)
+                    break
+                except Exception as error:
+                    last_error = type(error).__name__
+                    continue
+            if response is None:
+                failures.extend(
+                    {"query": query, "error": last_error}
+                    for query in group
+                )
+                continue
+            completed_queries += len(group)
+            items.extend(
+                self._grounded_items(
+                    response,
+                    group,
+                    max(10, min(30, limit * 2)),
+                )
+            )
+        return {
+            "items": items,
+            "completed_queries": completed_queries,
+            "failed_queries": failures,
+            "request_count": request_count,
+            "providers_used": providers_used,
+        }
 
     async def _search_firecrawl(
         self,

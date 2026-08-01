@@ -51,6 +51,7 @@ from app.db.models import (
     AdminAuditLog,
     CreditTransaction,
     InviteCode,
+    ModelComponentRunRecord,
     PendingRegistration,
     PurchaseOrder,
     ReportRecord,
@@ -70,7 +71,16 @@ from app.services.platform_calibration import (
     platform_calibration_summary,
     record_platform_contribution,
 )
+from app.services.component_runs import (
+    begin_native_component_run,
+    complete_component_run,
+    component_run_lineage,
+    fail_component_run,
+    snapshot_study_payload,
+    update_run_checkpoint,
+)
 from app.services.run_dispatcher import (
+    cancel_run_execution,
     dispatch_run_job,
     should_dispatch_asynchronously,
 )
@@ -108,8 +118,10 @@ RUN_STAGE_LABELS = {
     "RUNNING_AGENTS": "正在分析代表性消费人群",
     "RUNNING_SIMULATION": "正在运行市场情景模拟",
     "GENERATING_REPORT": "正在整理决策报告",
+    "RETRYING": "遇到临时故障，正在使用原输入安全重试",
     "COMPLETED": "报告已完成",
     "FAILED_RECOVERABLE": "任务未完成，额度已安排退回",
+    "CANCELLED": "任务已取消，额度已退回",
 }
 
 
@@ -639,6 +651,10 @@ def _run_job_payload(job: SimulationRunRecord) -> Dict[str, Any]:
         "progress_percent": int(job.progress_percent or 0),
         "plan_code": job.plan_code,
         "calibration_tier": job.calibration_tier,
+        "input_snapshot_sha256": job.frozen_input_digest,
+        "attempt_count": int(job.attempt_count or 0),
+        "checkpoint_stage": job.checkpoint_stage,
+        "checkpoint_sha256": job.checkpoint_sha256,
         "report_id": job.report_id,
         "error_code": job.error_code,
         "can_close_page": job.status in {
@@ -646,6 +662,7 @@ def _run_job_payload(job: SimulationRunRecord) -> Dict[str, Any]:
             "QUEUED",
             "RUNNING",
         },
+        "can_cancel": job.status in {"PENDING", "QUEUED", "RUNNING"},
         "created_at": utc_isoformat(job.created_at),
         "updated_at": utc_isoformat(job.updated_at),
         "started_at": utc_isoformat(job.started_at),
@@ -687,6 +704,12 @@ def _expire_stale_run(
     locked.progress_percent = 100
     locked.error_code = "RUN_TIMEOUT"
     locked.completed_at = datetime.utcnow()
+    update_run_checkpoint(
+        locked,
+        stage="FAILED_RECOVERABLE",
+        percent=100,
+        error_code="RUN_TIMEOUT",
+    )
     study = (
         db.query(StudyRecord)
         .filter(StudyRecord.id == locked.study_id)
@@ -1664,6 +1687,10 @@ async def run_simulation(
         if (record.inputs_json or {}).get("observed_choice_data")
         else "PUBLIC_EVIDENCE"
     )
+    frozen_inputs, frozen_facts, frozen_input_digest = snapshot_study_payload(
+        inputs=record.inputs_json,
+        facts=record.facts_json,
+    )
     run_job = SimulationRunRecord(
         user_id=user.id,
         study_id=study_id,
@@ -1673,6 +1700,9 @@ async def run_simulation(
         requested_population=requested_population,
         requested_mc_rounds=req.mc_rounds,
         seed=req.seed,
+        frozen_inputs_json=frozen_inputs,
+        frozen_facts_json=frozen_facts,
+        frozen_input_digest=frozen_input_digest,
         progress_stage="QUEUED",
         progress_percent=0,
         calibration_tier=calibration_tier,
@@ -1750,8 +1780,9 @@ async def run_simulation(
                 .filter(SimulationRunRecord.id == run_job.id)
                 .one()
             )
-            run_job.provider_execution_name = dispatch_result.get(
-                "operation_name"
+            run_job.provider_execution_name = (
+                dispatch_result.get("execution_name")
+                or dispatch_result.get("operation_name")
             )
             db.commit()
             db.refresh(run_job)
@@ -1798,13 +1829,33 @@ async def run_simulation(
     run_job.started_at = datetime.utcnow()
     db.commit()
 
+    component_run = None
+    component_run_id = None
     try:
+        # Rehydrate from the immutable queued snapshot so a later study edit
+        # cannot silently change an already billed run.
+        service.hydrate_study(
+            study_id=record.id,
+            name=record.name,
+            study_type=record.study_type,
+            status=record.status,
+            plan_code=record.plan_code,
+            inputs=run_job.frozen_inputs_json or record.inputs_json,
+            facts=run_job.frozen_facts_json or record.facts_json,
+            created_at=utc_isoformat(record.created_at),
+            updated_at=utc_isoformat(record.updated_at),
+        )
+        component_run = begin_native_component_run(db, run_job)
+        component_run_id = component_run.id
+        db.commit()
         model_study_type = service._effective_model_type(
             service.studies_db[study_id]
         )
         pooled_override = platform_calibration_override(
             db,
-            (record.facts_json or {}).get("category"),
+            (run_job.frozen_facts_json or record.facts_json or {}).get(
+                "category"
+            ),
             model_study_type,
         )
         if pooled_override and calibration_tier == "PUBLIC_EVIDENCE":
@@ -1818,6 +1869,14 @@ async def run_simulation(
             plan_code=plan_code,
             platform_calibration_override=pooled_override,
         )
+        complete_component_run(
+            db,
+            component_run,
+            report_id=report["report_id"],
+            report_run_id=report["run_id"],
+            report_payload=report,
+        )
+        report["model_components"] = [component_run_lineage(component_run)]
         report_record = ReportRecord(
             id=report["report_id"],
             user_id=user.id,
@@ -1866,6 +1925,13 @@ async def run_simulation(
         failed_job.progress_percent = 100
         failed_job.error_code = type(error).__name__[:120]
         failed_job.completed_at = datetime.utcnow()
+        if component_run_id:
+            failed_component = (
+                db.query(ModelComponentRunRecord)
+                .filter(ModelComponentRunRecord.id == component_run_id)
+                .first()
+            )
+            fail_component_run(failed_component, error)
         refund_run_reservation(
             db,
             user.id,
@@ -1902,6 +1968,83 @@ def get_run_status(
         raise HTTPException(status_code=404, detail="后台任务不存在")
     job = _expire_stale_run(db, job)
     return _run_job_payload(job)
+
+
+@app.post("/v1/runs/{run_job_id}/cancel")
+def cancel_run(
+    run_job_id: str,
+    user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db),
+):
+    """Cancel a queued/running customer run and refund its reservation once.
+
+    A Cloud Run worker may take a moment to stop after its current compute
+    slice.  It checks this durable state before writing a report, so a
+    cancelled run never becomes a completed paid result.
+    """
+
+    job = (
+        db.query(SimulationRunRecord)
+        .filter(
+            SimulationRunRecord.id == run_job_id,
+            SimulationRunRecord.user_id == user.id,
+        )
+        .with_for_update()
+        .first()
+    )
+    if not job:
+        raise HTTPException(status_code=404, detail="后台任务不存在")
+    if job.status not in {"PENDING", "QUEUED", "RUNNING"}:
+        raise HTTPException(
+            status_code=409,
+            detail="该任务当前不能取消",
+        )
+
+    reservation = _reservation_from_job(job)
+    job.status = "CANCELLED"
+    job.progress_stage = "CANCELLED"
+    job.progress_percent = 100
+    job.error_code = "CANCELLED_BY_USER"
+    job.completed_at = datetime.utcnow()
+    update_run_checkpoint(
+        job,
+        stage="CANCELLED",
+        percent=100,
+        error_code="CANCELLED_BY_USER",
+    )
+    study = (
+        db.query(StudyRecord)
+        .filter(StudyRecord.id == job.study_id)
+        .first()
+    )
+    if study:
+        study.status = "READY"
+    provider_reference = job.provider_execution_name
+    refund_run_reservation(
+        db,
+        job.user_id,
+        reservation,
+        f"{job.user_id}:{job.request_key}",
+    )
+    db.commit()
+    db.refresh(job)
+    provider_cancel_requested = False
+    if provider_reference:
+        try:
+            provider_cancel_requested = cancel_run_execution(
+                provider_reference
+            )
+        except Exception:
+            # Durable cancellation and refund are already committed.  The
+            # worker still cannot publish a report even if the provider's
+            # control-plane cancellation is temporarily unavailable.
+            LOGGER.exception(
+                "Cloud Run execution cancellation failed for %s",
+                run_job_id,
+            )
+    payload = _run_job_payload(job)
+    payload["provider_cancel_requested"] = provider_cancel_requested
+    return payload
 
 
 @app.get("/v1/reports/{report_id}")

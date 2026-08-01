@@ -171,6 +171,35 @@ def _upgrade_legacy_schema() -> None:
                 "ALTER TABLE simulation_runs ADD COLUMN seed "
                 "INTEGER NOT NULL DEFAULT 42"
             )
+        if "frozen_inputs_json" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN frozen_inputs_json JSON"
+            )
+        if "frozen_facts_json" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN frozen_facts_json JSON"
+            )
+        if "frozen_input_digest" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN frozen_input_digest VARCHAR"
+            )
+        if "checkpoint_json" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN checkpoint_json JSON"
+            )
+        if "checkpoint_sha256" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN checkpoint_sha256 VARCHAR"
+            )
+        if "checkpoint_stage" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN checkpoint_stage VARCHAR"
+            )
+        if "checkpoint_updated_at" not in columns:
+            statements.append(
+                "ALTER TABLE simulation_runs ADD COLUMN checkpoint_updated_at "
+                f"{datetime_type}"
+            )
         if "progress_stage" not in columns:
             statements.append(
                 "ALTER TABLE simulation_runs ADD COLUMN progress_stage "
@@ -245,6 +274,21 @@ def _upgrade_legacy_schema() -> None:
                 "ON credit_transactions (reference_id)"
             )
         )
+        if "simulation_runs" in tables:
+            connection.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS "
+                    "ix_simulation_runs_frozen_input_digest "
+                    "ON simulation_runs (frozen_input_digest)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS "
+                    "ix_simulation_runs_checkpoint_sha256 "
+                    "ON simulation_runs (checkpoint_sha256)"
+                )
+            )
         connection.execute(
             text(
                 "CREATE INDEX IF NOT EXISTS ix_users_invite_code "

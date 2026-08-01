@@ -30,6 +30,19 @@ class SocialSimulationResult:
         }
 
 
+@dataclass(frozen=True)
+class OasisExperimentLimits:
+    """Hard ceilings for an optional, isolated OASIS experiment."""
+
+    agent_count: int
+    activation_probability: float
+    time_steps: int
+    maximum_input_tokens: int
+    maximum_output_tokens: int
+    maximum_cost_minor: int
+    maximum_wall_time_seconds: int
+
+
 class SocialSimulationBackend(Protocol):
     backend_id: str
     backend_version: str

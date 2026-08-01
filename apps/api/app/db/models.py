@@ -285,6 +285,18 @@ class SimulationRunRecord(Base):
     requested_population = Column(Integer, nullable=True)
     requested_mc_rounds = Column(Integer, nullable=True)
     seed = Column(Integer, nullable=False, default=42)
+    # Heavy jobs must run from the exact confirmed study snapshot that was
+    # billed and queued.  These nullable fields preserve legacy runs created
+    # before immutable run inputs were introduced.
+    frozen_inputs_json = Column(JSON, nullable=True)
+    frozen_facts_json = Column(JSON, nullable=True)
+    frozen_input_digest = Column(String, nullable=True, index=True)
+    # Checkpoints contain execution metadata and hashes only.  They never
+    # duplicate customer inputs, research evidence, or report content.
+    checkpoint_json = Column(JSON, nullable=True)
+    checkpoint_sha256 = Column(String, nullable=True, index=True)
+    checkpoint_stage = Column(String, nullable=True)
+    checkpoint_updated_at = Column(DateTime, nullable=True)
     progress_stage = Column(String, nullable=False, default="QUEUED")
     progress_percent = Column(Integer, nullable=False, default=0)
     provider_execution_name = Column(String, nullable=True)
@@ -304,6 +316,95 @@ class SimulationRunRecord(Base):
     )
 
     user = relationship("User", back_populates="simulation_runs")
+    component_runs = relationship(
+        "ModelComponentRunRecord",
+        back_populates="simulation_run",
+        cascade="all, delete-orphan",
+    )
+
+
+class ModelComponentRunRecord(Base):
+    """Auditable lifecycle for one model component within a study run.
+
+    Large payloads remain in immutable object storage.  This table contains
+    only lineage, hashes, resource accounting, and object references.
+    """
+
+    __tablename__ = "model_component_runs"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"comp_{uuid.uuid4().hex[:12]}",
+    )
+    simulation_run_id = Column(
+        String,
+        ForeignKey("simulation_runs.id"),
+        nullable=False,
+        index=True,
+    )
+    component = Column(String, nullable=False, index=True)
+    backend = Column(String, nullable=False)
+    backend_version = Column(String, nullable=False)
+    dependency_version = Column(String, nullable=True)
+    config_version = Column(String, nullable=False)
+    seed = Column(Integer, nullable=False)
+    input_manifest_uri = Column(String, nullable=True)
+    input_manifest_sha256 = Column(String, nullable=False, index=True)
+    output_manifest_uri = Column(String, nullable=True)
+    output_manifest_sha256 = Column(String, nullable=True, index=True)
+    status = Column(String, nullable=False, default="QUEUED", index=True)
+    error_code = Column(String, nullable=True)
+    cost_minor = Column(Integer, nullable=False, default=0)
+    cost_currency = Column(String, nullable=False, default="THB")
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    simulation_run = relationship(
+        "SimulationRunRecord",
+        back_populates="component_runs",
+    )
+    artifacts = relationship(
+        "ModelArtifactRecord",
+        back_populates="component_run",
+        cascade="all, delete-orphan",
+    )
+
+
+class ModelArtifactRecord(Base):
+    """Immutable object-store descriptor; never stores artifact bytes."""
+
+    __tablename__ = "model_artifacts"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: f"artifact_{uuid.uuid4().hex[:12]}",
+    )
+    component_run_id = Column(
+        String,
+        ForeignKey("model_component_runs.id"),
+        nullable=False,
+        index=True,
+    )
+    artifact_type = Column(String, nullable=False)
+    uri = Column(String, nullable=False)
+    sha256 = Column(String, nullable=False, index=True)
+    size_bytes = Column(Integer, nullable=False)
+    media_type = Column(String, nullable=False)
+    schema_version = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    component_run = relationship(
+        "ModelComponentRunRecord",
+        back_populates="artifacts",
+    )
 
 
 class CalibrationContribution(Base):

@@ -361,6 +361,52 @@ class StudyServiceTests(unittest.TestCase):
         self.assertEqual(enriched["lineage"]["status"], "applied")
         self.assertEqual(enriched["lineage"]["coefficient_effect"], "none")
 
+    def test_grounded_search_summary_never_changes_choice_set_prices(self):
+        service = StudyService()
+        study = service.create_study(
+            {
+                "name": "Grounded evidence guardrail",
+                "study_type": "PRODUCT_VALIDATION",
+                "plan_code": "PROFESSIONAL",
+                "price": 1290,
+                "competitor_data": [{"name": "Known Competitor"}],
+            }
+        )
+        enriched = service._research_enriched_choice_inputs(
+            study,
+            {
+                "evidence": [
+                    {
+                        "source_id": "src_grounded_accessory_price",
+                        "source_type": "google_search_grounded_public",
+                        "evidence_grade": "D",
+                        "platform": "Lazada",
+                        "title": "lazada.co.th",
+                        "url": "https://vertexaisearch.cloud.google.com/redirect",
+                        "market_signals": {
+                            "prices": ["14.91 บาท"],
+                            "ratings": ["5.0 ดาว"],
+                        },
+                        "quality_checks": {
+                            "direct_page_retrieved": False,
+                        },
+                    }
+                ]
+            },
+            competitor_limit=5,
+        )
+
+        self.assertEqual(len(enriched["competitors"]), 1)
+        self.assertIsNone(enriched["competitors"][0].get("price"))
+        self.assertEqual(
+            enriched["lineage"]["status"],
+            "no_usable_quantitative_fields",
+        )
+        self.assertEqual(
+            enriched["lineage"]["qualitative_only_source_count"],
+            1,
+        )
+
     def test_venue_uses_subtype_model_and_visit_language(self):
         previous_key = os.environ.get("GEMINI_API_KEY")
         os.environ["GEMINI_API_KEY"] = ""

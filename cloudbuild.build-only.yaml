@@ -1,0 +1,37 @@
+substitutions:
+  _REGION: asia-southeast1
+  _REPOSITORY: market-twin
+  _IMAGE_TAG: phase4-staging
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:${_IMAGE_TAG}
+      - -f
+      - Dockerfile.api
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:${_IMAGE_TAG}
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_IMAGE_TAG}
+      - -f
+      - Dockerfile.runner
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_IMAGE_TAG}
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:${_IMAGE_TAG}
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_IMAGE_TAG}

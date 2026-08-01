@@ -7,7 +7,7 @@ import os
 import sys
 
 from app.db.database import initialize_database
-from app.services.run_worker import run_worker
+from app.services.run_worker import RetryableRunError, run_worker
 
 
 def main() -> int:
@@ -17,7 +17,14 @@ def main() -> int:
         logging.error("RUN_JOB_ID is required")
         return 2
     initialize_database()
-    report_id = run_worker(run_job_id)
+    try:
+        report_id = run_worker(run_job_id)
+    except RetryableRunError:
+        logging.exception(
+            "Simulation job %s requested a platform retry",
+            run_job_id,
+        )
+        return 1
     if report_id:
         logging.info(
             "Simulation job %s completed with report %s",

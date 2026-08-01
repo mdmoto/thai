@@ -368,8 +368,8 @@ function Step1({ state, update, onNext }: {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">第 1 步 / 共 5 步</div>
-        <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择研究类型</h2>
-        <p className="text-xs text-neutral-400 font-light mt-1">根据您的商业分析目标选择匹配的研究类型</p>
+        <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择您的商业出海场景</h2>
+        <p className="text-xs text-neutral-400 font-light mt-1">预置全泰宏观人口画像与竞品博弈算法，即将调动 30 万数字人群做模拟消费演练</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

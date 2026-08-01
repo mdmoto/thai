@@ -1,0 +1,26 @@
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+COPY apps/api/requirements-oasis-job.lock ./requirements-oasis-job.lock
+RUN python -m pip install --no-cache-dir --require-hashes -r requirements-oasis-job.lock
+RUN python -m pip install --no-cache-dir --no-deps \
+    "camel-oasis @ https://github.com/camel-ai/oasis/archive/e97a1d83761605a24a7dc91fa4d4e9defffa7e23.tar.gz#sha256=6facd292443d0abc6b922189c81fa98270ff73c11473ec3c4e0e655ac9482aeb"
+
+COPY packages /packages
+COPY docs/third-party-notices/OASIS-LICENSE.txt /licenses/OASIS-LICENSE.txt
+COPY scripts/validate_oasis_backend.py ./validate_oasis_backend.py
+
+ENV PYTHONPATH="/app:/packages" \
+    HOME="/home/appuser" \
+    OASIS_DB_PATH="/tmp/oasis-simulation.db"
+
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
+WORKDIR /tmp
+
+CMD ["python", "/app/validate_oasis_backend.py", "--output", "/tmp/oasis-validation.json"]

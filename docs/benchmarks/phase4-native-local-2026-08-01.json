@@ -1,0 +1,123 @@
+{
+  "schema_version": "phase4-native-benchmark-suite-v1",
+  "recorded_at": "2026-08-01T05:34:47.945682+00:00",
+  "scope_disclosure": "Local technical baseline for deterministic native compute only; not an end-to-end customer-run duration or Cloud Run measurement.",
+  "results": [
+    {
+      "population_size": 100,
+      "mc_rounds": 220,
+      "evaluated_variant_count": 14,
+      "competitor_count": 5,
+      "timing_seconds": {
+        "population_generation": 0.0034,
+        "quantitative_simulation": 2.2197,
+        "total": 2.224,
+        "process_cpu": 2.1207
+      },
+      "memory_mib": {
+        "baseline_rss": 87.734,
+        "peak_rss": 92.203,
+        "final_rss": 92.094,
+        "population_dataframe_deep": 0.122
+      },
+      "result_payload_kib": 42.372,
+      "mean_purchase_rate": 0.007944
+    },
+    {
+      "population_size": 5000,
+      "mc_rounds": 220,
+      "evaluated_variant_count": 14,
+      "competitor_count": 5,
+      "timing_seconds": {
+        "population_generation": 0.0165,
+        "quantitative_simulation": 5.945,
+        "total": 5.9682,
+        "process_cpu": 5.932
+      },
+      "memory_mib": {
+        "baseline_rss": 87.828,
+        "peak_rss": 110.672,
+        "final_rss": 110.672,
+        "population_dataframe_deep": 6.073
+      },
+      "result_payload_kib": 42.598,
+      "mean_purchase_rate": 0.006453
+    },
+    {
+      "population_size": 20000,
+      "mc_rounds": 220,
+      "evaluated_variant_count": 14,
+      "competitor_count": 5,
+      "timing_seconds": {
+        "population_generation": 0.0601,
+        "quantitative_simulation": 17.1888,
+        "total": 17.2746,
+        "process_cpu": 16.9238
+      },
+      "memory_mib": {
+        "baseline_rss": 87.766,
+        "peak_rss": 169.734,
+        "final_rss": 159.859,
+        "population_dataframe_deep": 24.291
+      },
+      "result_payload_kib": 42.598,
+      "mean_purchase_rate": 0.006579
+    },
+    {
+      "population_size": 100000,
+      "mc_rounds": 220,
+      "evaluated_variant_count": 14,
+      "competitor_count": 5,
+      "timing_seconds": {
+        "population_generation": 0.3053,
+        "quantitative_simulation": 77.5557,
+        "total": 77.9873,
+        "process_cpu": 75.9508
+      },
+      "memory_mib": {
+        "baseline_rss": 87.75,
+        "peak_rss": 453.812,
+        "final_rss": 319.422,
+        "population_dataframe_deep": 121.46
+      },
+      "result_payload_kib": 42.622,
+      "mean_purchase_rate": 0.006467
+    },
+    {
+      "population_size": 300000,
+      "mc_rounds": 220,
+      "evaluated_variant_count": 14,
+      "competitor_count": 5,
+      "timing_seconds": {
+        "population_generation": 0.98,
+        "quantitative_simulation": 252.8101,
+        "total": 254.1591,
+        "process_cpu": 250.0354
+      },
+      "memory_mib": {
+        "baseline_rss": 87.703,
+        "peak_rss": 931.109,
+        "final_rss": 646.828,
+        "population_dataframe_deep": 364.38
+      },
+      "result_payload_kib": 42.627,
+      "mean_purchase_rate": 0.006489
+    }
+  ],
+  "common_configuration": {
+    "benchmark_scope": "native_compute_only_no_web_no_llm",
+    "plan_code": "PROFESSIONAL",
+    "plan_config_version": "PLAN-CONFIG-2026.07.4",
+    "world_model_version": "TH-WORLD-2026.07.5",
+    "model_family": "hybrid_journey_mixed_logit",
+    "seed": 42,
+    "external_api_calls": 0,
+    "llm_calls": 0,
+    "host": {
+      "system": "Darwin",
+      "machine": "arm64",
+      "python": "3.12.13",
+      "logical_cpu_count": 8
+    }
+  }
+}

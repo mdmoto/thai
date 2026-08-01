@@ -36,4 +36,18 @@ def get_social_simulation_backend(
     ).strip().lower()
     if selected in {"prior", "prior_diffusion"}:
         return PriorSocialSimulationBackend()
+    if selected == "oasis":
+        enabled = os.environ.get("ENABLE_OASIS", "false").strip().lower()
+        if enabled not in {"1", "true", "yes"}:
+            raise RuntimeError(
+                "OASIS is disabled; set ENABLE_OASIS=true only after "
+                "isolated-job validation and owner approval"
+            )
+        # Delayed import keeps the production API and native runner free of
+        # OASIS, CAMEL, torch, and its Python-3.11-only dependency set.
+        from simulation_core.social_backends.oasis import (
+            OasisSocialSimulationBackend,
+        )
+
+        return OasisSocialSimulationBackend()
     raise ValueError(f"Unsupported social simulation backend: {selected}")

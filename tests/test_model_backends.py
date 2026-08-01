@@ -24,6 +24,10 @@ from simulation_core.social_backends.prior import (
     PriorSocialSimulationBackend,
     get_social_simulation_backend,
 )
+from simulation_core.social_backends.oasis import (
+    OASIS_STATUS,
+    OasisSocialSimulationBackend,
+)
 from world_model.backends.base import PopulationSynthesisRequest
 from world_model.backends.native import (
     NativePopulationSynthesisBackend,
@@ -152,6 +156,68 @@ class NativeBackendContractTests(unittest.TestCase):
             result.status,
             "uncalibrated_social_propagation_prior",
         )
+
+    def test_oasis_requires_explicit_enablement_and_a_job_runner(self):
+        with unittest.mock.patch.dict(
+            os.environ,
+            {
+                "SOCIAL_SIMULATION_BACKEND": "oasis",
+                "ENABLE_OASIS": "false",
+            },
+        ):
+            with self.assertRaisesRegex(RuntimeError, "disabled"):
+                get_social_simulation_backend()
+
+        request = SocialSimulationRequest(
+            seed=42,
+            plan_code="PROFESSIONAL",
+            frozen_inputs={
+                "oasis_experiment": {
+                    "agent_count": 8,
+                    "activation_probability": 0.2,
+                    "time_steps": 3,
+                    "maximum_input_tokens": 20_000,
+                    "maximum_output_tokens": 4_000,
+                    "maximum_cost_minor": 5_000,
+                    "maximum_wall_time_seconds": 300,
+                }
+            },
+            native_runner=lambda: [],
+        )
+        with self.assertRaisesRegex(RuntimeError, "isolated social"):
+            OasisSocialSimulationBackend().simulate(request)
+
+    def test_oasis_only_emits_simulated_social_metrics(self):
+        request = SocialSimulationRequest(
+            seed=42,
+            plan_code="PROFESSIONAL",
+            frozen_inputs={
+                "oasis_experiment": {
+                    "agent_count": 8,
+                    "activation_probability": 0.2,
+                    "time_steps": 3,
+                    "maximum_input_tokens": 20_000,
+                    "maximum_output_tokens": 4_000,
+                    "maximum_cost_minor": 5_000,
+                    "maximum_wall_time_seconds": 300,
+                }
+            },
+            native_runner=lambda: [],
+        )
+        backend = OasisSocialSimulationBackend(
+            runner=lambda _limits, _request: [
+                {
+                    "time_step": 1,
+                    "metric": "simulated_social_diffusion",
+                    "value": 0.38,
+                    "scenario_id": "creator_seed",
+                }
+            ]
+        )
+        result = backend.simulate(request)
+        self.assertEqual(result.status, OASIS_STATUS)
+        self.assertEqual(result.events[0]["status"], OASIS_STATUS)
+        self.assertNotIn("purchase_rate", result.events[0])
 
 
 class RepresentativeBackendTests(unittest.IsolatedAsyncioTestCase):

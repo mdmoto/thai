@@ -10,8 +10,8 @@ export function TemplatesClient() {
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div>
-        <h2 className="font-display text-base font-semibold text-primary">选择模板快速开始</h2>
-        <p className="text-sm text-muted mt-1">模板预设了常用字段和默认假设，帮助您快速提交第一个项目</p>
+        <h2 className="font-display text-base font-semibold text-primary">选择行业模板，即刻开启沙盘推演</h2>
+        <p className="text-sm text-muted mt-1">预置真实出海场景参数与竞品博弈模型，支持 1 分钟快速创建商业推演项目</p>
       </div>
 
       <Link href={DEMO_CASES[0].result_href}>

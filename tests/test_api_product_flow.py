@@ -27,10 +27,27 @@ os.environ["INVITE_CODES_JSON"] = (
     '{"TEST-INVITE":{"credits":5,"source":"AUTOMATED_TEST"}}'
 )
 
+from fastapi import HTTPException  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app.main import app, service  # noqa: E402
-from app.services.run_worker import execute_run_job  # noqa: E402
+from app import worker as worker_entrypoint  # noqa: E402
+from app.main import app, cancel_run, service  # noqa: E402
+from app.db.database import SessionLocal  # noqa: E402
+from app.db.models import (  # noqa: E402
+    ModelArtifactRecord,
+    ModelComponentRunRecord,
+    SimulationRunRecord,
+    StudyRecord,
+    User,
+)
+from app.services.component_runs import (  # noqa: E402
+    begin_native_component_run,
+    complete_component_run,
+)
+from app.services.run_worker import (  # noqa: E402
+    RetryableRunError,
+    execute_run_job,
+)
 
 
 class ApiProductFlowTests(unittest.TestCase):
@@ -58,6 +75,18 @@ class ApiProductFlowTests(unittest.TestCase):
         self.assertEqual(response.status_code, 201, response.text)
         body = response.json()
         return body, {"Authorization": f"Bearer {body['access_token']}"}
+
+    def test_worker_entrypoint_requests_cloud_retry_with_nonzero_exit(self):
+        with (
+            patch.dict(os.environ, {"RUN_JOB_ID": "runjob_retry_exit"}),
+            patch.object(worker_entrypoint, "initialize_database"),
+            patch.object(
+                worker_entrypoint,
+                "run_worker",
+                side_effect=RetryableRunError("retry same job"),
+            ),
+        ):
+            self.assertEqual(worker_entrypoint.main(), 1)
 
     def test_public_health_reports_database_connectivity(self):
         response = self.client.get("/v1/health")
@@ -890,10 +919,16 @@ class ApiProductFlowTests(unittest.TestCase):
                     },
                 )
                 self.assertEqual(run.status_code, 200, run.text)
-                account = self.client.get(
+                account_response = self.client.get(
                     "/v1/auth/me",
                     headers=headers,
-                ).json()
+                )
+                self.assertEqual(
+                    account_response.status_code,
+                    200,
+                    account_response.text,
+                )
+                account = account_response.json()
                 self.assertEqual(
                     account["credits_balance"],
                     expected_balance,
@@ -986,6 +1021,25 @@ class ApiProductFlowTests(unittest.TestCase):
             )
             dispatcher.assert_called_once()
 
+        db = SessionLocal()
+        try:
+            queued_run = (
+                db.query(SimulationRunRecord)
+                .filter(SimulationRunRecord.id == task["run_job_id"])
+                .one()
+            )
+            self.assertEqual(
+                queued_run.frozen_inputs_json["price"],
+                1290,
+            )
+            self.assertTrue(queued_run.frozen_input_digest)
+            self.assertEqual(
+                task["input_snapshot_sha256"],
+                queued_run.frozen_input_digest,
+            )
+        finally:
+            db.close()
+
         account = self.client.get("/v1/auth/me", headers=headers).json()
         self.assertEqual(account["deep_decision_runs_balance"], 0)
         self.assertEqual(account["credits_balance"], 15)
@@ -1005,8 +1059,42 @@ class ApiProductFlowTests(unittest.TestCase):
         }
         with patch(
             "app.services.run_worker.StudyService.execute_run",
-            new=AsyncMock(return_value=report),
+            new=AsyncMock(
+                side_effect=[
+                    RuntimeError("temporary upstream interruption"),
+                    report,
+                ]
+            ),
         ):
+            with self.assertRaises(RetryableRunError):
+                asyncio.run(execute_run_job(task["run_job_id"]))
+
+            retry_db = SessionLocal()
+            try:
+                retry_run = (
+                    retry_db.query(SimulationRunRecord)
+                    .filter(
+                        SimulationRunRecord.id == task["run_job_id"]
+                    )
+                    .one()
+                )
+                retry_user = (
+                    retry_db.query(User)
+                    .filter(User.id == retry_run.user_id)
+                    .one()
+                )
+                self.assertEqual(retry_run.status, "QUEUED")
+                self.assertEqual(retry_run.progress_stage, "RETRYING")
+                self.assertEqual(retry_run.attempt_count, 1)
+                self.assertEqual(retry_run.checkpoint_stage, "RETRYING")
+                self.assertTrue(retry_run.checkpoint_sha256)
+                self.assertEqual(
+                    retry_user.deep_decision_runs_balance,
+                    0,
+                )
+            finally:
+                retry_db.close()
+
             report_id = asyncio.run(execute_run_job(task["run_job_id"]))
         self.assertEqual(report_id, report["report_id"])
 
@@ -1019,6 +1107,41 @@ class ApiProductFlowTests(unittest.TestCase):
         self.assertEqual(status_body["status"], "COMPLETED")
         self.assertEqual(status_body["progress_percent"], 100)
         self.assertEqual(status_body["report_id"], report["report_id"])
+        self.assertEqual(report["model_components"][0]["status"], "COMPLETED")
+        self.assertEqual(
+            report["model_components"][0]["component"],
+            "native_simulation",
+        )
+
+        db = SessionLocal()
+        try:
+            component = (
+                db.query(ModelComponentRunRecord)
+                .filter(
+                    ModelComponentRunRecord.simulation_run_id
+                    == task["run_job_id"]
+                )
+                .one()
+            )
+            self.assertEqual(component.status, "COMPLETED")
+            self.assertTrue(component.input_manifest_sha256)
+            self.assertTrue(component.output_manifest_sha256)
+            completed_run = (
+                db.query(SimulationRunRecord)
+                .filter(
+                    SimulationRunRecord.id == task["run_job_id"]
+                )
+                .one()
+            )
+            self.assertEqual(completed_run.attempt_count, 2)
+            self.assertEqual(completed_run.checkpoint_stage, "COMPLETED")
+            self.assertEqual(
+                completed_run.checkpoint_json["study_snapshot_sha256"],
+                queued_run.frozen_input_digest,
+            )
+            self.assertEqual(completed_run.checkpoint_json["seed"], 42)
+        finally:
+            db.close()
 
         second_account, second_headers = self._register(
             "other-run-owner@example.com"
@@ -1029,6 +1152,241 @@ class ApiProductFlowTests(unittest.TestCase):
             headers=second_headers,
         )
         self.assertEqual(hidden.status_code, 404)
+
+    def test_component_manifests_persist_only_when_private_store_is_enabled(self):
+        db = SessionLocal()
+        try:
+            user = User(
+                id="usr_component_manifest_test",
+                email="component-manifest@example.com",
+                password_hash="not-used-by-this-storage-test",
+            )
+            study = StudyRecord(
+                id="study_component_manifest_test",
+                user_id=user.id,
+                name="组件产物保存验证",
+                study_type="PRODUCT_VALIDATION",
+                plan_code="PROFESSIONAL",
+                status="CONFIRMED",
+                inputs_json={"price": 990},
+                facts_json={"category": "PET"},
+            )
+            db.add_all([user, study])
+            db.flush()
+            run = SimulationRunRecord(
+                id="runjob_component_manifest_test",
+                user_id=user.id,
+                study_id=study.id,
+                request_key="component-manifest-test-key",
+                plan_code="PROFESSIONAL",
+                status="RUNNING",
+                requested_population=300_000,
+                requested_mc_rounds=220,
+                seed=42,
+                frozen_inputs_json={"customer_secret": "never-write-this"},
+                frozen_facts_json={"category": "PET"},
+                frozen_input_digest="f" * 64,
+            )
+            db.add(run)
+            db.flush()
+            with tempfile.TemporaryDirectory() as directory:
+                with patch.dict(
+                    os.environ,
+                    {
+                        "ENABLE_MODEL_ARTIFACT_PERSISTENCE": "true",
+                        "MODEL_ARTIFACT_STORE": "local",
+                        "MODEL_ARTIFACT_LOCAL_ROOT": directory,
+                    },
+                    clear=False,
+                ):
+                    component = begin_native_component_run(db, run)
+                    complete_component_run(
+                        db,
+                        component,
+                        report_id="rpt_component_manifest_test",
+                        report_run_id="run_component_manifest_test",
+                        report_payload={"summary": "safe report hash source"},
+                    )
+                    db.commit()
+                    artifacts = (
+                        db.query(ModelArtifactRecord)
+                        .filter(
+                            ModelArtifactRecord.component_run_id == component.id
+                        )
+                        .all()
+                    )
+                    self.assertEqual(
+                        {artifact.artifact_type for artifact in artifacts},
+                        {"input_manifest", "output_manifest"},
+                    )
+                    payloads = {
+                        artifact.artifact_type: Path(
+                            artifact.uri.removeprefix("file://")
+                        ).read_text("utf-8")
+                        for artifact in artifacts
+                    }
+                    self.assertNotIn(
+                        "never-write-this", payloads["input_manifest"]
+                    )
+                    self.assertIn(
+                        "study_snapshot_sha256", payloads["input_manifest"]
+                    )
+                    self.assertIn(
+                        "report_sha256", payloads["output_manifest"]
+                    )
+        finally:
+            db.close()
+
+    def test_cancelled_run_refunds_once_and_worker_cannot_publish_report(self):
+        db = SessionLocal()
+        try:
+            user = User(
+                id="usr_cancelled_run_test",
+                email="cancelled-run@example.com",
+                password_hash="not-used-by-this-cancellation-test",
+                deep_decision_runs_balance=0,
+            )
+            study = StudyRecord(
+                id="study_cancelled_run_test",
+                user_id=user.id,
+                name="取消运行验证",
+                study_type="PRODUCT_VALIDATION",
+                plan_code="PROFESSIONAL",
+                status="RUNNING",
+                inputs_json={"price": 7900},
+                facts_json={"category": "PET"},
+            )
+            db.add_all([user, study])
+            db.flush()
+            run = SimulationRunRecord(
+                id="runjob_cancelled_run_test",
+                user_id=user.id,
+                study_id=study.id,
+                request_key="cancelled-run-test-key",
+                plan_code="PROFESSIONAL",
+                status="RUNNING",
+                entitlement_code="PROFESSIONAL",
+                entitlement_reserved=1,
+                requested_population=300_000,
+                requested_mc_rounds=220,
+                seed=42,
+                frozen_inputs_json={"price": 7900},
+                frozen_facts_json={"category": "PET"},
+                frozen_input_digest="a" * 64,
+                provider_execution_name=(
+                    "projects/test-project/locations/asia-southeast1/"
+                    "jobs/market-twin-runner/executions/execution-cancel-test"
+                ),
+                progress_stage="RUNNING_SIMULATION",
+                progress_percent=70,
+            )
+            db.add(run)
+            db.commit()
+
+            with patch(
+                "app.main.cancel_run_execution",
+                return_value=True,
+            ) as provider_cancel:
+                payload = cancel_run(run.id, user, db)
+            self.assertEqual(payload["status"], "CANCELLED")
+            self.assertFalse(payload["can_cancel"])
+            self.assertTrue(payload["provider_cancel_requested"])
+            provider_cancel.assert_called_once_with(
+                run.provider_execution_name
+            )
+            db.refresh(user)
+            self.assertEqual(user.deep_decision_runs_balance, 1)
+
+            with self.assertRaises(HTTPException) as repeated:
+                cancel_run(run.id, user, db)
+            self.assertEqual(repeated.exception.status_code, 409)
+            db.refresh(user)
+            self.assertEqual(user.deep_decision_runs_balance, 1)
+
+            self.assertIsNone(asyncio.run(execute_run_job(run.id)))
+            db.refresh(run)
+            self.assertEqual(run.status, "CANCELLED")
+            self.assertIsNone(run.report_id)
+        finally:
+            db.close()
+
+    def test_worker_setup_failure_refunds_before_any_report_can_be_written(self):
+        db = SessionLocal()
+        try:
+            user = User(
+                id="usr_worker_setup_failure_test",
+                email="worker-setup-failure@example.com",
+                password_hash="not-used-by-this-worker-test",
+                deep_decision_runs_balance=0,
+            )
+            study = StudyRecord(
+                id="study_worker_setup_failure_test",
+                user_id=user.id,
+                name="产物库失败退款验证",
+                study_type="PRODUCT_VALIDATION",
+                plan_code="PROFESSIONAL",
+                status="QUEUED",
+                inputs_json={"price": 7900},
+                facts_json={"category": "PET"},
+            )
+            db.add_all([user, study])
+            db.flush()
+            run = SimulationRunRecord(
+                id="runjob_worker_setup_failure_test",
+                user_id=user.id,
+                study_id=study.id,
+                request_key="worker-setup-failure-test-key",
+                plan_code="PROFESSIONAL",
+                status="QUEUED",
+                entitlement_code="PROFESSIONAL",
+                entitlement_reserved=1,
+                requested_population=300_000,
+                requested_mc_rounds=220,
+                seed=42,
+                frozen_inputs_json={"price": 7900},
+                frozen_facts_json={"category": "PET"},
+                frozen_input_digest="b" * 64,
+            )
+            db.add(run)
+            db.commit()
+
+            with patch(
+                "app.services.run_worker.begin_native_component_run",
+                side_effect=RuntimeError("private artifact store unavailable"),
+            ):
+                with self.assertRaises(RetryableRunError):
+                    asyncio.run(execute_run_job(run.id))
+
+                db.refresh(run)
+                db.refresh(user)
+                db.refresh(study)
+                self.assertEqual(run.status, "QUEUED")
+                self.assertEqual(run.progress_stage, "RETRYING")
+                self.assertEqual(run.attempt_count, 1)
+                self.assertEqual(user.deep_decision_runs_balance, 0)
+                self.assertEqual(study.status, "RETRYING")
+                self.assertEqual(run.checkpoint_stage, "RETRYING")
+                self.assertTrue(run.checkpoint_sha256)
+                self.assertEqual(
+                    run.checkpoint_json["study_snapshot_sha256"],
+                    "b" * 64,
+                )
+                self.assertEqual(run.checkpoint_json["seed"], 42)
+
+                self.assertIsNone(asyncio.run(execute_run_job(run.id)))
+
+            db.refresh(run)
+            db.refresh(user)
+            db.refresh(study)
+            self.assertEqual(run.status, "FAILED")
+            self.assertEqual(run.progress_stage, "FAILED_RECOVERABLE")
+            self.assertEqual(run.attempt_count, 2)
+            self.assertEqual(user.deep_decision_runs_balance, 1)
+            self.assertEqual(study.status, "FAILED_RECOVERABLE")
+            self.assertEqual(run.checkpoint_stage, "FAILED_RECOVERABLE")
+            self.assertIsNone(run.report_id)
+        finally:
+            db.close()
 
     def test_basic_decision_package_grants_one_run_and_one_bonus_credit(self):
         account, headers = self._register("basic-decision@example.com")

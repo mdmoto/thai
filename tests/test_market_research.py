@@ -1,10 +1,92 @@
 import asyncio
+import os
 import unittest
+from unittest.mock import patch
 
 from data_pipeline.market_research import PublicMarketResearch
 
 
 class PublicMarketResearchTests(unittest.TestCase):
+    def test_official_firecrawl_cloud_is_not_used_without_api_key(self):
+        with patch.dict(
+            os.environ,
+            {
+                "FIRECRAWL_API_URL": "https://api.firecrawl.dev/v2",
+                "FIRECRAWL_API_KEY": "",
+                "FIRECRAWL_ALLOW_KEYLESS": "",
+            },
+        ):
+            collector = PublicMarketResearch(
+                enabled=True,
+                firecrawl_enabled=True,
+            )
+        self.assertTrue(collector.firecrawl_requested)
+        self.assertFalse(collector.firecrawl_enabled)
+
+    def test_google_grounded_search_adds_cited_public_evidence(self):
+        async def fake_pages(urls):
+            return []
+
+        async def fake_videos(query, limit):
+            return []
+
+        async def fake_grounded(queries, limit):
+            return {
+                "items": [
+                    {
+                        "source_id": "src_grounded",
+                        "source_type": "google_search_grounded_public",
+                        "collector": "Gemini Google Search Grounding",
+                        "platform": "Shopee",
+                        "title": "shopee.co.th",
+                        "url": "https://example.com/cited-result",
+                        "collected_at": "2026-08-01T00:00:00Z",
+                        "evidence_grade": "D",
+                        "content_sha256": "d" * 64,
+                        "excerpt": "ราคา ฿1,290 รีวิวจากผู้ใช้ในประเทศไทย",
+                        "observed_fields": ["citation_title"],
+                        "market_signals": {"prices": ["฿1,290"]},
+                        "limitation": "公开检索引用。",
+                    }
+                ],
+                "completed_queries": len(queries),
+                "failed_queries": [],
+                "request_count": 3,
+                "providers_used": [
+                    {"id": "vertex_service_account", "mode": "vertex_adc"}
+                ],
+            }
+
+        collector = PublicMarketResearch(
+            enabled=True,
+            page_reader=fake_pages,
+            video_searcher=fake_videos,
+            firecrawl_enabled=False,
+            grounded_searcher=fake_grounded,
+            google_grounded_search_enabled=True,
+        )
+        bundle = asyncio.run(
+            collector.collect(
+                {
+                    "name": "泰国宠物饮水机",
+                    "inputs": {"category": "宠物饮水机"},
+                    "facts": {"product_name": "QuietFlow"},
+                },
+                "PROFESSIONAL",
+            )
+        )
+
+        self.assertEqual(bundle["source_count"], 1)
+        self.assertEqual(bundle["platform_counts"], {"Shopee": 1})
+        grounded = next(
+            item
+            for item in bundle["collectors"]
+            if item["collector"]
+            == "Gemini Grounding with Google Search"
+        )
+        self.assertEqual(grounded["status"], "succeeded")
+        self.assertEqual(grounded["request_count"], 3)
+
     def test_anti_bot_page_is_not_accepted_as_evidence(self):
         item = PublicMarketResearch._page_evidence(
             "https://www.lazada.co.th/products/petkit-eversweet.html",

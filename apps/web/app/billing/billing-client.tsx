@@ -226,11 +226,14 @@ export function BillingClient() {
     <div className="p-5 sm:p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <span className="eyebrow">决策次数、赠送积分与已核验订单</span>
-          <h1 className="text-2xl font-semibold text-white mt-2">购买决策服务</h1>
+          <span className="eyebrow">🇹🇭 泰国出海商业沙盘算力中心</span>
+          <h1 className="text-2xl font-semibold text-white mt-2">选择最适合您的出海推演算力包</h1>
           <p className="text-sm text-neutral-400 mt-2 max-w-2xl">
-            创建订单后使用页面上的固定收款码付款，再提交付款人和时间。
-            当前没有自动回调，只有人工确认实际到账后才会发放次数和赠送积分。
+            根据企业商业推演规模灵活订阅。支持 5,000 ~ 300,000 仿真人群的大规模消费对抗演算，在资本投产前探明盈利红线。
+            <br />
+            <span className="text-blue-300 font-medium text-xs mt-2 inline-block">
+              ✅ 企业对公发票支持 ｜ ✅ 官方安全核验保障 ｜ ✅ 海外对公账户支付
+            </span>
           </p>
         </div>
         <Card className="!p-4 min-w-64">
