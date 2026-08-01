@@ -340,7 +340,8 @@
           ]
         }
       ],
-      "ranking_basis": "购买决策价值，不按采集便利度或单纯访问量排序"
+      "ranking_basis": "购买决策价值，不按采集便利度或单纯访问量排序",
+      "scope": "product_purchase_acquisition"
     },
     "started_at": "BASELINE_STARTED_AT",
     "status": "not_applicable",

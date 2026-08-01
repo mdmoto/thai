@@ -252,6 +252,108 @@ class PublicMarketResearchTests(unittest.TestCase):
         self.assertEqual(firecrawl["query_count"], 12)
         self.assertEqual(firecrawl["estimated_credits"], 24)
 
+    def test_offline_study_uses_local_discovery_sources_only(self):
+        searched_queries = []
+
+        async def fake_pages(urls):
+            self.assertEqual(urls, [])
+            return []
+
+        async def fake_videos(query, limit):
+            self.assertIn("精品咖啡馆", query)
+            return []
+
+        async def fake_consumer_search(query, limit):
+            searched_queries.append(query)
+            return [
+                {
+                    "source_id": "src_local_social",
+                    "source_type": "consumer_public_search",
+                    "collector": "Firecrawl",
+                    "platform": "Facebook",
+                    "title": "清迈宁曼精品咖啡馆探店讨论",
+                    "url": "https://www.facebook.com/example/local-cafe",
+                    "collected_at": "2026-08-01T00:00:00Z",
+                    "evidence_grade": "D",
+                    "content_sha256": "e" * 64,
+                    "limitation": "公开搜索摘要。",
+                    "evidence_role": "消费者公开检索线索",
+                }
+            ]
+
+        async def fake_grounded(queries, limit):
+            return {
+                "items": [
+                    {
+                        "source_id": "src_wrong_scope",
+                        "source_type": "google_search_grounded_public",
+                        "collector": "Gemini Google Search Grounding",
+                        "platform": "Shopee",
+                        "title": "无关的电商商品页",
+                        "url": "https://shopee.co.th/product/1/2",
+                        "collected_at": "2026-08-01T00:00:00Z",
+                        "evidence_grade": "D",
+                        "content_sha256": "f" * 64,
+                        "limitation": "公开检索引用。",
+                    }
+                ],
+                "completed_queries": len(queries),
+                "failed_queries": [],
+                "request_count": 1,
+                "providers_used": [],
+            }
+
+        collector = PublicMarketResearch(
+            enabled=True,
+            page_reader=fake_pages,
+            video_searcher=fake_videos,
+            consumer_searcher=fake_consumer_search,
+            grounded_searcher=fake_grounded,
+            google_grounded_search_enabled=True,
+        )
+        bundle = asyncio.run(
+            collector.collect(
+                {
+                    "name": "清迈精品咖啡馆选址比较",
+                    "study_type": "SITE_COMPARISON",
+                    "inputs": {
+                        "category": "CAFE",
+                        "research_urls": [
+                            "https://shopee.co.th/unrelated-product"
+                        ],
+                        "candidate_locations": [
+                            {"label": "Nimman Road, Chiang Mai"},
+                            {"label": "Chiang Mai Old City"},
+                        ],
+                    },
+                    "facts": {"product_name": "精品咖啡馆"},
+                },
+                "PROFESSIONAL",
+            )
+        )
+
+        joined_queries = " ".join(searched_queries).casefold()
+        self.assertIn("site:tiktok.com", joined_queries)
+        self.assertNotIn("shopee", joined_queries)
+        self.assertNotIn("lazada", joined_queries)
+        self.assertNotIn("tiktok shop", joined_queries)
+        self.assertEqual(
+            bundle["source_strategy"]["scope"],
+            "offline_venue_acquisition",
+        )
+        self.assertEqual(
+            bundle["source_strategy"]["priority_order"][0]["sources"],
+            ["Google Maps", "公开地点资料", "顾客公开评价"],
+        )
+        self.assertEqual(bundle["platform_counts"], {"Facebook": 1})
+        self.assertNotIn(
+            "Lazada / Shopee public commerce evidence",
+            [item["collector"] for item in bundle["collectors"]],
+        )
+        self.assertTrue(
+            any("电商平台证据" in warning for warning in bundle["warnings"])
+        )
+
     def test_professional_run_combines_public_pages_and_video_metadata(self):
         async def fake_pages(urls):
             self.assertEqual(urls, ["https://example.com/product"])

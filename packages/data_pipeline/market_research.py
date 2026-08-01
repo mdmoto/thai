@@ -64,6 +64,42 @@ SOURCE_STRATEGY = [
         "role": "产品规格与官方主张基线",
     },
 ]
+OFFLINE_STUDY_TYPES = {
+    "VENUE_STUDY",
+    "SITE_COMPARISON",
+    "OPERATING_SCENARIO",
+    "RESTAURANT",
+    "CAFE",
+    "BAR",
+    "RETAIL",
+}
+OFFLINE_SOURCE_STRATEGY = [
+    {
+        "priority": 1,
+        "sources": ["Google Maps", "公开地点资料", "顾客公开评价"],
+        "role": "地点、周边设施、营业信息与真实到店体验线索",
+    },
+    {
+        "priority": 2,
+        "sources": ["Facebook", "LINE", "TikTok", "Instagram"],
+        "role": "本地社群、探店内容与到店发现路径",
+    },
+    {
+        "priority": 3,
+        "sources": ["泰国媒体", "Pantip", "公开评测页", "交通与旅游公开资料"],
+        "role": "商圈需求、出行便利、口碑主题与第三方验证",
+    },
+    {
+        "priority": 4,
+        "sources": ["品牌官网", "物业或商圈公开页"],
+        "role": "门店主张、场地与商圈公开基线",
+    },
+    {
+        "priority": 5,
+        "sources": ["YouTube"],
+        "role": "长视频探店或行业背景补充，不作为优先采集来源",
+    },
+]
 PLATFORM_PRIORITY = {
     "Shopee": (1, "电商购买证据"),
     "Lazada": (1, "电商购买证据"),
@@ -122,6 +158,10 @@ CONSUMER_SIGNAL_TERMS = (
     "cons",
     "unboxing",
 )
+
+
+def _is_offline_study(study: Mapping[str, Any]) -> bool:
+    return str(study.get("study_type") or "").upper() in OFFLINE_STUDY_TYPES
 URL_TOKEN_STOPWORDS = {
     "collection",
     "collections",
@@ -388,9 +428,8 @@ class PublicMarketResearch:
             else bool(grounded_searcher)
             or grounded_configured in {"1", "true", "yes", "on"}
         )
-        self.grounded_searcher = (
-            grounded_searcher or self._search_google_grounded
-        )
+        self._uses_default_grounded_search = grounded_searcher is None
+        self.grounded_searcher = grounded_searcher or self._search_google_grounded
         configured_page_limit = max_pages or os.environ.get(
             "MARKET_RESEARCH_MAX_PAGES",
             "20",
@@ -480,8 +519,49 @@ class PublicMarketResearch:
         return _clean_text(" ".join(plain) + " Thailand รีวิว review", 240)
 
     @staticmethod
+    def _offline_location_labels(study: Mapping[str, Any]) -> List[str]:
+        facts = study.get("facts") or {}
+        inputs = study.get("inputs") or {}
+        candidates = (
+            facts.get("candidate_locations")
+            or inputs.get("candidate_locations")
+            or []
+        )
+        values: List[Any] = []
+        for candidate in candidates:
+            if isinstance(candidate, Mapping):
+                values.extend(
+                    candidate.get(key)
+                    for key in (
+                        "label",
+                        "name",
+                        "address",
+                        "formatted_address",
+                    )
+                )
+        location = facts.get("location") or inputs.get("location")
+        if isinstance(location, Mapping):
+            values.extend(
+                location.get(key)
+                for key in ("label", "name", "address", "formatted_address")
+            )
+        return [
+            _clean_text(value, 140)
+            for value in _unique(values)
+            if _clean_text(value, 140)
+        ][:5]
+
+    @staticmethod
     def _consumer_search_query(study: Mapping[str, Any]) -> str:
         base = PublicMarketResearch._search_query(study)
+        if _is_offline_study(study):
+            locations = PublicMarketResearch._offline_location_labels(study)
+            location_context = " ".join(locations) or "Thailand"
+            return _clean_text(
+                f"{base} {location_context} รีวิวร้าน บรรยากาศ ราคา "
+                "Google Maps Facebook TikTok การเดินทาง ที่จอดรถ",
+                320,
+            )
         return _clean_text(
             f"{base} ราคา ข้อดี ข้อเสีย ใช้จริง ซื้อที่ไหน "
             "Shopee Lazada TikTok Thailand",
@@ -502,6 +582,30 @@ class PublicMarketResearch:
             100,
         )
         subject = _clean_text(" ".join(_unique([product, category])), 180)
+        if _is_offline_study(study):
+            venue_type = _clean_text(
+                facts.get("venue_type") or inputs.get("venue_type") or category,
+                100,
+            )
+            locations = PublicMarketResearch._offline_location_labels(study)
+            location_context = " ".join(locations) or "Thailand"
+            query_templates = [
+                f"{subject} {location_context} รีวิวร้าน บรรยากาศ ราคา",
+                f"{venue_type} {location_context} Google Maps รีวิว การเดินทาง ที่จอดรถ",
+                f"{location_context} ร้านน่าไป คนท้องถิ่น นักท่องเที่ยว ช่วงเวลา",
+                f"site:facebook.com {subject} {location_context} รีวิว ความคิดเห็น ไทย",
+                f"site:tiktok.com {subject} {location_context} รีวิวร้าน ไทย",
+                f"site:instagram.com {subject} {location_context} Thailand review",
+                f"{location_context} การเดินทาง รถสาธารณะ ที่จอดรถ คนเดิน",
+                f"{location_context} คาเฟ่ ร้านอาหาร คู่แข่ง ราคา รีวิว Thailand",
+                f"{location_context} tourism local demand cafe restaurant Thailand",
+                f"{venue_type} Thailand Pantip รีวิว ร้านแนะนำ ปัญหา",
+                f"{venue_type} Thailand operating hours queue service review",
+                f"{subject} {location_context} local community event demand",
+            ]
+            return _unique(
+                _clean_text(query, 320) for query in query_templates
+            )
         competitors = [
             value
             for value in _unique(
@@ -592,12 +696,33 @@ class PublicMarketResearch:
             ],
         }
 
+    async def _run_grounded_search(
+        self,
+        queries: List[str],
+        study: Mapping[str, Any],
+    ) -> Dict[str, Any]:
+        """Keep injected test/search adapters compatible with the two-arg API."""
+        if self._uses_default_grounded_search:
+            return await self._search_google_grounded(
+                queries,
+                self.max_search_results,
+                offline_venue=_is_offline_study(study),
+            )
+        return await self.grounded_searcher(
+            queries,
+            self.max_search_results,
+        )
+
     async def collect(
         self,
         study: Mapping[str, Any],
         plan_code: str,
     ) -> Dict[str, Any]:
         started_at = _utc_now()
+        is_offline = _is_offline_study(study)
+        source_strategy = (
+            OFFLINE_SOURCE_STRATEGY if is_offline else SOURCE_STRATEGY
+        )
         base = {
             "version": RESEARCH_VERSION,
             "status": "not_applicable",
@@ -613,8 +738,17 @@ class PublicMarketResearch:
             "collectors": [],
             "warnings": [],
             "source_strategy": {
-                "ranking_basis": "购买决策价值，不按采集便利度或单纯访问量排序",
-                "priority_order": SOURCE_STRATEGY,
+                "ranking_basis": (
+                    "到店与选址决策价值，不按采集便利度或单纯访问量排序"
+                    if is_offline
+                    else "购买决策价值，不按采集便利度或单纯访问量排序"
+                ),
+                "scope": (
+                    "offline_venue_acquisition"
+                    if is_offline
+                    else "product_purchase_acquisition"
+                ),
+                "priority_order": source_strategy,
                 "discovery_channel": (
                     "Firecrawl 消费者公开检索；只作为公开线索，不代表平台后台数据"
                 ),
@@ -643,8 +777,16 @@ class PublicMarketResearch:
             return base
         base["version"] = PROFESSIONAL_RESEARCH_VERSION
         base["source_strategy"]["discovery_channel"] = (
-            "Gemini Google Search Grounding 与已配置的 Firecrawl；"
-            "只作为公开线索，不代表平台后台数据"
+            (
+                "Gemini Google Search Grounding 与已配置的 Firecrawl，"
+                "仅检索线下地点、商圈与到店发现公开线索；"
+                "不把电商平台当作线下渠道证据"
+            )
+            if is_offline
+            else (
+                "Gemini Google Search Grounding 与已配置的 Firecrawl；"
+                "只作为公开线索，不代表平台后台数据"
+            )
         )
         if not self.enabled:
             base["status"] = "disabled"
@@ -652,6 +794,21 @@ class PublicMarketResearch:
             return base
 
         urls = self._research_urls(study)[: self.max_pages]
+        scope_warnings: List[str] = []
+        if is_offline:
+            marketplace_urls = [
+                url
+                for url in urls
+                if _hostname_platform(
+                    urllib.parse.urlsplit(url).hostname or ""
+                )
+                in MARKETPLACE_PLATFORMS
+            ]
+            urls = [url for url in urls if url not in marketplace_urls]
+            if marketplace_urls:
+                scope_warnings.append(
+                    "线下研究已忽略电商商品页；请提供地点、商圈或公开社群页面作为补充来源。"
+                )
         query = base["query"]
         consumer_queries = self._consumer_search_queries(study)[
             : self.max_search_queries
@@ -678,10 +835,7 @@ class PublicMarketResearch:
             )
         if self.google_grounded_search_enabled:
             grounded_task = asyncio.create_task(
-                self.grounded_searcher(
-                    consumer_queries,
-                    self.max_search_results,
-                )
+                self._run_grounded_search(consumer_queries, study)
             )
         else:
             grounded_task = asyncio.create_task(
@@ -711,7 +865,7 @@ class PublicMarketResearch:
 
         evidence: List[Dict[str, Any]] = []
         collectors: List[Dict[str, Any]] = []
-        warnings: List[str] = []
+        warnings: List[str] = list(scope_warnings)
         if isinstance(page_results, Exception):
             warnings.append(f"公开网页采集失败：{type(page_results).__name__}")
             page_items: List[Dict[str, Any]] = []
@@ -863,27 +1017,29 @@ class PublicMarketResearch:
                 ),
             }
         )
-        collectors.extend(
-            [
-                {
-                    "collector": "Meta / TikTok public discovery",
-                    "status": "public_only",
-                    "requested": 0,
-                    "result_count": 0,
-                    "fallback_result": "search_index_and_official_embed_only",
-                },
+        collectors.append(
+            {
+                "collector": "Meta / TikTok public discovery",
+                "status": "public_only",
+                "requested": 0,
+                "result_count": 0,
+                "fallback_result": "search_index_and_official_embed_only",
+            }
+        )
+        if not is_offline:
+            collectors.append(
                 {
                     "collector": "Lazada / Shopee public commerce evidence",
                     "status": "public_only",
                     "requested": 0,
                     "result_count": 0,
                     "fallback_result": "public_product_metadata_only",
-                },
-            ]
-        )
+                }
+            )
 
         unique_evidence: List[Dict[str, Any]] = []
         seen_urls = set()
+        skipped_marketplace_evidence = 0
         for item in evidence:
             url = item.get("url")
             canonical_url = _canonical_url(str(url or ""))
@@ -892,6 +1048,9 @@ class PublicMarketResearch:
             seen_urls.add(canonical_url)
             item["url"] = canonical_url
             platform = str(item.get("platform") or "公开网页")
+            if is_offline and platform in MARKETPLACE_PLATFORMS:
+                skipped_marketplace_evidence += 1
+                continue
             priority, role = PLATFORM_PRIORITY.get(
                 platform,
                 PLATFORM_PRIORITY["公开网页"],
@@ -925,6 +1084,12 @@ class PublicMarketResearch:
                 grade_score + observed_score + signal_score + excerpt_score,
             )
             unique_evidence.append(item)
+        if skipped_marketplace_evidence:
+            warnings.append(
+                "线下研究已排除 "
+                f"{skipped_marketplace_evidence} 条电商平台证据，"
+                "避免把线上购买路径混入到店判断。"
+            )
         unique_evidence.sort(
             key=lambda item: (
                 int(item.get("decision_priority") or 99),
@@ -1245,6 +1410,7 @@ class PublicMarketResearch:
         self,
         queries: List[str],
         limit: int,
+        offline_venue: bool = False,
     ) -> Dict[str, Any]:
         providers = self._grounded_providers()
         if not providers:
@@ -1276,18 +1442,36 @@ class PublicMarketResearch:
         providers_used: List[Dict[str, str]] = []
         for start in range(0, len(queries), group_size):
             group = queries[start : start + group_size]
-            prompt = (
-                "Search the public web for current, decision-useful Thailand "
-                "market evidence for the query clusters below. Prioritize "
-                "Thai-language sources, Shopee, Lazada, TikTok, Facebook, "
-                "Instagram, Pantip, Thai review sites, and official brand "
-                "pages. Look for prices, ratings, recurring complaints, "
-                "warranty, delivery, product comparisons, and real usage "
-                "contexts. Cite every factual claim. Do not claim that public "
-                "likes, views, reviews, or displayed sold counts equal verified "
-                "sales or conversion. Return a concise Thai evidence summary.\n\n"
-                + "\n".join(f"- {query}" for query in group)
-            )
+            if offline_venue:
+                prompt = (
+                    "Search the public web for current, decision-useful "
+                    "Thailand physical-venue and location evidence for the "
+                    "query clusters below. Prioritize Thai-language Google Maps "
+                    "or public place listings, customer reviews, Facebook/LINE "
+                    "local communities, TikTok or Instagram venue-discovery "
+                    "content, Pantip, Thai local media, transport, tourism and "
+                    "official venue or district pages. Look for accessibility, "
+                    "parking, opening context, nearby competition, local versus "
+                    "tourist demand, recurring experience themes and public "
+                    "location facts. Cite every factual claim. Do not use Shopee, "
+                    "Lazada, TikTok Shop, delivery marketplaces, displayed sales, "
+                    "likes, views or reviews as a measure of actual footfall, "
+                    "sales or conversion. Return a concise Thai evidence summary.\n\n"
+                    + "\n".join(f"- {query}" for query in group)
+                )
+            else:
+                prompt = (
+                    "Search the public web for current, decision-useful Thailand "
+                    "market evidence for the query clusters below. Prioritize "
+                    "Thai-language sources, Shopee, Lazada, TikTok, Facebook, "
+                    "Instagram, Pantip, Thai review sites, and official brand "
+                    "pages. Look for prices, ratings, recurring complaints, "
+                    "warranty, delivery, product comparisons, and real usage "
+                    "contexts. Cite every factual claim. Do not claim that public "
+                    "likes, views, reviews, or displayed sold counts equal verified "
+                    "sales or conversion. Return a concise Thai evidence summary.\n\n"
+                    + "\n".join(f"- {query}" for query in group)
+                )
             response: Any = None
             last_error = "ProviderUnavailable"
             for candidate_index in range(provider_index, len(providers)):

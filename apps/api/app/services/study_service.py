@@ -73,6 +73,27 @@ SOCIAL_ACCESS_PATH = (
     _data_catalog_root() / "social" / "platform_access_v1.json"
 )
 
+OFFLINE_STUDY_TYPES = {
+    "VENUE_STUDY",
+    "SITE_COMPARISON",
+    "OPERATING_SCENARIO",
+    "RESTAURANT",
+    "CAFE",
+    "BAR",
+    "RETAIL",
+}
+
+OFFLINE_SEGMENT_CHANNELS = {
+    "AFFLUENT_DIGITAL": "Google Maps / 本地搜索",
+    "TREND_EXPLORER": "TikTok 探店内容",
+    "VALUE_SEEKER": "商圈自然到店 / 周边可见性",
+    "EVIDENCE_SEEKER": "Google Maps / 本地搜索",
+    "SOCIAL_COMMERCE": "Facebook / LINE 本地社群",
+    "FAMILY_PRAGMATIST": "Facebook / LINE 本地社群",
+    "LOCAL_TRUST_OFFLINE": "商圈自然到店 / 周边可见性",
+    "MAINSTREAM": "Google Maps / 本地搜索",
+}
+
 
 SEGMENT_COPY = {
     "AFFLUENT_DIGITAL": {
@@ -971,6 +992,7 @@ class StudyService:
         self,
         agent_research: Mapping[str, Any],
         representatives: Sequence[Mapping[str, Any]],
+        study_type: str,
     ) -> List[Dict[str, Any]]:
         lookup = {
             str(item["representative_id"]): item
@@ -986,6 +1008,16 @@ class StudyService:
                 f"{profile.get('income_tier', '收入层未知')}"
             )
             barriers = response.get("purchase_barriers", [])
+            segment_id = str(profile.get("segment_id") or "MAINSTREAM")
+            preferred_channel = response.get(
+                "preferred_channel",
+                "unspecified",
+            )
+            if str(study_type).upper() in OFFLINE_STUDY_TYPES:
+                preferred_channel = OFFLINE_SEGMENT_CHANNELS.get(
+                    segment_id,
+                    OFFLINE_SEGMENT_CHANNELS["MAINSTREAM"],
+                )
             voices.append(
                 {
                     "persona": persona,
@@ -1001,10 +1033,7 @@ class StudyService:
                         if "price" in barriers
                         else "价格不是首要阻碍"
                     ),
-                    "preferred_channel": response.get(
-                        "preferred_channel",
-                        "unspecified",
-                    ),
+                    "preferred_channel": preferred_channel,
                     "representative_id": response["representative_id"],
                     "monthly_income_thb": round(income, 0),
                     "source_type": agent_research.get("source_type"),
@@ -1095,6 +1124,7 @@ class StudyService:
     def _enrich_segments(
         self,
         segments: Sequence[Mapping[str, Any]],
+        study_type: str,
     ) -> List[Dict[str, Any]]:
         output = []
         for segment in segments:
@@ -1104,6 +1134,11 @@ class StudyService:
                 SEGMENT_COPY["MAINSTREAM"],
             )
             copy.update(text)
+            if str(study_type).upper() in OFFLINE_STUDY_TYPES:
+                copy["preferred_channel"] = OFFLINE_SEGMENT_CHANNELS.get(
+                    str(segment.get("segment_id") or "MAINSTREAM"),
+                    OFFLINE_SEGMENT_CHANNELS["MAINSTREAM"],
+                )
             output.append(copy)
         return output
 
@@ -1377,7 +1412,10 @@ class StudyService:
         report_id = f"rpt_{uuid.uuid4().hex[:8]}"
         scenarios = list(sim_results["scenarios"])
         best_scenario = max(scenarios, key=lambda item: item["revenue_idx"])
-        segments = self._enrich_segments(sim_results["segments"])
+        segments = self._enrich_segments(
+            sim_results["segments"],
+            str(study["study_type"]),
+        )
         best_segment = segments[0] if segments else None
         metrics = sim_results["metric_intervals"]
         calibration_lineage = sim_results["model_lineage"]["calibration"]
@@ -1558,6 +1596,7 @@ class StudyService:
             "consumer_voices": self._consumer_voices(
                 agent_research,
                 representatives,
+                str(study["study_type"]),
             ),
             "sample_profile": sample_profile,
             "market_dynamics": sim_results["market_dynamics"],
@@ -1718,6 +1757,23 @@ class StudyService:
                 **study["facts"],
                 "study_type": study["study_type"],
                 "model_study_type": model_study_type,
+                "channel_scope": (
+                    "offline_venue_acquisition"
+                    if str(study["study_type"]).upper()
+                    in OFFLINE_STUDY_TYPES
+                    else "product_purchase_acquisition"
+                ),
+                "allowed_preferred_channels": (
+                    [
+                        "商圈自然到店 / 周边可见性",
+                        "Google Maps / 本地搜索",
+                        "Facebook / LINE 本地社群",
+                        "TikTok 探店内容",
+                    ]
+                    if str(study["study_type"]).upper()
+                    in OFFLINE_STUDY_TYPES
+                    else []
+                ),
                 "brand_awareness": study["facts"].get(
                     "brand_awareness",
                     profile["defaults"]["brand_awareness"],

@@ -110,6 +110,45 @@ class StudyServiceTests(unittest.TestCase):
             ["Known Brand"],
         )
 
+    def test_offline_reports_override_marketplace_preferred_channels(self):
+        service = StudyService()
+        segments = service._enrich_segments(
+            [{"segment_id": "VALUE_SEEKER", "share": 0.3}],
+            "SITE_COMPARISON",
+        )
+        voices = service._consumer_voices(
+            {
+                "source_type": "structured_llm_qualitative_evidence",
+                "responses": [
+                    {
+                        "representative_id": "rep_1",
+                        "purchase_barriers": [],
+                        "preferred_channel": "Shopee Thailand",
+                    }
+                ],
+            },
+            [
+                {
+                    "representative_id": "rep_1",
+                    "segment_id": "VALUE_SEEKER",
+                    "age_group": "25-34",
+                    "province": "Chiang Mai",
+                    "income_tier": "middle",
+                    "monthly_income_thb": 30000,
+                }
+            ],
+            "SITE_COMPARISON",
+        )
+
+        self.assertEqual(
+            segments[0]["preferred_channel"],
+            "商圈自然到店 / 周边可见性",
+        )
+        self.assertEqual(
+            voices[0]["preferred_channel"],
+            "商圈自然到店 / 周边可见性",
+        )
+
     def test_service_runs_without_mock_personas(self):
         previous_key = os.environ.get("GEMINI_API_KEY")
         os.environ["GEMINI_API_KEY"] = ""

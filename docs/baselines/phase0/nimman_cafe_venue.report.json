@@ -999,7 +999,7 @@
     "collectors": [],
     "completed_at": "BASELINE_COMPLETED_AT",
     "consumer_search_queries": [],
-    "consumer_search_query": "CMAI Cafe GENERIC_CONSUMER_PRODUCT Thailand รีวิว review ราคา ข้อดี ข้อเสีย ใช้จริง ซื้อที่ไหน Shopee Lazada TikTok Thailand",
+    "consumer_search_query": "CMAI Cafe GENERIC_CONSUMER_PRODUCT Thailand รีวิว review Chiang Mai, Nimman Road รีวิวร้าน บรรยากาศ ราคา Google Maps Facebook TikTok การเดินทาง ที่จอดรถ",
     "evidence": [],
     "platform_counts": {},
     "query": "CMAI Cafe GENERIC_CONSUMER_PRODUCT Thailand รีวิว review",
@@ -1009,48 +1009,51 @@
       "priority_order": [
         {
           "priority": 1,
-          "role": "价格、销量提示、评价与竞品证据",
+          "role": "地点、周边设施、营业信息与真实到店体验线索",
           "sources": [
-            "Shopee",
-            "Lazada",
-            "TikTok Shop"
+            "Google Maps",
+            "公开地点资料",
+            "顾客公开评价"
           ]
         },
         {
           "priority": 2,
-          "role": "泰国本地讨论、社群情绪、短视频与直播反馈",
+          "role": "本地社群、探店内容与到店发现路径",
           "sources": [
             "Facebook",
+            "LINE",
             "TikTok",
             "Instagram"
           ]
         },
         {
           "priority": 3,
-          "role": "需求场景、问题词、趋势与第三方验证",
+          "role": "商圈需求、出行便利、口碑主题与第三方验证",
           "sources": [
-            "Google 搜索",
             "泰国媒体",
-            "论坛",
-            "公开评测页"
+            "Pantip",
+            "公开评测页",
+            "交通与旅游公开资料"
           ]
         },
         {
           "priority": 4,
-          "role": "长测评、安装体验与耐用性补充证据",
+          "role": "门店主张、场地与商圈公开基线",
           "sources": [
-            "YouTube"
+            "品牌官网",
+            "物业或商圈公开页"
           ]
         },
         {
           "priority": 5,
-          "role": "产品规格与官方主张基线",
+          "role": "长视频探店或行业背景补充，不作为优先采集来源",
           "sources": [
-            "品牌官网"
+            "YouTube"
           ]
         }
       ],
-      "ranking_basis": "购买决策价值，不按采集便利度或单纯访问量排序"
+      "ranking_basis": "到店与选址决策价值，不按采集便利度或单纯访问量排序",
+      "scope": "offline_venue_acquisition"
     },
     "started_at": "BASELINE_STARTED_AT",
     "status": "not_applicable",
@@ -2797,7 +2800,7 @@
       ],
       "name": "高收入数字消费人群",
       "population": 11,
-      "preferred_channel": "Lazada / 品牌旗舰店",
+      "preferred_channel": "Google Maps / 本地搜索",
       "price_sensitivity": 0.34,
       "purchase_rate": 0.1262,
       "segment_id": "AFFLUENT_DIGITAL",
@@ -2817,7 +2820,7 @@
       ],
       "name": "社交电商影响人群",
       "population": 2,
-      "preferred_channel": "TikTok Shop / Facebook 内容",
+      "preferred_channel": "Facebook / LINE 本地社群",
       "price_sensitivity": 0.727,
       "purchase_rate": 0.1208,
       "segment_id": "SOCIAL_COMMERCE",
@@ -2836,7 +2839,7 @@
       ],
       "name": "主流谨慎消费人群",
       "population": 34,
-      "preferred_channel": "Shopee / Lazada",
+      "preferred_channel": "Google Maps / 本地搜索",
       "price_sensitivity": 0.624,
       "purchase_rate": 0.1067,
       "segment_id": "MAINSTREAM",
@@ -2856,7 +2859,7 @@
       ],
       "name": "谨慎查证型人群",
       "population": 13,
-      "preferred_channel": "品牌官网 / Lazada 官方店",
+      "preferred_channel": "Google Maps / 本地搜索",
       "price_sensitivity": 0.807,
       "purchase_rate": 0.104,
       "segment_id": "EVIDENCE_SEEKER",
@@ -2875,7 +2878,7 @@
       ],
       "name": "本地信任线下人群",
       "population": 4,
-      "preferred_channel": "线下零售 / 门店",
+      "preferred_channel": "商圈自然到店 / 周边可见性",
       "price_sensitivity": 0.38,
       "purchase_rate": 0.1025,
       "segment_id": "LOCAL_TRUST_OFFLINE",
@@ -2894,7 +2897,7 @@
       ],
       "name": "价格敏感价值人群",
       "population": 33,
-      "preferred_channel": "Shopee Thailand",
+      "preferred_channel": "商圈自然到店 / 周边可见性",
       "price_sensitivity": 0.824,
       "purchase_rate": 0.0877,
       "segment_id": "VALUE_SEEKER",
@@ -2913,7 +2916,7 @@
       ],
       "name": "年轻潮流探索人群",
       "population": 3,
-      "preferred_channel": "TikTok Shop / 社交电商",
+      "preferred_channel": "TikTok 探店内容",
       "price_sensitivity": 0.589,
       "purchase_rate": 0.0832,
       "segment_id": "TREND_EXPLORER",

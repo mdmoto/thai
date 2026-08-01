@@ -237,6 +237,18 @@ class GeminiAgentGateway:
         business_questions: Sequence[str],
         profiles: Sequence[Mapping[str, Any]],
     ) -> str:
+        is_offline_venue = (
+            product_info.get("channel_scope")
+            == "offline_venue_acquisition"
+        )
+        channel_instruction = (
+            "This is a physical venue study. For preferred_channel, choose "
+            "only one supplied local visit or discovery path. Do not describe "
+            "Shopee, Lazada, TikTok Shop, delivery, or a marketplace as the "
+            "purchase path."
+            if is_offline_venue
+            else ""
+        )
         return (
             "You are producing structured weak labels for a Thailand market "
             "choice model. Evaluate each supplied representative independently. "
@@ -245,6 +257,7 @@ class GeminiAgentGateway:
             "chain-of-thought; provide only a concise observable reason. "
             "Probabilities describe awareness and consideration hypotheses and "
             "will be given low weight until validated against observed data.\n\n"
+            f"{channel_instruction}\n\n"
             f"Offer and context:\n{json.dumps(product_info, ensure_ascii=False)}\n\n"
             f"Business questions:\n{json.dumps(list(business_questions), ensure_ascii=False)}\n\n"
             "Representative profiles:\n"

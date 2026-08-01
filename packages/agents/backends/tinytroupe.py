@@ -68,6 +68,8 @@ PRODUCT_FIELDS = (
     "competitors",
     "scenarios",
     "public_market_evidence",
+    "channel_scope",
+    "allowed_preferred_channels",
 )
 
 
@@ -920,6 +922,14 @@ def run_tinytroupe_experiment(
         list(questions),
         ensure_ascii=False,
     )
+    channel_scope_instruction = (
+        "This is a physical venue study. preferred_channel must be one of "
+        "the supplied local visit or discovery paths. Do not name Shopee, "
+        "Lazada, TikTok Shop, delivery, or a marketplace as the purchase "
+        "path."
+        if product.get("channel_scope") == "offline_venue_acquisition"
+        else ""
+    )
     results = []
     budget_stop = None
     maximum_persona_attempts = max(
@@ -1031,6 +1041,7 @@ purchase_barriers (max 5), preferred_competitor, attribute_importance
 qualitative_reason, confidence, sentiment (positive/neutral/negative),
 preferred_channel. representative_id must be "{representative_id}".
 Probabilities and importance values must be numbers from 0 to 1.
+{channel_scope_instruction}
 """
                 agent.listen(
                     prompt,

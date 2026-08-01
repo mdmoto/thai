@@ -30,6 +30,23 @@ def _response(representative_id: str):
 
 
 class GeminiGatewayTests(unittest.IsolatedAsyncioTestCase):
+    async def test_offline_prompt_excludes_marketplace_purchase_paths(self):
+        gateway = GeminiAgentGateway(api_keys=[], vertex_fallback=False)
+        prompt = gateway._build_prompt(
+            {
+                "channel_scope": "offline_venue_acquisition",
+                "allowed_preferred_channels": [
+                    "Google Maps / 本地搜索",
+                    "TikTok 探店内容",
+                ],
+            },
+            [],
+            [],
+        )
+
+        self.assertIn("physical venue study", prompt)
+        self.assertIn("Do not describe Shopee, Lazada, TikTok Shop", prompt)
+
     async def test_api_keys_are_prioritized_before_vertex_adc(self):
         gateway = GeminiAgentGateway(
             api_keys=["AQ.primary-test", "AIza-secondary-test"],
