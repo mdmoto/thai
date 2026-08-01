@@ -41,6 +41,7 @@ class OasisExperimentLimits:
     maximum_output_tokens: int
     maximum_cost_minor: int
     maximum_wall_time_seconds: int
+    cost_currency: str = "USD"
 
 
 class SocialSimulationBackend(Protocol):

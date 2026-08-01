@@ -1,0 +1,39 @@
+substitutions:
+  _REGION: asia-southeast1
+  _REPOSITORY: market-twin
+  _IMAGE_TAG: phase5-oasis-preflight
+  _CACHE_TAG: phase5-oasis-experiment-20260801-r2
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - >-
+        docker pull
+        ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-social-job:${_CACHE_TAG}
+        || true
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --cache-from
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-social-job:${_CACHE_TAG}
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-social-job:${_IMAGE_TAG}
+      - -f
+      - Dockerfile.oasis
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-social-job:${_IMAGE_TAG}
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-social-job:${_IMAGE_TAG}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+serviceAccount: projects/$PROJECT_ID/serviceAccounts/market-twin-security-build@$PROJECT_ID.iam.gserviceaccount.com

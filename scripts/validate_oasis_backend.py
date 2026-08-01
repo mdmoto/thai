@@ -36,6 +36,7 @@ from simulation_core.social_backends.oasis import (
     OASIS_VERSION,
     OasisSocialSimulationBackend,
 )
+from simulation_core.social_backends.oasis_metrics import aggregate_oasis_sqlite
 
 
 class _ManualOnlyBackend(BaseModelBackend):
@@ -80,10 +81,6 @@ def _synthetic_profiles(agent_count: int) -> list[dict[str, Any]]:
         }
         for index in range(agent_count)
     ]
-
-
-def _scalar(connection: sqlite3.Connection, table: str) -> int:
-    return int(connection.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0])
 
 
 async def _manual_protocol(agent_count: int) -> dict[str, int]:
@@ -145,22 +142,17 @@ async def _manual_protocol(agent_count: int) -> dict[str, int]:
             await environment.close()
 
         with sqlite3.connect(database_path) as connection:
-            interactions = _scalar(connection, "like") + _scalar(
-                connection, "dislike"
-            )
-            participants = int(
-                connection.execute(
-                    "SELECT COUNT(DISTINCT user_id) FROM trace"
-                ).fetchone()[0]
-            )
+            aggregate = aggregate_oasis_sqlite(connection)
             return {
-                "post_count": _scalar(connection, "post"),
-                "recommendation_records": _scalar(connection, "rec"),
-                "interaction_records": interactions,
-                "participating_agents": participants,
-                "like_records": _scalar(connection, "like"),
-                "dislike_records": _scalar(connection, "dislike"),
-                "trace_records": _scalar(connection, "trace"),
+                "post_count": aggregate["posts"],
+                "recommendation_records": aggregate[
+                    "recommendation_records"
+                ],
+                "interaction_records": aggregate["interactions"],
+                "participating_agents": aggregate["participants"],
+                "like_records": aggregate["likes"],
+                "dislike_records": aggregate["dislikes"],
+                "trace_records": aggregate["trace_records"],
             }
 
 
@@ -186,19 +178,19 @@ def _events_from_protocol(
         },
         {
             "time_step": 1,
-            "metric": "simulated_social_interaction",
+            "metric": "simulated_interaction",
             "value": float(interactions),
             "scenario_id": "manual-action-technical-validation",
         },
         {
             "time_step": 1,
-            "metric": "simulated_social_diffusion",
+            "metric": "simulated_diffusion",
             "value": float(counts["participating_agents"]),
             "scenario_id": "manual-action-technical-validation",
         },
         {
             "time_step": 1,
-            "metric": "simulated_social_sentiment",
+            "metric": "simulated_sentiment",
             "value": sentiment,
             "scenario_id": "manual-action-technical-validation",
         },
@@ -214,6 +206,7 @@ def _run(agent_count: int) -> dict[str, Any]:
         maximum_output_tokens=1,
         maximum_cost_minor=0,
         maximum_wall_time_seconds=120,
+        cost_currency="USD",
     )
     request = SocialSimulationRequest(
         seed=42,

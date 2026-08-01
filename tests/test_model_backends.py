@@ -178,8 +178,9 @@ class NativeBackendContractTests(unittest.TestCase):
                     "time_steps": 3,
                     "maximum_input_tokens": 20_000,
                     "maximum_output_tokens": 4_000,
-                    "maximum_cost_minor": 5_000,
+                    "maximum_cost_minor": 500,
                     "maximum_wall_time_seconds": 300,
+                    "cost_currency": "USD",
                 }
             },
             native_runner=lambda: [],
@@ -198,8 +199,9 @@ class NativeBackendContractTests(unittest.TestCase):
                     "time_steps": 3,
                     "maximum_input_tokens": 20_000,
                     "maximum_output_tokens": 4_000,
-                    "maximum_cost_minor": 5_000,
+                    "maximum_cost_minor": 500,
                     "maximum_wall_time_seconds": 300,
+                    "cost_currency": "USD",
                 }
             },
             native_runner=lambda: [],
@@ -208,7 +210,7 @@ class NativeBackendContractTests(unittest.TestCase):
             runner=lambda _limits, _request: [
                 {
                     "time_step": 1,
-                    "metric": "simulated_social_diffusion",
+                    "metric": "simulated_diffusion",
                     "value": 0.38,
                     "scenario_id": "creator_seed",
                 }

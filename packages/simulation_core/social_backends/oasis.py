@@ -29,7 +29,7 @@ MAX_TIME_STEPS = 12
 MAX_ACTIVATION_PROBABILITY = 0.35
 MAX_INPUT_TOKENS = 250_000
 MAX_OUTPUT_TOKENS = 50_000
-MAX_COST_MINOR = 100_000
+MAX_COST_MINOR = 2_500
 MAX_WALL_TIME_SECONDS = 1_200
 
 OasisRunner = Callable[
@@ -58,6 +58,7 @@ def oasis_limits_from_inputs(
             maximum_output_tokens=int(raw["maximum_output_tokens"]),
             maximum_cost_minor=int(raw["maximum_cost_minor"]),
             maximum_wall_time_seconds=int(raw["maximum_wall_time_seconds"]),
+            cost_currency=str(raw.get("cost_currency", "USD")).upper(),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise RuntimeError(
@@ -78,6 +79,8 @@ def oasis_limits_from_inputs(
         raise RuntimeError("OASIS output-token limit exceeds the research ceiling")
     if not 0 <= limits.maximum_cost_minor <= MAX_COST_MINOR:
         raise RuntimeError("OASIS cost limit exceeds the research ceiling")
+    if limits.cost_currency != "USD":
+        raise RuntimeError("OASIS research cost currency must be USD")
     if not 1 <= limits.maximum_wall_time_seconds <= MAX_WALL_TIME_SECONDS:
         raise RuntimeError("OASIS wall-time limit exceeds the research ceiling")
     return limits
@@ -88,9 +91,9 @@ def _validate_event(event: Mapping[str, Any]) -> dict[str, Any]:
 
     allowed_metrics = {
         "simulated_social_exposure",
-        "simulated_social_interaction",
-        "simulated_social_diffusion",
-        "simulated_social_sentiment",
+        "simulated_interaction",
+        "simulated_diffusion",
+        "simulated_sentiment",
     }
     forbidden = {
         "purchase_rate",

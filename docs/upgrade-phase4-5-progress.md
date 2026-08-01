@@ -7,9 +7,10 @@ ChoiceLearn, PopulationSim, and TinyTroupe adapters.  It is deliberately
 conservative: a component that has not been validated or provisioned remains
 disabled rather than silently becoming part of a paid customer report.
 
-Sequence note: Phase 4 is the active workstream.  The OASIS files described
-below are dependency and protocol preflight only; they do not mean Phase 5 has
-started, passed acceptance, or entered production.
+Sequence note: Phase 4 entered production on 2026-08-01. Phase 5 subsequently
+completed one isolated OASIS provider experiment and prior-diffusion
+comparison. It did not enter production; the final findings and current
+decision are recorded in `docs/upgrade-phase5-report.md`.
 
 ## Phase 4: durable runs and artifacts
 
@@ -80,18 +81,19 @@ diffusion, and sentiment.  They must never be presented as observed reach,
 customer behaviour, purchase probability, sales, revenue, or forecast
 accuracy.
 
-## Remaining production gates
+## Gate status after Phase 5 audit
 
-1. Provision a private, versioned GCS artifact bucket with least-privilege
-   service access and retention controls, then explicitly enable artifact
-   persistence in staging.
-2. Run one staging Cloud Run Job at 300,000 people with real public-evidence
-   collection and the configured representative-agent provider.  Record
-   Cloud Monitoring billable time, peak memory, external API/LLM spend,
-   artifact size, report latency, retry, and provider-side cancellation.
-3. After Phase 4 production acceptance, run an OASIS experiment with an
-   approved LLM provider, frozen budget,
-   Thai synthetic personas, and a prior-diffusion comparison.  Review cost,
-   reproducibility, explainability, licensing, and data-processing risk.
-4. Keep `ENABLE_OASIS=false` unless the owner explicitly approves the
-   evidence and all production release gates.
+1. The private, versioned GCS artifact bucket is provisioned with public
+   access prevention, uniform access, soft delete, and least-privilege runtime
+   object access. Production artifact persistence is enabled for hash-only
+   manifests.
+2. Two isolated 300,000-person Cloud Run staging runs completed, including
+   retry, cancellation, billable-time, memory, evidence and artifact checks.
+3. OASIS failed its dependency-security production gate. Its Gemini secret
+   mount and secret-access permission were removed; it remains available only
+   for zero-LLM technical validation while a minimal safe image is pending.
+4. The non-OASIS API, Runner, Choice-Learn, PopulationSim and TinyTroupe locks
+   were upgraded and rescanned with no known vulnerabilities. Details and
+   candidate image digests are in `docs/upgrade-security-hardening-report.md`.
+5. `ENABLE_OASIS=false` remains mandatory until a later audit explicitly
+   passes every OASIS production release gate.

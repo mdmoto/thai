@@ -22,3 +22,5 @@ scipy
 # TinyPerson even though the bounded CMAI runner does not display notebooks.
 ipython
 google-auth
+cryptography==49.0.0
+pyOpenSSL==26.3.0

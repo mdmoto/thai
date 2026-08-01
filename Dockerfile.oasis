@@ -14,6 +14,8 @@ RUN python -m pip install --no-cache-dir --no-deps \
 COPY packages /packages
 COPY docs/third-party-notices/OASIS-LICENSE.txt /licenses/OASIS-LICENSE.txt
 COPY scripts/validate_oasis_backend.py ./validate_oasis_backend.py
+COPY scripts/probe_oasis_provider.py ./probe_oasis_provider.py
+COPY scripts/run_oasis_experiment.py ./run_oasis_experiment.py
 
 ENV PYTHONPATH="/app:/packages" \
     HOME="/home/appuser" \

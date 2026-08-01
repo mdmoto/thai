@@ -29,3 +29,8 @@ steps:
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:${_IMAGE_TAG}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+serviceAccount: projects/$PROJECT_ID/serviceAccounts/market-twin-security-build@$PROJECT_ID.iam.gserviceaccount.com

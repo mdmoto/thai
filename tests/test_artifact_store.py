@@ -246,18 +246,18 @@ class ComputeImageIsolationTests(unittest.TestCase):
             "psycopg",
         ):
             self.assertNotIn(unrelated, requirements)
-        api_dockerfile = self._text("dockerfile.api")
+        api_dockerfile = self._text("Dockerfile.api")
         self.assertNotIn("requirements-choice-job", api_dockerfile)
         self.assertIn("--require-hashes", api_dockerfile)
 
     def test_every_image_uses_an_independent_lock_file(self) -> None:
         expected = {
-            "dockerfile.api": "requirements-api.lock",
-            "dockerfile.runner": "requirements-runner-native.lock",
-            "dockerfile.choice": "requirements-choice-job.lock",
-            "dockerfile.population": "requirements-population-job.lock",
-            "dockerfile.tinytroupe": "requirements-tinytroupe-job.lock",
-            "dockerfile.oasis": "requirements-oasis-job.lock",
+            "Dockerfile.api": "requirements-api.lock",
+            "Dockerfile.runner": "requirements-runner-native.lock",
+            "Dockerfile.choice": "requirements-choice-job.lock",
+            "Dockerfile.population": "requirements-population-job.lock",
+            "Dockerfile.tinytroupe": "requirements-tinytroupe-job.lock",
+            "Dockerfile.oasis": "requirements-oasis-job.lock",
         }
         for dockerfile, lock_file in expected.items():
             content = self._text(dockerfile)
@@ -266,7 +266,7 @@ class ComputeImageIsolationTests(unittest.TestCase):
 
     def test_oasis_isolated_image_pins_compatible_research_runtime(self) -> None:
         requirements = self._text("apps/api/requirements-oasis-job.txt")
-        dockerfile = self._text("dockerfile.oasis")
+        dockerfile = self._text("Dockerfile.oasis")
         api_requirements = self._text("apps/api/requirements-api.txt")
         validation = self._text("scripts/validate_oasis_backend.py")
 
@@ -290,6 +290,15 @@ class ComputeImageIsolationTests(unittest.TestCase):
         self.assertIn("dockerfile.api", cloud_build)
         self.assertIn("dockerfile.runner", cloud_build)
         self.assertIn("market-twin-native-runner", cloud_build)
+        self.assertIn("market-twin-release-build", cloud_build)
+        self.assertIn("cloud_logging_only", cloud_build)
+
+    def test_security_preflight_uses_a_non_deployer_identity(self) -> None:
+        cloud_build = self._text("cloudbuild.security.yaml")
+        self.assertIn("market-twin-security-build", cloud_build)
+        self.assertIn("cloud_logging_only", cloud_build)
+        self.assertIn("pip-audit==2.10.0", cloud_build)
+        self.assertNotIn("gcloud run deploy", cloud_build)
 
 
 if __name__ == "__main__":

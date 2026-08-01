@@ -95,3 +95,8 @@ steps:
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-api:$BUILD_ID
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/market-twin-native-runner:$BUILD_ID
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+serviceAccount: projects/$PROJECT_ID/serviceAccounts/market-twin-release-build@$PROJECT_ID.iam.gserviceaccount.com

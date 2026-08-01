@@ -55,7 +55,9 @@ export default function HomePage() {
         <div className="max-w-4xl">
           <span className="eyebrow text-blue-300">🇹🇭 泰国出海商业沙盘系统</span>
           <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05] text-white mt-5">
-            在资本投入前，完成 6.6 亿次真实消费推演
+            在资本投入前
+            <br />
+            完成 6.6 亿次真实消费推演
           </h1>
           <p className="text-base sm:text-lg text-neutral-400 leading-relaxed max-w-2xl mt-6">
             从曼谷核心商圈选址，到 Shopee/TikTok 爆品定价。30 万 AI 数字消费者在正式上线前，为你还原真实的市场博弈与转化全貌。

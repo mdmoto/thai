@@ -13,8 +13,14 @@ build
 dist
 apps/web
 tests
-docs
-scripts
+docs/*
+!docs/third-party-notices/
+docs/third-party-notices/*
+!docs/third-party-notices/OASIS-LICENSE.txt
+scripts/*
+!scripts/validate_oasis_backend.py
+!scripts/probe_oasis_provider.py
+!scripts/run_oasis_experiment.py
 infra
 docker-compose.yml
 cloudbuild.yaml
