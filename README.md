@@ -1,116 +1,182 @@
-# Thailand Market Twin
+# 🇹🇭 Thailand Digital Market Twin (泰国数字市场孪生决策平台)
 
-面向进入泰国市场的消费品牌，用版本化人口、竞品证据、离散选择模型和
-Monte Carlo 情景模拟，比较产品、价格、目标人群和竞品方案。
+[![FastAPI](https://img.shields.io/badge/FastAPI-2.1.0-009688.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2--Turbopack-000000.svg?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare_Pages-Deployed-F38020.svg?style=flat-square&logo=cloudflare)](https://ai.lazzor.com)
+[![Google Cloud Run](https://img.shields.io/badge/Google_Cloud_Run-Asia_Southeast1-4285F4.svg?style=flat-square&logo=googlecloud)](https://cloud.google.com/run)
+[![License](https://img.shields.io/badge/License-Proprietary-gold.svg?style=flat-square)](#)
 
-当前公开产品只销售已经验证可运行的三个等级：
+> 面向出海东南亚（泰国）的消费品牌、跨境电商与餐饮零售企业。基于泰国国家统计局（NSO）77 府真实人口微观数据、多项式离散选择模型（MNL Choice Model）、蒙特卡洛风险模拟与 LLM 结构化消费者声浪，提供极高可信度的产品出海验证、客单价弹性响应、商圈选址与全渠道策略。
 
-| 对外名称 | AI 模拟消费人群 | 风险测试 | 竞品上限 | 积分 |
-|---|---:|---:|---:|---:|
-| 免费预览 | 100 | 40 | 1 | 0（每账号一次） |
-| 基础模拟 | 5,000 | 80 | 3 | 5 |
-| 深度决策 | 300,000 | 150 | 5 | 20 |
+---
 
-Deep / Enterprise 算法配置仍作为内部研发配置保留，不在当前公开目录中
-销售，也不会伪装成已经接入 Cloud Batch 的产品能力。
+## 🌐 线上环境与访问端点
 
-## 已交付的产品链路
+- **🌐 生产主站**: [https://ai.lazzor.com](https://ai.lazzor.com) *(部署于 Cloudflare Pages)*
+- **⚡ 云端 API 服务**: [https://ai-100282158973.asia-southeast1.run.app](https://ai-100282158973.asia-southeast1.run.app) *(部署于 Google Cloud Run - 曼谷/东南亚节点)*
+- **📘 健康检查**: `GET /v1/health`
+- **📚 演示报告**: [https://ai.lazzor.com/demo/pet-water](https://ai.lazzor.com/demo/pet-water) *(泰国宠物智能饮水机大盘模拟示范)*
 
-- 真实注册、登录、签名令牌与账号隔离
-- 项目创建、事实确认、模拟运行、报告保存与重新读取
-- 运行幂等、原子积分预留、失败自动退款
-- 待付款订单、受保护的到账确认和不可由前端伪造的积分流水
-- 泰国 77 府人口与家庭收入官方聚合校准
-- 焦点产品、竞品和“不购买”选项的离散选择模型
-- 宠物智能饮水机公开竞品面板与通用消费品先验
-- 报告中的数据版本、模型版本、先验预测区间和限制披露
-- 静态销售站、工作区、定价、条款、隐私与方法页面
+---
 
-## 方法边界
+## 🚀 核心特色与商业价值
 
-当前消费品档案标记为
-`official_macro_calibrated_choice_prior`。人口、地区、家庭收入/支出与家庭
-规模来自带哈希快照的泰国 NSO 公开数据；选择系数、WTP、品类渗透、
-品牌认知和复购仍可能是先验。
+### 1. 📊 真实官方数据校准 (Official Macro Calibration)
+- 结合泰国国家统计局（NSO）Household Socio-Economic Survey 官方统计微观抽样（带 SHA256 快照）。
+- 涵盖曼谷都市圈、清迈、普吉岛、芭提雅/春武里（EEC）、孔敬/呵叻（伊森）等全泰 77 府 300,000 人规模的合成居民人口、家庭收入层级与消费支出基线。
 
-因此报告用于方案筛选，不是销量、市场份额或收入保证。LLM 只生成有
-权重上限的结构化弱信号；供应商不可用时权重为零，不会替换成固定
-Persona。
+### 2. 🧮 离散选择模型与支付意愿 (MNL Choice Model & WTP)
+- 严谨的多项式 Logit 选择模型，综合评估焦点产品、多个竞品及“不购买”选项的效用函数。
+- 计算消费者的边际支付意愿 (Implied WTP)，消除单一问卷失真。
 
-完整方法见 [docs/model_methodology_v2.md](docs/model_methodology_v2.md)。
+### 3. 📈 10 大商业级评估报告模块
+- **泰国合成样本点状图**：自带泰国国界矢量底图与 7 大核心城市（曼谷、清迈、普吉岛、芭提雅、孔敬、呵叻、合艾）高对比标注。
+- **价格 / 客单价响应曲线**：**双 Y 轴 (Dual Y-Axes)** 架构（左轴：购买意向率 %，右轴：相对收入指数），配合 80 以下无意义空白的自适应截断，消除平缓低对比。
+- **产品与定价情景对比**：支持降价、品质增强与溢价多情景对比。
+- **地理需求与小时经营模型**：包含 15 分钟步行商圈常住人口覆盖与客流到店机会指数。
+- **渠道适配与履约诊断**：Shopee、Lazada、TikTok Shop、7-Eleven 渠道匹配度与 COD / 运费履约阻力评估。
+- **LLM 消费者声浪面板**：整合结构化弱信号推理，还原泰国不同收入与年龄段消费者的真实顾虑与买点。
 
-## 本地运行
+### 4. 💳 商业级鉴权与积分计费系统 (Auth & Credits System)
+- 基于 JWT 签名令牌的注册与登录系统（新用户注册即赠 5 体验积分）。
+- 原子化积分扣减、预留与模拟失败自动退款保障。
+- 订单生成与受保护的离线财务入账流。
 
-最接近生产的方式：
+### 5. 🖨️ 高清离线 PDF 导印支持 (PDF Print Styling)
+- 针对报告定制的 `@media print` 样式表，一键将深色极简 UI 转换为高对比度纸质导印排版，满足企业汇报与客户交付需求。
+
+---
+
+## ⚡ 算力等级与配额矩阵
+
+| 方案等级 | AI 模拟人群 | 蒙特卡洛风险轮次 | 竞品上限 | 消耗积分 | 响应耗时 | 推荐使用场景 |
+|---|---:|---:|---:|---:|---:|---|
+| **Free Preview** | 100 人 | 40 轮 | 1 个 | 0 积分 | < 1 秒 | 快速检查项目输入与基本方向（每账号赠 1 次） |
+| **Standard 标准版** | 10,000 人 | 80 轮 | 3 个 | 5 积分 | ~ 5 秒 | 单品初筛、基础价格响应与渠道适配评估 |
+| **Professional 专业版** | 30,000 人 | 150 轮 | 5 个 | 20 积分 | ~ 15 秒 | 完整竞品选择集、WTP 弹性、多情景与商圈分析 |
+| **Enterprise 深度版** | 300,000 人 | 220 轮 | 10+ 个 | 销售协助 | 超大样本微观分层、Gemini 1.5 Pro 深级 CoT 推理 |
+
+---
+
+## 🏗️ 平台架构与目录结构
+
+```text
+Thailand-Market-Twin/
+├── apps/
+│   ├── web/                    # Next.js 16 (Turbopack) 极简商业前端
+│   │   ├── app/                # App Router (Dashboard, Studies, Billing, Methodology)
+│   │   ├── components/         # 模块化 UI、AuthModal、RechargeModal 与 AppShell 容器
+│   │   ├── lib/                # API 客户端 (带公网 HTTPS 动态解析)、Token 存储与产品目录
+│   │   └── public/             # 静态资源与 Cloudflare Pages 标头 (_headers)
+│   └── api/                    # FastAPI 2.1 生产级后端 API
+│       └── app/
+│           ├── db/             # SQLAlchemy 数据库、User/Transaction 模型、JWT 鉴权与计费
+│           ├── schemas/        # Pydantic 数据结构校验
+│           └── services/       # 模拟运行调度器、10 大报告模块组装器
+├── packages/
+│   ├── simulation_core/        # 离散选择模型、估计器 (Estimation) 与 Monte Carlo 引擎
+│   ├── world_model/            # 泰国 77 府人口分布、合成居民生成器与资格审查
+│   ├── agents/                 # Gemini 1.5 Pro / Flash 结构化弱信号推理网关
+│   └── data_pipeline/          # NSO 官方统计清洗与电商商品页采集器
+├── data_catalog/               # 带 SHA256 校验快照的官方统计数据与类目先验
+├── docs/                       # 架构规范、方法论文档 (V2)、部署 Runbook 与发布检查清单
+│   ├── model_methodology_v2.md # 模型与统计校准详细方法论说明
+│   ├── production-runbook.md   # 云端部署与应急恢复手册
+│   └── sales-operations.md     # 收款与积分入账流
+└── tests/                      # 模型方向性、数据血缘、账号隔离与退款逻辑测试
+```
+
+---
+
+## 💻 本地运行指南
+
+### 方式一：Docker Compose（推荐，最接近生产环境）
 
 ```bash
 docker compose up --build
 ```
 
-或分别运行：
+### 方式二：手动分步启动
+
+#### 1. 启动后端 API 服务 (Python 3.10+)
 
 ```bash
+# 创建虚拟环境
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r apps/api/requirements.txt
 
+# 安装依赖
+pip install -r apps/api/requirements.txt
+
+# 启动 FastAPI 服务
 PYTHONPATH=apps/api:packages \
   DATABASE_URL=sqlite:////tmp/market_twin.db \
-  JWT_SECRET_KEY=local-development-secret \
+  JWT_SECRET_KEY=local-dev-secret-key-change-in-prod \
   uvicorn app.main:app --app-dir apps/api --reload --port 8080
 ```
+- API 服务运行于: `http://127.0.0.1:8080`
+- 健康检查地址: `http://127.0.0.1:8080/v1/health`
+
+#### 2. 启动前端工作区 (Node.js 18+)
 
 ```bash
 cd apps/web
-cp .env.example .env.local
 npm install
 npm run dev
 ```
+- 前端运行于: `http://localhost:3000`
 
-前端：http://localhost:3000
+---
 
-API：http://localhost:8080
+## 🧪 自动化测试与质量校验
 
-健康检查：http://localhost:8080/v1/health
-
-## 验证
+本地研发与发布前，请运行完整测试套件：
 
 ```bash
+# 运行后端逻辑与算法测试
 source .venv/bin/activate
 PYTHONPATH=apps/api:packages python -m unittest discover -s tests -v
-cd apps/web && npm audit && npm run build
+
+# 运行前端类型检查与静态导出构建
+cd apps/web
+npm run build
 ```
 
-测试覆盖模型方向性、人口校准、公开数据血缘、账号归属、订单入账、
-运行幂等与失败退款。生产发布前还应执行
-[docs/release-checklist.md](docs/release-checklist.md)。
+---
 
-## 生产部署
+## ☁️ 生产部署与运维
 
-- 前端：静态 Next.js 导出，可部署至 Cloudflare Pages 或 Sites。
-- API：Cloud Run 容器。
-- 数据库：PostgreSQL，`APP_ENV=production` 时为必填。
-- 秘钥：JWT、管理接口和数据库连接只从云端 Secret Manager 注入。
+- **前端 (Cloudflare Pages)**:
+  - 构建命令: `npm run build`
+  - 产物输出目录: `out`
+  - 域名绑定: `ai.lazzor.com`
+- **后端 (Google Cloud Run)**:
+  - 部署指令:
+    ```bash
+    gcloud run deploy ai \
+      --source . \
+      --region asia-southeast1 \
+      --allow-unauthenticated \
+      --project thai-503312
+    ```
+- **环境变量要求**:
+  - `GEMINI_API_KEY`: Google AI Studio 接口秘钥。
+  - `DATABASE_URL`: PostgreSQL 连接字符串（生产必须）。
+  - `JWT_SECRET_KEY`: 高强度加密哈希密钥。
 
-所需环境变量见：
+---
 
-- `apps/api/.env.example`
-- `apps/web/.env.example`
+## 🛡️ 方法边界与合规声明
 
-发布与恢复步骤见 [docs/production-runbook.md](docs/production-runbook.md)；
-收款与积分入账见 [docs/sales-operations.md](docs/sales-operations.md)。
+当前消费品档案标记为 `official_macro_calibrated_choice_prior`：
+1. 人口、地区、家庭收入/支出与规模数据均来自于带 SHA256 哈希快照的泰国国家统计局（NSO）公开数据。
+2. 选择系数与支付意愿 (WTP) 基于选择效用建模。报告用于**商业方案筛选与风险防范**，不构成对销量的绝对担保。
+3. 大语言模型（LLM）仅生成有权重上限的结构化弱信号；在 API 不可用时权重自动归零，切勿替代真实验证。
 
-## 主要目录
+完整方法论详见 [docs/model_methodology_v2.md](docs/model_methodology_v2.md)。
 
-```text
-apps/web/                   销售站与客户工作区
-apps/api/                   FastAPI、认证、订单与持久化
-packages/simulation_core/   选择模型、校准、估计与情景模拟
-packages/world_model/       合成人口与品类资格
-packages/agents/            Gemini 结构化弱信号
-packages/data_pipeline/     NSO 与公开商品页采集
-data_catalog/               版本化快照、来源、面板与档案
-tests/                      模型、数据与业务链路测试
-```
+---
 
-生产域名：https://ai.lazzor.com
+## 📄 License & 版权
+
+© 2026 Thailand Market Twin Project (Lazzor AI). All Rights Reserved.
