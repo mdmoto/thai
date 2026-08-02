@@ -1321,10 +1321,42 @@ function SampleProfileSection({ data }: { data: ReportData }) {
                 return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.4" fill="#67d9c4" opacity=".7" />;
               })}
             </g>
+            {/* 泰国主要城市标注 */}
+            {[
+              { name: "清迈", lat: 18.7883, lng: 98.9853, dx: 7, dy: 3, anchor: "start" },
+              { name: "曼谷", lat: 13.7563, lng: 100.5018, dx: -7, dy: 3, anchor: "end" },
+              { name: "芭提雅 / 春武里", lat: 12.9236, lng: 100.8825, dx: 7, dy: 3, anchor: "start" },
+              { name: "普吉岛", lat: 7.8804, lng: 98.3923, dx: 7, dy: 3, anchor: "start" },
+              { name: "孔敬", lat: 16.4322, lng: 102.8236, dx: 7, dy: 3, anchor: "start" },
+              { name: "呵叻", lat: 14.9799, lng: 102.0978, dx: 7, dy: 3, anchor: "start" },
+              { name: "合艾", lat: 7.0086, lng: 100.4747, dx: 7, dy: 3, anchor: "start" },
+            ].map(city => {
+              const pos = mapPoint(city.lng, city.lat);
+              return (
+                <g key={city.name} className="pointer-events-none">
+                  <circle cx={pos.x} cy={pos.y} r="5" fill="#f43f5e" opacity="0.35" />
+                  <circle cx={pos.x} cy={pos.y} r="2.5" fill="#fb7185" stroke="#ffffff" strokeWidth="1" />
+                  <text
+                    x={pos.x + city.dx}
+                    y={pos.y + city.dy}
+                    textAnchor={city.anchor as "start" | "end" | "middle"}
+                    fill="#ffffff"
+                    fontSize="10"
+                    fontWeight="600"
+                    stroke="#08111f"
+                    strokeWidth="3"
+                    paintOrder="stroke"
+                  >
+                    {city.name}
+                  </text>
+                </g>
+              );
+            })}
           </svg>
           <div className="flex flex-wrap gap-3 text-[10px] text-neutral-400">
             <span><i className="inline-block w-2 h-2 rounded-full bg-teal-300 mr-1" />品类目标样本</span>
-            <span><i className="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1" />其他样本</span>
+            <span><i className="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1" />其他大盘样本</span>
+            <span><i className="inline-block w-2 h-2 rounded-full bg-rose-400 mr-1" />泰国主要城市 (曼谷/清迈/普吉/芭提雅等)</span>
           </div>
           <p className="text-[10px] leading-relaxed text-neutral-500 mt-3">{sample.location_disclosure}</p>
           <p className="text-[9px] leading-relaxed text-neutral-600 mt-2">
