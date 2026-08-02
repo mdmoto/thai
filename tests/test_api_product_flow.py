@@ -733,6 +733,21 @@ class ApiProductFlowTests(unittest.TestCase):
         self.assertEqual(created.status_code, 201, created.text)
         self.assertEqual(created.json()["code"], "PARTNER-ONE")
 
+        # Single-character Chinese names are valid and must not be rejected by
+        # the API after the browser has accepted them.
+        single_character = self.client.post(
+            "/v1/admin/invite-codes",
+            headers=admin_headers,
+            json={
+                "code": "WANG-1",
+                "source_name": "王",
+                "owner_name": "李",
+                "commission_percent": 10,
+                "bonus_credits": 0,
+            },
+        )
+        self.assertEqual(single_character.status_code, 201, single_character.text)
+
         customer, customer_headers = self._register(
             "partner-customer@example.com",
             invite_code="partner-one",

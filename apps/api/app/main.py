@@ -353,8 +353,11 @@ class InviteCodeRequest(BaseModel):
         max_length=40,
         pattern=r"^[A-Za-z0-9-]+$",
     )
-    source_name: str = Field(min_length=2, max_length=120)
-    owner_name: str = Field(min_length=2, max_length=120)
+    # A single Han character is a valid personal or business name.  The UI
+    # already collects a separate source and owner, so requiring two Unicode
+    # characters here only turns valid Chinese names into an opaque 422.
+    source_name: str = Field(min_length=1, max_length=120)
+    owner_name: str = Field(min_length=1, max_length=120)
     owner_contact: Optional[str] = Field(default=None, max_length=160)
     commission_percent: float = Field(default=0, ge=0, le=100)
     bonus_credits: int = Field(default=0, ge=0, le=1000)
@@ -368,7 +371,10 @@ class InviteCodeRequest(BaseModel):
     @field_validator("source_name", "owner_name")
     @classmethod
     def normalize_required_text(cls, value: str) -> str:
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("请输入来源名称和分成对象")
+        return normalized
 
     @field_validator("owner_contact", "notes")
     @classmethod
