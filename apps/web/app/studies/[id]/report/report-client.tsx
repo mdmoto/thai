@@ -1009,6 +1009,19 @@ function SegmentsSection({ data }: { data: ReportData }) {
 function PriceElasticitySection({ data }: { data: ReportData }) {
   const elasticity = data.price_elasticity || [];
   const terms = reportTerms(data);
+
+  const rates = elasticity.map(e => Number(e.purchase_rate) * (Number(e.purchase_rate) <= 1 ? 100 : 1));
+  const revs = elasticity.map(e => Number(e.revenue_idx));
+  const minRate = rates.length ? Math.max(0, Math.floor(Math.min(...rates) * 0.8 * 10) / 10) : 0;
+  const maxRate = rates.length ? Math.ceil(Math.max(...rates) * 1.25 * 10) / 10 : 10;
+  const minRev = revs.length ? Math.max(40, Math.floor(Math.min(...revs) * 0.88)) : 80;
+  const maxRev = revs.length ? Math.ceil(Math.max(...revs) * 1.12) : 120;
+
+  const chartData = elasticity.map(e => ({
+    ...e,
+    purchase_rate_pct: Number(e.purchase_rate) <= 1 ? Number(e.purchase_rate) * 100 : Number(e.purchase_rate),
+  }));
+
   return (
     <div className="space-y-6">
       <div>
@@ -1017,15 +1030,31 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
       </div>
 
       <Card>
-        <div className="h-64 pt-4">
+        <div className="h-72 pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={elasticity} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 25, left: 10, bottom: 15 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#242424" />
-              <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: "售价（泰铢）", position: "insideBottom", offset: -5, fill: "#86868b", fontSize: 10 }} />
-              <YAxis tick={{ fill: "#86868b", fontSize: 11 }} />
-              <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} />
-              <Line type="monotone" dataKey="purchase_rate" name={terms.intent} stroke="#6ba0ff" strokeWidth={2} dot={{ r: 3, fill: "#6ba0ff" }} />
-              <Line type="monotone" dataKey="revenue_idx" name="相对收入指数" stroke="#5dd8c1" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3, fill: "#5dd8c1" }} />
+              <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: "售价（泰铢 THB）", position: "insideBottom", offset: -8, fill: "#86868b", fontSize: 10 }} />
+              <YAxis
+                yAxisId="left"
+                orientation="left"
+                domain={[minRate, maxRate]}
+                tick={{ fill: "#6ba0ff", fontSize: 10 }}
+                tickFormatter={v => `${Number(v).toFixed(1)}%`}
+                label={{ value: `${terms.intent} (%)`, angle: -90, position: "insideLeft", offset: -5, fill: "#6ba0ff", fontSize: 10 }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                domain={[minRev, maxRev]}
+                tick={{ fill: "#5dd8c1", fontSize: 10 }}
+                tickFormatter={v => `${Math.round(Number(v))}`}
+                label={{ value: "相对收入指数 (基准=100)", angle: 90, position: "insideRight", offset: -5, fill: "#5dd8c1", fontSize: 10 }}
+              />
+              <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} formatter={(value, name) => name === terms.intent ? [`${Number(value).toFixed(1)}%`, name] : [`${Number(value).toFixed(1)}`, name]} />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+              <Line yAxisId="left" type="monotone" dataKey="purchase_rate_pct" name={terms.intent} stroke="#6ba0ff" strokeWidth={2.5} dot={{ r: 4, fill: "#6ba0ff" }} />
+              <Line yAxisId="right" type="monotone" dataKey="revenue_idx" name="相对收入指数" stroke="#5dd8c1" strokeWidth={2.5} strokeDasharray="4 4" dot={{ r: 4, fill: "#5dd8c1" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -1045,6 +1074,20 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
 
 function ScenariosSection({ data }: { data: ReportData }) {
   const terms = reportTerms(data);
+  const scenarios = data.scenarios || [];
+
+  const rates = scenarios.map(s => Number(s.purchase_rate) * (Number(s.purchase_rate) <= 1 ? 100 : 1));
+  const revs = scenarios.map(s => Number(s.revenue_idx));
+  const minRate = rates.length ? Math.max(0, Math.floor(Math.min(...rates) * 0.8 * 10) / 10) : 0;
+  const maxRate = rates.length ? Math.ceil(Math.max(...rates) * 1.25 * 10) / 10 : 10;
+  const minRev = revs.length ? Math.max(40, Math.floor(Math.min(...revs) * 0.88)) : 80;
+  const maxRev = revs.length ? Math.ceil(Math.max(...revs) * 1.12) : 120;
+
+  const chartData = scenarios.map(s => ({
+    ...s,
+    purchase_rate_pct: Number(s.purchase_rate) <= 1 ? Number(s.purchase_rate) * 100 : Number(s.purchase_rate),
+  }));
+
   return (
     <div className="space-y-6">
       <div>
@@ -1053,15 +1096,31 @@ function ScenariosSection({ data }: { data: ReportData }) {
       </div>
 
       <Card>
-        <div className="h-64 pt-4">
+        <div className="h-72 pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.scenarios} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 25, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#242424" />
               <XAxis dataKey="name" tick={{ fill: "#86868b", fontSize: 10 }} />
-              <YAxis tick={{ fill: "#86868b", fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} />
-              <Bar dataKey="purchase_rate" name={terms.intent} fill="#6ba0ff" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="revenue_idx" name="相对收入指数" fill="#5dd8c1" radius={[4, 4, 0, 0]} />
+              <YAxis
+                yAxisId="left"
+                orientation="left"
+                domain={[minRate, maxRate]}
+                tick={{ fill: "#6ba0ff", fontSize: 10 }}
+                tickFormatter={v => `${Number(v).toFixed(1)}%`}
+                label={{ value: `${terms.intent} (%)`, angle: -90, position: "insideLeft", offset: -5, fill: "#6ba0ff", fontSize: 10 }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                domain={[minRev, maxRev]}
+                tick={{ fill: "#5dd8c1", fontSize: 10 }}
+                tickFormatter={v => `${Math.round(Number(v))}`}
+                label={{ value: "相对收入指数 (基准=100)", angle: 90, position: "insideRight", offset: -5, fill: "#5dd8c1", fontSize: 10 }}
+              />
+              <Tooltip contentStyle={{ background: "#131313", border: "1px solid #242424", borderRadius: 8, color: "#f5f5f7", fontSize: 12 }} formatter={(value, name) => name === terms.intent ? [`${Number(value).toFixed(1)}%`, name] : [`${Number(value).toFixed(1)}`, name]} />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
+              <Bar yAxisId="left" dataKey="purchase_rate_pct" name={terms.intent} fill="#6ba0ff" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="right" dataKey="revenue_idx" name="相对收入指数" fill="#5dd8c1" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
