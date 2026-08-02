@@ -512,12 +512,19 @@ const EVIDENCE_BASIS_LABELS: Record<string, string> = {
 };
 
 const REGION_LABELS: Record<string, string> = {
-  "Bangkok Metro": "曼谷都市圈",
-  "East / EEC": "东部经济走廊（EEC）",
-  Central: "中部地区",
-  North: "北部地区",
-  South: "南部地区",
-  Northeast: "东北部地区",
+  "Bangkok Metro": "曼谷都市圈（大曼谷 / 暖武里 / 北榄）",
+  "曼谷都市圈": "曼谷都市圈（大曼谷 / 暖武里 / 北榄）",
+  "East / EEC": "东部经济走廊 EEC（春武里 / 芭提雅 / 罗勇）",
+  "东部经济走廊（EEC）": "东部经济走廊 EEC（春武里 / 芭提雅 / 罗勇）",
+  "东部经济走廊 (EEC)": "东部经济走廊 EEC（春武里 / 芭提雅 / 罗勇）",
+  Central: "中部地区（大城 / 龙仔厝 / 佛统）",
+  "中部地区": "中部地区（大城 / 龙仔厝 / 佛统）",
+  North: "北部地区（清迈 / 清莱 / 彭世洛）",
+  "北部地区": "北部地区（清迈 / 清莱 / 彭世洛）",
+  South: "南部地区（普吉岛 / 合艾 / 苏梅岛）",
+  "南部地区": "南部地区（普吉岛 / 合艾 / 苏梅岛）",
+  Northeast: "东北部地区 / 伊森（孔敬 / 呵叻 / 乌汶）",
+  "东北部地区": "东北部地区 / 伊森（孔敬 / 呵叻 / 乌汶）",
 };
 
 function statusLabel(status?: string) {
