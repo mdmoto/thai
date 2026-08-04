@@ -8,10 +8,7 @@ from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if APP_ENV == "production" and not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is required when APP_ENV=production")
-DATABASE_URL = DATABASE_URL or "sqlite:////tmp/market_twin.db"
+DATABASE_URL = os.environ.get("DATABASE_URL") or "sqlite:////tmp/market_twin.db"
 
 # For SQLite, enable check_same_thread=False for FastAPI multithreading
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
