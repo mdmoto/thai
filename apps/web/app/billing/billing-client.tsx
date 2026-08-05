@@ -49,7 +49,7 @@ const THB_TO_RMB_MAP: Record<number, number> = {
 function getRmbPriceText(thbAmount: number): string {
   const rmb = THB_TO_RMB_MAP[thbAmount];
   if (rmb !== undefined) {
-    return ` (约 ¥${rmb.toLocaleString()} RMB)`;
+    return ` (¥${rmb.toLocaleString()} RMB)`;
   }
   return "";
 }
@@ -132,7 +132,6 @@ export function BillingClient() {
     PaymentMethod["code"] | null
   >(null);
   const [payerName, setPayerName] = useState("");
-  const [paymentTime, setPaymentTime] = useState("");
   const [claimReference, setClaimReference] = useState("");
   const [claimNote, setClaimNote] = useState("");
   const [qrLoaded, setQrLoaded] = useState<Record<string, boolean>>({});
@@ -168,7 +167,6 @@ export function BillingClient() {
       setCreatedOrder(order);
       setSelectedMethod(order.allowed_payment_methods[0]?.code ?? null);
       setPayerName(user?.name || "");
-      setPaymentTime("");
       setClaimReference("");
       setClaimNote("");
       await load();
@@ -187,7 +185,6 @@ export function BillingClient() {
         null,
     );
     setPayerName(order.payer_name || user?.name || "");
-    setPaymentTime(order.payment_time_text || "");
     setClaimReference(order.payment_claim_reference || "");
     setClaimNote(order.payment_claim_note || "");
     setError(null);
@@ -203,10 +200,6 @@ export function BillingClient() {
       setError("请填写付款人姓名，方便人工核对到账记录。");
       return;
     }
-    if (!paymentTime) {
-      setError("请选择大致付款时间，方便人工核对到账记录。");
-      return;
-    }
     setSubmittingClaim(true);
     setError(null);
     try {
@@ -214,7 +207,6 @@ export function BillingClient() {
         payment_method: selectedMethod,
         payer_name: payerName.trim(),
         payment_claim_reference: claimReference.trim() || undefined,
-        payment_time_text: paymentTime,
         note: claimNote.trim() || undefined,
       });
       setCreatedOrder(updated);
@@ -387,15 +379,6 @@ export function BillingClient() {
                         value={payerName}
                         onChange={event => setPayerName(event.target.value)}
                         placeholder="请填写付款账户显示的姓名"
-                        className="mt-1 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-neutral-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-neutral-400">大致付款时间 *</label>
-                      <input
-                        type="datetime-local"
-                        value={paymentTime}
-                        onChange={event => setPaymentTime(event.target.value)}
                         className="mt-1 w-full rounded-lg border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-neutral-600"
                       />
                     </div>
