@@ -46,6 +46,7 @@ from app.db.database import (
     database_is_healthy,
     get_db,
     initialize_database,
+    upload_sqlite_to_gcs,
 )
 from app.datetime_utils import utc_isoformat
 from app.db.models import (
@@ -463,6 +464,7 @@ def _create_registered_user(
                 )
             )
         db.commit()
+        upload_sqlite_to_gcs()
     except IntegrityError as error:
         db.rollback()
         raise HTTPException(status_code=409, detail="该邮箱已被注册") from error

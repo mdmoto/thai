@@ -3,12 +3,55 @@ Database Configuration & SQLAlchemy Session Management.
 Supports SQLite (file-based persistence) and PostgreSQL (via DATABASE_URL env var).
 """
 
+import logging
 import os
 from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+LOGGER = logging.getLogger("market_twin.db")
+
 APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
 DATABASE_URL = os.environ.get("DATABASE_URL") or "sqlite:////tmp/market_twin.db"
+
+GCS_DB_BUCKET = os.environ.get("GCS_SQLITE_BUCKET", "thai-503312-sqlite-db")
+GCS_DB_BLOB = os.environ.get("GCS_SQLITE_BLOB", "market_twin.db")
+LOCAL_DB_FILE = "/tmp/market_twin.db"
+
+
+def download_sqlite_from_gcs() -> bool:
+    """Download persisted SQLite database from GCS bucket on container startup."""
+    if not DATABASE_URL.startswith("sqlite"):
+        return False
+    try:
+        from google.cloud import storage
+        client = storage.Client()
+        bucket = client.bucket(GCS_DB_BUCKET)
+        blob = bucket.blob(GCS_DB_BLOB)
+        if blob.exists():
+            blob.download_to_filename(LOCAL_DB_FILE)
+            LOGGER.info("Successfully restored SQLite DB from gs://%s/%s", GCS_DB_BUCKET, GCS_DB_BLOB)
+            return True
+    except Exception as exc:
+        LOGGER.warning("Could not download SQLite DB from GCS: %s", exc)
+    return False
+
+
+def upload_sqlite_to_gcs() -> bool:
+    """Upload current SQLite database snapshot to GCS bucket for permanent persistence."""
+    if not DATABASE_URL.startswith("sqlite") or not os.path.exists(LOCAL_DB_FILE):
+        return False
+    try:
+        from google.cloud import storage
+        client = storage.Client()
+        bucket = client.bucket(GCS_DB_BUCKET)
+        blob = bucket.blob(GCS_DB_BLOB)
+        blob.upload_from_filename(LOCAL_DB_FILE)
+        LOGGER.info("Successfully backed up SQLite DB to gs://%s/%s", GCS_DB_BUCKET, GCS_DB_BLOB)
+        return True
+    except Exception as exc:
+        LOGGER.warning("Could not backup SQLite DB to GCS: %s", exc)
+    return False
+
 
 # For SQLite, enable check_same_thread=False for FastAPI multithreading
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
@@ -33,8 +76,10 @@ Base = declarative_base()
 def initialize_database() -> None:
     from app.db import models  # noqa: F401
 
+    download_sqlite_from_gcs()
     Base.metadata.create_all(bind=engine)
     _upgrade_legacy_schema()
+    upload_sqlite_to_gcs()
 
 
 def _upgrade_legacy_schema() -> None:
