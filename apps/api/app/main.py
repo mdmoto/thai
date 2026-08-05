@@ -181,6 +181,16 @@ def _cors_headers(request: Request) -> Dict[str, str]:
     return headers
 
 
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        for item in reversed(forwarded.split(",")):
+            candidate = item.strip()
+            if candidate and not candidate.startswith("10.") and not candidate.startswith("169.254."):
+                return candidate[:120]
+    return request.client.host if request.client else "unknown"
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     if request.method == "OPTIONS":
@@ -199,15 +209,15 @@ async def security_headers(request: Request, call_next):
             headers=_cors_headers(request),
         )
 
-    client_host = request.client.host if request.client else "unknown"
+    client_host = _client_ip(request)
     if request.url.path.startswith("/v1/auth/"):
-        limit, window = 40, 900
+        limit, window = 200, 300
         bucket_name = "auth"
     elif request.url.path.endswith("/runs"):
-        limit, window = 30, 3600
+        limit, window = 100, 3600
         bucket_name = "runs"
     else:
-        limit, window = 600, 60
+        limit, window = 1000, 60
         bucket_name = "global"
     bucket = _rate_buckets[f"{bucket_name}:{client_host}"]
     now = time.monotonic()
