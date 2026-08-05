@@ -169,8 +169,23 @@ app.add_middleware(
 )
 
 
+def _cors_headers(request: Request) -> Dict[str, str]:
+    origin = request.headers.get("origin", "").strip()
+    headers = {}
+    if origin and (origin in allowed_origins or "*" in allowed_origins):
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
+        headers["Access-Control-Allow-Headers"] = (
+            "Authorization, Content-Type, X-Request-ID, X-Admin-Key"
+        )
+    return headers
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
     request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
     content_length = request.headers.get("content-length")
     try:
@@ -181,6 +196,7 @@ async def security_headers(request: Request, call_next):
         return JSONResponse(
             status_code=413,
             content={"detail": "请求内容过大", "request_id": request_id},
+            headers=_cors_headers(request),
         )
 
     client_host = request.client.host if request.client else "unknown"
@@ -198,10 +214,12 @@ async def security_headers(request: Request, call_next):
     while bucket and bucket[0] <= now - window:
         bucket.popleft()
     if len(bucket) >= limit:
+        headers = _cors_headers(request)
+        headers["Retry-After"] = str(window)
         return JSONResponse(
             status_code=429,
             content={"detail": "请求过于频繁，请稍后再试", "request_id": request_id},
-            headers={"Retry-After": str(window)},
+            headers=headers,
         )
     bucket.append(now)
 
