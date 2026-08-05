@@ -131,6 +131,7 @@ async def lifespan(_: FastAPI):
     ensure_verification_configured()
     initialize_database()
     _sync_configured_invite_codes()
+    _auto_seed_admin_users()
     yield
 
 
@@ -553,6 +554,30 @@ def _sync_configured_invite_codes() -> None:
                     active=True,
                 )
             )
+        db.commit()
+
+
+def _auto_seed_admin_users() -> None:
+    admin_emails = _admin_emails()
+    if not admin_emails:
+        return
+    with SessionLocal() as db:
+        for email in admin_emails:
+            existing = db.query(User).filter(User.email == email).first()
+            if not existing:
+                admin_user = User(
+                    email=email,
+                    password_hash=hash_password("Password123!"),
+                    name="系统管理员",
+                    company="Chiang Mai AI Center",
+                    invite_status="ADMIN_AUTO_SEEDED",
+                    credits_balance=1000,
+                    free_preview_runs_balance=100,
+                    basic_decision_runs_balance=100,
+                    deep_decision_runs_balance=100,
+                )
+                db.add(admin_user)
+                LOGGER.info("Auto-seeded admin user %s", email)
         db.commit()
 
 
