@@ -39,6 +39,21 @@ type Transaction = {
 const SALES_URL =
   process.env.NEXT_PUBLIC_SALES_URL || "https://wa.me/66623458238";
 
+const THB_TO_RMB_MAP: Record<number, number> = {
+  990: 198,
+  7900: 1580,
+  34900: 6980,
+  89000: 17800,
+};
+
+function getRmbPriceText(thbAmount: number): string {
+  const rmb = THB_TO_RMB_MAP[thbAmount];
+  if (rmb !== undefined) {
+    return ` (约 ¥${rmb.toLocaleString()} RMB)`;
+  }
+  return "";
+}
+
 const PACKAGE_LABELS: Record<string, string> = {
   BASIC_DECISION_SINGLE: "单次基础决策",
   STARTER: "单次专业决策包",
@@ -282,7 +297,10 @@ export function BillingClient() {
               </h2>
               <p className="text-xs text-neutral-400 mt-1">
                 订单编号 <span className="font-mono text-white">{createdOrder.id}</span>。
-                金额 <span className="text-white">฿{(createdOrder.amount_minor / 100).toLocaleString()}</span>。
+                金额 <span className="text-white font-medium">฿{(createdOrder.amount_minor / 100).toLocaleString()}</span>
+                <span className="text-emerald-400 font-semibold">
+                  {getRmbPriceText(createdOrder.amount_minor / 100)}
+                </span>。
               </p>
               {createdOrder.review_note && createdOrder.status === "PAYMENT_REJECTED" && (
                 <p className="mt-3 rounded-lg border border-amber-900/60 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
@@ -442,8 +460,11 @@ export function BillingClient() {
             <h2 className="text-base font-semibold text-white">
               {PACKAGE_LABELS[pkg.code] ?? pkg.name}
             </h2>
-            <div className="text-3xl font-semibold text-white mt-4">
-              ฿{(pkg.amount_minor / 100).toLocaleString()}
+            <div className="text-2xl font-semibold text-white mt-4 flex items-baseline gap-2 flex-wrap">
+              <span>฿{(pkg.amount_minor / 100).toLocaleString()}</span>
+              <span className="text-xs font-normal text-emerald-400">
+                {getRmbPriceText(pkg.amount_minor / 100)}
+              </span>
             </div>
             <div className="text-xs text-neutral-500 mt-2">
               {PACKAGE_POPULATION[pkg.code]}
@@ -490,7 +511,12 @@ export function BillingClient() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-neutral-300">฿{(order.amount_minor / 100).toLocaleString()}</div>
+                  <div className="text-neutral-300">
+                    ฿{(order.amount_minor / 100).toLocaleString()}
+                    <span className="text-emerald-400 font-normal text-[11px] block sm:inline">
+                      {getRmbPriceText(order.amount_minor / 100)}
+                    </span>
+                  </div>
                   <div className="text-neutral-500 mt-1">{ORDER_STATUS_LABELS[order.status] ?? order.status}</div>
                   {order.status !== "PAID" && (
                     <button
