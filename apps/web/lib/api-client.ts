@@ -27,47 +27,16 @@ function requestHeaders(authenticated = true): Record<string, string> {
   return headers;
 }
 
-function formatErrorDetail(detail: unknown): string {
-  if (!detail) return "请求失败";
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) {
-    return detail
-      .map((item) => {
-        if (typeof item === "string") return item;
-        if (typeof item === "object" && item !== null) {
-          const obj = item as Record<string, unknown>;
-          return String(obj.msg || obj.detail || obj.message || JSON.stringify(item));
-        }
-        return String(item);
-      })
-      .filter(Boolean)
-      .join("；");
-  }
-  if (typeof detail === "object" && detail !== null) {
-    const obj = detail as Record<string, unknown>;
-    if (typeof obj.msg === "string") return obj.msg;
-    if (obj.detail) return formatErrorDetail(obj.detail);
-    if (typeof obj.message === "string") return obj.message;
-    try {
-      return JSON.stringify(detail);
-    } catch {
-      return "请求失败";
-    }
-  }
-  return String(detail);
-}
-
 async function responseError(resp: Response, action: string): Promise<Error> {
-  let detail: unknown = resp.statusText || "请求失败";
+  let detail = resp.statusText || "请求失败";
   try {
     const payload = await resp.json();
-    detail = payload.detail ?? payload.message ?? detail;
+    detail = payload.detail || detail;
   } catch {
     // Keep the HTTP status text when the body is not JSON.
   }
   if (resp.status === 401) clearAuthSession();
-  const message = formatErrorDetail(detail);
-  return new Error(`${action}：${message}`);
+  return new Error(`${action}：${detail}`);
 }
 
 async function apiJson<T>(
