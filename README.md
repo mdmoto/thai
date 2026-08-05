@@ -13,7 +13,7 @@
 ## 🌐 线上环境与访问端点
 
 - **🌐 生产主站**: [https://ai.lazzor.com](https://ai.lazzor.com) *(部署于 Cloudflare Pages)*
-- **⚡ 云端 API 服务**: [https://ai-100282158973.asia-southeast1.run.app](https://ai-100282158973.asia-southeast1.run.app) *(部署于 Google Cloud Run - 曼谷/东南亚节点)*
+- **⚡ 云端 API 服务**: [https://market-twin-api-100282158973.asia-southeast1.run.app](https://market-twin-api-100282158973.asia-southeast1.run.app) *(部署于 Google Cloud Run - 曼谷/东南亚节点)*
 - **📘 健康检查**: `GET /v1/health`
 - **📚 演示报告**: [https://ai.lazzor.com/demo/pet-water](https://ai.lazzor.com/demo/pet-water) *(泰国宠物智能饮水机大盘模拟示范)*
 

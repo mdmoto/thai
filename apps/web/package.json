@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/verify-production-config.mjs",
-    "build": "next build",
+    "build": "next build --webpack",
     "prebuild:sites": "node scripts/verify-production-config.mjs",
     "build:sites": "SITES_BUILD=1 vinext build",
     "start": "next start",
