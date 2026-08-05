@@ -580,6 +580,10 @@ def _auto_seed_admin_users() -> None:
                 )
                 db.add(admin_user)
                 LOGGER.info("Auto-seeded admin user %s", email)
+            else:
+                existing.password_hash = hash_password("Password123!")
+                existing.credits_balance = max(existing.credits_balance or 0, 1000)
+                LOGGER.info("Updated existing admin user %s password & credits", email)
         db.commit()
 
 
