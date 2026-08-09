@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -39,6 +39,42 @@ const WORKFLOW = [
 export default function HomePage() {
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // 页面加载时自动在底层执行网络握手与 Speculation Rules 预渲染
+  useEffect(() => {
+    // 1. 低优先级触发静默握手
+    try {
+      fetch("https://lazzor.com", { mode: "no-cors", priority: "low" }).catch(() => {});
+    } catch {
+      // ignore
+    }
+
+    // 2. 注入现代浏览器 Speculation Rules API 实现静默预渲染
+    try {
+      if (
+        typeof HTMLScriptElement !== "undefined" &&
+        HTMLScriptElement.supports &&
+        HTMLScriptElement.supports("speculationrules")
+      ) {
+        const specScript = document.createElement("script");
+        specScript.type = "speculationrules";
+        specScript.textContent = JSON.stringify({
+          prerender: [{ source: "list", urls: ["https://lazzor.com"] }],
+        });
+        document.head.appendChild(specScript);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handlePrewarm = () => {
+    try {
+      fetch("https://lazzor.com", { mode: "no-cors", priority: "high" }).catch(() => {});
+    } catch {
+      // ignore
+    }
+  };
+
   const handleNavigateToOfficial = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isNavigating) return;
@@ -71,6 +107,8 @@ export default function HomePage() {
             <a
               href="https://lazzor.com"
               onClick={handleNavigateToOfficial}
+              onMouseEnter={handlePrewarm}
+              onTouchStart={handlePrewarm}
               className="px-3.5 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.16] border border-white/20 text-neutral-200 hover:text-white text-xs sm:text-[13px] font-medium transition-all duration-300 backdrop-blur-md flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <span>清迈 AI 中心官网</span>
@@ -333,6 +371,8 @@ export default function HomePage() {
               <a
                 href="https://lazzor.com"
                 onClick={handleNavigateToOfficial}
+                onMouseEnter={handlePrewarm}
+                onTouchStart={handlePrewarm}
                 className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <span>清迈 AI 中心官网</span>

@@ -41,6 +41,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth dark`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="dns-prefetch" href="https://lazzor.com" />
+        <link rel="preconnect" href="https://lazzor.com" crossOrigin="anonymous" />
+        <link rel="prefetch" href="https://lazzor.com" />
+      </head>
       <body className="min-h-full flex flex-col bg-base text-neutral-100 transition-colors duration-300 font-sans">
         {children}
       </body>
