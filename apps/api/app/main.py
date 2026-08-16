@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 import logging
 import json
 import os
@@ -110,6 +111,7 @@ MAX_REQUEST_BYTES = int(os.environ.get("MAX_REQUEST_BYTES", "1048576"))
 RUN_STALE_AFTER_SECONDS = int(
     os.environ.get("RUN_STALE_AFTER_SECONDS", "3900")
 )
+ORIGIN_SHARED_SECRET = os.environ.get("ORIGIN_SHARED_SECRET", "").strip()
 _rate_buckets: Dict[str, deque] = defaultdict(deque)
 
 RUN_STAGE_LABELS = {
@@ -167,6 +169,29 @@ app.add_middleware(
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Admin-Key"],
 )
+
+
+@app.middleware("http")
+async def require_trusted_edge(request: Request, call_next):
+    """Reject direct-origin traffic when a production edge secret is set.
+
+    The public site reaches the API through the Cloudflare Worker.  Health
+    endpoints remain available to the AWS load balancer, but all application
+    routes require the Worker-injected secret so the ALB cannot be used as an
+    alternate public API origin.
+    """
+
+    if (
+        ORIGIN_SHARED_SECRET
+        and request.url.path not in {"/", "/healthz", "/v1/health"}
+    ):
+        provided = request.headers.get("X-Origin-Verify", "")
+        if not hmac.compare_digest(provided, ORIGIN_SHARED_SECRET):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"detail": "Requests must use the secure site gateway."},
+            )
+    return await call_next(request)
 
 
 def _cors_headers(request: Request) -> Dict[str, str]:
