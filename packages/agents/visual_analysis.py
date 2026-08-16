@@ -91,7 +91,7 @@ async def analyze_product_image(
         "Assess visible packaging, form factor, legibility, design differentiation, "
         "Thai-localization cues, and trust risks such as unreadable copy or unsupported claims."
     )
-    model = os.environ.get("GEMINI_VISION_MODEL", "gemini-3.6-flash").strip()
+    model = os.environ.get("GEMINI_VISION_MODEL", "gemini-2.5-flash").strip()
     try:
         client = genai.Client(api_key=keys[0])
         async with client.aio as async_client:
