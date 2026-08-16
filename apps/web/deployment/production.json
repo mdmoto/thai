@@ -1,6 +1,6 @@
 {
   "siteOrigin": "https://ai.lazzor.com",
-  "apiOrigin": "https://market-twin-api-100282158973.asia-southeast1.run.app",
-  "cloudRunService": "market-twin-api",
+  "apiOrigin": "https://ai.lazzor.com/api",
+  "apiGateway": "cloudflare-worker",
   "cloudflarePagesProject": "ai"
 }

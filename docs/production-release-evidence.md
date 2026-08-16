@@ -6,7 +6,7 @@ Release verification date: 2026-07-24 (Asia/Bangkok)
 
 - Customer site: `https://ai.lazzor.com`
 - Production API:
-  `https://market-twin-api-100282158973.asia-southeast1.run.app`
+  `https://ai.lazzor.com/api`（Cloudflare 安全入口，转发至 AWS 新加坡运行集群）
 - Cloud Run revision: `market-twin-api-00005-tbl`, serving 100% of traffic
 - Cloud SQL instance: `market-twin-db`, PostgreSQL 16, regional high
   availability, deletion protection enabled

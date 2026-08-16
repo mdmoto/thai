@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "market-twin-api-proxy",
+  "main": "src/aws-api-proxy.ts",
+  "compatibility_date": "2024-09-23",
+  "vars": {
+    "API_ORIGIN": "http://market-twin-api-alb-352156089.ap-southeast-1.elb.amazonaws.com"
+  },
+  "routes": [
+    {
+      "pattern": "ai.lazzor.com/api/*",
+      "zone_name": "lazzor.com"
+    }
+  ]
+}

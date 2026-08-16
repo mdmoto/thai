@@ -9,13 +9,11 @@ const production = JSON.parse(
   readFileSync(resolve(webRoot, "deployment/production.json"), "utf8"),
 );
 
-const expectedApiOrigin =
-  "https://market-twin-api-100282158973.asia-southeast1.run.app";
+const expectedApiOrigin = "https://ai.lazzor.com/api";
 const turnstileOrigin = "https://challenges.cloudflare.com";
 const retiredApiOrigin = [
-  "https://",
-  "ai",
-  "-100282158973.asia-southeast1.run.app",
+  "https://market-twin-api-",
+  "100282158973.asia-southeast1.run.app",
 ].join("");
 
 function fail(message) {
@@ -27,8 +25,8 @@ if (production.apiOrigin !== expectedApiOrigin) {
   fail(`deployment/production.json must use ${expectedApiOrigin}`);
 }
 
-if (production.cloudRunService !== "market-twin-api") {
-  fail("the only production Cloud Run service must be market-twin-api");
+if (production.apiGateway !== "cloudflare-worker") {
+  fail("production traffic must use the Cloudflare API gateway");
 }
 
 const configuredApiOrigin = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -43,7 +41,7 @@ if (
 const headers = readFileSync(resolve(webRoot, "public/_headers"), "utf8");
 if (
   !headers.includes(
-    `connect-src 'self' ${expectedApiOrigin} ${turnstileOrigin};`,
+    `connect-src 'self' ${turnstileOrigin};`,
   )
 ) {
   fail("public/_headers does not allow the canonical production API");
@@ -60,11 +58,6 @@ if (
 }
 if (headers.includes(["*", ".run.app"].join(""))) {
   fail("public/_headers must not allow wildcard Cloud Run origins");
-}
-
-const cloudBuild = readFileSync(resolve(repositoryRoot, "cloudbuild.yaml"), "utf8");
-if (!cloudBuild.includes("\n      - market-twin-api\n")) {
-  fail("cloudbuild.yaml does not deploy the canonical Cloud Run service");
 }
 
 const trackedFiles = execFileSync("git", ["ls-files", "-z"], {
