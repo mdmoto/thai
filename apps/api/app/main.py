@@ -591,13 +591,19 @@ def _auto_seed_admin_users() -> None:
     admin_emails = _admin_emails()
     if not admin_emails:
         return
+    bootstrap_password = os.environ.get("ADMIN_BOOTSTRAP_PASSWORD", "")
+    if len(bootstrap_password) < 12:
+        LOGGER.warning(
+            "Admin bootstrap skipped: ADMIN_BOOTSTRAP_PASSWORD is not configured"
+        )
+        return
     with SessionLocal() as db:
         for email in admin_emails:
             existing = db.query(User).filter(User.email == email).first()
             if not existing:
                 admin_user = User(
                     email=email,
-                    password_hash=hash_password("Password123!"),
+                    password_hash=hash_password(bootstrap_password),
                     name="系统管理员",
                     company="Chiang Mai AI Center",
                     invite_status="ADMIN_AUTO_SEEDED",
@@ -609,7 +615,7 @@ def _auto_seed_admin_users() -> None:
                 db.add(admin_user)
                 LOGGER.info("Auto-seeded admin user %s", email)
             else:
-                existing.password_hash = hash_password("Password123!")
+                existing.password_hash = hash_password(bootstrap_password)
                 existing.credits_balance = max(existing.credits_balance or 0, 1000)
                 LOGGER.info("Updated existing admin user %s password & credits", email)
         db.commit()

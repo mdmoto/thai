@@ -9,6 +9,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 COPY apps/api/requirements-api.lock ./requirements-api.lock
 RUN python -m pip install --no-cache-dir --require-hashes -r requirements-api.lock
+# The API dispatches paid deep simulations as ECS Fargate tasks when deployed
+# on AWS. Keep this SDK separate from the generated application lock because
+# the worker image does not need AWS control-plane access.
+RUN python -m pip install --no-cache-dir boto3==1.42.27
 RUN crawl4ai-setup && chmod -R a+rX /ms-playwright
 
 COPY apps/api/app ./app
