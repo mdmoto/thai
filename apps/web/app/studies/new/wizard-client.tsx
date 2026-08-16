@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, ChevronRight, Plus, X, Link as LinkIcon } from "lucide-react";
+import { Check, ChevronRight, ImagePlus, Plus, X, Link as LinkIcon } from "lucide-react";
 import { STUDY_TYPE_META, PLAN_META, TEMPLATES } from "@/lib/product-catalog";
 import { getStoredToken } from "@/lib/auth-session";
 import { Card, Input } from "@/components/ui";
@@ -17,8 +17,11 @@ interface WizardState {
   name: string;
   description: string;
   product_name: string;
+  product_image_data_url: string;
   category: string;
   price: string;
+  reference_price: string;
+  variable_cost: string;
   selling_points: string[];
   competitors: string[];
   url: string;
@@ -31,8 +34,7 @@ interface WizardState {
   opening_hours: string;
   creative_format: string;
   channel: string;
-  latitude: string;
-  longitude: string;
+  creative_content: string;
   preset_scenarios: Array<Record<string, unknown>>;
   template_key: string;
   marketplaces: string[];
@@ -48,8 +50,11 @@ const INIT_STATE: WizardState = {
   name: "",
   description: "",
   product_name: "",
+  product_image_data_url: "",
   category: "GENERIC_CONSUMER_PRODUCT",
   price: "",
+  reference_price: "",
+  variable_cost: "",
   selling_points: [""],
   competitors: [""],
   url: "",
@@ -62,8 +67,7 @@ const INIT_STATE: WizardState = {
   opening_hours: "",
   creative_format: "IMAGE",
   channel: "META",
-  latitude: "",
-  longitude: "",
+  creative_content: "",
   preset_scenarios: [],
   template_key: "",
   marketplaces: ["Shopee", "Lazada", "TikTok Shop"],
@@ -98,6 +102,28 @@ function parseVenueHistory(value: string) {
       ("visits" in row && Number.isFinite(row.visits))
       || ("average_daily_visits" in row && Number.isFinite(row.average_daily_visits))
     ));
+}
+
+async function compressImageForStudy(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("请上传 JPG、PNG 或 WebP 格式的图片。");
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    throw new Error("图片不能超过 12MB。");
+  }
+  const bitmap = await createImageBitmap(file);
+  const longestSide = Math.max(bitmap.width, bitmap.height);
+  const scale = Math.min(1, 1200 / longestSide);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+  if (dataUrl.length > 780_000) {
+    throw new Error("图片压缩后仍过大，请裁剪后重新上传。");
+  }
+  return dataUrl;
 }
 
 const BUSINESS_QUESTIONS = {
@@ -210,8 +236,11 @@ export function NewStudyWizard() {
         plan_code: state.plan_code,
         template_key: state.template_key || undefined,
         product_name: state.product_name,
+        product_image_data_url: state.product_image_data_url || undefined,
         category: state.category,
         price: state.price ? Number(state.price) : undefined,
+        reference_price: state.reference_price ? Number(state.reference_price) : undefined,
+        variable_cost: state.variable_cost ? Number(state.variable_cost) : undefined,
         url: state.url,
         description: state.description,
         selling_points: state.selling_points.filter(Boolean),
@@ -223,11 +252,9 @@ export function NewStudyWizard() {
         opening_hours: state.opening_hours || undefined,
         creative_format: state.study_type === "CREATIVE_TEST" ? state.creative_format : undefined,
         channel: state.study_type === "CREATIVE_TEST" ? state.channel : undefined,
-        location: state.location_text
+        location: isOffline && state.study_type !== "SITE_COMPARISON" && state.location_text
           ? {
               label: state.location_text,
-              latitude: state.latitude ? Number(state.latitude) : undefined,
-              longitude: state.longitude ? Number(state.longitude) : undefined,
             }
           : undefined,
         candidate_locations: candidateLocations.map(label => ({ label })),
@@ -429,7 +456,8 @@ function Step2({ state, update, onNext, onBack }: {
   onBack: () => void;
 }) {
   const meta = state.study_type ? STUDY_TYPE_META[state.study_type] : null;
-  const isProduct = !state.study_type || ["PRODUCT_VALIDATION", "PRICING_STUDY"].includes(state.study_type);
+  const isProduct = state.study_type === "PRODUCT_VALIDATION";
+  const isPricing = state.study_type === "PRICING_STUDY";
   const isCreative = state.study_type === "CREATIVE_TEST";
   const isOffline = Boolean(state.study_type && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type));
   const siteCount = state.location_text.split(/[;\n、]+/).map(value => value.trim()).filter(Boolean).length;
@@ -451,13 +479,13 @@ function Step2({ state, update, onNext, onBack }: {
 
   const canProceed = state.name.trim().length > 0
     && state.product_name.trim().length > 0
-    && (
-      isOffline
-        ? state.location_text.trim().length > 0
-          && Number(state.average_check) > 0
-          && (state.study_type !== "SITE_COMPARISON" || siteCount >= 2)
-        : Number(state.price) > 0
-    );
+    && (isOffline
+      ? state.location_text.trim().length > 0
+        && Number(state.average_check) > 0
+        && (state.study_type !== "SITE_COMPARISON" || siteCount >= 2)
+      : isCreative
+        ? true
+        : Number(state.price) > 0);
 
   return (
     <div className="space-y-6">
@@ -493,81 +521,99 @@ function Step2({ state, update, onNext, onBack }: {
           </div>
         </div>
 
-        {/* Product info */}
-        {(isProduct || isCreative) && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Input
-              label={isCreative ? "推广产品 / 品牌" : "产品名称"}
-              placeholder={isCreative ? "例：新款智能饮水机" : "例：BKK宠物零食"}
-              value={state.product_name}
-              onChange={e => update({ product_name: e.target.value })}
-            />
-            {state.study_type !== "SITE_COMPARISON" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="纬度（推荐）"
-                  type="number"
-                  placeholder="例：18.7966"
-                  value={state.latitude}
-                  onChange={e => update({ latitude: e.target.value })}
-                />
-                <Input
-                  label="经度（推荐）"
-                  type="number"
-                  placeholder="例：98.9677"
-                  value={state.longitude}
-                  onChange={e => update({ longitude: e.target.value })}
-                />
+        {(isProduct || isPricing || isCreative) && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label={isCreative ? "推广的产品 / 品牌" : "产品名称"}
+                required
+                placeholder={isCreative ? "例：智能宠物饮水机" : "例：可折叠宠物推车"}
+                value={state.product_name}
+                onChange={e => update({ product_name: e.target.value })}
+              />
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-neutral-400 tracking-wide">产品品类</label>
+                <select className="input-lazzor" value={state.category} onChange={event => update({ category: event.target.value })}>
+                  <option value="PET_WATER_FOUNTAIN">宠物智能饮水机（有专属竞品面板）</option>
+                  <option value="BEAUTY_PERSONAL_CARE">美妆 / 个护</option>
+                  <option value="FOOD_BEVERAGE">食品 / 饮料</option>
+                  <option value="HOME_LIVING">家居 / 生活</option>
+                  <option value="ELECTRONICS">数码 / 小家电</option>
+                  <option value="PET_SUPPLIES">宠物用品</option>
+                  <option value="GENERIC_CONSUMER_PRODUCT">其他消费品</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="cmai-card p-4 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xs font-medium text-white">产品图片（选填）</div>
+                  <p className="text-[11px] text-neutral-500 mt-1">上传实物图、包装图或广告主图。系统会自动压缩并保存到本项目，不需要先上传到图床。</p>
+                </div>
+                {state.product_image_data_url ? (
+                  <button type="button" onClick={() => update({ product_image_data_url: "" })} className="text-xs text-neutral-400 hover:text-white">移除图片</button>
+                ) : null}
+              </div>
+              <div className="flex items-center gap-4">
+                {state.product_image_data_url ? <img src={state.product_image_data_url} alt="产品预览" className="h-20 w-20 rounded-lg object-cover border border-neutral-800" /> : <div className="h-20 w-20 rounded-lg border border-dashed border-neutral-700 flex items-center justify-center text-neutral-500"><ImagePlus size={22} /></div>}
+                <label className="btn-lazzor-ghost cursor-pointer">
+                  <ImagePlus size={14} /> {state.product_image_data_url ? "更换图片" : "选择图片"}
+                  <input
+                    className="hidden"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={async event => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        update({ product_image_data_url: await compressImageForStudy(file) });
+                      } catch (error) {
+                        window.alert(error instanceof Error ? error.message : "图片处理失败，请重试。");
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {!isCreative && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Input label={isPricing ? "当前测试价格（泰铢 THB）" : "计划售价（泰铢 THB）"} required type="number" placeholder="例：990" value={state.price} onChange={e => update({ price: e.target.value })} />
+                {isPricing && <Input label="市场常见价 / 竞品中位价（选填）" type="number" placeholder="例：1,190" value={state.reference_price} onChange={e => update({ reference_price: e.target.value })} />}
+                {isPricing && <Input label="单件变动成本（选填）" type="number" placeholder="例：430" value={state.variable_cost} onChange={e => update({ variable_cost: e.target.value })} />}
               </div>
             )}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-neutral-400 tracking-wide">
-                产品品类
-              </label>
-              <select
-                className="input-lazzor"
-                value={state.category}
-                onChange={event => update({ category: event.target.value })}
-              >
-                <option value="PET_WATER_FOUNTAIN">
-                  宠物智能饮水机（已连接竞品面板）
-                </option>
-                <option value="GENERIC_CONSUMER_PRODUCT">
-                  其他消费品（通用品类先验）
-                </option>
-              </select>
-            </div>
-            <Input
-              label={isCreative ? "产品售价（泰铢 THB）" : "售价（泰铢 THB）"}
-              type="number"
-              placeholder="例：299"
-              value={state.price}
-              onChange={e => update({ price: e.target.value })}
-            />
-          </div>
+          </>
         )}
 
         {isCreative && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-neutral-400 tracking-wide">素材形式</label>
-              <select className="input-lazzor" value={state.creative_format} onChange={e => update({ creative_format: e.target.value })}>
-                <option value="IMAGE">广告图片</option>
-                <option value="COPY">广告文案</option>
-                <option value="VIDEO_SCRIPT">短视频脚本</option>
-                <option value="LANDING_PAGE">落地页</option>
-              </select>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-neutral-400 tracking-wide">要测试的素材形式</label>
+                <select className="input-lazzor" value={state.creative_format} onChange={e => update({ creative_format: e.target.value })}>
+                  <option value="IMAGE">广告图片</option>
+                  <option value="COPY">广告文案</option>
+                  <option value="VIDEO_SCRIPT">短视频脚本</option>
+                  <option value="LANDING_PAGE">落地页</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-neutral-400 tracking-wide">投放渠道</label>
+                <select className="input-lazzor" value={state.channel} onChange={e => update({ channel: e.target.value })}>
+                  <option value="META">Facebook / Instagram</option>
+                  <option value="TIKTOK">TikTok</option>
+                  <option value="LINE">LINE</option>
+                  <option value="MARKETPLACE">Shopee / Lazada</option>
+                </select>
+              </div>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-neutral-400 tracking-wide">主要渠道</label>
-              <select className="input-lazzor" value={state.channel} onChange={e => update({ channel: e.target.value })}>
-                <option value="META">Facebook / Instagram</option>
-                <option value="TIKTOK">TikTok</option>
-                <option value="LINE">LINE</option>
-                <option value="MARKETPLACE">Shopee / Lazada</option>
-              </select>
+              <label className="block text-xs font-medium text-neutral-400 tracking-wide">广告文案 / 视频脚本 / 主要信息（选填）</label>
+              <textarea className="input-lazzor min-h-28 resize-y" placeholder="粘贴广告标题、正文、视频脚本或希望消费者看完后记住的信息。图片素材可直接在上方上传。" value={state.creative_content} onChange={e => update({ creative_content: e.target.value, description: e.target.value })} />
             </div>
-          </div>
+          </>
         )}
 
         {state.template_key === "ECOMMERCE" && (
@@ -625,15 +671,18 @@ function Step2({ state, update, onNext, onBack }: {
               </div>
             </div>
             <Input
-              label={state.study_type === "SITE_COMPARISON" ? "候选区域 / 点位（用分号或换行分隔）" : "城市、商圈或具体位置"}
+              label={state.study_type === "SITE_COMPARISON" ? "候选地址或商圈（每行一个，至少两个）" : "门店地址或商圈"}
               required
-              placeholder="例：Chiang Mai, Nimman Soi 9"
+              placeholder={state.study_type === "SITE_COMPARISON" ? "例：Thonglor, Bangkok\nEkkamai, Bangkok" : "例：Nimman Soi 9, Chiang Mai"}
               value={state.location_text}
               onChange={e => update({ location_text: e.target.value })}
             />
+            {state.study_type === "SITE_COMPARISON" && (
+              <p className="text-[11px] text-neutral-500 -mt-2">只需填写可搜索的地址或商圈名称。系统会在运行时自动解析坐标、路网和周边公开地点；无需填写经纬度。</p>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input
-                label="平均客单价（泰铢 THB）"
+                label={state.study_type === "SITE_COMPARISON" ? "预计客单价（泰铢 THB）" : "平均客单价（泰铢 THB）"}
                 type="number"
                 required
                 placeholder="例：350"
@@ -673,12 +722,12 @@ function Step2({ state, update, onNext, onBack }: {
 
         {/* Selling points */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-neutral-400 tracking-wide">核心卖点</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">{isOffline ? "招牌 / 服务特色" : isCreative ? "希望消费者记住的重点" : "核心卖点"}</label>
           {state.selling_points.map((sp, i) => (
             <div key={i} className="flex gap-2">
               <input
                 className="input-lazzor flex-1"
-                placeholder={`卖点 ${i + 1}`}
+                placeholder={isOffline ? `特色 ${i + 1}，例：手冲咖啡 / 深夜营业` : `卖点 ${i + 1}`}
                 value={sp}
                 onChange={e => updateListItem("selling_points", i, e.target.value)}
               />
@@ -696,12 +745,12 @@ function Step2({ state, update, onNext, onBack }: {
 
         {/* Competitors */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-neutral-400 tracking-wide">竞品名称或公开网址（选填）</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">{isOffline ? "周边竞品或对标门店（选填）" : "竞品名称或公开网址（选填）"}</label>
           {state.competitors.map((c, i) => (
             <div key={i} className="flex gap-2">
               <input
                 className="input-lazzor flex-1"
-                placeholder={`竞品 ${i + 1}：名称或商品网址`}
+                placeholder={isOffline ? `竞品 ${i + 1}：名称、商场或地图链接` : `竞品 ${i + 1}：名称或商品网址`}
                 value={c}
                 onChange={e => updateListItem("competitors", i, e.target.value)}
               />

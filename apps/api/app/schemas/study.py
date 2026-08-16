@@ -12,6 +12,11 @@ class CreateStudyRequest(BaseModel):
     plan_code: str = Field(default="PROFESSIONAL", max_length=32)
     template_key: Optional[str] = Field(default=None, max_length=80)
     product_name: Optional[str] = Field(default=None, max_length=200)
+    product_image_data_url: Optional[str] = Field(
+        default=None,
+        max_length=800_000,
+        description="Optional compressed product or creative image data URL.",
+    )
     category: Optional[str] = Field(default=None, max_length=120)
     price: Optional[float] = Field(default=None, gt=0, le=1_000_000_000)
     url: Optional[str] = Field(default=None, max_length=2048)

@@ -280,6 +280,7 @@ class StudyService:
             price = 299.0
 
         fact_fields = (
+            "product_image_data_url",
             "url",
             "template_key",
             "description",

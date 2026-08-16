@@ -110,9 +110,11 @@ export interface CreateStudyPayload {
   plan_code?: string;
   template_key?: string;
   product_name?: string;
+  product_image_data_url?: string;
   category?: string;
   price?: number;
   reference_price?: number;
+  variable_cost?: number;
   url?: string;
   research_urls?: string[];
   description?: string;
