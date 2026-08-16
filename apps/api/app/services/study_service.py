@@ -27,6 +27,7 @@ from agents.backends.base import (
 )
 from agents.backends.gemini import get_representative_research_backend
 from agents.gemini_gateway import GeminiAgentGateway
+from agents.visual_analysis import analyze_product_image
 from data_pipeline.market_research import PublicMarketResearch
 from app.services.geospatial_research import GoogleGeospatialResearch
 from simulation_core.calibration import (
@@ -635,8 +636,19 @@ class StudyService:
         study: Mapping[str, Any],
         market_research: Mapping[str, Any],
         competitor_limit: int,
+        visual_analysis: Optional[Mapping[str, Any]] = None,
     ) -> Dict[str, Any]:
         product_attributes = self._product_attributes(study)
+        visual_overrides = (
+            dict((visual_analysis or {}).get("attribute_overrides") or {})
+            if str((visual_analysis or {}).get("status")) == "analyzed"
+            else {}
+        )
+        visual_fields: List[str] = []
+        for field, value in visual_overrides.items():
+            if field not in product_attributes:
+                product_attributes[field] = value
+                visual_fields.append(field)
         competitors = self._competitors(study)
         inputs = study.get("inputs") or {}
         facts = study.get("facts") or {}
@@ -821,6 +833,7 @@ class StudyService:
                 ),
                 "source_ids": list(dict.fromkeys(used_sources)),
                 "focal_fields_enriched": sorted(set(focal_fields)),
+                "visual_attribute_fields": sorted(visual_fields),
                 "competitor_field_updates": competitor_fields,
                 **(
                     {
@@ -1736,11 +1749,24 @@ class StudyService:
                     platform_calibration_override,
                 )
             )
+            visual_analysis = await analyze_product_image(
+                data_url=study["inputs"].get("product_image_data_url"),
+                product_name=str(
+                    study["facts"].get("product_name") or study["name"]
+                ),
+                category=str(study["facts"].get("category") or ""),
+                plan_code=plan.code,
+            )
             research_choice_inputs = self._research_enriched_choice_inputs(
                 study,
                 market_research,
                 plan.competitor_limit,
+                visual_analysis=visual_analysis,
             )
+            if visual_analysis.get("status") in {"failed", "unavailable"}:
+                calibration_warnings.append(
+                    str(visual_analysis.get("reason") or "产品图片未进入视觉分析。")
+                )
             update_progress("GENERATING_POPULATION", 35)
             population_result = self.population_backend.generate(
                 PopulationSynthesisRequest(
@@ -1804,6 +1830,11 @@ class StudyService:
                     "source_count",
                     0,
                 ),
+                "product_image_analysis": {
+                    key: value
+                    for key, value in visual_analysis.items()
+                    if key != "attribute_overrides"
+                },
             }
             representative_result = await self.representative_backend.research(
                 RepresentativeResearchRequest(
@@ -1850,6 +1881,13 @@ class StudyService:
                 sim_results["model_lineage"][
                     "representative_research"
                 ] = representative_result.lineage()
+            sim_results["model_lineage"]["product_image_analysis"] = {
+                key: value
+                for key, value in visual_analysis.items()
+                if key not in {"attribute_overrides", "scores"}
+            }
+            if visual_analysis.get("status") == "analyzed":
+                sim_results.setdefault("visual_evidence", visual_analysis)
             geo_analysis = build_geo_analysis(
                 study_type=study["study_type"],
                 venue_type=study["facts"].get("venue_type") or model_study_type,
