@@ -252,6 +252,16 @@ interface ReportData {
     frictions: string[];
     status: string;
   } | null;
+  visual_evidence?: {
+    status: string;
+    model_id?: string;
+    appearance_summary?: string;
+    visible_claims?: string[];
+    visual_differentiators?: string[];
+    trust_risks?: string[];
+    confidence?: number;
+    limitation?: string;
+  };
   warnings?: string[];
   model_lineage?: {
     model_family?: string;
@@ -311,7 +321,7 @@ const SECTIONS = [
   "executive_summary", "market_response", "segments",
   "sample_profile", "price_elasticity", "scenarios", "geo", "regional", "channels",
   "social_dynamics",
-  "market_intelligence", "consumer_voices", "sensitivity", "methodology"
+  "market_intelligence", "visual_evidence", "consumer_voices", "sensitivity", "methodology"
 ] as const;
 
 const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
@@ -326,6 +336,7 @@ const SECTION_LABELS: Record<typeof SECTIONS[number], string> = {
   channels: "渠道适配",
   social_dynamics: "口碑传播",
   market_intelligence: "AI 市场情报",
+  visual_evidence: "产品视觉分析",
   consumer_voices: "消费者声浪",
   sensitivity: "敏感性分析",
   methodology: "数据血缘与附录",
@@ -605,9 +616,10 @@ export function ReportClient({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
-  const visibleSections = reportData.geo_analysis
-    ? SECTIONS
-    : SECTIONS.filter(section => section !== "geo");
+  const visibleSections = SECTIONS.filter(section => (
+    (section !== "geo" || Boolean(reportData.geo_analysis))
+    && (section !== "visual_evidence" || reportData.visual_evidence?.status === "analyzed")
+  ));
 
   const shareReport = async () => {
     try {
@@ -776,6 +788,7 @@ export function ReportClient({
         {activeSection === "channels" && <ChannelsSection data={reportData} />}
         {activeSection === "social_dynamics" && <SocialDynamicsSection data={reportData} />}
         {activeSection === "market_intelligence" && <MarketIntelligenceSection data={reportData} />}
+        {activeSection === "visual_evidence" && <VisualEvidenceSection data={reportData} />}
         {activeSection === "consumer_voices" && <ConsumerVoicesSection data={reportData} />}
         {activeSection === "sensitivity" && <SensitivitySection data={reportData} />}
         {activeSection === "methodology" && <MethodologySection data={reportData} />}
@@ -1831,6 +1844,39 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
         </p>
       </Card>
     </div>
+  );
+}
+
+function VisualEvidenceSection({ data }: { data: ReportData }) {
+  const visual = data.visual_evidence;
+  if (!visual || visual.status !== "analyzed") return null;
+  return (
+    <section className="space-y-5">
+      <div>
+        <div className="eyebrow mb-1">AI 视觉证据</div>
+        <h2 className="text-xl font-semibold text-white">产品图片如何进入本次模拟</h2>
+        <p className="text-xs text-neutral-400 mt-1">模型识别可见包装与设计信号，并以受限权重补充产品属性；不会从图片推断真实销量或成交。</p>
+      </div>
+      <Card>
+        <div className="text-sm text-neutral-200 leading-6">{visual.appearance_summary || "已完成视觉识别。"}</div>
+        <div className="mt-3 text-[10px] font-mono text-neutral-500">视觉模型：{visual.model_id || "已记录"} · 识别置信度：{formatPercent(visual.confidence ?? 0, 0)}</div>
+      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <div className="eyebrow mb-2">可见产品信息</div>
+          <ul className="space-y-2 text-xs text-neutral-300">{(visual.visible_claims || []).map((item, index) => <li key={index}>• {item}</li>)}</ul>
+        </Card>
+        <Card>
+          <div className="eyebrow mb-2">视觉差异点</div>
+          <ul className="space-y-2 text-xs text-neutral-300">{(visual.visual_differentiators || []).map((item, index) => <li key={index}>• {item}</li>)}</ul>
+        </Card>
+        <Card>
+          <div className="eyebrow mb-2">需要验证的信任风险</div>
+          <ul className="space-y-2 text-xs text-neutral-300">{(visual.trust_risks || []).map((item, index) => <li key={index}>• {item}</li>)}</ul>
+        </Card>
+      </div>
+      {visual.limitation && <p className="text-[11px] text-neutral-500">限制：{visual.limitation}</p>}
+    </section>
   );
 }
 
