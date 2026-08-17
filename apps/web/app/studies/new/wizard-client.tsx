@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronRight, ImagePlus, Plus, X, Link as LinkIcon } from "lucide-react";
 import { STUDY_TYPE_META, PLAN_META, TEMPLATES } from "@/lib/product-catalog";
-import { getStoredToken } from "@/lib/auth-session";
+import { getStoredToken, getStoredUser } from "@/lib/auth-session";
 import { Card, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -212,7 +212,17 @@ export function NewStudyWizard() {
   const [returnPath, setReturnPath] = useState("/studies/new");
 
   useEffect(() => {
+    const user = getStoredUser();
     setAuthReady(Boolean(getStoredToken()));
+    // A new account should begin with its included preview instead of a paid
+    // plan it cannot run. Do not override an explicit template/user choice.
+    if ((user?.free_preview_runs_balance ?? 0) > 0) {
+      setState(current =>
+        current.plan_code === INIT_STATE.plan_code
+          ? { ...current, plan_code: "PREVIEW" }
+          : current,
+      );
+    }
     setReturnPath(`${window.location.pathname}${window.location.search}`);
   }, []);
 
