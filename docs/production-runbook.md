@@ -35,6 +35,23 @@ The database secret must use the Cloud SQL Unix socket form:
 postgresql+psycopg://USER:PASSWORD@/DATABASE?host=/cloudsql/PROJECT:asia-southeast1:market-twin-db
 ```
 
+## AWS production credential preflight
+
+Before an AWS ECS image rollout, verify that the application runtime secret is
+still synchronized with the RDS-managed master password. This command prints
+only a pass/fail result; it never prints a connection string or password.
+
+```bash
+python3 scripts/verify_aws_runtime_database_secret.py \
+  --region ap-southeast-1 \
+  --db-instance market-twin-prod-db \
+  --runtime-secret market-twin-runtime
+```
+
+Do not start a rollout when this check fails. Synchronize only the
+`DATABASE_URL` password in `market-twin-runtime` with the RDS managed secret,
+then re-run the check before deploying.
+
 Before the build, grant `roles/cloudsql.client` and
 `roles/secretmanager.secretAccessor` to the dedicated runtime service account.
 Grant the Cloud Build service account permission to deploy Cloud Run, use the
