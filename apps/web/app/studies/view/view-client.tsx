@@ -35,6 +35,9 @@ export function StudyViewClient() {
   }
 
   const facts = study.facts || {};
+  const isMalaysia = facts.country_code === "MY";
+  const countryName = isMalaysia ? "马来西亚" : "泰国";
+  const currencySymbol = isMalaysia ? "RM " : "฿";
   const canRun = ["READY", "FAILED_RECOVERABLE", "COMPLETED"].includes(study.status);
   const isRunning = [
     "QUEUED",
@@ -91,10 +94,11 @@ export function StudyViewClient() {
         <span className="eyebrow">已确认的研究输入</span>
         <div className="mt-4 divide-y divide-neutral-900 text-sm">
           <Fact label="研究类型" value={study.study_type} />
+          <Fact label="目标国家" value={countryName} />
           <Fact label="品类" value={facts.category} />
           <Fact label="产品名称" value={facts.product_name} />
-          <Fact label="价格" value={facts.price ? `฿${Number(facts.price).toLocaleString()}` : undefined} />
-          <Fact label="参考价格" value={facts.reference_price ? `฿${Number(facts.reference_price).toLocaleString()}` : undefined} />
+          <Fact label="价格" value={facts.price ? `${currencySymbol}${Number(facts.price).toLocaleString()}` : undefined} />
+          <Fact label="参考价格" value={facts.reference_price ? `${currencySymbol}${Number(facts.reference_price).toLocaleString()}` : undefined} />
           <Fact label="竞品数量" value={Array.isArray(facts.competitor_data) ? `${facts.competitor_data.length} 个` : "0 个"} />
           <Fact label="品类面板版本" value={facts.category_panel_version} />
         </div>
@@ -103,7 +107,7 @@ export function StudyViewClient() {
       <Card>
         <span className="eyebrow">结果应如何理解</span>
         <p className="text-sm text-neutral-300 mt-3 leading-relaxed">
-          本项目输出用于比较方案方向。人口与收入采用泰国公开宏观数据校准；
+          本项目输出用于比较方案方向。人口与收入采用{countryName}公开宏观数据校准；
           若没有客户销售、消费者选择实验或广告对照测试数据，购买率和支付意愿（WTP）会明确标记为待验证的先验预测。
         </p>
       </Card>

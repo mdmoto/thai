@@ -5,14 +5,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronRight, ImagePlus, Plus, X, Link as LinkIcon } from "lucide-react";
 import { STUDY_TYPE_META, PLAN_META, TEMPLATES } from "@/lib/product-catalog";
-import { getStoredToken } from "@/lib/auth-session";
+import { getStoredToken, getStoredUser } from "@/lib/auth-session";
 import { Card, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 type StudyType = keyof typeof STUDY_TYPE_META;
 type PlanCode = keyof typeof PLAN_META;
+type CountryCode = "TH" | "MY";
 
 interface WizardState {
+  country_code: CountryCode;
   study_type: StudyType | null;
   name: string;
   description: string;
@@ -25,6 +27,7 @@ interface WizardState {
   selling_points: string[];
   competitors: string[];
   url: string;
+  research_urls: string[];
   plan_code: PlanCode;
   business_questions: string[];
   venue_type: string;
@@ -46,6 +49,7 @@ interface WizardState {
 }
 
 const INIT_STATE: WizardState = {
+  country_code: "TH",
   study_type: null,
   name: "",
   description: "",
@@ -58,6 +62,7 @@ const INIT_STATE: WizardState = {
   selling_points: [""],
   competitors: [""],
   url: "",
+  research_urls: [""],
   plan_code: "STANDARD",
   business_questions: [],
   venue_type: "RESTAURANT",
@@ -212,7 +217,18 @@ export function NewStudyWizard() {
   const [returnPath, setReturnPath] = useState("/studies/new");
 
   useEffect(() => {
+    const user = getStoredUser();
     setAuthReady(Boolean(getStoredToken()));
+    // A first-time account should land on its included free preview rather
+    // than on a paid simulation it cannot run yet. Preserve an explicit plan
+    // choice (for example, a template or a user selection).
+    if ((user?.free_preview_runs_balance ?? 0) > 0) {
+      setState(current => (
+        current.plan_code === INIT_STATE.plan_code
+          ? { ...current, plan_code: "PREVIEW" }
+          : current
+      ));
+    }
     setReturnPath(`${window.location.pathname}${window.location.search}`);
   }, []);
 
@@ -233,6 +249,7 @@ export function NewStudyWizard() {
       const study = await createStudyApi({
         name: state.name || "未命名研究项目",
         study_type: state.study_type || "PRODUCT_VALIDATION",
+        country_code: state.country_code,
         plan_code: state.plan_code,
         template_key: state.template_key || undefined,
         product_name: state.product_name,
@@ -242,6 +259,7 @@ export function NewStudyWizard() {
         reference_price: state.reference_price ? Number(state.reference_price) : undefined,
         variable_cost: state.variable_cost ? Number(state.variable_cost) : undefined,
         url: state.url,
+        research_urls: state.research_urls.filter(Boolean),
         description: state.description,
         selling_points: state.selling_points.filter(Boolean),
         competitors: state.competitors.filter(Boolean),
@@ -396,7 +414,30 @@ function Step1({ state, update, onNext }: {
       <div>
         <div className="eyebrow mb-1">第 1 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择您的商业出海场景</h2>
-        <p className="text-xs text-neutral-400 font-light mt-1">预置全泰宏观人口画像与竞品博弈算法，即将调动 30 万数字人群做模拟消费演练</p>
+        <p className="text-xs text-neutral-400 font-light mt-1">选择目标国家后，系统会加载对应的官方宏观人口、收入、地区与币种配置。</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {([
+          { code: "TH", label: "泰国", detail: "NSO · THB · 77 府" },
+          { code: "MY", label: "马来西亚", detail: "DOSM · MYR · 16 州/联邦直辖区" },
+        ] as const).map(market => (
+          <button
+            type="button"
+            key={market.code}
+            onClick={() => update({ country_code: market.code })}
+            className={cn(
+              "card-lazzor p-4 text-left transition-colors",
+              state.country_code === market.code ? "bg-neutral-900 border-neutral-500" : "hover:bg-[#171717]",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <strong className="text-sm text-white">{market.label}</strong>
+              {state.country_code === market.code && <Check size={14} className="text-white" />}
+            </div>
+            <p className="text-[10px] text-neutral-500 mt-1">{market.detail}</p>
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -461,6 +502,9 @@ function Step2({ state, update, onNext, onBack }: {
   const isCreative = state.study_type === "CREATIVE_TEST";
   const isOffline = Boolean(state.study_type && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type));
   const siteCount = state.location_text.split(/[;\n、]+/).map(value => value.trim()).filter(Boolean).length;
+  const market = state.country_code === "MY"
+    ? { name: "马来西亚", currency: "MYR", symbol: "RM", priceExample: "99" }
+    : { name: "泰国", currency: "THB", symbol: "฿", priceExample: "990" };
 
   const addListItem = (field: "selling_points" | "competitors") => {
     update({ [field]: [...state[field], ""] });
@@ -502,23 +546,69 @@ function Step2({ state, update, onNext, onBack }: {
         <Input
           label="项目名称"
           required
-          placeholder="例：泰国宠物饮水机上市验证"
+          placeholder={`例：${market.name}宠物饮水机上市验证`}
           value={state.name}
           onChange={e => update({ name: e.target.value })}
         />
 
-        {/* URL input */}
+        {/* Public research sources. These pages are processed only by the
+            bounded, robots-aware public-evidence collector in Professional. */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-neutral-400 tracking-wide">重点查看的网址（选填）</label>
+          <label className="block text-xs font-medium text-neutral-400 tracking-wide">产品 / 品牌官网（选填）</label>
           <div className="relative">
             <LinkIcon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
               className="input-lazzor pl-9"
-              placeholder="https:// 官网、商品页或公开社交页面"
+              placeholder="https:// 产品官网或商品页"
               value={state.url}
               onChange={e => update({ url: e.target.value })}
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <div>
+            <label className="block text-xs font-medium text-neutral-400 tracking-wide">补充公开来源（选填）</label>
+            <p className="mt-1 text-[11px] leading-5 text-neutral-500">
+              可加入竞品商品页、公开评测或品牌页面。专业版会检查网站规则并抓取公开的价格、促销、评分、规格与消费者问题；登录页、验证码页和个人资料不会采集。
+            </p>
+          </div>
+          {state.research_urls.map((value, index) => (
+            <div className="flex gap-2" key={`research-url-${index}`}>
+              <div className="relative flex-1">
+                <LinkIcon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+                <input
+                  className="input-lazzor pl-9"
+                  placeholder="https:// 公开商品页、测评或竞品页"
+                  value={value}
+                  onChange={event => {
+                    const researchUrls = [...state.research_urls];
+                    researchUrls[index] = event.target.value;
+                    update({ research_urls: researchUrls });
+                  }}
+                />
+              </div>
+              {state.research_urls.length > 1 && (
+                <button
+                  type="button"
+                  aria-label="删除来源"
+                  className="rounded-lg border border-neutral-800 px-3 text-neutral-500 transition hover:border-neutral-600 hover:text-white"
+                  onClick={() => update({ research_urls: state.research_urls.filter((_, itemIndex) => itemIndex !== index) })}
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+          ))}
+          {state.research_urls.length < 5 && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 text-xs text-amber-300 transition hover:text-amber-200"
+              onClick={() => update({ research_urls: [...state.research_urls, ""] })}
+            >
+              <Plus size={14} /> 添加公开来源
+            </button>
+          )}
         </div>
 
         {(isProduct || isPricing || isCreative) && (
@@ -534,7 +624,7 @@ function Step2({ state, update, onNext, onBack }: {
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-neutral-400 tracking-wide">产品品类</label>
                 <select className="input-lazzor" value={state.category} onChange={event => update({ category: event.target.value })}>
-                  <option value="PET_WATER_FOUNTAIN">宠物智能饮水机（有专属竞品面板）</option>
+                  <option value="PET_WATER_FOUNTAIN">宠物智能饮水机{state.country_code === "TH" ? "（泰国有专属竞品面板）" : ""}</option>
                   <option value="BEAUTY_PERSONAL_CARE">美妆 / 个护</option>
                   <option value="FOOD_BEVERAGE">食品 / 饮料</option>
                   <option value="HOME_LIVING">家居 / 生活</option>
@@ -579,7 +669,7 @@ function Step2({ state, update, onNext, onBack }: {
 
             {!isCreative && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Input label={isPricing ? "当前测试价格（泰铢 THB）" : "计划售价（泰铢 THB）"} required type="number" placeholder="例：990" value={state.price} onChange={e => update({ price: e.target.value })} />
+                <Input label={`${isPricing ? "当前测试价格" : "计划售价"}（${market.currency}）`} required type="number" placeholder={`例：${market.priceExample}`} value={state.price} onChange={e => update({ price: e.target.value })} />
                 {isPricing && <Input label="市场常见价 / 竞品中位价（选填）" type="number" placeholder="例：1,190" value={state.reference_price} onChange={e => update({ reference_price: e.target.value })} />}
                 {isPricing && <Input label="单件变动成本（选填）" type="number" placeholder="例：430" value={state.variable_cost} onChange={e => update({ variable_cost: e.target.value })} />}
               </div>
@@ -619,12 +709,12 @@ function Step2({ state, update, onNext, onBack }: {
         {state.template_key === "ECOMMERCE" && (
           <div className="cmai-card p-5 space-y-4">
             <div>
-              <span className="eyebrow text-blue-300">泰国电商交易条件</span>
+              <span className="eyebrow text-blue-300">{market.name}电商交易条件</span>
               <h3 className="text-sm font-semibold text-white mt-1">电商履约与平台信任</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="预计运费（泰铢 THB）"
+                label={`预计运费（${market.currency}）`}
                 type="number"
                 value={state.shipping_fee}
                 onChange={e => update({ shipping_fee: e.target.value })}
@@ -682,7 +772,7 @@ function Step2({ state, update, onNext, onBack }: {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input
-                label={state.study_type === "SITE_COMPARISON" ? "预计客单价（泰铢 THB）" : "平均客单价（泰铢 THB）"}
+                label={`${state.study_type === "SITE_COMPARISON" ? "预计客单价" : "平均客单价"}（${market.currency}）`}
                 type="number"
                 required
                 placeholder="例：350"
@@ -792,12 +882,15 @@ function Step3({ state, onNext, onBack }: {
   const meta = state.study_type ? STUDY_TYPE_META[state.study_type] : null;
   const isOffline = Boolean(state.study_type && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type));
   const isCreative = state.study_type === "CREATIVE_TEST";
+  const market = state.country_code === "MY"
+    ? { name: "马来西亚", currency: "MYR", symbol: "RM", areas: "16 个州/联邦直辖区", source: "DOSM" }
+    : { name: "泰国", currency: "THB", symbol: "฿", areas: "77 府", source: "NSO" };
 
   const facts = [
     state.product_name && { label: isOffline ? "门店 / 项目" : isCreative ? "推广产品 / 品牌" : "产品名称", value: state.product_name },
     (isOffline ? state.average_check : state.price) && {
       label: isOffline ? "平均客单价" : "售价",
-      value: `฿${isOffline ? state.average_check : state.price}（泰铢）`,
+      value: `${market.symbol}${isOffline ? state.average_check : state.price}（${market.currency}）`,
     },
     isOffline
       ? { label: "位置与业态", value: `${state.location_text} · ${state.venue_type}` }
@@ -809,21 +902,21 @@ function Step3({ state, onNext, onBack }: {
   const pricePosition = price < 1_200 ? "低于公开面板中位区间" : price > 2_500 ? "高于公开面板中位区间" : "位于公开面板主要区间";
 
   const inferences = [
-    { label: "模拟市场", value: "泰国全国 77 府人口权重", grade: "B" },
-    { label: "人口与收入", value: "NSO 官方聚合统计校准", grade: "B" },
+    { label: "模拟市场", value: `${market.name}全国 ${market.areas}人口权重`, grade: "B" },
+    { label: "人口与收入", value: `${market.source} 官方聚合统计校准`, grade: "B" },
     {
       label: isOffline ? "地理与客流参照" : isCreative ? "广告效果参照" : "价格参照",
       value: isOffline
-        ? "运行时解析泰国地址、周边营业地点和步行路网；无历史数据时小时客流仍为先验"
+        ? `运行时解析${market.name}地址、周边营业地点和步行路网；无历史数据时小时客流仍为先验`
         : isCreative
           ? "当前使用结构化反应先验，尚未接入真实曝光与点击"
-          : isPetWater ? `${pricePosition}（公开样本 ฿435–฿3,290）` : "尚无该品类实证价格面板",
-      grade: isOffline || isPetWater ? "B" : "D",
+          : isPetWater && state.country_code === "TH" ? `${pricePosition}（公开样本 ฿435–฿3,290）` : "尚无该国家该品类实证价格面板",
+      grade: isOffline || (isPetWater && state.country_code === "TH") ? "B" : "D",
     },
     {
       label: "竞品选择集",
-      value: isPetWater ? "15 个泰国公开零售报价，模拟时压缩为代表性选择集" : isOffline ? "用户输入周边竞品 + 不到店选项" : "用户输入竞品 + 不购买选项",
-      grade: isPetWater ? "B" : "D",
+      value: isPetWater && state.country_code === "TH" ? "15 个泰国公开零售报价，模拟时压缩为代表性选择集" : isOffline ? "用户输入周边竞品 + 不到店选项" : "用户输入竞品 + 不购买选项",
+      grade: isPetWater && state.country_code === "TH" ? "B" : "D",
     },
   ];
 

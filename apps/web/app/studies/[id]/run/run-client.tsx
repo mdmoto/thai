@@ -15,15 +15,27 @@ import {
   runSimulationApi,
   SimulationRunStatus,
 } from "@/lib/api-client";
+import { PLAN_META } from "@/lib/product-catalog";
 import { cn } from "@/lib/utils";
 
 type RunStatus = "running" | "completed" | "failed";
+type PlanCode = keyof typeof PLAN_META;
 
-const SERVER_STAGES = [
+function planMetaFor(code?: string | null) {
+  if (code && code in PLAN_META) {
+    return PLAN_META[code as PlanCode];
+  }
+  return PLAN_META.PROFESSIONAL;
+}
+
+function stagesForPlan(code?: string | null) {
+  const plan = planMetaFor(code);
+  const population = plan.population.toLocaleString();
+  return [
   {
     code: "COLLECTING_PUBLIC_EVIDENCE",
     label: "扫描公开市场信息",
-    detail: "后台执行多组泰文检索，读取公开评测、社媒、电商和视频资料",
+    detail: "后台按目标国家执行多语种检索，读取公开评测、社媒、电商和视频资料",
   },
   {
     code: "COLLECTING_PUBLIC_EVIDENCE",
@@ -33,7 +45,7 @@ const SERVER_STAGES = [
   {
     code: "GENERATING_POPULATION",
     label: "准备 AI 模拟消费人群",
-    detail: "结合泰国人口、地区、收入与多维消费心理参数生成 AI 人群",
+    detail: "结合目标国家人口、地区、收入与多维消费心理参数生成 AI 人群",
   },
   {
     code: "RUNNING_AGENTS",
@@ -43,7 +55,7 @@ const SERVER_STAGES = [
   {
     code: "RUNNING_SIMULATION",
     label: "运行市场模拟",
-    detail: "对 30 万 AI 模拟消费者执行多轮随机偏好与风险计算",
+    detail: `对 ${population} 名 AI 模拟消费者执行多轮随机偏好与风险计算`,
   },
   {
     code: "RUNNING_SIMULATION",
@@ -55,7 +67,8 @@ const SERVER_STAGES = [
     label: "生成决策报告",
     detail: "整理结论、依据、数据版本和使用限制",
   },
-];
+  ];
+}
 
 const STAGE_RANK: Record<string, number> = {
   QUEUED: -2,
@@ -221,6 +234,9 @@ export function RunProgressClient({
   const formatElapsed = (seconds: number) =>
     `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
   const activeRank = STAGE_RANK[serverStatus?.stage || "QUEUED"] ?? -2;
+  const displayPlanCode = serverStatus?.plan_code || planCode;
+  const displayPlan = planMetaFor(displayPlanCode);
+  const serverStages = stagesForPlan(displayPlanCode);
 
   return (
     <div className="max-w-3xl mx-auto p-5 sm:p-8 space-y-8">
@@ -262,7 +278,7 @@ export function RunProgressClient({
         ) : (
           <div className="space-y-3">
             <Loader2 size={22} className="animate-spin text-white mx-auto" />
-            <div className="eyebrow">后台深度决策正在运行</div>
+            <div className="eyebrow">后台{displayPlan.label}正在运行</div>
             <h2 className="text-xl font-semibold text-white tracking-tight">
               {serverStatus?.stage_label || "正在安全提交后台任务…"}
             </h2>
@@ -282,7 +298,7 @@ export function RunProgressClient({
       <div className="space-y-3">
         <span className="eyebrow">本次分析内容</span>
         <div className="space-y-2">
-          {SERVER_STAGES.map((stage, index) => {
+          {serverStages.map((stage, index) => {
             const completed = status === "completed" || activeRank > index;
             const active = status === "running" && activeRank === index;
             return (

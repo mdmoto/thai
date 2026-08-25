@@ -81,6 +81,8 @@ def _canonicalize(report: dict[str, Any]) -> dict[str, Any]:
                         "started_at",
                         "completed_at",
                         "collected_at",
+                        "audited_at",
+                        "checked_at",
                     }
                     else normalize(item)
                 )
@@ -167,7 +169,7 @@ async def main() -> None:
 
     manifest = {
         "schema_version": "1",
-        "baseline_id": "PHASE0-2026-07-30",
+        "baseline_id": "PHASE0-SEA-2026-08-25",
         "world_model_version": manifest_cases[0] and report[
             "world_model_version"
         ],

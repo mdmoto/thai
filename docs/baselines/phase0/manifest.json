@@ -1,5 +1,5 @@
 {
-  "baseline_id": "PHASE0-2026-07-30",
+  "baseline_id": "PHASE0-SEA-2026-08-25",
   "cases": [
     {
       "case_id": "pet_water_product_validation",
@@ -24,7 +24,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/pet_water_product_validation.report.json",
-      "report_sha256": "741cde66d05aeb23eb5de772266eb74eee54d5ed00727cb9c0f7f5f18e988782",
+      "report_sha256": "2367e820e90173d7cfeed0e2f356da97887cd5294649c55c8a71ada2ae215240",
       "seed": 42
     },
     {
@@ -55,7 +55,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/generic_pricing_study.report.json",
-      "report_sha256": "62ef897fcd2cd36293244a6b88d75c2c10f76dbe8c02a1ec434e2704df778d48",
+      "report_sha256": "683f00930ccc87214c9412e5330c1cab2a18cef85d8cbc1810ca6a65d1b519a3",
       "seed": 42
     },
     {
@@ -84,7 +84,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/nimman_cafe_venue.report.json",
-      "report_sha256": "29012284c1b97f778511d66cfafc3ef406ac0dfafe78f425781d206f9bfe3987",
+      "report_sha256": "0e39a83d23cc6f60f012db481a1332b6c7baf80684a6d8e0795406b1ef3c7170",
       "seed": 42
     }
   ],
@@ -93,5 +93,5 @@
   "plan_config_version": "PLAN-CONFIG-2026.07.4",
   "schema_version": "1",
   "simulation_model_version": "SIM-3.0.0",
-  "world_model_version": "TH-WORLD-2026.07.5"
+  "world_model_version": "SEA-WORLD-2026.08.1"
 }

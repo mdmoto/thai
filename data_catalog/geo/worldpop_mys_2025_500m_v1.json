@@ -1,0 +1,46 @@
+{
+  "dataset_id": "worldpop_mys_2025_500m_v1",
+  "title": "Malaysia 2025 residential population grid, 500 m runtime aggregate",
+  "source_item_id": "mys_pop_2025_CN_100m_R2025A_v1",
+  "source_url": "https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/MYS/v1/100m/constrained/mys_pop_2025_CN_100m_R2025A_v1.tif",
+  "source_catalog_url": "https://api.stac.worldpop.org/collections/MYS/items/mys_pop_2025_CN_100m_R2025A_v1",
+  "source_doi": "10.5258/SOTON/WP00839",
+  "publisher": "WorldPop, University of Southampton",
+  "license": "CC-BY-4.0",
+  "source_resolution": "3 arc-second (~100 m)",
+  "runtime_resolution": "15 arc-second (~500 m)",
+  "aggregation": "sum of 5 x 5 source pixels; cell-center polygon inclusion at runtime",
+  "population_definition": "estimated residential population, people per grid cell",
+  "model_method": "Random Forest-based dasymetric redistribution, constrained grid",
+  "source_sha256": "f690371b5a0f8e14f28d127494df5e6be83fd7bf5dd38310ab927fa6a5699bdb",
+  "runtime_sha256": "02a5df26f4e4f28a04088e83630857c4603cff12ddc302e5b19465c10d565e05",
+  "source_shape": [
+    7832,
+    23554
+  ],
+  "runtime_shape": [
+    1567,
+    4711
+  ],
+  "worldpop_population_total": 35771104.87,
+  "national_benchmark": {
+    "publisher": "Department of Statistics Malaysia (DOSM)",
+    "dataset": "Population Table: States, 2026",
+    "resident_population": 34389300,
+    "url": "https://data.gov.my/data-catalogue/population_state",
+    "usage": "national reasonableness benchmark only; not used to invent a finer spatial distribution"
+  },
+  "national_adjustment": {
+    "factor": 0.9613709201478942,
+    "method": "uniform_national_scaling_to_official_benchmark",
+    "calibrated_population_total": 34389300,
+    "reason": "The WorldPop 2025 spatial surface is retained for local distribution, then uniformly scaled to the latest official national benchmark when one is configured."
+  },
+  "generated_at": "2026-08-25T04:45:27.366524Z",
+  "limitations": [
+    "This is a modeled residential population surface, not daytime population.",
+    "A uniform national adjustment may align the grid total to a newer official benchmark, but it does not create district-level census counts.",
+    "It is not mobile-device footfall, a mall turnstile count, or payment activity.",
+    "The production grid is aggregated to approximately 500 m and uses cell centers for catchment inclusion."
+  ]
+}

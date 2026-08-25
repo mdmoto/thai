@@ -1,0 +1,3154 @@
+{
+  "version": "MY-CONSUMER-MACRO-2026.08.1",
+  "status": "official_macro_calibrated_choice_prior",
+  "claim": "Malaysia adult age, binary sex, state population, state household income, income percentiles, expenditure and household-size margins are calibrated from DOSM/data.gov.my public aggregates. Administrative-district population, household income/expenditure and labour context are retained for geographic evidence. Behavioral traits and all choice coefficients remain unvalidated cross-market priors.",
+  "sources": [
+    {
+      "source_id": "DOSM_POPULATION_STATE",
+      "dataset_id": "population_state",
+      "dataset_page": "https://data.gov.my/data-catalogue/population_state",
+      "api_url": "https://storage.dosm.gov.my/population/population_state.csv",
+      "title": "Malaysia population by state, age and sex",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:16.469974+00:00",
+      "record_count": 2736,
+      "raw_sha256": "a3ac1a8831a4e66dbc0bc0d018b699b3810eaead3775fbee4c95e9eb2cc44945",
+      "sha256": "bbc0d14d9df028035b1ed5f365d3c728ccdac5521b2652179220ed8c01dd1fdc",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/population_state.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "DOSM_POPULATION_DISTRICT",
+      "dataset_id": "population_district",
+      "dataset_page": "https://data.gov.my/data-catalogue/population_district",
+      "api_url": "https://storage.dosm.gov.my/population/population_district.csv",
+      "title": "Malaysia population by administrative district, age and sex",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:20.538842+00:00",
+      "record_count": 9120,
+      "raw_sha256": "694b4b506b0ee8771134e78d9f57e5f2dd5c5fcde5d9cb9ae2fa320823d57940",
+      "sha256": "7e08bcd4e0f1ede6f090038eb5bd7120d33437866cef0c345d976ae1b5131414",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/population_district.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "DOSM_HIES_STATE_PERCENTILE",
+      "dataset_id": "hies_state_percentile",
+      "dataset_page": "https://data.gov.my/data-catalogue/hies_state_percentile",
+      "api_url": "https://storage.dosm.gov.my/hies/hies_state_percentile.csv",
+      "title": "Malaysia household income by state and percentile",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:21.241437+00:00",
+      "record_count": 1600,
+      "raw_sha256": "781990407571bcfb6a6f374aad34694d89b276f4c41c6b6f9e648fa6c82676d5",
+      "sha256": "935ed64860f2f618d6858c5ce18ab54da72bc38007ee7ecc051f11afce90b138",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/hies_state_percentile.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "DOSM_HIES_STATE",
+      "dataset_id": "hies_state",
+      "dataset_page": "https://data.gov.my/data-catalogue/hies_state",
+      "api_url": "https://storage.dosm.gov.my/hies/hies_state.csv",
+      "title": "Malaysia household income and expenditure by state",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:21.432312+00:00",
+      "record_count": 16,
+      "raw_sha256": "2006002bbfb2e64f36ced670580e618ab04ceaedd1df3554f6f7eabcac93573b",
+      "sha256": "90ed44d948e46434e22d7e7702a381441ff6a7eb46e9e60bb3b54b714289c619",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/hies_state.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "DOSM_HIES_DISTRICT",
+      "dataset_id": "hies_district",
+      "dataset_page": "https://data.gov.my/data-catalogue/hies_district",
+      "api_url": "https://storage.dosm.gov.my/hies/hies_district.csv",
+      "title": "Malaysia household income and expenditure by administrative district",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:21.645761+00:00",
+      "record_count": 162,
+      "raw_sha256": "7a2a6ec4cc0f107a6e8c8fec2affa4e06cff515c0c396de5f9ae209b4ee53e5b",
+      "sha256": "2fa42cb10ee26c1220b0ae2d2fbc7eda176024c51f7d2b6d00b8549e0f61d6af",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/hies_district.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "DOSM_LFS_DISTRICT",
+      "dataset_id": "lfs_district",
+      "dataset_page": "https://data.gov.my/data-catalogue/lfs_district",
+      "api_url": "https://storage.dosm.gov.my/labour/lfs_district.csv",
+      "title": "Malaysia labour-force statistics by administrative district",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:21.915764+00:00",
+      "record_count": 162,
+      "raw_sha256": "a29fb0bc348f28d888eb286d7ac2f143ed9615ce1f0efc3779b5e1e8c67f216d",
+      "sha256": "9a244d4870ba05ba852dc79bc103ab5dd9c91a757d6bbcff02dac50c06316299",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/lfs_district.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "DOSM_HOUSEHOLDS_STATE",
+      "dataset_id": "hh_profile_state",
+      "dataset_page": "https://data.gov.my/data-catalogue/hh_profile_state",
+      "api_url": "https://storage.dosm.gov.my/demography/hh_lq_state.csv",
+      "title": "Malaysia households and living quarters by state",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:22.192963+00:00",
+      "record_count": 16,
+      "raw_sha256": "1576b86d63bde002ed7a42953a45dee5509024d62910159fe2dde8969aaa2e31",
+      "sha256": "a0f18f9f9714869bb7643ed2cd435f284e1510ef6fe490bf26c31fe3198bc69f",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/hh_profile_state.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "DOSM_CPI_STATE",
+      "dataset_id": "cpi_state",
+      "dataset_page": "https://data.gov.my/data-catalogue/cpi_state",
+      "api_url": "https://storage.dosm.gov.my/cpi/cpi_2d_state.csv",
+      "title": "Malaysia monthly CPI by state and division",
+      "license": "CC BY 4.0",
+      "retrieval_method": "official_public_csv",
+      "observed": true,
+      "fetched_at": "2026-08-25T04:48:22.745308+00:00",
+      "record_count": 384,
+      "raw_sha256": "7f7f17c3f84f7c3efd2dce1f4af560f6818f94dce83256084b15fcaa6d21b466",
+      "sha256": "e0f20db4088998dccdd55e495053cff4c27a057601607ca667a57bffb1c61a6e",
+      "filter": "latest available period; CPI retains latest 24 months",
+      "snapshot_path": "data_catalog/raw/dosm/2026-08-25/cpi_state.json.gz",
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "THAILAND_ENGINEERING_PRIOR_TRANSFER",
+      "source_type": "cross_market_assumption",
+      "observed": false,
+      "note": "Behavior and choice priors are inherited structurally from the Thailand development model and are not Malaysian estimates."
+    }
+  ],
+  "limitations": [
+    "DOSM inputs are aggregate margins, not linked household microdata; joint dependencies are synthesized.",
+    "The population model excludes children; the 18-19 population is approximated as 40% of the DOSM 15-19 band.",
+    "Household income and expenditure are not individual wages or disposable cash flow.",
+    "Administrative-district population and household context use their own release dates and are not a substitute for enumeration-block microdata.",
+    "Ethnicity is not used as a behavioral coefficient or targeting variable.",
+    "Behavioral traits, category engagement, payment preferences and tourist shares remain unvalidated priors.",
+    "Choice coefficients, WTP and conversion rates have not been fitted to Malaysian observed choices or sales.",
+    "Forecast intervals remain prior-predictive and are not validated forecast intervals."
+  ],
+  "population": {
+    "registered_population_total": 34389300,
+    "population_reference_date": "2026-01-01",
+    "age_group": {
+      "18-24": 0.1648304895155397,
+      "25-34": 0.23561286190090058,
+      "35-44": 0.21716605190382854,
+      "45-54": 0.1558676947688772,
+      "55+": 0.22652290191085397
+    },
+    "gender": {
+      "Female": 0.4731725620750749,
+      "Male": 0.526827437924925
+    },
+    "region": {
+      "Central": 0.280840261360365,
+      "Northern": 0.20125155208160678,
+      "Southern": 0.1898904601140471,
+      "East Coast": 0.14168360507483432,
+      "East Malaysia": 0.1863341213691468
+    },
+    "province_by_region": {
+      "Central": {
+        "Selangor": 0.771824102548173,
+        "W.P. Kuala Lumpur": 0.21560587705401799,
+        "W.P. Putrajaya": 0.012570020397809047
+      },
+      "Northern": {
+        "Kedah": 0.3232816541201289,
+        "Perak": 0.372480457743935,
+        "Perlis": 0.04295684087329683,
+        "Pulau Pinang": 0.26128104726263923
+      },
+      "Southern": {
+        "Johor": 0.6468867722274969,
+        "Melaka": 0.16192459649015345,
+        "Negeri Sembilan": 0.1911886312823497
+      },
+      "East Coast": {
+        "Kelantan": 0.39514407684098185,
+        "Pahang": 0.3460717510877596,
+        "Terengganu": 0.25878417207125853
+      },
+      "East Malaysia": {
+        "Sabah": 0.5878681003136753,
+        "Sarawak": 0.39635449991416843,
+        "W.P. Labuan": 0.015777399772156246
+      }
+    },
+    "income_tier": {
+      "LOW": 0.2,
+      "MID_LOW": 0.2,
+      "MID_HIGH": 0.2,
+      "HIGH": 0.2,
+      "LUXURY": 0.2
+    },
+    "income_tier_by_region": {
+      "Central": {
+        "LOW": 0.2,
+        "MID_LOW": 0.2,
+        "MID_HIGH": 0.2,
+        "HIGH": 0.2,
+        "LUXURY": 0.2
+      },
+      "Northern": {
+        "LOW": 0.2,
+        "MID_LOW": 0.2,
+        "MID_HIGH": 0.2,
+        "HIGH": 0.2,
+        "LUXURY": 0.2
+      },
+      "Southern": {
+        "LOW": 0.2,
+        "MID_LOW": 0.2,
+        "MID_HIGH": 0.2,
+        "HIGH": 0.2,
+        "LUXURY": 0.2
+      },
+      "East Coast": {
+        "LOW": 0.2,
+        "MID_LOW": 0.2,
+        "MID_HIGH": 0.2,
+        "HIGH": 0.2,
+        "LUXURY": 0.2
+      },
+      "East Malaysia": {
+        "LOW": 0.2,
+        "MID_LOW": 0.2,
+        "MID_HIGH": 0.2,
+        "HIGH": 0.2,
+        "LUXURY": 0.2
+      }
+    },
+    "income_monthly_thb": {
+      "LOW": 3455.19,
+      "MID_LOW": 5499.93,
+      "MID_HIGH": 7334.65,
+      "HIGH": 9925.02,
+      "LUXURY": 19677.27
+    },
+    "income_monthly_local": {
+      "LOW": 3455.19,
+      "MID_LOW": 5499.93,
+      "MID_HIGH": 7334.65,
+      "HIGH": 9925.02,
+      "LUXURY": 19677.27
+    },
+    "income_currency": "MYR",
+    "region_income_multiplier": {
+      "Central": 1.4996800360839013,
+      "Northern": 0.7604506722075115,
+      "Southern": 0.9965022667124996,
+      "East Coast": 0.686037393632292,
+      "East Malaysia": 0.7479095215912199
+    },
+    "province_income_multiplier": {
+      "Selangor": 0.9884424522230193,
+      "W.P. Kuala Lumpur": 1.0396636352541309,
+      "W.P. Putrajaya": 1.0293301890403073,
+      "Kedah": 0.8493006833783482,
+      "Perak": 0.9050117587596312,
+      "Perlis": 0.8790621262794021,
+      "Pulau Pinang": 1.341757268130268,
+      "Johor": 1.0610656310882913,
+      "Melaka": 0.9717857519646667,
+      "Negeri Sembilan": 0.8172800964888199,
+      "Kelantan": 0.8556173458023824,
+      "Pahang": 0.9857881898646251,
+      "Terengganu": 1.2394669508897949,
+      "Sabah": 0.9686338411947215,
+      "Sarawak": 1.0355646806370775,
+      "W.P. Labuan": 1.2752635443860945
+    },
+    "official_state_household_income_myr": {
+      "Johor": 9484.0,
+      "Kedah": 5793.0,
+      "Kelantan": 5265.0,
+      "Melaka": 8686.0,
+      "Negeri Sembilan": 7305.0,
+      "Pahang": 6066.0,
+      "Perak": 6173.0,
+      "Perlis": 5996.0,
+      "Pulau Pinang": 9152.0,
+      "Sabah": 6498.0,
+      "Sarawak": 6947.0,
+      "Selangor": 13296.0,
+      "Terengganu": 7627.0,
+      "W.P. Kuala Lumpur": 13985.0,
+      "W.P. Labuan": 8555.0,
+      "W.P. Putrajaya": 13846.0
+    },
+    "household_size_by_province": {
+      "Johor": 3.701,
+      "Kedah": 3.918,
+      "Kelantan": 4.835,
+      "Melaka": 3.448,
+      "Negeri Sembilan": 3.509,
+      "Pahang": 3.77,
+      "Perak": 3.576,
+      "Perlis": 3.128,
+      "Pulau Pinang": 3.303,
+      "Sabah": 4.641,
+      "Sarawak": 3.836,
+      "Selangor": 3.551,
+      "Terengganu": 3.903,
+      "W.P. Kuala Lumpur": 3.195,
+      "W.P. Labuan": 3.775,
+      "W.P. Putrajaya": 3.457
+    },
+    "province_disposable_income_share": {
+      "Johor": 0.3750527203711514,
+      "Kedah": 0.30467805972725703,
+      "Kelantan": 0.27350427350427353,
+      "Melaka": 0.2848261570343081,
+      "Negeri Sembilan": 0.2997946611909651,
+      "Pahang": 0.2799208704253215,
+      "Perak": 0.31443382472055725,
+      "Perlis": 0.3188792528352235,
+      "Pulau Pinang": 0.36079545454545453,
+      "Sabah": 0.4541397353031702,
+      "Sarawak": 0.3837627752986901,
+      "Selangor": 0.4535198555956679,
+      "Terengganu": 0.3157204667628163,
+      "W.P. Kuala Lumpur": 0.41523060421880587,
+      "W.P. Labuan": 0.4743424897720631,
+      "W.P. Putrajaya": 0.3365592951032789
+    },
+    "district_context": {
+      "Johor|Batu Pahat": {
+        "population": 511800,
+        "income_mean_myr": 9006.0,
+        "income_median_myr": 7555.0,
+        "expenditure_mean_myr": 5153.0,
+        "gini": 0.316,
+        "poverty_rate": 2.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.9,
+        "unemployment_rate": 1.3,
+        "employment_population_ratio": 70.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Johor Bahru": {
+        "population": 1814400,
+        "income_mean_myr": 10975.0,
+        "income_median_myr": 8977.0,
+        "expenditure_mean_myr": 6764.0,
+        "gini": 0.35,
+        "poverty_rate": 1.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 74.6,
+        "unemployment_rate": 2.7,
+        "employment_population_ratio": 72.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Kluang": {
+        "population": 335200,
+        "income_mean_myr": 6616.0,
+        "income_median_myr": 6158.0,
+        "expenditure_mean_myr": 4748.0,
+        "gini": 0.292,
+        "poverty_rate": 5.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.6,
+        "unemployment_rate": 2.8,
+        "employment_population_ratio": 70.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Kota Tinggi": {
+        "population": 234700,
+        "income_mean_myr": 8106.0,
+        "income_median_myr": 6284.0,
+        "expenditure_mean_myr": 4949.0,
+        "gini": 0.379,
+        "poverty_rate": 4.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.1,
+        "unemployment_rate": 2.4,
+        "employment_population_ratio": 70.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Mersing": {
+        "population": 81400,
+        "income_mean_myr": 6014.0,
+        "income_median_myr": 5335.0,
+        "expenditure_mean_myr": 4274.0,
+        "gini": 0.263,
+        "poverty_rate": 6.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 61.3,
+        "unemployment_rate": 2.0,
+        "employment_population_ratio": 60.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Muar": {
+        "population": 323900,
+        "income_mean_myr": 8401.0,
+        "income_median_myr": 7334.0,
+        "expenditure_mean_myr": 5541.0,
+        "gini": 0.306,
+        "poverty_rate": 2.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.4,
+        "unemployment_rate": 1.6,
+        "employment_population_ratio": 68.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Pontian": {
+        "population": 177900,
+        "income_mean_myr": 7011.0,
+        "income_median_myr": 5685.0,
+        "expenditure_mean_myr": 4856.0,
+        "gini": 0.341,
+        "poverty_rate": 2.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.6,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 64.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Segamat": {
+        "population": 204300,
+        "income_mean_myr": 7348.0,
+        "income_median_myr": 6451.0,
+        "expenditure_mean_myr": 4870.0,
+        "gini": 0.292,
+        "poverty_rate": 3.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.3,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 69.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Kulai": {
+        "population": 353000,
+        "income_mean_myr": 10296.0,
+        "income_median_myr": 8406.0,
+        "expenditure_mean_myr": 6254.0,
+        "gini": 0.319,
+        "poverty_rate": 0.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.8,
+        "unemployment_rate": 2.3,
+        "employment_population_ratio": 65.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Johor|Tangkak": {
+        "population": 169200,
+        "income_mean_myr": 7524.0,
+        "income_median_myr": 6374.0,
+        "expenditure_mean_myr": 4673.0,
+        "gini": 0.306,
+        "poverty_rate": 4.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.9,
+        "unemployment_rate": 1.7,
+        "employment_population_ratio": 64.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Baling": {
+        "population": 149000,
+        "income_mean_myr": 4345.0,
+        "income_median_myr": 3367.0,
+        "expenditure_mean_myr": 3041.0,
+        "gini": 0.324,
+        "poverty_rate": 14.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.4,
+        "unemployment_rate": 1.8,
+        "employment_population_ratio": 69.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Bandar Baharu": {
+        "population": 45600,
+        "income_mean_myr": 4835.0,
+        "income_median_myr": 4310.0,
+        "expenditure_mean_myr": 3006.0,
+        "gini": 0.339,
+        "poverty_rate": 5.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.8,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 70.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Kota Setar": {
+        "population": 383400,
+        "income_mean_myr": 6034.0,
+        "income_median_myr": 5208.0,
+        "expenditure_mean_myr": 4495.0,
+        "gini": 0.328,
+        "poverty_rate": 5.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.8,
+        "unemployment_rate": 3.2,
+        "employment_population_ratio": 61.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Kuala Muda": {
+        "population": 574700,
+        "income_mean_myr": 5729.0,
+        "income_median_myr": 4953.0,
+        "expenditure_mean_myr": 3869.0,
+        "gini": 0.333,
+        "poverty_rate": 11.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 62.8,
+        "unemployment_rate": 2.2,
+        "employment_population_ratio": 61.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Kubang Pasu": {
+        "population": 254200,
+        "income_mean_myr": 6313.0,
+        "income_median_myr": 5312.0,
+        "expenditure_mean_myr": 4478.0,
+        "gini": 0.317,
+        "poverty_rate": 4.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.3,
+        "unemployment_rate": 2.4,
+        "employment_population_ratio": 63.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Kulim": {
+        "population": 354000,
+        "income_mean_myr": 6395.0,
+        "income_median_myr": 5236.0,
+        "expenditure_mean_myr": 4054.0,
+        "gini": 0.349,
+        "poverty_rate": 8.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.0,
+        "unemployment_rate": 1.9,
+        "employment_population_ratio": 67.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Langkawi": {
+        "population": 100500,
+        "income_mean_myr": 6278.0,
+        "income_median_myr": 5083.0,
+        "expenditure_mean_myr": 4356.0,
+        "gini": 0.335,
+        "poverty_rate": 6.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.6,
+        "unemployment_rate": 4.9,
+        "employment_population_ratio": 69.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Padang Terap": {
+        "population": 67900,
+        "income_mean_myr": 5062.0,
+        "income_median_myr": 3954.0,
+        "expenditure_mean_myr": 3872.0,
+        "gini": 0.292,
+        "poverty_rate": 8.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.3,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 68.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Sik": {
+        "population": 70500,
+        "income_mean_myr": 5107.0,
+        "income_median_myr": 4438.0,
+        "expenditure_mean_myr": 3675.0,
+        "gini": 0.325,
+        "poverty_rate": 8.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.0,
+        "unemployment_rate": 2.0,
+        "employment_population_ratio": 62.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Yan": {
+        "population": 75100,
+        "income_mean_myr": 5272.0,
+        "income_median_myr": 4695.0,
+        "expenditure_mean_myr": 3859.0,
+        "gini": 0.293,
+        "poverty_rate": 7.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.0,
+        "unemployment_rate": 1.9,
+        "employment_population_ratio": 61.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Pendang": {
+        "population": 102000,
+        "income_mean_myr": 5464.0,
+        "income_median_myr": 4592.0,
+        "expenditure_mean_myr": 3914.0,
+        "gini": 0.347,
+        "poverty_rate": 7.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.9,
+        "unemployment_rate": 3.5,
+        "employment_population_ratio": 64.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kedah|Pokok Sena": {
+        "population": 51200,
+        "income_mean_myr": 5736.0,
+        "income_median_myr": 5163.0,
+        "expenditure_mean_myr": 4257.0,
+        "gini": 0.27,
+        "poverty_rate": 7.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.4,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 67.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Bachok": {
+        "population": 167600,
+        "income_mean_myr": 5149.0,
+        "income_median_myr": 4187.0,
+        "expenditure_mean_myr": 3579.0,
+        "gini": 0.349,
+        "poverty_rate": 11.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 54.8,
+        "unemployment_rate": 3.2,
+        "employment_population_ratio": 53.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Kota Bharu": {
+        "population": 590100,
+        "income_mean_myr": 6180.0,
+        "income_median_myr": 4729.0,
+        "expenditure_mean_myr": 4329.0,
+        "gini": 0.361,
+        "poverty_rate": 9.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.0,
+        "unemployment_rate": 4.5,
+        "employment_population_ratio": 60.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Machang": {
+        "population": 117700,
+        "income_mean_myr": 5237.0,
+        "income_median_myr": 4156.0,
+        "expenditure_mean_myr": 3411.0,
+        "gini": 0.331,
+        "poverty_rate": 7.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 57.5,
+        "unemployment_rate": 4.9,
+        "employment_population_ratio": 54.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Pasir Mas": {
+        "population": 242700,
+        "income_mean_myr": 4975.0,
+        "income_median_myr": 3591.0,
+        "expenditure_mean_myr": 3581.0,
+        "gini": 0.365,
+        "poverty_rate": 8.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 54.3,
+        "unemployment_rate": 3.8,
+        "employment_population_ratio": 52.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Pasir Puteh": {
+        "population": 144700,
+        "income_mean_myr": 5070.0,
+        "income_median_myr": 4853.0,
+        "expenditure_mean_myr": 3749.0,
+        "gini": 0.302,
+        "poverty_rate": 11.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 57.7,
+        "unemployment_rate": 3.0,
+        "employment_population_ratio": 56.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Tanah Merah": {
+        "population": 159900,
+        "income_mean_myr": 4922.0,
+        "income_median_myr": 3638.0,
+        "expenditure_mean_myr": 3632.0,
+        "gini": 0.363,
+        "poverty_rate": 14.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 55.8,
+        "unemployment_rate": 2.2,
+        "employment_population_ratio": 54.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Tumpat": {
+        "population": 191200,
+        "income_mean_myr": 4991.0,
+        "income_median_myr": 3904.0,
+        "expenditure_mean_myr": 4181.0,
+        "gini": 0.334,
+        "poverty_rate": 12.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 53.4,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 52.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Gua Musang": {
+        "population": 111300,
+        "income_mean_myr": 4684.0,
+        "income_median_myr": 3871.0,
+        "expenditure_mean_myr": 3726.0,
+        "gini": 0.302,
+        "poverty_rate": 16.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 51.3,
+        "unemployment_rate": 3.3,
+        "employment_population_ratio": 49.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Kuala Krai": {
+        "population": 112400,
+        "income_mean_myr": 3872.0,
+        "income_median_myr": 2994.0,
+        "expenditure_mean_myr": 2863.0,
+        "gini": 0.342,
+        "poverty_rate": 20.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 59.0,
+        "unemployment_rate": 2.1,
+        "employment_population_ratio": 57.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Jeli": {
+        "population": 58200,
+        "income_mean_myr": 3829.0,
+        "income_median_myr": 3008.0,
+        "expenditure_mean_myr": 3062.0,
+        "gini": 0.315,
+        "poverty_rate": 10.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 55.7,
+        "unemployment_rate": 2.3,
+        "employment_population_ratio": 54.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Kelantan|Kecil Lojing": {
+        "population": 11700,
+        "income_mean_myr": 3511.0,
+        "income_median_myr": 3385.0,
+        "expenditure_mean_myr": 2953.0,
+        "gini": 0.218,
+        "poverty_rate": 20.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 48.8,
+        "unemployment_rate": 5.6,
+        "employment_population_ratio": 45.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Melaka|Alor Gajah": {
+        "population": 261800,
+        "income_mean_myr": 7855.0,
+        "income_median_myr": 6308.0,
+        "expenditure_mean_myr": 5745.0,
+        "gini": 0.327,
+        "poverty_rate": 4.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.6,
+        "unemployment_rate": 2.3,
+        "employment_population_ratio": 71.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Melaka|Jasin": {
+        "population": 157300,
+        "income_mean_myr": 7755.0,
+        "income_median_myr": 6401.0,
+        "expenditure_mean_myr": 5654.0,
+        "gini": 0.298,
+        "poverty_rate": 1.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.7,
+        "unemployment_rate": 1.2,
+        "employment_population_ratio": 65.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Melaka|Melaka Tengah": {
+        "population": 633300,
+        "income_mean_myr": 9232.0,
+        "income_median_myr": 7415.0,
+        "expenditure_mean_myr": 6527.0,
+        "gini": 0.373,
+        "poverty_rate": 2.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.7,
+        "unemployment_rate": 1.4,
+        "employment_population_ratio": 69.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Negeri Sembilan|Jelebu": {
+        "population": 48600,
+        "income_mean_myr": 4664.0,
+        "income_median_myr": 3713.0,
+        "expenditure_mean_myr": 3811.0,
+        "gini": 0.313,
+        "poverty_rate": 6.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.1,
+        "unemployment_rate": 3.5,
+        "employment_population_ratio": 61.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Negeri Sembilan|Kuala Pilah": {
+        "population": 72500,
+        "income_mean_myr": 4888.0,
+        "income_median_myr": 3996.0,
+        "expenditure_mean_myr": 3809.0,
+        "gini": 0.324,
+        "poverty_rate": 6.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 62.0,
+        "unemployment_rate": 4.7,
+        "employment_population_ratio": 59.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Negeri Sembilan|Port Dickson": {
+        "population": 135600,
+        "income_mean_myr": 6280.0,
+        "income_median_myr": 5342.0,
+        "expenditure_mean_myr": 4709.0,
+        "gini": 0.324,
+        "poverty_rate": 4.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.0,
+        "unemployment_rate": 4.2,
+        "employment_population_ratio": 64.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Negeri Sembilan|Rembau": {
+        "population": 49500,
+        "income_mean_myr": 5723.0,
+        "income_median_myr": 4894.0,
+        "expenditure_mean_myr": 4226.0,
+        "gini": 0.339,
+        "poverty_rate": 2.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.7,
+        "unemployment_rate": 3.5,
+        "employment_population_ratio": 64.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Negeri Sembilan|Seremban": {
+        "population": 716800,
+        "income_mean_myr": 8395.0,
+        "income_median_myr": 6472.0,
+        "expenditure_mean_myr": 5686.0,
+        "gini": 0.368,
+        "poverty_rate": 2.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.6,
+        "unemployment_rate": 2.7,
+        "employment_population_ratio": 65.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Negeri Sembilan|Tampin": {
+        "population": 90700,
+        "income_mean_myr": 5715.0,
+        "income_median_myr": 4367.0,
+        "expenditure_mean_myr": 4238.0,
+        "gini": 0.349,
+        "poverty_rate": 7.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.3,
+        "unemployment_rate": 3.0,
+        "employment_population_ratio": 64.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Negeri Sembilan|Jempol": {
+        "population": 130900,
+        "income_mean_myr": 5777.0,
+        "income_median_myr": 4291.0,
+        "expenditure_mean_myr": 4113.0,
+        "gini": 0.364,
+        "poverty_rate": 7.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.1,
+        "unemployment_rate": 3.4,
+        "employment_population_ratio": 62.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Bentong": {
+        "population": 120000,
+        "income_mean_myr": 6278.0,
+        "income_median_myr": 5015.0,
+        "expenditure_mean_myr": 4631.0,
+        "gini": 0.286,
+        "poverty_rate": 2.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.3,
+        "unemployment_rate": 1.5,
+        "employment_population_ratio": 65.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Cameron Highland": {
+        "population": 44800,
+        "income_mean_myr": 6895.0,
+        "income_median_myr": 5655.0,
+        "expenditure_mean_myr": 4672.0,
+        "gini": 0.294,
+        "poverty_rate": 5.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.8,
+        "unemployment_rate": 1.5,
+        "employment_population_ratio": 70.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Jerantut": {
+        "population": 100300,
+        "income_mean_myr": 5220.0,
+        "income_median_myr": 4231.0,
+        "expenditure_mean_myr": 3732.0,
+        "gini": 0.319,
+        "poverty_rate": 8.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.7,
+        "unemployment_rate": 2.8,
+        "employment_population_ratio": 62.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Kuantan": {
+        "population": 576700,
+        "income_mean_myr": 7008.0,
+        "income_median_myr": 5520.0,
+        "expenditure_mean_myr": 4969.0,
+        "gini": 0.332,
+        "poverty_rate": 3.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.1,
+        "unemployment_rate": 1.9,
+        "employment_population_ratio": 69.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Lipis": {
+        "population": 103300,
+        "income_mean_myr": 5276.0,
+        "income_median_myr": 4611.0,
+        "expenditure_mean_myr": 4278.0,
+        "gini": 0.237,
+        "poverty_rate": 9.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 54.5,
+        "unemployment_rate": 1.2,
+        "employment_population_ratio": 53.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Pekan": {
+        "population": 129300,
+        "income_mean_myr": 5098.0,
+        "income_median_myr": 4344.0,
+        "expenditure_mean_myr": 3799.0,
+        "gini": 0.277,
+        "poverty_rate": 10.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.0,
+        "unemployment_rate": 2.0,
+        "employment_population_ratio": 63.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Raub": {
+        "population": 99900,
+        "income_mean_myr": 5940.0,
+        "income_median_myr": 4427.0,
+        "expenditure_mean_myr": 4675.0,
+        "gini": 0.335,
+        "poverty_rate": 3.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.3,
+        "unemployment_rate": 2.6,
+        "employment_population_ratio": 61.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Temerloh": {
+        "population": 178700,
+        "income_mean_myr": 5521.0,
+        "income_median_myr": 4595.0,
+        "expenditure_mean_myr": 3684.0,
+        "gini": 0.319,
+        "poverty_rate": 6.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 62.6,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 61.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Rompin": {
+        "population": 104000,
+        "income_mean_myr": 5429.0,
+        "income_median_myr": 4760.0,
+        "expenditure_mean_myr": 3966.0,
+        "gini": 0.279,
+        "poverty_rate": 8.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 59.8,
+        "unemployment_rate": 1.9,
+        "employment_population_ratio": 58.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Maran": {
+        "population": 119900,
+        "income_mean_myr": 5088.0,
+        "income_median_myr": 4470.0,
+        "expenditure_mean_myr": 3764.0,
+        "gini": 0.257,
+        "poverty_rate": 7.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.4,
+        "unemployment_rate": 1.8,
+        "employment_population_ratio": 64.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pahang|Bera": {
+        "population": 101300,
+        "income_mean_myr": 4997.0,
+        "income_median_myr": 4269.0,
+        "expenditure_mean_myr": 3548.0,
+        "gini": 0.361,
+        "poverty_rate": 9.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 53.9,
+        "unemployment_rate": 2.8,
+        "employment_population_ratio": 52.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pulau Pinang|Sp Tengah": {
+        "population": 445200,
+        "income_mean_myr": 8413.0,
+        "income_median_myr": 6892.0,
+        "expenditure_mean_myr": 5419.0,
+        "gini": 0.346,
+        "poverty_rate": 2.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      },
+      "Pulau Pinang|Sp Utara": {
+        "population": 353100,
+        "income_mean_myr": 8101.0,
+        "income_median_myr": 6810.0,
+        "expenditure_mean_myr": 5232.0,
+        "gini": 0.343,
+        "poverty_rate": 3.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      },
+      "Pulau Pinang|Sp Selatan": {
+        "population": 189500,
+        "income_mean_myr": 8234.0,
+        "income_median_myr": 6822.0,
+        "expenditure_mean_myr": 5391.0,
+        "gini": 0.352,
+        "poverty_rate": 3.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      },
+      "Pulau Pinang|Timur Laut": {
+        "population": 565900,
+        "income_mean_myr": 9993.0,
+        "income_median_myr": 7745.0,
+        "expenditure_mean_myr": 6416.0,
+        "gini": 0.398,
+        "poverty_rate": 0.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.4,
+        "unemployment_rate": 1.8,
+        "employment_population_ratio": 70.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Pulau Pinang|Barat Daya": {
+        "population": 249700,
+        "income_mean_myr": 10231.0,
+        "income_median_myr": 8919.0,
+        "expenditure_mean_myr": 6222.0,
+        "gini": 0.368,
+        "poverty_rate": 0.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.9,
+        "unemployment_rate": 0.9,
+        "employment_population_ratio": 71.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Batang Padang": {
+        "population": 127000,
+        "income_mean_myr": 5433.0,
+        "income_median_myr": 4339.0,
+        "expenditure_mean_myr": 3722.0,
+        "gini": 0.354,
+        "poverty_rate": 11.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 47.2,
+        "unemployment_rate": 5.9,
+        "employment_population_ratio": 44.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Manjung": {
+        "population": 256400,
+        "income_mean_myr": 6612.0,
+        "income_median_myr": 5380.0,
+        "expenditure_mean_myr": 4387.0,
+        "gini": 0.346,
+        "poverty_rate": 3.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.0,
+        "unemployment_rate": 3.1,
+        "employment_population_ratio": 68.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Kinta": {
+        "population": 927400,
+        "income_mean_myr": 6758.0,
+        "income_median_myr": 5136.0,
+        "expenditure_mean_myr": 4648.0,
+        "gini": 0.391,
+        "poverty_rate": 3.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.5,
+        "unemployment_rate": 2.6,
+        "employment_population_ratio": 70.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Kerian": {
+        "population": 169800,
+        "income_mean_myr": 5590.0,
+        "income_median_myr": 4554.0,
+        "expenditure_mean_myr": 3807.0,
+        "gini": 0.305,
+        "poverty_rate": 7.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.8,
+        "unemployment_rate": 4.2,
+        "employment_population_ratio": 66.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Kuala Kangsar": {
+        "population": 179600,
+        "income_mean_myr": 5489.0,
+        "income_median_myr": 3977.0,
+        "expenditure_mean_myr": 4005.0,
+        "gini": 0.357,
+        "poverty_rate": 11.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.6,
+        "unemployment_rate": 4.3,
+        "employment_population_ratio": 61.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Larut Dan Matang": {
+        "population": 278300,
+        "income_mean_myr": 6024.0,
+        "income_median_myr": 4843.0,
+        "expenditure_mean_myr": 4174.0,
+        "gini": 0.335,
+        "poverty_rate": 9.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.3,
+        "unemployment_rate": 2.8,
+        "employment_population_ratio": 70.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Hilir Perak": {
+        "population": 141800,
+        "income_mean_myr": 5599.0,
+        "income_median_myr": 4347.0,
+        "expenditure_mean_myr": 3711.0,
+        "gini": 0.36,
+        "poverty_rate": 12.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 46.0,
+        "unemployment_rate": 7.4,
+        "employment_population_ratio": 42.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Hulu Perak": {
+        "population": 98500,
+        "income_mean_myr": 4980.0,
+        "income_median_myr": 3701.0,
+        "expenditure_mean_myr": 3270.0,
+        "gini": 0.331,
+        "poverty_rate": 13.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 49.6,
+        "unemployment_rate": 5.4,
+        "employment_population_ratio": 46.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Perak Tengah": {
+        "population": 99200,
+        "income_mean_myr": 6027.0,
+        "income_median_myr": 4685.0,
+        "expenditure_mean_myr": 3956.0,
+        "gini": 0.354,
+        "poverty_rate": 10.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.9,
+        "unemployment_rate": 3.8,
+        "employment_population_ratio": 68.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Kampar": {
+        "population": 98800,
+        "income_mean_myr": 5608.0,
+        "income_median_myr": 4538.0,
+        "expenditure_mean_myr": 3753.0,
+        "gini": 0.37,
+        "poverty_rate": 4.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.2,
+        "unemployment_rate": 4.4,
+        "employment_population_ratio": 61.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Muallim": {
+        "population": 79600,
+        "income_mean_myr": 6229.0,
+        "income_median_myr": 4856.0,
+        "expenditure_mean_myr": 4517.0,
+        "gini": 0.35,
+        "poverty_rate": 7.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.9,
+        "unemployment_rate": 4.0,
+        "employment_population_ratio": 68.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Bagan Datuk": {
+        "population": 83500,
+        "income_mean_myr": 5326.0,
+        "income_median_myr": 4134.0,
+        "expenditure_mean_myr": 3543.0,
+        "gini": 0.361,
+        "poverty_rate": 11.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 53.6,
+        "unemployment_rate": 5.0,
+        "employment_population_ratio": 50.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perak|Selama": {
+        "population": 35000,
+        "income_mean_myr": 5019.0,
+        "income_median_myr": 3827.0,
+        "expenditure_mean_myr": 3779.0,
+        "gini": 0.337,
+        "poverty_rate": 10.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 44.5,
+        "unemployment_rate": 8.9,
+        "employment_population_ratio": 40.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Gombak": {
+        "population": 985400,
+        "income_mean_myr": 14168.0,
+        "income_median_myr": 10777.0,
+        "expenditure_mean_myr": 7326.0,
+        "gini": 0.366,
+        "poverty_rate": 2.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 75.7,
+        "unemployment_rate": 3.0,
+        "employment_population_ratio": 73.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Klang": {
+        "population": 1183000,
+        "income_mean_myr": 10912.0,
+        "income_median_myr": 8837.0,
+        "expenditure_mean_myr": 6927.0,
+        "gini": 0.299,
+        "poverty_rate": 1.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 80.3,
+        "unemployment_rate": 2.6,
+        "employment_population_ratio": 78.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Kuala Langat": {
+        "population": 329000,
+        "income_mean_myr": 11714.0,
+        "income_median_myr": 10583.0,
+        "expenditure_mean_myr": 6123.0,
+        "gini": 0.16,
+        "poverty_rate": 0.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 74.8,
+        "unemployment_rate": 1.2,
+        "employment_population_ratio": 73.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Kuala Selangor": {
+        "population": 301600,
+        "income_mean_myr": 10584.0,
+        "income_median_myr": 8046.0,
+        "expenditure_mean_myr": 5974.0,
+        "gini": 0.35,
+        "poverty_rate": 1.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.6,
+        "unemployment_rate": 2.6,
+        "employment_population_ratio": 68.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Petaling": {
+        "population": 2370600,
+        "income_mean_myr": 14422.0,
+        "income_median_myr": 10688.0,
+        "expenditure_mean_myr": 8210.0,
+        "gini": 0.387,
+        "poverty_rate": 1.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 79.8,
+        "unemployment_rate": 2.0,
+        "employment_population_ratio": 78.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Sabak Bernam": {
+        "population": 110500,
+        "income_mean_myr": 8033.0,
+        "income_median_myr": 6941.0,
+        "expenditure_mean_myr": 5621.0,
+        "gini": 0.268,
+        "poverty_rate": 2.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.4,
+        "unemployment_rate": 1.9,
+        "employment_population_ratio": 70.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Sepang": {
+        "population": 350400,
+        "income_mean_myr": 15906.0,
+        "income_median_myr": 11131.0,
+        "expenditure_mean_myr": 7676.0,
+        "gini": 0.332,
+        "poverty_rate": 0.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 76.7,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 74.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Ulu Langat": {
+        "population": 1516600,
+        "income_mean_myr": 13822.0,
+        "income_median_myr": 11404.0,
+        "expenditure_mean_myr": 6758.0,
+        "gini": 0.219,
+        "poverty_rate": 0.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 77.4,
+        "unemployment_rate": 2.3,
+        "employment_population_ratio": 75.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Selangor|Ulu Selangor": {
+        "population": 259800,
+        "income_mean_myr": 9499.0,
+        "income_median_myr": 8485.0,
+        "expenditure_mean_myr": 5425.0,
+        "gini": 0.299,
+        "poverty_rate": 0.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 77.8,
+        "unemployment_rate": 1.4,
+        "employment_population_ratio": 76.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Besut": {
+        "population": 167500,
+        "income_mean_myr": 6747.0,
+        "income_median_myr": 5820.0,
+        "expenditure_mean_myr": 4339.0,
+        "gini": 0.311,
+        "poverty_rate": 13.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 59.9,
+        "unemployment_rate": 3.5,
+        "employment_population_ratio": 57.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Dungun": {
+        "population": 169900,
+        "income_mean_myr": 8055.0,
+        "income_median_myr": 7156.0,
+        "expenditure_mean_myr": 5833.0,
+        "gini": 0.308,
+        "poverty_rate": 4.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 58.0,
+        "unemployment_rate": 3.1,
+        "employment_population_ratio": 56.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Kemaman": {
+        "population": 235000,
+        "income_mean_myr": 8973.0,
+        "income_median_myr": 7709.0,
+        "expenditure_mean_myr": 5644.0,
+        "gini": 0.319,
+        "poverty_rate": 3.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.5,
+        "unemployment_rate": 2.6,
+        "employment_population_ratio": 65.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Kuala Terengganu": {
+        "population": 248400,
+        "income_mean_myr": 7279.0,
+        "income_median_myr": 6615.0,
+        "expenditure_mean_myr": 5264.0,
+        "gini": 0.267,
+        "poverty_rate": 4.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 59.3,
+        "unemployment_rate": 3.3,
+        "employment_population_ratio": 57.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Marang": {
+        "population": 128800,
+        "income_mean_myr": 6807.0,
+        "income_median_myr": 6246.0,
+        "expenditure_mean_myr": 5141.0,
+        "gini": 0.281,
+        "poverty_rate": 7.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 58.0,
+        "unemployment_rate": 2.6,
+        "employment_population_ratio": 56.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Hulu Terengganu": {
+        "population": 74800,
+        "income_mean_myr": 6360.0,
+        "income_median_myr": 6134.0,
+        "expenditure_mean_myr": 4554.0,
+        "gini": 0.255,
+        "poverty_rate": 6.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 55.8,
+        "unemployment_rate": 3.3,
+        "employment_population_ratio": 54.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Setiu": {
+        "population": 64900,
+        "income_mean_myr": 6359.0,
+        "income_median_myr": 6125.0,
+        "expenditure_mean_myr": 4314.0,
+        "gini": 0.214,
+        "poverty_rate": 4.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.7,
+        "unemployment_rate": 3.6,
+        "employment_population_ratio": 62.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Terengganu|Kuala Nerus": {
+        "population": 157500,
+        "income_mean_myr": 8385.0,
+        "income_median_myr": 7304.0,
+        "expenditure_mean_myr": 5498.0,
+        "gini": 0.282,
+        "poverty_rate": 1.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 59.3,
+        "unemployment_rate": 3.3,
+        "employment_population_ratio": 57.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Tawau": {
+        "population": 416400,
+        "income_mean_myr": 6751.0,
+        "income_median_myr": 4852.0,
+        "expenditure_mean_myr": 3182.0,
+        "gini": 0.389,
+        "poverty_rate": 13.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 73.3,
+        "unemployment_rate": 7.1,
+        "employment_population_ratio": 68.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Lahad Datu": {
+        "population": 252900,
+        "income_mean_myr": 6557.0,
+        "income_median_myr": 5526.0,
+        "expenditure_mean_myr": 3571.0,
+        "gini": 0.286,
+        "poverty_rate": 13.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.4,
+        "unemployment_rate": 7.5,
+        "employment_population_ratio": 67.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Semporna": {
+        "population": 201400,
+        "income_mean_myr": 5604.0,
+        "income_median_myr": 4059.0,
+        "expenditure_mean_myr": 2567.0,
+        "gini": 0.411,
+        "poverty_rate": 30.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.2,
+        "unemployment_rate": 8.4,
+        "employment_population_ratio": 63.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Sandakan": {
+        "population": 504500,
+        "income_mean_myr": 6648.0,
+        "income_median_myr": 5314.0,
+        "expenditure_mean_myr": 3677.0,
+        "gini": 0.355,
+        "poverty_rate": 15.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 73.0,
+        "unemployment_rate": 6.8,
+        "employment_population_ratio": 68.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kinabatangan": {
+        "population": 164800,
+        "income_mean_myr": 5632.0,
+        "income_median_myr": 4897.0,
+        "expenditure_mean_myr": 2482.0,
+        "gini": 0.308,
+        "poverty_rate": 26.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.6,
+        "unemployment_rate": 8.2,
+        "employment_population_ratio": 64.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Beluran": {
+        "population": 90600,
+        "income_mean_myr": 4993.0,
+        "income_median_myr": 4436.0,
+        "expenditure_mean_myr": 2750.0,
+        "gini": 0.314,
+        "poverty_rate": 33.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.6,
+        "unemployment_rate": 8.6,
+        "employment_population_ratio": 60.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kota Kinabalu": {
+        "population": 552400,
+        "income_mean_myr": 8715.0,
+        "income_median_myr": 5896.0,
+        "expenditure_mean_myr": 4726.0,
+        "gini": 0.426,
+        "poverty_rate": 12.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 76.2,
+        "unemployment_rate": 5.9,
+        "employment_population_ratio": 71.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Ranau": {
+        "population": 89100,
+        "income_mean_myr": 5330.0,
+        "income_median_myr": 3470.0,
+        "expenditure_mean_myr": 2905.0,
+        "gini": 0.441,
+        "poverty_rate": 23.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.2,
+        "unemployment_rate": 9.3,
+        "employment_population_ratio": 63.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kota Belud": {
+        "population": 111500,
+        "income_mean_myr": 5007.0,
+        "income_median_myr": 3512.0,
+        "expenditure_mean_myr": 2920.0,
+        "gini": 0.361,
+        "poverty_rate": 26.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.5,
+        "unemployment_rate": 8.7,
+        "employment_population_ratio": 58.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Tuaran": {
+        "population": 142800,
+        "income_mean_myr": 5388.0,
+        "income_median_myr": 4277.0,
+        "expenditure_mean_myr": 3185.0,
+        "gini": 0.342,
+        "poverty_rate": 23.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.5,
+        "unemployment_rate": 8.8,
+        "employment_population_ratio": 57.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Penampang": {
+        "population": 166800,
+        "income_mean_myr": 7550.0,
+        "income_median_myr": 6090.0,
+        "expenditure_mean_myr": 4234.0,
+        "gini": 0.348,
+        "poverty_rate": 5.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 74.4,
+        "unemployment_rate": 5.8,
+        "employment_population_ratio": 70.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Papar": {
+        "population": 156300,
+        "income_mean_myr": 6038.0,
+        "income_median_myr": 5177.0,
+        "expenditure_mean_myr": 3613.0,
+        "gini": 0.313,
+        "poverty_rate": 12.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.5,
+        "unemployment_rate": 8.3,
+        "employment_population_ratio": 66.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kudat": {
+        "population": 93700,
+        "income_mean_myr": 4571.0,
+        "income_median_myr": 3249.0,
+        "expenditure_mean_myr": 3206.0,
+        "gini": 0.385,
+        "poverty_rate": 35.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 62.2,
+        "unemployment_rate": 9.4,
+        "employment_population_ratio": 56.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kota Marudu": {
+        "population": 74800,
+        "income_mean_myr": 4685.0,
+        "income_median_myr": 2877.0,
+        "expenditure_mean_myr": 3466.0,
+        "gini": 0.421,
+        "poverty_rate": 40.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 61.2,
+        "unemployment_rate": 8.7,
+        "employment_population_ratio": 55.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Pitas": {
+        "population": 39000,
+        "income_mean_myr": 4121.0,
+        "income_median_myr": 2785.0,
+        "expenditure_mean_myr": 3472.0,
+        "gini": 0.411,
+        "poverty_rate": 50.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 53.5,
+        "unemployment_rate": 9.6,
+        "employment_population_ratio": 48.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Beaufort": {
+        "population": 77400,
+        "income_mean_myr": 5048.0,
+        "income_median_myr": 4070.0,
+        "expenditure_mean_myr": 3545.0,
+        "gini": 0.373,
+        "poverty_rate": 20.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.4,
+        "unemployment_rate": 9.4,
+        "employment_population_ratio": 60.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kuala Penyu": {
+        "population": 24900,
+        "income_mean_myr": 4750.0,
+        "income_median_myr": 3733.0,
+        "expenditure_mean_myr": 2826.0,
+        "gini": 0.375,
+        "poverty_rate": 14.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.7,
+        "unemployment_rate": 9.0,
+        "employment_population_ratio": 61.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Sipitang": {
+        "population": 40900,
+        "income_mean_myr": 5548.0,
+        "income_median_myr": 4606.0,
+        "expenditure_mean_myr": 3341.0,
+        "gini": 0.306,
+        "poverty_rate": 15.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.2,
+        "unemployment_rate": 8.7,
+        "employment_population_ratio": 64.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Tenom": {
+        "population": 54200,
+        "income_mean_myr": 5410.0,
+        "income_median_myr": 4161.0,
+        "expenditure_mean_myr": 3504.0,
+        "gini": 0.336,
+        "poverty_rate": 12.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.5,
+        "unemployment_rate": 11.1,
+        "employment_population_ratio": 61.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Nabawan": {
+        "population": 31100,
+        "income_mean_myr": 5146.0,
+        "income_median_myr": 4361.0,
+        "expenditure_mean_myr": 3553.0,
+        "gini": 0.314,
+        "poverty_rate": 25.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.1,
+        "unemployment_rate": 10.7,
+        "employment_population_ratio": 63.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Keningau": {
+        "population": 157800,
+        "income_mean_myr": 6033.0,
+        "income_median_myr": 4801.0,
+        "expenditure_mean_myr": 3542.0,
+        "gini": 0.322,
+        "poverty_rate": 12.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.7,
+        "unemployment_rate": 8.7,
+        "employment_population_ratio": 65.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Tambunan": {
+        "population": 33700,
+        "income_mean_myr": 5361.0,
+        "income_median_myr": 4854.0,
+        "expenditure_mean_myr": 3508.0,
+        "gini": 0.3,
+        "poverty_rate": 8.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.0,
+        "unemployment_rate": 9.0,
+        "employment_population_ratio": 64.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kunak": {
+        "population": 78300,
+        "income_mean_myr": 6608.0,
+        "income_median_myr": 4539.0,
+        "expenditure_mean_myr": 2797.0,
+        "gini": 0.484,
+        "poverty_rate": 29.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.6,
+        "unemployment_rate": 8.4,
+        "employment_population_ratio": 65.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Tongod": {
+        "population": 43700,
+        "income_mean_myr": 4090.0,
+        "income_median_myr": 3470.0,
+        "expenditure_mean_myr": 2465.0,
+        "gini": 0.344,
+        "poverty_rate": 41.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 52.8,
+        "unemployment_rate": 9.7,
+        "employment_population_ratio": 47.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Putatan": {
+        "population": 71000,
+        "income_mean_myr": 7377.0,
+        "income_median_myr": 6563.0,
+        "expenditure_mean_myr": 4188.0,
+        "gini": 0.289,
+        "poverty_rate": 6.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 73.7,
+        "unemployment_rate": 6.1,
+        "employment_population_ratio": 69.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Telupid": {
+        "population": 30600,
+        "income_mean_myr": 4877.0,
+        "income_median_myr": 4489.0,
+        "expenditure_mean_myr": 2659.0,
+        "gini": 0.267,
+        "poverty_rate": 22.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 53.4,
+        "unemployment_rate": 9.3,
+        "employment_population_ratio": 48.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sabah|Kalabakan": {
+        "population": 59100,
+        "income_mean_myr": 5174.0,
+        "income_median_myr": 3304.0,
+        "expenditure_mean_myr": 2257.0,
+        "gini": 0.447,
+        "poverty_rate": 26.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.1,
+        "unemployment_rate": 9.1,
+        "employment_population_ratio": 62.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Kuching": {
+        "population": 627200,
+        "income_mean_myr": 8237.0,
+        "income_median_myr": 6741.0,
+        "expenditure_mean_myr": 5184.0,
+        "gini": 0.349,
+        "poverty_rate": 7.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.3,
+        "unemployment_rate": 2.8,
+        "employment_population_ratio": 70.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Bau": {
+        "population": 54000,
+        "income_mean_myr": 5843.0,
+        "income_median_myr": 4885.0,
+        "expenditure_mean_myr": 3965.0,
+        "gini": 0.327,
+        "poverty_rate": 6.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.5,
+        "unemployment_rate": 2.9,
+        "employment_population_ratio": 67.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Lundu": {
+        "population": 34800,
+        "income_mean_myr": 5170.0,
+        "income_median_myr": 3918.0,
+        "expenditure_mean_myr": 3370.0,
+        "gini": 0.345,
+        "poverty_rate": 12.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.9,
+        "unemployment_rate": 2.7,
+        "employment_population_ratio": 66.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Samarahan": {
+        "population": 136600,
+        "income_mean_myr": 7965.0,
+        "income_median_myr": 6785.0,
+        "expenditure_mean_myr": 4973.0,
+        "gini": 0.322,
+        "poverty_rate": 6.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.9,
+        "unemployment_rate": 5.7,
+        "employment_population_ratio": 66.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Serian": {
+        "population": 88100,
+        "income_mean_myr": 5113.0,
+        "income_median_myr": 4082.0,
+        "expenditure_mean_myr": 3594.0,
+        "gini": 0.326,
+        "poverty_rate": 11.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 57.7,
+        "unemployment_rate": 6.7,
+        "employment_population_ratio": 53.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Simunjan": {
+        "population": 37300,
+        "income_mean_myr": 4246.0,
+        "income_median_myr": 3365.0,
+        "expenditure_mean_myr": 3130.0,
+        "gini": 0.311,
+        "poverty_rate": 14.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.6,
+        "unemployment_rate": 4.2,
+        "employment_population_ratio": 61.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Sri Aman": {
+        "population": 61300,
+        "income_mean_myr": 5349.0,
+        "income_median_myr": 3967.0,
+        "expenditure_mean_myr": 3378.0,
+        "gini": 0.383,
+        "poverty_rate": 6.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.8,
+        "unemployment_rate": 1.6,
+        "employment_population_ratio": 66.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Lubok Antu": {
+        "population": 24600,
+        "income_mean_myr": 4820.0,
+        "income_median_myr": 4169.0,
+        "expenditure_mean_myr": 3564.0,
+        "gini": 0.311,
+        "poverty_rate": 13.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.3,
+        "unemployment_rate": 2.1,
+        "employment_population_ratio": 64.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Betong": {
+        "population": 37200,
+        "income_mean_myr": 4572.0,
+        "income_median_myr": 4074.0,
+        "expenditure_mean_myr": 2877.0,
+        "gini": 0.269,
+        "poverty_rate": 7.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.8,
+        "unemployment_rate": 1.9,
+        "employment_population_ratio": 63.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Saratok": {
+        "population": 23500,
+        "income_mean_myr": 4796.0,
+        "income_median_myr": 3418.0,
+        "expenditure_mean_myr": 3127.0,
+        "gini": 0.352,
+        "poverty_rate": 5.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.9,
+        "unemployment_rate": 3.1,
+        "employment_population_ratio": 63.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Sarikei": {
+        "population": 45200,
+        "income_mean_myr": 5792.0,
+        "income_median_myr": 4675.0,
+        "expenditure_mean_myr": 3849.0,
+        "gini": 0.355,
+        "poverty_rate": 17.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 69.0,
+        "unemployment_rate": 4.3,
+        "employment_population_ratio": 66.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Maradong": {
+        "population": 20900,
+        "income_mean_myr": 4208.0,
+        "income_median_myr": 3472.0,
+        "expenditure_mean_myr": 2864.0,
+        "gini": 0.303,
+        "poverty_rate": 16.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.4,
+        "unemployment_rate": 5.1,
+        "employment_population_ratio": 62.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Daro": {
+        "population": 20300,
+        "income_mean_myr": 4913.0,
+        "income_median_myr": 3806.0,
+        "expenditure_mean_myr": 3076.0,
+        "gini": 0.326,
+        "poverty_rate": 26.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.6,
+        "unemployment_rate": 3.8,
+        "employment_population_ratio": 65.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Julau": {
+        "population": 15700,
+        "income_mean_myr": 4363.0,
+        "income_median_myr": 3264.0,
+        "expenditure_mean_myr": 3401.0,
+        "gini": 0.36,
+        "poverty_rate": 26.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 63.3,
+        "unemployment_rate": 3.0,
+        "employment_population_ratio": 61.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Sibu": {
+        "population": 256400,
+        "income_mean_myr": 6842.0,
+        "income_median_myr": 5737.0,
+        "expenditure_mean_myr": 4490.0,
+        "gini": 0.32,
+        "poverty_rate": 6.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 71.1,
+        "unemployment_rate": 5.7,
+        "employment_population_ratio": 67.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Dalat": {
+        "population": 21800,
+        "income_mean_myr": 5416.0,
+        "income_median_myr": 4614.0,
+        "expenditure_mean_myr": 3079.0,
+        "gini": 0.355,
+        "poverty_rate": 10.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.9,
+        "unemployment_rate": 2.3,
+        "employment_population_ratio": 64.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Mukah": {
+        "population": 42700,
+        "income_mean_myr": 6373.0,
+        "income_median_myr": 5169.0,
+        "expenditure_mean_myr": 3650.0,
+        "gini": 0.34,
+        "poverty_rate": 11.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.9,
+        "unemployment_rate": 2.6,
+        "employment_population_ratio": 69.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Kanowit": {
+        "population": 25100,
+        "income_mean_myr": 4549.0,
+        "income_median_myr": 3511.0,
+        "expenditure_mean_myr": 3240.0,
+        "gini": 0.343,
+        "poverty_rate": 21.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.3,
+        "unemployment_rate": 5.3,
+        "employment_population_ratio": 60.6,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Bintulu": {
+        "population": 190100,
+        "income_mean_myr": 10480.0,
+        "income_median_myr": 8317.0,
+        "expenditure_mean_myr": 5073.0,
+        "gini": 0.369,
+        "poverty_rate": 3.7,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 74.8,
+        "unemployment_rate": 2.2,
+        "employment_population_ratio": 73.1,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Tatau": {
+        "population": 32200,
+        "income_mean_myr": 5807.0,
+        "income_median_myr": 4409.0,
+        "expenditure_mean_myr": 3071.0,
+        "gini": 0.308,
+        "poverty_rate": 2.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.7,
+        "unemployment_rate": 2.8,
+        "employment_population_ratio": 68.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Kapit": {
+        "population": 37200,
+        "income_mean_myr": 4326.0,
+        "income_median_myr": 3259.0,
+        "expenditure_mean_myr": 3683.0,
+        "gini": 0.346,
+        "poverty_rate": 15.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 65.8,
+        "unemployment_rate": 4.2,
+        "employment_population_ratio": 63.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Song": {
+        "population": 10400,
+        "income_mean_myr": 4077.0,
+        "income_median_myr": 3052.0,
+        "expenditure_mean_myr": 2939.0,
+        "gini": 0.344,
+        "poverty_rate": 11.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 56.9,
+        "unemployment_rate": 3.7,
+        "employment_population_ratio": 53.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Belaga": {
+        "population": 22600,
+        "income_mean_myr": 4903.0,
+        "income_median_myr": 3977.0,
+        "expenditure_mean_myr": 2757.0,
+        "gini": 0.313,
+        "poverty_rate": 13.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.7,
+        "unemployment_rate": 5.9,
+        "employment_population_ratio": 62.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Miri": {
+        "population": 257700,
+        "income_mean_myr": 8166.0,
+        "income_median_myr": 6600.0,
+        "expenditure_mean_myr": 4609.0,
+        "gini": 0.307,
+        "poverty_rate": 3.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 72.9,
+        "unemployment_rate": 2.7,
+        "employment_population_ratio": 71.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Marudi": {
+        "population": 18400,
+        "income_mean_myr": 5430.0,
+        "income_median_myr": 4519.0,
+        "expenditure_mean_myr": 2705.0,
+        "gini": 0.309,
+        "poverty_rate": 4.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 68.1,
+        "unemployment_rate": 2.1,
+        "employment_population_ratio": 66.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Limbang": {
+        "population": 46700,
+        "income_mean_myr": 5202.0,
+        "income_median_myr": 4060.0,
+        "expenditure_mean_myr": 3457.0,
+        "gini": 0.385,
+        "poverty_rate": 14.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 68.7,
+        "unemployment_rate": 2.7,
+        "employment_population_ratio": 66.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Lawas": {
+        "population": 38400,
+        "income_mean_myr": 5050.0,
+        "income_median_myr": 3929.0,
+        "expenditure_mean_myr": 3241.0,
+        "gini": 0.35,
+        "poverty_rate": 14.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.6,
+        "unemployment_rate": 4.6,
+        "employment_population_ratio": 61.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Matu": {
+        "population": 16600,
+        "income_mean_myr": 4417.0,
+        "income_median_myr": 3891.0,
+        "expenditure_mean_myr": 2992.0,
+        "gini": 0.308,
+        "poverty_rate": 9.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.1,
+        "unemployment_rate": 2.5,
+        "employment_population_ratio": 64.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Asajaya": {
+        "population": 35000,
+        "income_mean_myr": 5165.0,
+        "income_median_myr": 4447.0,
+        "expenditure_mean_myr": 3598.0,
+        "gini": 0.326,
+        "poverty_rate": 14.0,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.8,
+        "unemployment_rate": 2.2,
+        "employment_population_ratio": 66.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Pakan": {
+        "population": 15700,
+        "income_mean_myr": 4473.0,
+        "income_median_myr": 3742.0,
+        "expenditure_mean_myr": 3444.0,
+        "gini": 0.306,
+        "poverty_rate": 14.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.1,
+        "unemployment_rate": 1.6,
+        "employment_population_ratio": 63.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Selangau": {
+        "population": 20700,
+        "income_mean_myr": 4688.0,
+        "income_median_myr": 4170.0,
+        "expenditure_mean_myr": 2947.0,
+        "gini": 0.291,
+        "poverty_rate": 17.2,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 66.2,
+        "unemployment_rate": 2.3,
+        "employment_population_ratio": 64.8,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Tebedu": {
+        "population": 25900,
+        "income_mean_myr": 3375.0,
+        "income_median_myr": 3024.0,
+        "expenditure_mean_myr": 2639.0,
+        "gini": 0.249,
+        "poverty_rate": 25.8,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 49.1,
+        "unemployment_rate": 6.1,
+        "employment_population_ratio": 46.4,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Pusa": {
+        "population": 20300,
+        "income_mean_myr": 4155.0,
+        "income_median_myr": 3276.0,
+        "expenditure_mean_myr": 2736.0,
+        "gini": 0.339,
+        "poverty_rate": 14.6,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 54.2,
+        "unemployment_rate": 1.7,
+        "employment_population_ratio": 53.5,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Kabong": {
+        "population": 19100,
+        "income_mean_myr": 4136.0,
+        "income_median_myr": 3407.0,
+        "expenditure_mean_myr": 3225.0,
+        "gini": 0.289,
+        "poverty_rate": 4.5,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.2,
+        "unemployment_rate": 2.0,
+        "employment_population_ratio": 63.0,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Tanjung Manis": {
+        "population": 7900,
+        "income_mean_myr": 4457.0,
+        "income_median_myr": 3837.0,
+        "expenditure_mean_myr": 2902.0,
+        "gini": 0.303,
+        "poverty_rate": 15.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      },
+      "Sarawak|Sebauh": {
+        "population": 31500,
+        "income_mean_myr": 5726.0,
+        "income_median_myr": 4636.0,
+        "expenditure_mean_myr": 3311.0,
+        "gini": 0.295,
+        "poverty_rate": 2.9,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 68.7,
+        "unemployment_rate": 1.4,
+        "employment_population_ratio": 67.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Bukit Mabong": {
+        "population": 10700,
+        "income_mean_myr": 3783.0,
+        "income_median_myr": 2589.0,
+        "expenditure_mean_myr": 3363.0,
+        "gini": 0.333,
+        "poverty_rate": 6.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 64.4,
+        "unemployment_rate": 2.8,
+        "employment_population_ratio": 62.9,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Subis": {
+        "population": 55600,
+        "income_mean_myr": 6475.0,
+        "income_median_myr": 5531.0,
+        "expenditure_mean_myr": 3967.0,
+        "gini": 0.274,
+        "poverty_rate": 2.4,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 70.5,
+        "unemployment_rate": 1.5,
+        "employment_population_ratio": 69.3,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Beluru": {
+        "population": 26900,
+        "income_mean_myr": 4927.0,
+        "income_median_myr": 4346.0,
+        "expenditure_mean_myr": 2844.0,
+        "gini": 0.238,
+        "poverty_rate": 10.1,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 68.0,
+        "unemployment_rate": 1.6,
+        "employment_population_ratio": 66.7,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Sarawak|Telang Usan": {
+        "population": 17400,
+        "income_mean_myr": 4795.0,
+        "income_median_myr": 4281.0,
+        "expenditure_mean_myr": 2824.0,
+        "gini": 0.229,
+        "poverty_rate": 1.3,
+        "income_context_status": "official_district_aggregate",
+        "labour_participation_rate": 67.8,
+        "unemployment_rate": 1.5,
+        "employment_population_ratio": 67.2,
+        "labour_context_status": "official_district_aggregate"
+      },
+      "Perlis|Perlis": {
+        "population": 297800,
+        "income_mean_myr": 5996.0,
+        "income_median_myr": 4950.0,
+        "expenditure_mean_myr": 4084.0,
+        "gini": 0.334,
+        "poverty_rate": 3.6,
+        "income_context_status": "official_state_aggregate_fallback",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      },
+      "W.P. Kuala Lumpur|W.P. Kuala Lumpur": {
+        "population": 2074100,
+        "income_mean_myr": 13985.0,
+        "income_median_myr": 10802.0,
+        "expenditure_mean_myr": 8178.0,
+        "gini": 0.375,
+        "poverty_rate": 1.0,
+        "income_context_status": "official_state_aggregate_fallback",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      },
+      "W.P. Labuan|W.P. Labuan": {
+        "population": 100900,
+        "income_mean_myr": 8555.0,
+        "income_median_myr": 7383.0,
+        "expenditure_mean_myr": 4497.0,
+        "gini": 0.327,
+        "poverty_rate": 2.0,
+        "income_context_status": "official_state_aggregate_fallback",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      },
+      "W.P. Putrajaya|W.P. Putrajaya": {
+        "population": 120800,
+        "income_mean_myr": 13846.0,
+        "income_median_myr": 10769.0,
+        "expenditure_mean_myr": 9186.0,
+        "gini": 0.324,
+        "poverty_rate": 0.2,
+        "income_context_status": "official_state_aggregate_fallback",
+        "labour_participation_rate": null,
+        "unemployment_rate": null,
+        "employment_population_ratio": null,
+        "labour_context_status": "not_available_for_district"
+      }
+    },
+    "tourist_share_by_region": {
+      "Central": 0.08,
+      "Northern": 0.05,
+      "Southern": 0.04,
+      "East Coast": 0.04,
+      "East Malaysia": 0.06
+    },
+    "latest_years": {
+      "population": 2026,
+      "income": 2024,
+      "households": 2024,
+      "cpi": 2026,
+      "district_population": 2025,
+      "district_income": 2024,
+      "district_labour": 2024
+    }
+  },
+  "behavior": {
+    "disposable_income_share": {
+      "mean": 0.37556661444171835,
+      "sd": 0.08
+    },
+    "online_affinity_beta": [
+      2.6,
+      1.8
+    ],
+    "review_sensitivity_beta": [
+      3.0,
+      1.6
+    ],
+    "novelty_seeking_beta": [
+      2.1,
+      2.3
+    ],
+    "social_influence_beta": [
+      2.0,
+      2.8
+    ],
+    "local_brand_trust_beta": [
+      2.8,
+      2.0
+    ],
+    "pet_ownership_probability": 0.34,
+    "coffee_visits_weekly_lambda": 2.8,
+    "dining_out_weekly_lambda": 2.4,
+    "nightlife_monthly_lambda": 1.2
+  },
+  "defaults": {
+    "brand_awareness": 0.12,
+    "quality_score": 0.6,
+    "review_score": 0.5,
+    "design_score": 0.55,
+    "convenience_score": 0.55,
+    "localization_score": 0.45,
+    "clarity_score": 0.6,
+    "variable_cost_share": 0.5,
+    "distance_km": 3.0
+  },
+  "study_models": {
+    "PRODUCT_VALIDATION": {
+      "model_key": "product_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.9,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -1.35,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 1.05,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "convenience": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "localization": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -0.9,
+      "referral_intercept": -1.5
+    },
+    "PRICING_STUDY": {
+      "model_key": "pricing_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.32
+        },
+        "price_log_ratio": {
+          "mean": -1.9,
+          "sd": 0.34
+        },
+        "affordability": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.52,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.26,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.0,
+      "referral_intercept": -1.7
+    },
+    "CREATIVE_TEST": {
+      "model_key": "creative_response_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.38
+        },
+        "price_log_ratio": {
+          "mean": -1.05,
+          "sd": 0.25
+        },
+        "affordability": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "brand_trust": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.78,
+          "sd": 0.18
+        },
+        "convenience": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "social_influence": {
+          "mean": 0.7,
+          "sd": 0.17
+        },
+        "category_engagement": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.1,
+      "referral_intercept": -1.2
+    },
+    "VENUE_STUDY": {
+      "model_key": "venue_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.8,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.9,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 0.88,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "review_proof": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "novelty": {
+          "mean": 0.32,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.92,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.95,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.15,
+          "sd": 0.25
+        }
+      },
+      "repeat_intercept": -0.65,
+      "referral_intercept": -1.3
+    },
+    "SITE_COMPARISON": {
+      "inherits": "VENUE_STUDY",
+      "model_key": "site_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.75,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.7,
+          "sd": 0.15
+        },
+        "brand_trust": {
+          "mean": 0.4,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.55,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "convenience": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "social_influence": {
+          "mean": 0.25,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -1.45,
+          "sd": 0.3
+        }
+      },
+      "repeat_intercept": -0.8,
+      "referral_intercept": -1.5
+    },
+    "RESTAURANT": {
+      "model_key": "restaurant_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.6,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.0,
+          "sd": 0.24
+        },
+        "affordability": {
+          "mean": 0.5,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 1.08,
+          "sd": 0.22
+        },
+        "brand_trust": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "novelty": {
+          "mean": 0.34,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "social_influence": {
+          "mean": 0.44,
+          "sd": 0.12
+        },
+        "category_engagement": {
+          "mean": 1.02,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "distance_friction": {
+          "mean": -1.2,
+          "sd": 0.26
+        }
+      },
+      "repeat_intercept": -0.45,
+      "referral_intercept": -1.15
+    },
+    "CAFE": {
+      "model_key": "cafe_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.7,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.82,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "novelty": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "convenience": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "social_influence": {
+          "mean": 0.58,
+          "sd": 0.15
+        },
+        "category_engagement": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "distance_friction": {
+          "mean": -1.0,
+          "sd": 0.23
+        }
+      },
+      "repeat_intercept": -0.35,
+      "referral_intercept": -1.0
+    },
+    "BAR": {
+      "model_key": "bar_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.4
+        },
+        "price_log_ratio": {
+          "mean": -0.88,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "brand_trust": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "review_proof": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "convenience": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "social_influence": {
+          "mean": 0.95,
+          "sd": 0.22
+        },
+        "category_engagement": {
+          "mean": 1.12,
+          "sd": 0.25
+        },
+        "localization": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -0.92,
+          "sd": 0.22
+        }
+      },
+      "repeat_intercept": -0.75,
+      "referral_intercept": -0.8
+    },
+    "RETAIL": {
+      "model_key": "retail_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.25,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.55,
+          "sd": 0.13
+        },
+        "review_proof": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.86,
+          "sd": 0.18
+        },
+        "social_influence": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "category_engagement": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "localization": {
+          "mean": 0.46,
+          "sd": 0.11
+        },
+        "distance_friction": {
+          "mean": -0.72,
+          "sd": 0.18
+        }
+      },
+      "repeat_intercept": -0.55,
+      "referral_intercept": -1.4
+    },
+    "OPERATING_SCENARIO": {
+      "model_key": "venue_operations_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.85,
+          "sd": 0.21
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.8,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.96,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.05,
+          "sd": 0.24
+        }
+      },
+      "repeat_intercept": -0.6,
+      "referral_intercept": -1.25
+    }
+  },
+  "dynamics": {
+    "innovation_rate": {
+      "mean": 0.025,
+      "sd": 0.008
+    },
+    "word_of_mouth_rate": {
+      "mean": 0.28,
+      "sd": 0.06
+    },
+    "repeat_quality_effect": 1.1,
+    "referral_social_effect": 0.9
+  },
+  "country_code": "MY",
+  "country_name": "Malaysia",
+  "currency_code": "MYR",
+  "currency_symbol": "RM",
+  "macro_context": {
+    "status": "observed_official_context",
+    "latest_cpi_date": "2026-07-01",
+    "source_count": 1,
+    "national_cpi": {
+      "year": 2026,
+      "month": 7,
+      "price_index": 135.68794363363023,
+      "yoy": 1.71518453995865,
+      "aggregation": "population_weighted_state_context_index"
+    },
+    "state_cpi": {
+      "Johor": {
+        "index": 141.8,
+        "yoy": 2.088
+      },
+      "Kedah": {
+        "index": 130.9,
+        "yoy": 2.266
+      },
+      "Kelantan": {
+        "index": 130.7,
+        "yoy": 0.927
+      },
+      "Melaka": {
+        "index": 133.1,
+        "yoy": 1.758
+      },
+      "Negeri Sembilan": {
+        "index": 136.4,
+        "yoy": 2.479
+      },
+      "Pahang": {
+        "index": 135.8,
+        "yoy": 2.336
+      },
+      "Perak": {
+        "index": 130.3,
+        "yoy": 1.165
+      },
+      "Perlis": {
+        "index": 127.5,
+        "yoy": 1.271
+      },
+      "Pulau Pinang": {
+        "index": 139.8,
+        "yoy": 1.599
+      },
+      "Sabah": {
+        "index": 126.0,
+        "yoy": 1.859
+      },
+      "Sarawak": {
+        "index": 129.0,
+        "yoy": 0.311
+      },
+      "Selangor": {
+        "index": 143.8,
+        "yoy": 1.769
+      },
+      "Terengganu": {
+        "index": 130.9,
+        "yoy": 1.788
+      },
+      "W.P. Kuala Lumpur": {
+        "index": 137.6,
+        "yoy": 2.153
+      },
+      "W.P. Labuan": {
+        "index": 126.8,
+        "yoy": 2.011
+      },
+      "W.P. Putrajaya": {
+        "index": 144.0,
+        "yoy": 1.839
+      }
+    },
+    "district_context": {
+      "status": "observed_official_aggregate_context",
+      "district_count": 160,
+      "district_income_fallback_count": 4,
+      "district_labour_available_count": 152,
+      "population_reference_date": "2025-01-01",
+      "income_reference_date": "2024-01-01",
+      "labour_reference_date": "2024-01-01",
+      "quantitative_effect": "location_context_only_until_geospatially_matched_and_backtested"
+    },
+    "quantitative_effect": "context_only_until_backtested"
+  },
+  "model_transfer": {
+    "source_country": "TH",
+    "target_country": "MY",
+    "transferred_components": [
+      "behavior_priors",
+      "choice_coefficient_priors",
+      "dynamics"
+    ],
+    "status": "unvalidated_cross_market_prior"
+  }
+}

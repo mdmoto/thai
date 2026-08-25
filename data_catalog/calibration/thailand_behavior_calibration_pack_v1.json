@@ -1,0 +1,63 @@
+{
+  "version": "TH-BEHAVIOR-CALIBRATION-PACK-2026.08.1",
+  "country": "TH",
+  "purpose": "Turn customer-authorized observed choices and compliant public-market evidence into versioned calibration inputs. Public web evidence may enrich product and competitor attributes; it must never be treated as sales, conversion, or an observed consumer choice.",
+  "activation": {
+    "plan_code": "PROFESSIONAL",
+    "public_market_research": "enabled_in_production",
+    "customer_choice_calibration": "requires_customer_calibration_plan_and_observed_choice_data"
+  },
+  "evidence_tiers": [
+    {
+      "tier": "A",
+      "name": "Customer-authorized observed choice",
+      "allowed_uses": ["fit_choice_coefficients", "holdout_validation", "pooled_deidentified_benchmark_after_threshold"],
+      "minimum_fields": ["choice_set_id", "alternative", "chosen"],
+      "model_features": ["price_log_ratio", "affordability", "quality_fit", "brand_trust", "review_proof", "novelty", "convenience", "social_influence", "category_engagement", "localization", "distance_friction"],
+      "collection_examples": ["A/B offer or landing-page choices", "checkout or quote alternatives", "choice-based conjoint", "store-visit alternatives"],
+      "not_accepted": ["personal identifiers", "raw customer names", "email addresses", "phone numbers", "device identifiers", "ungrouped aggregate sales totals"]
+    },
+    {
+      "tier": "B",
+      "name": "Customer operations history",
+      "allowed_uses": ["venue_demand_and_service_calibration", "time_of_day_diagnostics"],
+      "minimum_fields": ["date", "visits_or_orders"],
+      "recommended_fields": ["hour", "location_label", "average_daily_revenue", "service_minutes", "promotion_flag"]
+    },
+    {
+      "tier": "C",
+      "name": "Verified public market evidence",
+      "allowed_uses": ["competitor_price_attributes", "promotion_flags", "public_rating_metadata", "product_claims", "consumer_research_questions"],
+      "not_allowed": ["sales_estimation", "conversion_estimation", "choice_coefficient_fitting", "personal_profile_collection"],
+      "collection_controls": ["HTTPS public pages only", "robots.txt check", "rate limiting", "reject login walls", "reject CAPTCHAs and anti-bot pages", "content hash and source URL lineage"]
+    }
+  ],
+  "acceptance_gates": {
+    "choice_model": {
+      "minimum_choice_sets": "max(20, feature_count * 5)",
+      "requirements": ["one chosen option per choice set", "at least one varying numeric feature", "finite numeric feature values", "converged conditional logit fit"],
+      "initial_validation_status": "applied_unvalidated",
+      "promotion_requirement": "out_of_sample_or_time_based_validation"
+    },
+    "platform_pooling": {
+      "minimum_customer_contributions": 5,
+      "minimum_choice_sets": 500,
+      "stored_data": "deidentified coefficient summaries, uncertainty and sample counts only"
+    }
+  },
+  "collection_cadence": {
+    "public_price_and_promotion": "per professional study plus weekly category refresh where permitted",
+    "customer_observed_choices": "continuous; publish a new version only after quality gates pass",
+    "operations_history": "daily or hourly where a venue study is in scope",
+    "holdout_validation": "monthly or after each material campaign"
+  },
+  "lineage": {
+    "required": ["source_type", "collection_time", "source_url_or_authorization_reference", "content_or_batch_hash", "allowed_use", "limitation"],
+    "report_rule": "Every result must state whether it is official aggregate data, observed customer data, public evidence, or a model prior."
+  },
+  "privacy": {
+    "principle": "data_minimization_and_deidentification",
+    "public_web_scope": "No login cookies, private endpoints, personal profiles, CAPTCHA bypasses, or collection that contravenes access controls.",
+    "customer_data_scope": "Use only authorized business data. Remove direct identifiers before upload; raw choice rows are not embedded in reports or platform pooling."
+  }
+}

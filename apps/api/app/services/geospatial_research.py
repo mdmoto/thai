@@ -1,4 +1,4 @@
-"""Live, traceable geospatial evidence for Thailand venue studies.
+"""Live, traceable geospatial evidence for supported-country venue studies.
 
 Google Maps calls use the Cloud Run service account through Application Default
 Credentials. Failures are returned as explicit lineage warnings so an offline
@@ -21,7 +21,7 @@ from google.auth.transport.requests import Request
 import httpx
 
 from simulation_core.population_grid import estimate_population_for_geojson
-from world_model.thailand_geo import point_in_thailand
+from world_model.country_geo import point_in_country
 
 
 GEOCODING_URL = "https://geocode.googleapis.com/v4/geocode/address"
@@ -171,13 +171,17 @@ class GoogleGeospatialResearch:
         response.raise_for_status()
         return response.json()
 
-    async def _geocode(self, row: Mapping[str, Any]) -> Dict[str, Any]:
+    async def _geocode(
+        self,
+        row: Mapping[str, Any],
+        country_code: str,
+    ) -> Dict[str, Any]:
         latitude = row.get("latitude")
         longitude = row.get("longitude")
         if latitude is not None and longitude is not None:
             lat, lng = float(latitude), float(longitude)
-            if not point_in_thailand(lng, lat):
-                raise ValueError("coordinates_outside_thailand")
+            if not point_in_country(country_code, lng, lat):
+                raise ValueError("coordinates_outside_selected_country")
             return {
                 "latitude": lat,
                 "longitude": lng,
@@ -189,9 +193,11 @@ class GoogleGeospatialResearch:
         if not label:
             raise ValueError("missing_location_label")
         encoded = urllib.parse.quote(label, safe="")
+        region_code = "my" if country_code == "MY" else "th"
+        language_code = "ms" if country_code == "MY" else "th"
         data = await self._request_json(
             "GET",
-            f"{GEOCODING_URL}/{encoded}?regionCode=th&languageCode=th",
+            f"{GEOCODING_URL}/{encoded}?regionCode={region_code}&languageCode={language_code}",
         )
         results = data.get("results") or []
         if not results:
@@ -200,8 +206,8 @@ class GoogleGeospatialResearch:
         location = result.get("location") or {}
         lat = float(location["latitude"])
         lng = float(location["longitude"])
-        if not point_in_thailand(lng, lat):
-            raise ValueError("geocoding_result_outside_thailand")
+        if not point_in_country(country_code, lng, lat):
+            raise ValueError("geocoding_result_outside_selected_country")
         return {
             "latitude": lat,
             "longitude": lng,
@@ -241,6 +247,7 @@ class GoogleGeospatialResearch:
         latitude: float,
         longitude: float,
         minutes: int,
+        country_code: str,
     ) -> Dict[str, Any]:
         body = {
             "location": {"latitude": latitude, "longitude": longitude},
@@ -260,7 +267,10 @@ class GoogleGeospatialResearch:
         else:
             geojson = {}
         area_km2 = _polygon_area_km2(geojson)
-        population = estimate_population_for_geojson(geojson) or {
+        population = estimate_population_for_geojson(
+            geojson,
+            country_code=country_code,
+        ) or {
             "population_status": "population_grid_unavailable",
         }
         population_estimate = population.get("estimated_resident_population")
@@ -284,9 +294,10 @@ class GoogleGeospatialResearch:
         row: Mapping[str, Any],
         *,
         include_isochrones: bool,
+        country_code: str,
     ) -> Dict[str, Any]:
         label = str(row.get("label") or row.get("name") or "").strip()
-        resolved = await self._geocode(row)
+        resolved = await self._geocode(row, country_code)
         latitude = float(resolved["latitude"])
         longitude = float(resolved["longitude"])
 
@@ -298,7 +309,14 @@ class GoogleGeospatialResearch:
         }
         catchment_tasks = (
             [
-                asyncio.create_task(self._isochrone(latitude, longitude, minutes))
+                asyncio.create_task(
+                    self._isochrone(
+                        latitude,
+                        longitude,
+                        minutes,
+                        country_code,
+                    )
+                )
                 for minutes in (5, 10, 15)
             ]
             if include_isochrones
@@ -333,6 +351,11 @@ class GoogleGeospatialResearch:
         }
 
     async def collect(self, study: Mapping[str, Any]) -> Dict[str, Any]:
+        facts = study.get("facts") or {}
+        inputs = study.get("inputs") or {}
+        country_code = str(
+            facts.get("country_code") or inputs.get("country_code") or "TH"
+        ).upper()
         if not self.enabled:
             return {
                 "status": "disabled",
@@ -350,7 +373,9 @@ class GoogleGeospatialResearch:
             label = str(row.get("label") or row.get("name") or "").strip()
             try:
                 locations[_label_key(label)] = await self._collect_location(
-                    row, include_isochrones=True
+                    row,
+                    include_isochrones=True,
+                    country_code=country_code,
                 )
             except Exception as error:
                 warnings.append(f"{label or '候选点'}：实时地理采集失败（{type(error).__name__}）。")
@@ -358,7 +383,9 @@ class GoogleGeospatialResearch:
             label = row["label"]
             try:
                 evidence = await self._collect_location(
-                    row, include_isochrones=False
+                    row,
+                    include_isochrones=False,
+                    country_code=country_code,
                 )
                 evidence["average_daily_visits"] = row["average_daily_visits"]
                 historical_locations[_label_key(label)] = evidence
@@ -373,7 +400,7 @@ class GoogleGeospatialResearch:
                 if locations
                 else "unavailable"
             ),
-            "version": "google-geospatial-worldpop-v2",
+            "version": f"google-geospatial-{country_code.lower()}-v3",
             "locations": locations,
             "historical_locations": historical_locations,
             "sources": [
@@ -393,17 +420,33 @@ class GoogleGeospatialResearch:
                     "data_class": "external_market_data",
                 },
                 {
-                    "name": "WorldPop Thailand 2025 constrained population grid",
+                    "name": (
+                        "WorldPop Malaysia 2025 constrained population grid"
+                        if country_code == "MY"
+                        else "WorldPop Thailand 2025 constrained population grid"
+                    ),
                     "role": "步行商圈常住人口估算（100 米源数据，生产环境聚合至约 500 米）",
                     "data_class": "external_modeled_population",
                     "license": "CC BY 4.0",
                     "doi": "10.5258/SOTON/WP00839",
                 },
-                {
-                    "name": "Thailand NSO 2025 Population and Housing Census (early results)",
-                    "role": "全国人口与家庭总量合理性参照，不用于虚构街区分布",
-                    "data_class": "official_national_benchmark",
-                },
+                *(
+                    [
+                        {
+                            "name": "Thailand NSO 2025 Population and Housing Census (early results)",
+                            "role": "全国人口与家庭总量合理性参照，不用于虚构街区分布",
+                            "data_class": "official_national_benchmark",
+                        },
+                    ]
+                    if country_code == "TH"
+                    else [
+                        {
+                            "name": "Malaysia DOSM administrative-district population and household aggregates",
+                            "role": "区县人口与收入背景；不把统计区直接下推为真实客流",
+                            "data_class": "official_subnational_benchmark",
+                        }
+                    ]
+                ),
             ],
             "warnings": warnings,
             "collected_at": _utc_now(),

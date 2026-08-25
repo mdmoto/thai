@@ -1,0 +1,3 @@
+session_id,occurred_at,sku,offered_price_thb,discount_thb,shipping_fee_thb,channel,province,device_type,converted,units,net_revenue_thb
+example-session-001,2026-08-01T10:30:00+07:00,SKU-001,1290,100,0,shopee,bangkok,mobile,1,1,1190
+example-session-002,2026-08-01T10:44:00+07:00,SKU-001,1290,0,40,lazada,chiang_mai,mobile,0,0,0

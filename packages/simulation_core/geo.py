@@ -17,7 +17,8 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
 
-from world_model.thailand_geo import province_for_point
+from simulation_core.population_grid import estimate_population_for_geojson
+from world_model.country_geo import province_for_point
 
 
 OFFLINE_TYPES = {
@@ -87,16 +88,23 @@ def _load_json(path: Path, fallback: Mapping[str, Any]) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _load_catalog() -> Dict[str, Any]:
+def _load_catalog(country_code: str) -> Dict[str, Any]:
+    if country_code != "TH":
+        return {"dataset_id": "country_catalog_unavailable", "sources": [], "zones": []}
     return _load_json(
         _catalog_root() / "geo" / "chiang_mai_market_context_v1.json",
         {"dataset_id": "unavailable", "sources": [], "zones": []},
     )
 
 
-def _load_macro_context() -> Dict[str, Any]:
+def _load_macro_context(country_code: str) -> Dict[str, Any]:
+    profile_name = (
+        "malaysia_consumer_products_macro_v1.json"
+        if country_code == "MY"
+        else "thailand_consumer_products_macro_v1.json"
+    )
     return _load_json(
-        _catalog_root() / "thailand_consumer_products_macro_v1.json",
+        _catalog_root() / profile_name,
         {"calibration": {}},
     )
 
@@ -134,6 +142,44 @@ def _count_index(value: float, reference: float) -> float:
     return min(100.0, max(0.0, 100.0 * (1.0 - math.exp(-max(0.0, value) / reference))))
 
 
+def _radial_catchments_with_population(
+    latitude: float,
+    longitude: float,
+    country_code: str,
+) -> List[Dict[str, Any]]:
+    """Return disclosed straight-line catchments when road isochrones are absent."""
+    catchments: List[Dict[str, Any]] = []
+    longitude_scale = max(
+        0.001,
+        111.320 * math.cos(math.radians(latitude)),
+    )
+    for minutes in (5, 10, 15):
+        radius_km = minutes * 0.08
+        ring = []
+        for index in range(25):
+            angle = math.tau * index / 24
+            ring.append(
+                [
+                    longitude + radius_km * math.cos(angle) / longitude_scale,
+                    latitude + radius_km * math.sin(angle) / 110.574,
+                ]
+            )
+        population = estimate_population_for_geojson(
+            {"type": "Polygon", "coordinates": [ring]},
+            country_code=country_code,
+        ) or {"population_status": "population_grid_unavailable"}
+        catchments.append(
+            {
+                "minutes": minutes,
+                "radius_km": round(radius_km, 2),
+                "mode": "walking_radial_proxy",
+                "data_class": "external_modeled_population",
+                **population,
+            }
+        )
+    return catchments
+
+
 def _venue_competitor_count(venue_type: str, observed: Mapping[str, Any]) -> float:
     key = {
         "RESTAURANT": "restaurants",
@@ -148,10 +194,11 @@ def _province_context(
     latitude: Optional[float],
     longitude: Optional[float],
     macro: Mapping[str, Any],
+    country_code: str,
 ) -> Dict[str, Any]:
     if latitude is None or longitude is None:
         return {"province": None, "province_income_context_index": 50.0}
-    province = province_for_point(longitude, latitude)
+    province = province_for_point(country_code, longitude, latitude)
     if not province:
         return {"province": None, "province_income_context_index": 50.0}
     name = str(province.get("name") or "")
@@ -512,8 +559,9 @@ def build_geo_analysis(
     if normalized_type not in OFFLINE_TYPES and normalized_venue not in HOURLY_PRIORS:
         return None
 
-    catalog = _load_catalog()
-    macro = _load_macro_context()
+    country_code = str(inputs.get("country_code") or "TH").upper()
+    catalog = _load_catalog(country_code)
+    macro = _load_macro_context(country_code)
     zones = catalog.get("zones", [])
     candidates = _candidate_records(inputs)
     live = external_evidence or {}
@@ -541,12 +589,23 @@ def build_geo_analysis(
             latitude = float(zone["latitude"])
         if longitude is None and zone:
             longitude = float(zone["longitude"])
-        province_context = _province_context(latitude, longitude, macro)
+        province_context = _province_context(
+            latitude,
+            longitude,
+            macro,
+            country_code,
+        )
         evidence_catchments = [
             dict(item)
             for item in evidence.get("catchments") or []
             if isinstance(item, Mapping)
         ]
+        if not evidence_catchments and latitude is not None and longitude is not None:
+            evidence_catchments = _radial_catchments_with_population(
+                latitude,
+                longitude,
+                country_code,
+            )
         resident_population = _catchment_population(evidence_catchments)
         resident_population_index = (
             round(_count_index(resident_population, 20_000.0), 1)
@@ -699,7 +758,11 @@ def build_geo_analysis(
         *(live.get("sources") or []),
         *catalog.get("sources", []),
         {
-            "name": "Thailand NSO public macro aggregates",
+            "name": (
+                "Malaysia DOSM public state aggregates"
+                if country_code == "MY"
+                else "Thailand NSO public macro aggregates"
+            ),
             "role": "province income context",
             "data_class": "external_market_data",
         },

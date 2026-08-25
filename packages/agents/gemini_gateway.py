@@ -237,6 +237,15 @@ class GeminiAgentGateway:
         business_questions: Sequence[str],
         profiles: Sequence[Mapping[str, Any]],
     ) -> str:
+        country_code = str(product_info.get("country_code") or "TH").upper()
+        country_name = "Malaysia" if country_code == "MY" else "Thailand"
+        local_context = (
+            "Malaysian payment habits, local-brand trust, delivery, location, "
+            "and named competitors"
+            if country_code == "MY"
+            else "Thai payment habits, local-brand trust, delivery, location, "
+            "and named competitors"
+        )
         is_offline_venue = (
             product_info.get("channel_scope")
             == "offline_venue_acquisition"
@@ -250,7 +259,7 @@ class GeminiAgentGateway:
             else ""
         )
         return (
-            "You are producing structured weak labels for a Thailand market "
+            f"You are producing structured weak labels for a {country_name} market "
             "choice model. Evaluate each supplied representative independently. "
             "Do not invent a population purchase rate, sales forecast, sample "
             "count, or statistical confidence interval. Do not expose hidden "
@@ -263,8 +272,7 @@ class GeminiAgentGateway:
             "Representative profiles:\n"
             f"{json.dumps([self._profile_for_prompt(item) for item in profiles], ensure_ascii=False)}\n\n"
             "Return one response for every representative_id using the required "
-            "JSON schema. Evaluate Thai payment habits, local-brand trust, "
-            "delivery, location, and named competitors only when supported by "
+            f"JSON schema. Evaluate {local_context} only when supported by "
             "the supplied context."
         )
 

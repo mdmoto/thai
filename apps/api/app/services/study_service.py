@@ -29,7 +29,9 @@ from agents.backends.gemini import get_representative_research_backend
 from agents.gemini_gateway import GeminiAgentGateway
 from agents.visual_analysis import analyze_product_image
 from data_pipeline.market_research import PublicMarketResearch
+from data_pipeline.moc import load_latest_moc_context
 from app.services.geospatial_research import GoogleGeospatialResearch
+from market_config.countries import get_country_config
 from simulation_core.calibration import (
     get_study_model,
     load_calibration_profile,
@@ -53,7 +55,7 @@ from world_model.backends.base import (
 )
 from world_model.backends.native import get_population_backend
 from world_model.category_profiles import load_category_profile
-from world_model.thailand_geo import sample_point_in_province
+from world_model.country_geo import sample_point_in_province
 
 
 def _data_catalog_root() -> Path:
@@ -252,13 +254,20 @@ class StudyService:
 
     def create_study(self, data: Dict[str, Any]) -> Dict[str, Any]:
         data = dict(data)
+        country = get_country_config(data.get("country_code"))
+        data["country_code"] = country.code
+        data["currency_code"] = country.currency_code
         study_id = f"study_{uuid.uuid4().hex[:8]}"
         now = _utc_now()
         plan_code = normalize_plan_code(data.get("plan_code", "PROFESSIONAL"))
         category_profile = load_category_profile(data.get("category"))
         category_key = category_profile["category_key"]
         category_panel_version = None
-        if category_key == "PET_WATER_FOUNTAIN" and PET_WATER_PANEL_PATH.exists():
+        if (
+            country.code == "TH"
+            and category_key == "PET_WATER_FOUNTAIN"
+            and PET_WATER_PANEL_PATH.exists()
+        ):
             category_panel = json.loads(
                 PET_WATER_PANEL_PATH.read_text(encoding="utf-8")
             )
@@ -278,7 +287,7 @@ class StudyService:
         if price is None:
             price = data.get("average_check")
         if price is None:
-            price = 299.0
+            price = country.default_price
 
         fact_fields = (
             "product_image_data_url",
@@ -310,10 +319,16 @@ class StudyService:
             "scenarios",
             "category_panel_version",
             "research_urls",
+            "country_code",
+            "currency_code",
         )
         facts = {
             "product_name": data.get("product_name") or data.get("name"),
             "price": float(price),
+            "country_code": country.code,
+            "country_name": country.name_en,
+            "currency_code": country.currency_code,
+            "currency_symbol": country.currency_symbol,
         }
         for field in fact_fields:
             if data.get(field) is not None:
@@ -339,7 +354,11 @@ class StudyService:
                 },
                 {
                     "label": "数据校准状态",
-                    "value": "人口与收入使用泰国 NSO 公开宏观数据；选择系数与品类渗透仍为先验",
+                    "value": (
+                        "人口与收入使用泰国 NSO 公开宏观数据；选择系数与品类渗透仍为先验"
+                        if country.code == "TH"
+                        else "人口、年龄、性别、州级收入与 CPI 使用马来西亚 DOSM 公开数据；行为和选择系数仍为跨市场先验"
+                    ),
                     "grade": "D",
                 },
                 {
@@ -445,6 +464,11 @@ class StudyService:
         platform_override: Optional[Mapping[str, Any]] = None,
     ) -> tuple[Dict[str, Any], Dict[str, Any], List[str]]:
         inputs = study.get("inputs") or {}
+        country_code = str(
+            study.get("facts", {}).get("country_code")
+            or inputs.get("country_code")
+            or "TH"
+        )
         observed_rows = list(inputs.get("observed_choice_data") or [])
         manual_overrides = inputs.get("calibration_overrides")
         warnings: List[str] = []
@@ -456,7 +480,10 @@ class StudyService:
                     f"{plan.code} 不支持客户校准覆盖，已使用平台基础模型。"
                 )
             selected_override = use_overrides or platform_override
-            profile = load_calibration_profile(overrides=selected_override)
+            profile = load_calibration_profile(
+                overrides=selected_override,
+                country_code=country_code,
+            )
             if platform_override and not use_overrides:
                 benchmark = dict(
                     platform_override.get("platform_benchmark") or {}
@@ -559,7 +586,7 @@ class StudyService:
                 f"{minimum_choice_sets} 个。"
             )
 
-        base_profile = load_calibration_profile()
+        base_profile = load_calibration_profile(country_code=country_code)
         base_model = get_study_model(base_profile, model_study_type)
         initial_coefficients = {
             name: float(base_model["coefficients"][name]["mean"])
@@ -581,7 +608,10 @@ class StudyService:
                 "真实选择模型未收敛，未替换生产系数；请检查选择组和特征尺度。"
             )
         override = fit.calibration_override(model_study_type)
-        profile = load_calibration_profile(overrides=override)
+        profile = load_calibration_profile(
+            overrides=override,
+            country_code=country_code,
+        )
         profile["limitations"] = [
             limitation
             for limitation in profile.get("limitations", [])
@@ -1069,6 +1099,7 @@ class StudyService:
         self,
         population_result: PopulationSynthesisResult,
         seed: int,
+        country_code: str = "TH",
     ) -> Dict[str, Any]:
         """Build a bounded visualization sample without exposing real locations."""
         population_df = population_result.population
@@ -1085,10 +1116,17 @@ class StudyService:
             low, high = AGE_GROUP_RANGES.get(age_group, (35, 44))
             age = int(rng.integers(low, high + 1))
             region = str(row.get("region") or "Central")
-            province = str(row.get("province") or "Bangkok")
+            province = str(
+                row.get("province")
+                or ("Bangkok" if country_code == "TH" else "Selangor")
+            )
             # These are synthetic display points sampled inside the assigned
             # province polygon, not observed household addresses.
-            latitude, longitude = sample_point_in_province(province, rng)
+            latitude, longitude = sample_point_in_province(
+                country_code,
+                province,
+                rng,
+            )
             points.append(
                 {
                     "person_id": row.get("person_id"),
@@ -1096,6 +1134,14 @@ class StudyService:
                     "age_group": age_group,
                     "household_income_thb": round(
                         float(row.get("household_monthly_income_thb") or 0),
+                        0,
+                    ),
+                    "household_income_local": round(
+                        float(
+                            row.get("household_monthly_income_local")
+                            or row.get("household_monthly_income_thb")
+                            or 0
+                        ),
                         0,
                     ),
                     "income_tier": row.get("income_tier"),
@@ -1134,9 +1180,13 @@ class StudyService:
                 {"label": key, "share": round(float(value), 6)}
                 for key, value in region_counts.items()
             ],
-            "location_status": "synthetic_province_polygon_sample",
+            "location_status": (
+                "synthetic_province_polygon_sample"
+                if country_code == "TH"
+                else "synthetic_adm1_polygon_sample"
+            ),
             "location_disclosure": (
-                "点位依据 AI 模拟消费人群所属府，在真实泰国府界多边形内确定性抽样，"
+                f"点位依据 AI 模拟消费人群所属行政区，在 {country_code} 的真实 ADM1 边界多边形内确定性抽样，"
                 "仅展示地域分布；不是个人住址、设备定位或实测客流。"
             ),
         }
@@ -1149,6 +1199,7 @@ class StudyService:
         self,
         segments: Sequence[Mapping[str, Any]],
         study_type: str,
+        country_code: str = "TH",
     ) -> List[Dict[str, Any]]:
         output = []
         for segment in segments:
@@ -1162,6 +1213,12 @@ class StudyService:
                 copy["preferred_channel"] = OFFLINE_SEGMENT_CHANNELS.get(
                     str(segment.get("segment_id") or "MAINSTREAM"),
                     OFFLINE_SEGMENT_CHANNELS["MAINSTREAM"],
+                )
+            if country_code == "MY":
+                copy["preferred_channel"] = str(
+                    copy.get("preferred_channel") or ""
+                ).replace("Shopee Thailand", "Shopee Malaysia").replace(
+                    "LINE", "WhatsApp"
                 )
             output.append(copy)
         return output
@@ -1309,6 +1366,8 @@ class StudyService:
         sim_results: Mapping[str, Any],
         agent_research: Mapping[str, Any],
         market_research: Mapping[str, Any],
+        macro_context: Mapping[str, Any],
+        country_code: str,
     ) -> Dict[str, Any]:
         calibration_sources = sim_results["model_lineage"][
             "calibration"
@@ -1332,11 +1391,37 @@ class StudyService:
             "execution_policy": "independent_collectors_fail_open",
             "collectors": [
                 {
-                    "collector": "Thailand NSO versioned snapshots",
+                    "collector": (
+                        "Malaysia DOSM versioned snapshots"
+                        if country_code == "MY"
+                        else "Thailand NSO versioned snapshots"
+                    ),
                     "status": "succeeded" if observed_macro else "fallback",
                     "result_count": observed_macro,
                     "fallback_result": (
                         None if observed_macro else "versioned_population_prior"
+                    ),
+                },
+                {
+                    "collector": (
+                        "Malaysia DOSM state CPI"
+                        if country_code == "MY"
+                        else "Thailand MOC CPI and consumer confidence"
+                    ),
+                    "status": (
+                        "succeeded"
+                        if macro_context.get("status")
+                        == "observed_official_context"
+                        else "not_refreshed"
+                    ),
+                    "result_count": int(
+                        macro_context.get("source_count") or 0
+                    ),
+                    "fallback_result": (
+                        None
+                        if macro_context.get("status")
+                        == "observed_official_context"
+                        else "no_macro_shock_adjustment"
                     ),
                 },
                 {
@@ -1434,11 +1519,28 @@ class StudyService:
         market_research: Mapping[str, Any],
     ) -> Dict[str, Any]:
         report_id = f"rpt_{uuid.uuid4().hex[:8]}"
+        country_code = str(
+            study.get("facts", {}).get("country_code")
+            or study.get("inputs", {}).get("country_code")
+            or "TH"
+        ).upper()
+        country = get_country_config(country_code)
+        macro_context = (
+            dict(
+                load_calibration_profile(country_code="MY").get(
+                    "macro_context"
+                )
+                or {}
+            )
+            if country_code == "MY"
+            else load_latest_moc_context(_data_catalog_root())
+        )
         scenarios = list(sim_results["scenarios"])
         best_scenario = max(scenarios, key=lambda item: item["revenue_idx"])
         segments = self._enrich_segments(
             sim_results["segments"],
             str(study["study_type"]),
+            country_code,
         )
         best_segment = segments[0] if segments else None
         metrics = sim_results["metric_intervals"]
@@ -1553,6 +1655,10 @@ class StudyService:
             "study_id": study["id"],
             "study_name": study["name"],
             "study_type": study["study_type"],
+            "country_code": country.code,
+            "country_name": country.name_en,
+            "currency_code": country.currency_code,
+            "currency_symbol": country.currency_symbol,
             "category_key": sim_results["category_key"],
             "plan_code": sim_results["plan_code"],
             "world_model_version": sim_results["world_model_version"],
@@ -1627,6 +1733,7 @@ class StudyService:
             "social_dynamics": sim_results.get("social_dynamics", []),
             "social_evidence": self._social_evidence_policy(),
             "market_research": market_research,
+            "macro_context": macro_context,
             "evidence_estimates": self._evidence_estimates(
                 sim_results,
                 agent_research,
@@ -1635,6 +1742,8 @@ class StudyService:
                 sim_results,
                 agent_research,
                 market_research,
+                macro_context,
+                country_code,
             ),
             "geo_analysis": sim_results.get("geo_analysis"),
             "commerce_analysis": self._commerce_analysis(study),
@@ -1756,6 +1865,7 @@ class StudyService:
                 ),
                 category=str(study["facts"].get("category") or ""),
                 plan_code=plan.code,
+                country_code=str(study["facts"].get("country_code") or "TH"),
             )
             research_choice_inputs = self._research_enriched_choice_inputs(
                 study,
@@ -1789,6 +1899,7 @@ class StudyService:
             sample_profile = self._sample_profile(
                 population_result,
                 seed,
+                str(study["facts"].get("country_code") or "TH"),
             )
             product_context = {
                 **study["facts"],
@@ -1804,7 +1915,11 @@ class StudyService:
                     [
                         "商圈自然到店 / 周边可见性",
                         "Google Maps / 本地搜索",
-                        "Facebook / LINE 本地社群",
+                        (
+                            "Facebook / WhatsApp 本地社群"
+                            if str(study["facts"].get("country_code") or "TH") == "MY"
+                            else "Facebook / LINE 本地社群"
+                        ),
                         "TikTok 探店内容",
                     ]
                     if str(study["study_type"]).upper()

@@ -106,6 +106,7 @@ export interface StudyDetail extends StudyListItem {
 export interface CreateStudyPayload {
   name: string;
   study_type: string;
+  country_code?: "TH" | "MY";
   language?: string;
   plan_code?: string;
   template_key?: string;

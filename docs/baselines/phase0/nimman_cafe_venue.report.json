@@ -48,6 +48,10 @@
   ],
   "commerce_analysis": null,
   "consumer_voices": [],
+  "country_code": "TH",
+  "country_name": "Thailand",
+  "currency_code": "THB",
+  "currency_symbol": "฿",
   "evidence_acquisition": {
     "collectors": [
       {
@@ -55,6 +59,12 @@
         "fallback_result": null,
         "result_count": 4,
         "status": "succeeded"
+      },
+      {
+        "collector": "Thailand MOC CPI and consumer confidence",
+        "fallback_result": "no_macro_shock_adjustment",
+        "result_count": 0,
+        "status": "not_refreshed"
       },
       {
         "collector": "Category competitor public evidence",
@@ -230,27 +240,63 @@
   "geo_analysis": {
     "catchments": [
       {
-        "data_class": "model_inference",
+        "data_class": "external_modeled_population",
+        "estimated_resident_population": 4231,
+        "estimated_resident_population_unadjusted": 4231,
         "location_id": "CNX_NIMMAN",
         "location_name": "Chiang Mai, Nimman Road",
         "minutes": 5,
         "mode": "walking_radial_proxy",
+        "population_adjustment": null,
+        "population_adjustment_factor": 1.0,
+        "population_dataset_id": "worldpop_tha_2025_500m_v1",
+        "population_license": "CC-BY-4.0",
+        "population_method": "500m_cell_center_in_network_isochrone",
+        "population_runtime_resolution": "15 arc-second (~500 m)",
+        "population_source": "WorldPop 2025",
+        "population_source_doi": "10.5258/SOTON/WP00839",
+        "population_source_resolution": "3 arc-second (~100 m)",
+        "population_status": "modeled_residential_population_grid",
         "radius_km": 0.4
       },
       {
-        "data_class": "model_inference",
+        "data_class": "external_modeled_population",
+        "estimated_resident_population": 13531,
+        "estimated_resident_population_unadjusted": 13531,
         "location_id": "CNX_NIMMAN",
         "location_name": "Chiang Mai, Nimman Road",
         "minutes": 10,
         "mode": "walking_radial_proxy",
+        "population_adjustment": null,
+        "population_adjustment_factor": 1.0,
+        "population_dataset_id": "worldpop_tha_2025_500m_v1",
+        "population_license": "CC-BY-4.0",
+        "population_method": "500m_cell_center_in_network_isochrone",
+        "population_runtime_resolution": "15 arc-second (~500 m)",
+        "population_source": "WorldPop 2025",
+        "population_source_doi": "10.5258/SOTON/WP00839",
+        "population_source_resolution": "3 arc-second (~100 m)",
+        "population_status": "modeled_residential_population_grid",
         "radius_km": 0.8
       },
       {
-        "data_class": "model_inference",
+        "data_class": "external_modeled_population",
+        "estimated_resident_population": 30413,
+        "estimated_resident_population_unadjusted": 30413,
         "location_id": "CNX_NIMMAN",
         "location_name": "Chiang Mai, Nimman Road",
         "minutes": 15,
         "mode": "walking_radial_proxy",
+        "population_adjustment": null,
+        "population_adjustment_factor": 1.0,
+        "population_dataset_id": "worldpop_tha_2025_500m_v1",
+        "population_license": "CC-BY-4.0",
+        "population_method": "500m_cell_center_in_network_isochrone",
+        "population_runtime_resolution": "15 arc-second (~500 m)",
+        "population_source": "WorldPop 2025",
+        "population_source_doi": "10.5258/SOTON/WP00839",
+        "population_source_resolution": "3 arc-second (~100 m)",
+        "population_status": "modeled_residential_population_grid",
         "radius_km": 1.2
       }
     ],
@@ -271,31 +317,31 @@
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.7786,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.7786,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 7.1,
+        "intensity": 7.2,
         "latitude": 18.7786,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.7786,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.7786,
         "longitude": 98.9767
       },
@@ -325,31 +371,31 @@
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.7831,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.7831,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 17.1,
+        "intensity": 17.3,
         "latitude": 18.7831,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.7831,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.7831,
         "longitude": 98.9767
       },
@@ -367,271 +413,271 @@
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.7876,
         "longitude": 98.9497
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.7876,
         "longitude": 98.9542
       },
       {
         "data_class": "model_inference",
-        "intensity": 19.4,
+        "intensity": 19.6,
         "latitude": 18.7876,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.7876,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 32.0,
+        "intensity": 32.4,
         "latitude": 18.7876,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.7876,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 19.4,
+        "intensity": 19.6,
         "latitude": 18.7876,
         "longitude": 98.9767
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.7876,
         "longitude": 98.9812
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.7876,
         "longitude": 98.9857
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.7921,
         "longitude": 98.9497
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.7921,
         "longitude": 98.9542
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.7921,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 41.1,
+        "intensity": 41.6,
         "latitude": 18.7921,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 46.6,
+        "intensity": 47.1,
         "latitude": 18.7921,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 41.1,
+        "intensity": 41.6,
         "latitude": 18.7921,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.7921,
         "longitude": 98.9767
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.7921,
         "longitude": 98.9812
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.7921,
         "longitude": 98.9857
       },
       {
         "data_class": "model_inference",
-        "intensity": 7.1,
+        "intensity": 7.2,
         "latitude": 18.7966,
         "longitude": 98.9497
       },
       {
         "data_class": "model_inference",
-        "intensity": 17.1,
+        "intensity": 17.3,
         "latitude": 18.7966,
         "longitude": 98.9542
       },
       {
         "data_class": "model_inference",
-        "intensity": 32.0,
+        "intensity": 32.4,
         "latitude": 18.7966,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 46.6,
+        "intensity": 47.1,
         "latitude": 18.7966,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 52.8,
+        "intensity": 53.4,
         "latitude": 18.7966,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 46.6,
+        "intensity": 47.1,
         "latitude": 18.7966,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 32.0,
+        "intensity": 32.4,
         "latitude": 18.7966,
         "longitude": 98.9767
       },
       {
         "data_class": "model_inference",
-        "intensity": 17.1,
+        "intensity": 17.3,
         "latitude": 18.7966,
         "longitude": 98.9812
       },
       {
         "data_class": "model_inference",
-        "intensity": 7.1,
+        "intensity": 7.2,
         "latitude": 18.7966,
         "longitude": 98.9857
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.8011,
         "longitude": 98.9497
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.8011,
         "longitude": 98.9542
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.8011,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 41.1,
+        "intensity": 41.6,
         "latitude": 18.8011,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 46.6,
+        "intensity": 47.1,
         "latitude": 18.8011,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 41.1,
+        "intensity": 41.6,
         "latitude": 18.8011,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.8011,
         "longitude": 98.9767
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.8011,
         "longitude": 98.9812
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.8011,
         "longitude": 98.9857
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.8056,
         "longitude": 98.9497
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.8056,
         "longitude": 98.9542
       },
       {
         "data_class": "model_inference",
-        "intensity": 19.4,
+        "intensity": 19.6,
         "latitude": 18.8056,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.8056,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 32.0,
+        "intensity": 32.4,
         "latitude": 18.8056,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 28.3,
+        "intensity": 28.6,
         "latitude": 18.8056,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 19.4,
+        "intensity": 19.6,
         "latitude": 18.8056,
         "longitude": 98.9767
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.8056,
         "longitude": 98.9812
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.8056,
         "longitude": 98.9857
       },
@@ -649,31 +695,31 @@
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.8101,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.8101,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 17.1,
+        "intensity": 17.3,
         "latitude": 18.8101,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 15.1,
+        "intensity": 15.3,
         "latitude": 18.8101,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 10.4,
+        "intensity": 10.5,
         "latitude": 18.8101,
         "longitude": 98.9767
       },
@@ -703,31 +749,31 @@
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.8146,
         "longitude": 98.9587
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.8146,
         "longitude": 98.9632
       },
       {
         "data_class": "model_inference",
-        "intensity": 7.1,
+        "intensity": 7.2,
         "latitude": 18.8146,
         "longitude": 98.9677
       },
       {
         "data_class": "model_inference",
-        "intensity": 6.3,
+        "intensity": 6.4,
         "latitude": 18.8146,
         "longitude": 98.9722
       },
       {
         "data_class": "model_inference",
-        "intensity": 4.3,
+        "intensity": 4.4,
         "latitude": 18.8146,
         "longitude": 98.9767
       },
@@ -777,8 +823,8 @@
         "competition_saturation_index": 99.2,
         "coordinate_source": "catalog_snapshot",
         "coordinate_status": "resolved",
-        "footfall_opportunity_index": null,
-        "footfall_opportunity_status": "insufficient_population_evidence",
+        "footfall_opportunity_index": 58.3,
+        "footfall_opportunity_status": "modeled_opportunity_not_measured_footfall",
         "formatted_address": null,
         "id": "CNX_NIMMAN",
         "latitude": 18.7966,
@@ -797,9 +843,9 @@
         "province": "Chiang Mai",
         "province_income_context_index": 50.0,
         "rank": 1,
-        "resident_catchment_population_15m": null,
-        "resident_population_index": null,
-        "score_status": "observed_geospatial_features_with_unvalidated_weights",
+        "resident_catchment_population_15m": 30413,
+        "resident_population_index": 78.1,
+        "score_status": "observed_geospatial_population_features_with_unvalidated_weights",
         "score_weights": {
           "access_index": 0.17,
           "competition_saturation_index": -0.13,
@@ -809,8 +855,8 @@
           "target_audience_index": 0.27,
           "tourism_index": 0.1
         },
-        "site_score": 52.8,
-        "target_audience_index": 72.4,
+        "site_score": 53.4,
+        "target_audience_index": 74.7,
         "tourism_index": 0.0
       }
     ],
@@ -910,7 +956,7 @@
     },
     "schema_version": "3",
     "score_calibration": null,
-    "score_method": "observed_feature_weighting_unvalidated",
+    "score_method": "observed_feature_population_weighting_unvalidated",
     "sources": [
       {
         "fetched_at": "2026-07-25T00:10:00+07:00",
@@ -964,6 +1010,11 @@
       "status": "prior_implied_not_empirically_estimated"
     }
   ],
+  "macro_context": {
+    "quantitative_effect": "none",
+    "reason": "尚未运行泰国商务部公开数据刷新命令。",
+    "status": "not_available"
+  },
   "market_dynamics": [
     {
       "awareness_rate": 0.11475,
@@ -1001,9 +1052,39 @@
     "consumer_search_queries": [],
     "consumer_search_query": "CMAI Cafe GENERIC_CONSUMER_PRODUCT Thailand รีวิว review Chiang Mai, Nimman Road รีวิวร้าน บรรยากาศ ราคา Google Maps Facebook TikTok การเดินทาง ที่จอดรถ",
     "evidence": [],
+    "evidence_audit": {
+      "audited_at": "BASELINE_AUDITED_AT",
+      "flags": [],
+      "status": "not_run",
+      "version": "EVIDENCE-AUDIT-2026.08.1"
+    },
     "platform_counts": {},
     "query": "CMAI Cafe GENERIC_CONSUMER_PRODUCT Thailand รีวิว review",
+    "source_adapter_policy": {
+      "adapter_ids": [
+        "public_page_reader",
+        "firecrawl_consumer_search",
+        "google_grounded_search",
+        "youtube_public_metadata",
+        "social_public_discovery",
+        "marketplace_public_evidence"
+      ],
+      "credential_rule": "service credentials, official APIs, customer-authorized exports, or public no-login access only",
+      "prohibited": [
+        "personal browser cookies",
+        "login or captcha bypass",
+        "private endpoints"
+      ],
+      "version": "SOURCE-ADAPTER-REGISTRY-2026.08.1"
+    },
     "source_count": 0,
+    "source_health": {
+      "adapters": [],
+      "checked_at": "BASELINE_CHECKED_AT",
+      "health_counts": {},
+      "overall_status": "not_run",
+      "version": "SOURCE-HEALTH-2026.08.1"
+    },
     "source_strategy": {
       "discovery_channel": "Firecrawl 消费者公开检索；只作为公开线索，不代表平台后台数据",
       "priority_order": [
@@ -1072,7 +1153,7 @@
       ],
       "quantitative_effect": "verified_public_price_rating_fields_may_update_choice_set_attributes_but_never_choice_coefficients"
     },
-    "version": "TH-MARKET-RESEARCH-2026.07.6",
+    "version": "SEA-MARKET-RESEARCH-2026.08.1",
     "warnings": [
       "公开市场深度扫描仅在深度决策中执行。"
     ]
@@ -1185,6 +1266,8 @@
     },
     "calibration": {
       "claim": "Thailand regional population, binary sex margins, household-income bands, province income, expenditure residual and household size are calibrated from versioned NSO public aggregates. Age, behavioral traits and all discrete-choice coefficients remain unvalidated priors.",
+      "country_code": "TH",
+      "currency_code": "THB",
       "limitations": [
         "Official inputs are aggregate margins, not household microdata; joint dependencies are synthesized.",
         "Registered-population regional shares cover all ages while the simulated decision population starts at age 18.",
@@ -1365,9 +1448,9 @@
       "heatmap_status": "model_inference_not_measured_footfall",
       "observed_source_count": 2,
       "operations_status": "operating_prior_not_observed",
-      "population_status": "population_grid_unavailable",
+      "population_status": "worldpop_2025_residential_grid",
       "site_score_calibration": null,
-      "site_score_status": "observed_feature_weighting_unvalidated"
+      "site_score_status": "observed_feature_population_weighting_unvalidated"
     },
     "market_research": {
       "choice_set_enrichment": {
@@ -1377,12 +1460,13 @@
         "focal_fields_enriched": [],
         "limitation": "公开价格、评分和评论量只更新产品与竞品属性；不会被当作真实成交选择，也不会重新拟合购买系数。",
         "source_ids": [],
-        "status": "no_usable_quantitative_fields"
+        "status": "no_usable_quantitative_fields",
+        "visual_attribute_fields": []
       },
       "quantitative_effect": "verified_public_price_rating_fields_may_update_choice_set_attributes_but_never_choice_coefficients",
       "source_count": 0,
       "status": "not_applicable",
-      "version": "TH-MARKET-RESEARCH-2026.07.6"
+      "version": "SEA-MARKET-RESEARCH-2026.08.1"
     },
     "model_family": "mnl_prior",
     "plan": {
@@ -1403,6 +1487,12 @@
       "representative_agents": 0
     },
     "plan_config_version": "PLAN-CONFIG-2026.07.4",
+    "product_image_analysis": {
+      "coefficient_effect": "none",
+      "reason": "未上传产品或素材图片。",
+      "source_type": "customer_uploaded_image",
+      "status": "not_supplied"
+    },
     "requested_study_type": "VENUE_STUDY",
     "study_model_key": "cafe_gravity_choice_prior_v1",
     "uncertainty": {
@@ -1532,13 +1622,14 @@
         "share": 0.02
       }
     ],
-    "location_disclosure": "点位依据 AI 模拟消费人群所属府，在真实泰国府界多边形内确定性抽样，仅展示地域分布；不是个人住址、设备定位或实测客流。",
+    "location_disclosure": "点位依据 AI 模拟消费人群所属行政区，在 TH 的真实 ADM1 边界多边形内确定性抽样，仅展示地域分布；不是个人住址、设备定位或实测客流。",
     "location_status": "synthetic_province_polygon_sample",
     "points": [
       {
         "age": 39,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 62060.0,
         "household_income_thb": 62060.0,
         "income_tier": "MID_HIGH",
         "latitude": 18.4001,
@@ -1551,6 +1642,7 @@
         "age": 31,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 12519.0,
         "household_income_thb": 12519.0,
         "income_tier": "MID_LOW",
         "latitude": 5.8876,
@@ -1563,6 +1655,7 @@
         "age": 51,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 17605.0,
         "household_income_thb": 17605.0,
         "income_tier": "MID_LOW",
         "latitude": 16.1643,
@@ -1575,6 +1668,7 @@
         "age": 41,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 4945.0,
         "household_income_thb": 4945.0,
         "income_tier": "LOW",
         "latitude": 14.0069,
@@ -1587,6 +1681,7 @@
         "age": 18,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 17543.0,
         "household_income_thb": 17543.0,
         "income_tier": "MID_LOW",
         "latitude": 13.9497,
@@ -1599,6 +1694,7 @@
         "age": 36,
         "age_group": "55+",
         "category_eligible": true,
+        "household_income_local": 8721.0,
         "household_income_thb": 8721.0,
         "income_tier": "LOW",
         "latitude": 12.7442,
@@ -1611,6 +1707,7 @@
         "age": 42,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 81789.0,
         "household_income_thb": 81789.0,
         "income_tier": "HIGH",
         "latitude": 13.6718,
@@ -1623,6 +1720,7 @@
         "age": 39,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 6670.0,
         "household_income_thb": 6670.0,
         "income_tier": "LOW",
         "latitude": 15.9676,
@@ -1635,6 +1733,7 @@
         "age": 20,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 86134.0,
         "household_income_thb": 86134.0,
         "income_tier": "HIGH",
         "latitude": 13.7648,
@@ -1647,6 +1746,7 @@
         "age": 29,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 21022.0,
         "household_income_thb": 21022.0,
         "income_tier": "MID_LOW",
         "latitude": 17.8476,
@@ -1659,6 +1759,7 @@
         "age": 33,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 22530.0,
         "household_income_thb": 22530.0,
         "income_tier": "MID_LOW",
         "latitude": 17.2236,
@@ -1671,6 +1772,7 @@
         "age": 42,
         "age_group": "55+",
         "category_eligible": true,
+        "household_income_local": 7841.0,
         "household_income_thb": 7841.0,
         "income_tier": "LOW",
         "latitude": 14.7653,
@@ -1683,6 +1785,7 @@
         "age": 38,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 8182.0,
         "household_income_thb": 8182.0,
         "income_tier": "LOW",
         "latitude": 13.6651,
@@ -1695,6 +1798,7 @@
         "age": 46,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 6274.0,
         "household_income_thb": 6274.0,
         "income_tier": "LOW",
         "latitude": 15.3549,
@@ -1707,6 +1811,7 @@
         "age": 29,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 25535.0,
         "household_income_thb": 25535.0,
         "income_tier": "MID_LOW",
         "latitude": 17.3986,
@@ -1719,6 +1824,7 @@
         "age": 31,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 13892.0,
         "household_income_thb": 13892.0,
         "income_tier": "MID_LOW",
         "latitude": 17.0639,
@@ -1731,6 +1837,7 @@
         "age": 35,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 18428.0,
         "household_income_thb": 18428.0,
         "income_tier": "MID_LOW",
         "latitude": 13.8382,
@@ -1743,6 +1850,7 @@
         "age": 20,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 76400.0,
         "household_income_thb": 76400.0,
         "income_tier": "LUXURY",
         "latitude": 13.9191,
@@ -1755,6 +1863,7 @@
         "age": 49,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 16095.0,
         "household_income_thb": 16095.0,
         "income_tier": "MID_LOW",
         "latitude": 8.1488,
@@ -1767,6 +1876,7 @@
         "age": 39,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 112721.0,
         "household_income_thb": 112721.0,
         "income_tier": "HIGH",
         "latitude": 15.3801,
@@ -1779,6 +1889,7 @@
         "age": 39,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 25467.0,
         "household_income_thb": 25467.0,
         "income_tier": "MID_LOW",
         "latitude": 13.0455,
@@ -1791,6 +1902,7 @@
         "age": 29,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 19007.0,
         "household_income_thb": 19007.0,
         "income_tier": "MID_LOW",
         "latitude": 14.7697,
@@ -1803,6 +1915,7 @@
         "age": 35,
         "age_group": "55+",
         "category_eligible": true,
+        "household_income_local": 12219.0,
         "household_income_thb": 12219.0,
         "income_tier": "MID_LOW",
         "latitude": 17.6969,
@@ -1815,6 +1928,7 @@
         "age": 52,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 6895.0,
         "household_income_thb": 6895.0,
         "income_tier": "MID_LOW",
         "latitude": 6.7507,
@@ -1827,6 +1941,7 @@
         "age": 40,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 15585.0,
         "household_income_thb": 15585.0,
         "income_tier": "MID_LOW",
         "latitude": 13.7066,
@@ -1839,6 +1954,7 @@
         "age": 21,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 53457.0,
         "household_income_thb": 53457.0,
         "income_tier": "MID_HIGH",
         "latitude": 6.9943,
@@ -1851,6 +1967,7 @@
         "age": 27,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 81871.0,
         "household_income_thb": 81871.0,
         "income_tier": "HIGH",
         "latitude": 13.7483,
@@ -1863,6 +1980,7 @@
         "age": 22,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 17323.0,
         "household_income_thb": 17323.0,
         "income_tier": "MID_LOW",
         "latitude": 16.1858,
@@ -1875,6 +1993,7 @@
         "age": 24,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 18799.0,
         "household_income_thb": 18799.0,
         "income_tier": "MID_LOW",
         "latitude": 16.0444,
@@ -1887,6 +2006,7 @@
         "age": 43,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 14074.0,
         "household_income_thb": 14074.0,
         "income_tier": "MID_LOW",
         "latitude": 13.8135,
@@ -1899,6 +2019,7 @@
         "age": 40,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 56139.0,
         "household_income_thb": 56139.0,
         "income_tier": "HIGH",
         "latitude": 13.6039,
@@ -1911,6 +2032,7 @@
         "age": 42,
         "age_group": "55+",
         "category_eligible": true,
+        "household_income_local": 65182.0,
         "household_income_thb": 65182.0,
         "income_tier": "HIGH",
         "latitude": 16.9889,
@@ -1923,6 +2045,7 @@
         "age": 32,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 21944.0,
         "household_income_thb": 21944.0,
         "income_tier": "MID_LOW",
         "latitude": 7.903,
@@ -1935,6 +2058,7 @@
         "age": 25,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 7269.0,
         "household_income_thb": 7269.0,
         "income_tier": "LOW",
         "latitude": 15.1822,
@@ -1947,6 +2071,7 @@
         "age": 30,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 17280.0,
         "household_income_thb": 17280.0,
         "income_tier": "MID_LOW",
         "latitude": 7.244,
@@ -1959,6 +2084,7 @@
         "age": 23,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 93181.0,
         "household_income_thb": 93181.0,
         "income_tier": "HIGH",
         "latitude": 16.7462,
@@ -1971,6 +2097,7 @@
         "age": 20,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 14230.0,
         "household_income_thb": 14230.0,
         "income_tier": "MID_LOW",
         "latitude": 17.5978,
@@ -1983,6 +2110,7 @@
         "age": 28,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 23517.0,
         "household_income_thb": 23517.0,
         "income_tier": "MID_LOW",
         "latitude": 17.6737,
@@ -1995,6 +2123,7 @@
         "age": 33,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 28391.0,
         "household_income_thb": 28391.0,
         "income_tier": "MID_LOW",
         "latitude": 13.8783,
@@ -2007,6 +2136,7 @@
         "age": 38,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 104176.0,
         "household_income_thb": 104176.0,
         "income_tier": "LUXURY",
         "latitude": 13.7715,
@@ -2019,6 +2149,7 @@
         "age": 32,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 5524.0,
         "household_income_thb": 5524.0,
         "income_tier": "LOW",
         "latitude": 15.7988,
@@ -2031,6 +2162,7 @@
         "age": 47,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 30372.0,
         "household_income_thb": 30372.0,
         "income_tier": "MID_LOW",
         "latitude": 19.0567,
@@ -2043,6 +2175,7 @@
         "age": 38,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 29841.0,
         "household_income_thb": 29841.0,
         "income_tier": "MID_HIGH",
         "latitude": 13.9533,
@@ -2055,6 +2188,7 @@
         "age": 29,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 23112.0,
         "household_income_thb": 23112.0,
         "income_tier": "MID_LOW",
         "latitude": 16.1955,
@@ -2067,6 +2201,7 @@
         "age": 50,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 14443.0,
         "household_income_thb": 14443.0,
         "income_tier": "MID_LOW",
         "latitude": 14.7817,
@@ -2079,6 +2214,7 @@
         "age": 51,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 26076.0,
         "household_income_thb": 26076.0,
         "income_tier": "MID_LOW",
         "latitude": 7.7146,
@@ -2091,6 +2227,7 @@
         "age": 31,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 6287.0,
         "household_income_thb": 6287.0,
         "income_tier": "LOW",
         "latitude": 15.0128,
@@ -2103,6 +2240,7 @@
         "age": 25,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 6319.0,
         "household_income_thb": 6319.0,
         "income_tier": "LOW",
         "latitude": 14.8544,
@@ -2115,6 +2253,7 @@
         "age": 43,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 24841.0,
         "household_income_thb": 24841.0,
         "income_tier": "MID_LOW",
         "latitude": 14.8524,
@@ -2127,6 +2266,7 @@
         "age": 21,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 16259.0,
         "household_income_thb": 16259.0,
         "income_tier": "MID_LOW",
         "latitude": 14.4821,
@@ -2139,6 +2279,7 @@
         "age": 21,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 13460.0,
         "household_income_thb": 13460.0,
         "income_tier": "MID_LOW",
         "latitude": 17.5026,
@@ -2151,6 +2292,7 @@
         "age": 23,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 40524.0,
         "household_income_thb": 40524.0,
         "income_tier": "MID_HIGH",
         "latitude": 8.0401,
@@ -2163,6 +2305,7 @@
         "age": 43,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 20172.0,
         "household_income_thb": 20172.0,
         "income_tier": "MID_LOW",
         "latitude": 16.1608,
@@ -2175,6 +2318,7 @@
         "age": 38,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 14582.0,
         "household_income_thb": 14582.0,
         "income_tier": "MID_LOW",
         "latitude": 13.9461,
@@ -2187,6 +2331,7 @@
         "age": 39,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 45435.0,
         "household_income_thb": 45435.0,
         "income_tier": "MID_HIGH",
         "latitude": 13.5314,
@@ -2199,6 +2344,7 @@
         "age": 40,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 5312.0,
         "household_income_thb": 5312.0,
         "income_tier": "LOW",
         "latitude": 15.3747,
@@ -2211,6 +2357,7 @@
         "age": 28,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 50878.0,
         "household_income_thb": 50878.0,
         "income_tier": "MID_HIGH",
         "latitude": 18.3195,
@@ -2223,6 +2370,7 @@
         "age": 36,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 23433.0,
         "household_income_thb": 23433.0,
         "income_tier": "MID_HIGH",
         "latitude": 13.6573,
@@ -2235,6 +2383,7 @@
         "age": 19,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 33375.0,
         "household_income_thb": 33375.0,
         "income_tier": "MID_HIGH",
         "latitude": 13.8305,
@@ -2247,6 +2396,7 @@
         "age": 20,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 11239.0,
         "household_income_thb": 11239.0,
         "income_tier": "MID_LOW",
         "latitude": 15.1192,
@@ -2259,6 +2409,7 @@
         "age": 36,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 4866.0,
         "household_income_thb": 4866.0,
         "income_tier": "LOW",
         "latitude": 14.5355,
@@ -2271,6 +2422,7 @@
         "age": 30,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 18910.0,
         "household_income_thb": 18910.0,
         "income_tier": "MID_LOW",
         "latitude": 15.9264,
@@ -2283,6 +2435,7 @@
         "age": 42,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 43545.0,
         "household_income_thb": 43545.0,
         "income_tier": "MID_HIGH",
         "latitude": 13.3907,
@@ -2295,6 +2448,7 @@
         "age": 43,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 52218.0,
         "household_income_thb": 52218.0,
         "income_tier": "MID_HIGH",
         "latitude": 12.9562,
@@ -2307,6 +2461,7 @@
         "age": 38,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 20889.0,
         "household_income_thb": 20889.0,
         "income_tier": "MID_LOW",
         "latitude": 10.9121,
@@ -2319,6 +2474,7 @@
         "age": 35,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 53176.0,
         "household_income_thb": 53176.0,
         "income_tier": "HIGH",
         "latitude": 14.8524,
@@ -2331,6 +2487,7 @@
         "age": 35,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 27774.0,
         "household_income_thb": 27774.0,
         "income_tier": "MID_HIGH",
         "latitude": 14.9377,
@@ -2343,6 +2500,7 @@
         "age": 29,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 31682.0,
         "household_income_thb": 31682.0,
         "income_tier": "MID_HIGH",
         "latitude": 14.7491,
@@ -2355,6 +2513,7 @@
         "age": 22,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 22954.0,
         "household_income_thb": 22954.0,
         "income_tier": "MID_LOW",
         "latitude": 13.8844,
@@ -2367,6 +2526,7 @@
         "age": 28,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 80978.0,
         "household_income_thb": 80978.0,
         "income_tier": "HIGH",
         "latitude": 13.6475,
@@ -2379,6 +2539,7 @@
         "age": 33,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 22424.0,
         "household_income_thb": 22424.0,
         "income_tier": "MID_LOW",
         "latitude": 13.7346,
@@ -2391,6 +2552,7 @@
         "age": 30,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 37497.0,
         "household_income_thb": 37497.0,
         "income_tier": "MID_HIGH",
         "latitude": 13.5203,
@@ -2403,6 +2565,7 @@
         "age": 52,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 31045.0,
         "household_income_thb": 31045.0,
         "income_tier": "MID_LOW",
         "latitude": 13.7206,
@@ -2415,6 +2578,7 @@
         "age": 25,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 20607.0,
         "household_income_thb": 20607.0,
         "income_tier": "MID_LOW",
         "latitude": 17.9576,
@@ -2427,6 +2591,7 @@
         "age": 22,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 6277.0,
         "household_income_thb": 6277.0,
         "income_tier": "LOW",
         "latitude": 15.6561,
@@ -2439,6 +2604,7 @@
         "age": 32,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 13127.0,
         "household_income_thb": 13127.0,
         "income_tier": "MID_LOW",
         "latitude": 16.4028,
@@ -2451,6 +2617,7 @@
         "age": 34,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 14619.0,
         "household_income_thb": 14619.0,
         "income_tier": "MID_LOW",
         "latitude": 13.7223,
@@ -2463,6 +2630,7 @@
         "age": 37,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 4722.0,
         "household_income_thb": 4722.0,
         "income_tier": "LOW",
         "latitude": 17.1665,
@@ -2475,6 +2643,7 @@
         "age": 39,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 10886.0,
         "household_income_thb": 10886.0,
         "income_tier": "MID_LOW",
         "latitude": 6.5741,
@@ -2487,6 +2656,7 @@
         "age": 41,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 4499.0,
         "household_income_thb": 4499.0,
         "income_tier": "LOW",
         "latitude": 20.3105,
@@ -2499,6 +2669,7 @@
         "age": 38,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 21354.0,
         "household_income_thb": 21354.0,
         "income_tier": "MID_LOW",
         "latitude": 13.7935,
@@ -2511,6 +2682,7 @@
         "age": 32,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 6187.0,
         "household_income_thb": 6187.0,
         "income_tier": "LOW",
         "latitude": 15.129,
@@ -2523,6 +2695,7 @@
         "age": 54,
         "age_group": "45-54",
         "category_eligible": true,
+        "household_income_local": 13150.0,
         "household_income_thb": 13150.0,
         "income_tier": "MID_LOW",
         "latitude": 14.9318,
@@ -2535,6 +2708,7 @@
         "age": 19,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 21426.0,
         "household_income_thb": 21426.0,
         "income_tier": "MID_LOW",
         "latitude": 14.5839,
@@ -2547,6 +2721,7 @@
         "age": 21,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 19969.0,
         "household_income_thb": 19969.0,
         "income_tier": "MID_LOW",
         "latitude": 15.5137,
@@ -2559,6 +2734,7 @@
         "age": 19,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 17631.0,
         "household_income_thb": 17631.0,
         "income_tier": "MID_LOW",
         "latitude": 16.0126,
@@ -2571,6 +2747,7 @@
         "age": 43,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 51914.0,
         "household_income_thb": 51914.0,
         "income_tier": "HIGH",
         "latitude": 13.5356,
@@ -2583,6 +2760,7 @@
         "age": 31,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 6891.0,
         "household_income_thb": 6891.0,
         "income_tier": "LOW",
         "latitude": 15.6569,
@@ -2595,6 +2773,7 @@
         "age": 18,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 20826.0,
         "household_income_thb": 20826.0,
         "income_tier": "MID_LOW",
         "latitude": 16.6626,
@@ -2607,6 +2786,7 @@
         "age": 28,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 14427.0,
         "household_income_thb": 14427.0,
         "income_tier": "MID_LOW",
         "latitude": 13.7551,
@@ -2619,6 +2799,7 @@
         "age": 23,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 5292.0,
         "household_income_thb": 5292.0,
         "income_tier": "LOW",
         "latitude": 18.846,
@@ -2631,6 +2812,7 @@
         "age": 37,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 89990.0,
         "household_income_thb": 89990.0,
         "income_tier": "HIGH",
         "latitude": 13.9572,
@@ -2643,6 +2825,7 @@
         "age": 29,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 18407.0,
         "household_income_thb": 18407.0,
         "income_tier": "MID_LOW",
         "latitude": 8.9055,
@@ -2655,6 +2838,7 @@
         "age": 32,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 47238.0,
         "household_income_thb": 47238.0,
         "income_tier": "MID_HIGH",
         "latitude": 14.0381,
@@ -2667,6 +2851,7 @@
         "age": 27,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 56595.0,
         "household_income_thb": 56595.0,
         "income_tier": "HIGH",
         "latitude": 17.3479,
@@ -2679,6 +2864,7 @@
         "age": 40,
         "age_group": "35-44",
         "category_eligible": true,
+        "household_income_local": 29027.0,
         "household_income_thb": 29027.0,
         "income_tier": "MID_LOW",
         "latitude": 10.6294,
@@ -2691,6 +2877,7 @@
         "age": 29,
         "age_group": "25-34",
         "category_eligible": true,
+        "household_income_local": 28469.0,
         "household_income_thb": 28469.0,
         "income_tier": "MID_LOW",
         "latitude": 9.9902,
@@ -2703,6 +2890,7 @@
         "age": 22,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 19662.0,
         "household_income_thb": 19662.0,
         "income_tier": "MID_LOW",
         "latitude": 17.7136,
@@ -2715,6 +2903,7 @@
         "age": 20,
         "age_group": "18-24",
         "category_eligible": true,
+        "household_income_local": 26399.0,
         "household_income_thb": 26399.0,
         "income_tier": "MID_HIGH",
         "latitude": 19.6733,
@@ -2727,6 +2916,7 @@
         "age": 43,
         "age_group": "55+",
         "category_eligible": true,
+        "household_income_local": 11213.0,
         "household_income_thb": 11213.0,
         "income_tier": "MID_LOW",
         "latitude": 17.3984,
@@ -3209,5 +3399,5 @@
     "部分或全部步行范围为直线半径代理，不是道路网络等时圈。",
     "公开市场深度扫描仅在深度决策中执行。"
   ],
-  "world_model_version": "TH-WORLD-2026.07.5"
+  "world_model_version": "SEA-WORLD-2026.08.1"
 }

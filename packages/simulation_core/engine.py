@@ -399,6 +399,11 @@ class SimulationEngine:
         plan: PlanConfig,
         study_type: str,
     ) -> List[Dict[str, Any]]:
+        country_name_zh = (
+            "马来西亚"
+            if str(self.profile.get("country_code") or "TH").upper() == "MY"
+            else "泰国"
+        )
         if study_type == "CREATIVE_TEST":
             scenarios = [
                 {
@@ -494,7 +499,7 @@ class SimulationEngine:
                 },
                 {
                     "scenario_id": "localized_trust",
-                    "name": "泰国本地化与信任增强",
+                    "name": f"{country_name_zh}本地化与信任增强",
                     "price": price,
                     "localization_score": min(
                         1.0,
@@ -1229,10 +1234,11 @@ class SimulationEngine:
             )
             method = "offline_visit_acquisition_affinity_index"
         else:
+            country_name = str(self.profile.get("country_name") or "Thailand")
             scores = {
-                "Shopee Thailand": 0.45 * online + 0.35 * review + 0.2,
-                "Lazada Thailand": 0.5 * online + 0.25 * trust + 0.2,
-                "TikTok Shop Thailand": 0.42 * social + 0.38 * novelty + 0.15,
+                f"Shopee {country_name}": 0.45 * online + 0.35 * review + 0.2,
+                f"Lazada {country_name}": 0.5 * online + 0.25 * trust + 0.2,
+                f"TikTok Shop {country_name}": 0.42 * social + 0.38 * novelty + 0.15,
                 "线下零售 / 门店": 0.48 * trust + 0.35 * (1.0 - online) + 0.15,
             }
             recommendation = "进入渠道 A/B 测试优先级"

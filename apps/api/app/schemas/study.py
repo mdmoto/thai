@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 class CreateStudyRequest(BaseModel):
     name: str = Field(min_length=2, max_length=160)
     study_type: str = Field(min_length=2, max_length=40)
+    country_code: str = Field(default="TH", min_length=2, max_length=2)
     language: str = Field(default="zh", max_length=10)
     plan_code: str = Field(default="PROFESSIONAL", max_length=32)
     template_key: Optional[str] = Field(default=None, max_length=80)
@@ -80,6 +81,14 @@ class CreateStudyRequest(BaseModel):
             "OPERATING_SCENARIO",
         }:
             raise ValueError("不支持的研究类型")
+        return normalized
+
+    @field_validator("country_code")
+    @classmethod
+    def validate_country_code(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if normalized not in {"TH", "MY"}:
+            raise ValueError("目前仅支持泰国（TH）和马来西亚（MY）")
         return normalized
 
     @field_validator("selling_points", "competitors", "business_questions")

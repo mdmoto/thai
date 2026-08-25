@@ -11,6 +11,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
+from market_config.countries import get_country_config
+
 
 DATA_CATALOG_ROOT = Path(
     os.environ.get(
@@ -85,10 +87,27 @@ def validate_profile(profile: Mapping[str, Any]) -> None:
 def load_calibration_profile(
     path: Optional[str] = None,
     overrides: Optional[Mapping[str, Any]] = None,
+    country_code: Optional[str] = None,
 ) -> Dict[str, Any]:
-    profile_path = Path(path) if path else DEFAULT_PROFILE_PATH
+    if path:
+        profile_path = Path(path)
+    elif country_code:
+        config = get_country_config(country_code)
+        candidate = DATA_CATALOG_ROOT / config.profile_file
+        if not candidate.exists():
+            raise CalibrationError(
+                f"Calibration profile for {config.code} is not installed: {candidate}"
+            )
+        profile_path = candidate
+    else:
+        profile_path = DEFAULT_PROFILE_PATH
     with profile_path.open("r", encoding="utf-8") as handle:
         profile = json.load(handle)
+
+    profile.setdefault("country_code", "TH")
+    profile.setdefault("country_name", "Thailand")
+    profile.setdefault("currency_code", "THB")
+    profile.setdefault("currency_symbol", "฿")
 
     if overrides:
         override_status = str(
@@ -118,4 +137,6 @@ def calibration_summary(profile: Mapping[str, Any]) -> Dict[str, Any]:
         "claim": profile.get("claim"),
         "sources": copy.deepcopy(profile.get("sources", [])),
         "limitations": copy.deepcopy(profile.get("limitations", [])),
+        "country_code": profile.get("country_code", "TH"),
+        "currency_code": profile.get("currency_code", "THB"),
     }

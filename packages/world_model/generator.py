@@ -1,4 +1,4 @@
-"""Synthetic Thailand market population with explicit calibration lineage.
+"""Synthetic country-market population with explicit calibration lineage.
 
 The generator creates a joint micro-population from a versioned calibration
 profile. The bundled profile combines official aggregate margins with explicit
@@ -15,7 +15,7 @@ from simulation_core.calibration import load_calibration_profile
 from world_model.category_profiles import load_category_profile
 
 
-WORLD_MODEL_VERSION = "TH-WORLD-2026.07.5"
+WORLD_MODEL_VERSION = "SEA-WORLD-2026.08.1"
 
 REGION_PROVINCES = {
     "Bangkok Metro": ["Bangkok", "Nonthaburi", "Pathum Thani", "Samut Prakan"],
@@ -136,6 +136,8 @@ class PopulationGenerator:
 
         population = self.profile["population"]
         behavior = self.profile["behavior"]
+        country_code = str(self.profile.get("country_code") or "TH").upper()
+        currency_code = str(self.profile.get("currency_code") or "THB").upper()
 
         age_labels = list(population["age_group"])
         gender_labels = list(population["gender"])
@@ -159,8 +161,11 @@ class PopulationGenerator:
         provinces = self._draw_provinces(regions)
         income_tiers = self._draw_income_tiers(regions)
 
+        income_table = population.get("income_monthly_local") or population[
+            "income_monthly_thb"
+        ]
         income_midpoint = np.array(
-            [population["income_monthly_thb"][tier] for tier in income_tiers],
+            [income_table[tier] for tier in income_tiers],
             dtype=float,
         )
         if population.get("income_tier_by_region"):
@@ -504,7 +509,11 @@ class PopulationGenerator:
 
         frame = pd.DataFrame(
             {
-                "person_id": [f"TH_{index + 1:07d}" for index in range(size)],
+                "person_id": [
+                    f"{country_code}_{index + 1:07d}" for index in range(size)
+                ],
+                "country_code": country_code,
+                "currency_code": currency_code,
                 "age_group": age_groups,
                 "gender": genders,
                 "region": regions,
@@ -515,6 +524,10 @@ class PopulationGenerator:
                 "equivalized_income_thb": np.round(equivalized_income, 0),
                 "household_size": household_size,
                 "disposable_income_thb": np.round(disposable_income, 0),
+                "monthly_income_local": np.round(monthly_income, 0),
+                "household_monthly_income_local": np.round(monthly_income, 0),
+                "equivalized_income_local": np.round(equivalized_income, 0),
+                "disposable_income_local": np.round(disposable_income, 0),
                 "is_tourist": is_tourist,
                 "price_sensitivity": np.round(price_sensitivity, 4),
                 "brand_sensitivity": np.round(brand_sensitivity, 4),

@@ -15,10 +15,21 @@ import {
   THAILAND_MAP_BOUNDS,
   THAILAND_PROVINCE_PATH,
 } from "@/lib/thailand-boundary";
+import {
+  MALAYSIA_BOUNDARY_SOURCE,
+  MALAYSIA_BOUNDARY_VERSION,
+  MALAYSIA_COUNTRY_PATH,
+  MALAYSIA_MAP_BOUNDS,
+  MALAYSIA_STATE_PATH,
+} from "@/lib/malaysia-boundary";
 
 interface ReportData {
   study_name: string;
   study_type?: string;
+  country_code?: "TH" | "MY";
+  country_name?: string;
+  currency_code?: string;
+  currency_symbol?: string;
   run_id: string;
   world_model_version: string;
   simulation_model_version: string;
@@ -77,6 +88,7 @@ interface ReportData {
       age: number;
       age_group: string;
       household_income_thb: number;
+      household_income_local?: number;
       income_tier: string;
       region: string;
       province: string;
@@ -150,8 +162,41 @@ interface ReportData {
       completed_queries?: number;
       estimated_credits?: number;
       access_mode?: string;
+      failure_reason?: string | null;
       fallback_result?: string | null;
     }>;
+    source_health?: {
+      version: string;
+      checked_at: string;
+      overall_status: string;
+      health_counts: Record<string, number>;
+      adapters: Array<{
+        adapter_id: string;
+        collector: string;
+        health: string;
+        collector_status: string;
+        requested: number;
+        result_count: number;
+        success_rate?: number | null;
+        failure_reason?: string | null;
+        fallback_result?: string | null;
+      }>;
+    };
+    evidence_audit?: {
+      version: string;
+      status: string;
+      accepted_count: number;
+      duplicate_url_count: number;
+      duplicate_content_count: number;
+      provenance_coverage: number;
+      content_hash_coverage: number;
+      publication_time_coverage: number;
+      stale_publication_count: number;
+      top_domain?: string | null;
+      top_domain_share: number;
+      data_status_counts: Record<string, number>;
+      flags: string[];
+    };
     evidence: Array<{
       source_id: string;
       source_type: string;
@@ -167,6 +212,7 @@ interface ReportData {
       observed_fields?: string[];
       evidence_role?: string;
       evidence_quality_score?: number;
+      data_status?: string;
       limitation: string;
     }>;
     warnings?: string[];
@@ -175,6 +221,28 @@ interface ReportData {
       allowed?: string[];
       not_allowed?: string[];
     };
+  };
+  macro_context?: {
+    status: string;
+    generated_at?: string;
+    quantitative_effect: string;
+    source_count?: number;
+    reason?: string;
+    national_cpi?: {
+      year: number;
+      month: number;
+      price_index?: number | null;
+      mom?: number | null;
+      yoy?: number | null;
+      aoa?: number | null;
+    } | null;
+    consumer_confidence?: {
+      year: number;
+      month: number;
+      index_all?: number | null;
+      index_current?: number | null;
+      index_future?: number | null;
+    } | null;
   };
   implied_wtp?: { attribute: string; score_increase: number; implied_wtp_thb: number; status: string }[];
   geo_analysis?: {
@@ -462,6 +530,13 @@ const STATUS_LABELS: Record<string, string> = {
   disabled: "未启用",
   partial: "部分完成",
   succeeded: "采集成功",
+  healthy: "运行健康",
+  degraded: "部分渠道降级",
+  inactive: "未启用",
+  not_run: "未运行",
+  not_refreshed: "尚未刷新",
+  passed: "审计通过",
+  attention_required: "需要关注",
   not_applicable: "本研究不适用",
   public_only: "仅使用公开资料",
   public_index_only_no_customer_login: "公开索引，无需客户登录",
@@ -474,12 +549,16 @@ const STATUS_LABELS: Record<string, string> = {
 
 const COLLECTOR_LABELS: Record<string, string> = {
   "Thailand NSO versioned snapshots": "泰国国家统计局（NSO）版本化数据",
+  "Thailand MOC CPI and consumer confidence": "泰国商务部 CPI 与消费者信心",
+  "Malaysia DOSM versioned snapshots": "马来西亚统计局（DOSM）版本化数据",
+  "Malaysia DOSM state CPI": "马来西亚 DOSM 州级 CPI",
   "Category competitor public evidence": "品类竞品公开证据",
   "Open geospatial / POI evidence": "开放地理与周边设施数据",
   "Structured LLM research": "大模型结构化消费者研究",
   "Social platform evidence": "社交平台传播证据",
   "Crawl4AI public page reader": "公开网页深度读取",
   "Firecrawl multi-query consumer research": "泰国消费者多主题公开检索",
+  "Gemini Grounding with Google Search": "Google 引用式公开检索",
   "YouTube public metadata": "YouTube 公开视频资料",
   "Meta / TikTok public discovery": "Meta / TikTok 公开内容发现",
   "Lazada / Shopee public commerce evidence": "Lazada / Shopee 公开消费证据",
@@ -495,6 +574,7 @@ const FALLBACK_LABELS: Record<string, string> = {
   public_product_metadata_only: "仅使用公开商品元数据",
   public_pages_and_official_public_apis: "公开网页与官方公开接口",
   search_index_and_official_embed_only: "搜索索引与官方嵌入验证",
+  no_macro_shock_adjustment: "不施加宏观冲击调整",
 };
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
@@ -550,14 +630,16 @@ function eligibilityLabel(status?: string) {
   return status || "通用人群假设";
 }
 
-function calibrationClaim(status?: string, claim?: string) {
+function calibrationClaim(status?: string, claim?: string, countryCode?: string) {
   if (status === "official_macro_calibrated_choice_prior") {
-    return "地区人口、家庭收入区间、各府收入与支出、家庭规模等人口结构已使用泰国国家统计局公开汇总数据校准；年龄细分、消费行为特征和选择系数仍属于待验证先验。";
+    return countryCode === "MY"
+      ? "年龄、性别、州级人口、家庭收入百分位、支出与家庭规模已使用马来西亚 DOSM 公开汇总数据校准；行为特征和选择系数仍是待验证的跨市场先验。"
+      : "地区人口、家庭收入区间、各府收入与支出、家庭规模等人口结构已使用泰国国家统计局公开汇总数据校准；年龄细分、消费行为特征和选择系数仍属于待验证先验。";
   }
   return claim || "未提供更详细的校准说明。";
 }
 
-function warningLabel(warning: string) {
+function warningLabel(warning: string, countryCode?: string) {
   if (warning.includes("aggregate margins") || warning.includes("joint dependencies")) {
     return "官方输入是汇总统计，而不是逐户微观数据；年龄、收入、地区等变量之间的联合关系由系统合成。";
   }
@@ -565,7 +647,9 @@ function warningLabel(warning: string) {
     return "官方地区人口占比覆盖全部年龄，而本次消费决策模拟仅纳入 18 岁及以上人群，两者统计口径不同。";
   }
   if (warning.includes("binary sex") || warning.includes("non-binary")) {
-    return "泰国国家统计局当前公开口径只提供男性和女性；模型保留的 1% 非二元性别比例属于明确披露的工程假设。";
+    return countryCode === "MY"
+      ? "马来西亚 DOSM 当前人口校准采用公开的男性和女性汇总口径；系统未据此推断性别相关消费行为。"
+      : "泰国国家统计局当前公开口径只提供男性和女性；模型保留的 1% 非二元性别比例属于明确披露的工程假设。";
   }
   if (warning.includes("households, not individual wages")) {
     return "收入与支出数据描述的是家庭整体，不是个人工资；报告中的收入坐标均应按家庭月收入理解。";
@@ -749,7 +833,7 @@ export function ReportClient({
             <div className="eyebrow mb-1">Chiang Mai AI Center · 商业决策报告</div>
             <h1 className="text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
             <p className="text-xs text-neutral-400 font-light mt-1">
-              覆盖 {reportData.population_size.toLocaleString()} 人泰国 AI 模拟消费人群 · 深度计算样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} 人 · 完成 {reportData.mc_rounds} 轮风险测试
+              覆盖 {reportData.population_size.toLocaleString()} 人{reportData.country_code === "MY" ? "马来西亚" : "泰国"} AI 模拟消费人群 · 深度计算样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} 人 · 完成 {reportData.mc_rounds} 轮风险测试
             </p>
             <p className="text-[10px] text-neutral-500 mt-1">
               AI 模拟消费人群由模型生成，不是真实问卷受访者或真实订单；人数表示模拟覆盖规模。
@@ -1022,6 +1106,7 @@ function SegmentsSection({ data }: { data: ReportData }) {
 function PriceElasticitySection({ data }: { data: ReportData }) {
   const elasticity = data.price_elasticity || [];
   const terms = reportTerms(data);
+  const currencyCode = data.currency_code ?? "THB";
 
   const rates = elasticity.map(e => Number(e.purchase_rate) * (Number(e.purchase_rate) <= 1 ? 100 : 1));
   const revs = elasticity.map(e => Number(e.revenue_idx));
@@ -1047,7 +1132,7 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 25, left: 10, bottom: 15 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#242424" />
-              <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: "售价（泰铢 THB）", position: "insideBottom", offset: -8, fill: "#86868b", fontSize: 10 }} />
+              <XAxis dataKey="price" tick={{ fill: "#86868b", fontSize: 11 }} label={{ value: `售价（${currencyCode}）`, position: "insideBottom", offset: -8, fill: "#86868b", fontSize: 10 }} />
               <YAxis
                 yAxisId="left"
                 orientation="left"
@@ -1075,7 +1160,7 @@ function PriceElasticitySection({ data }: { data: ReportData }) {
         <div className="mt-4 grid grid-cols-5 gap-2 text-center">
           {elasticity.map((e, i) => (
             <div key={i} className="p-2.5 rounded-lg bg-black border border-neutral-900">
-              <div className="text-[10px] text-neutral-500 font-mono">THB {e.price}</div>
+              <div className="text-[10px] text-neutral-500 font-mono">{currencyCode} {e.price}</div>
               <div className="text-xs font-semibold text-white mt-0.5">{formatPercent(e.purchase_rate)}</div>
             </div>
           ))}
@@ -1323,7 +1408,7 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
         </Card>
         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
           <Card><span className="eyebrow">模型日访问先验</span><div className="text-2xl font-semibold text-white mt-2">{geo.operations.daily_visit_prior}</div></Card>
-          <Card><span className="eyebrow">相对日收入</span><div className="text-2xl font-semibold text-white mt-2">฿{geo.operations.daily_revenue_index_thb.toLocaleString()}</div></Card>
+          <Card><span className="eyebrow">相对日收入</span><div className="text-2xl font-semibold text-white mt-2">{data.currency_symbol ?? "฿"}{geo.operations.daily_revenue_index_thb.toLocaleString()}</div></Card>
           <Card><span className="eyebrow">峰值容量</span><div className="text-2xl font-semibold text-white mt-2">{formatPercent(geo.operations.peak_capacity_utilization)}</div></Card>
           <Card><span className="eyebrow">排队风险</span><div className="text-2xl font-semibold text-white mt-2">{queueLabel}</div></Card>
         </div>
@@ -1332,12 +1417,17 @@ function GeoAnalysisSection({ data }: { data: ReportData }) {
   );
 }
 
-function mapPoint(longitude: number, latitude: number) {
-  const [minLongitude, minLatitude, maxLongitude, maxLatitude] =
-    THAILAND_MAP_BOUNDS;
+function mapPoint(
+  longitude: number,
+  latitude: number,
+  bounds: readonly [number, number, number, number],
+  width: number,
+  height: number,
+) {
+  const [minLongitude, minLatitude, maxLongitude, maxLatitude] = bounds;
   return {
-    x: 12 + ((longitude - minLongitude) / (maxLongitude - minLongitude)) * 336,
-    y: 12 + ((maxLatitude - latitude) / (maxLatitude - minLatitude)) * 536,
+    x: 12 + ((longitude - minLongitude) / (maxLongitude - minLongitude)) * (width - 24),
+    y: 12 + ((maxLatitude - latitude) / (maxLatitude - minLatitude)) * (height - 24),
   };
 }
 
@@ -1348,8 +1438,48 @@ function SampleProfileSection({ data }: { data: ReportData }) {
   }
   const eligible = sample.points.filter(point => point.category_eligible);
   const other = sample.points.filter(point => !point.category_eligible);
+  const isMalaysia = data.country_code === "MY";
+  const currencyCode = data.currency_code ?? (isMalaysia ? "MYR" : "THB");
+  const currencySymbol = data.currency_symbol ?? (isMalaysia ? "RM" : "฿");
+  const map = isMalaysia
+    ? {
+        name: "马来西亚",
+        bounds: MALAYSIA_MAP_BOUNDS,
+        width: 640,
+        height: 300,
+        countryPath: MALAYSIA_COUNTRY_PATH,
+        adm1Path: MALAYSIA_STATE_PATH,
+        source: MALAYSIA_BOUNDARY_SOURCE,
+        version: MALAYSIA_BOUNDARY_VERSION,
+        cities: [
+          { name: "吉隆坡", lat: 3.139, lng: 101.6869, dx: 7, dy: 3, anchor: "start" },
+          { name: "槟城", lat: 5.4141, lng: 100.3288, dx: 7, dy: 3, anchor: "start" },
+          { name: "新山", lat: 1.4927, lng: 103.7414, dx: 7, dy: 3, anchor: "start" },
+          { name: "亚庇", lat: 5.9804, lng: 116.0735, dx: 7, dy: 3, anchor: "start" },
+          { name: "古晋", lat: 1.5533, lng: 110.3592, dx: 7, dy: 3, anchor: "start" },
+        ],
+      }
+    : {
+        name: "泰国",
+        bounds: THAILAND_MAP_BOUNDS,
+        width: 360,
+        height: 560,
+        countryPath: THAILAND_COUNTRY_PATH,
+        adm1Path: THAILAND_PROVINCE_PATH,
+        source: THAILAND_BOUNDARY_SOURCE,
+        version: THAILAND_BOUNDARY_VERSION,
+        cities: [
+          { name: "清迈", lat: 18.7883, lng: 98.9853, dx: 7, dy: 3, anchor: "start" },
+          { name: "曼谷", lat: 13.7563, lng: 100.5018, dx: -7, dy: 3, anchor: "end" },
+          { name: "芭提雅 / 春武里", lat: 12.9236, lng: 100.8825, dx: 7, dy: 3, anchor: "start" },
+          { name: "普吉岛", lat: 7.8804, lng: 98.3923, dx: 7, dy: 3, anchor: "start" },
+          { name: "孔敬", lat: 16.4322, lng: 102.8236, dx: 7, dy: 3, anchor: "start" },
+          { name: "呵叻", lat: 14.9799, lng: 102.0978, dx: 7, dy: 3, anchor: "start" },
+          { name: "合艾", lat: 7.0086, lng: 100.4747, dx: 7, dy: 3, anchor: "start" },
+        ],
+      };
   const incomeValues = sample.points
-    .map(point => point.household_income_thb)
+    .map(point => point.household_income_local ?? point.household_income_thb)
     .sort((a, b) => a - b);
   const p95Income = incomeValues[Math.floor(incomeValues.length * 0.95)] ?? 100000;
   return (
@@ -1364,53 +1494,44 @@ function SampleProfileSection({ data }: { data: ReportData }) {
 
       <div className="grid lg:grid-cols-[.78fr_1.22fr] gap-4">
         <Card>
-          <div className="eyebrow mb-1">泰国样本位置分布</div>
-          <h3 className="text-sm font-semibold text-white">泰国合成样本点状图</h3>
-          <svg viewBox="0 0 360 560" className="w-full h-[440px] mt-4" role="img" aria-label="泰国 AI 模拟消费人群分布">
+          <div className="eyebrow mb-1">{map.name}样本位置分布</div>
+          <h3 className="text-sm font-semibold text-white">{map.name}合成样本点状图</h3>
+          <svg viewBox={`0 0 ${map.width} ${map.height}`} className="w-full h-[440px] mt-4" role="img" aria-label={`${map.name} AI 模拟消费人群分布`}>
             <defs>
               <linearGradient id="thai-map-fill" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stopColor="#12233d" />
                 <stop offset="100%" stopColor="#08111f" />
               </linearGradient>
-              <clipPath id="thailand-country-clip">
-                <path d={THAILAND_COUNTRY_PATH} fillRule="evenodd" />
+              <clipPath id="market-country-clip">
+                <path d={map.countryPath} fillRule="evenodd" />
               </clipPath>
             </defs>
             <path
-              d={THAILAND_COUNTRY_PATH}
+              d={map.countryPath}
               fill="url(#thai-map-fill)"
               fillRule="evenodd"
               stroke="#4b75aa"
               strokeWidth="1.6"
             />
             <path
-              d={THAILAND_PROVINCE_PATH}
+              d={map.adm1Path}
               fill="none"
               stroke="#2a456b"
               strokeWidth=".45"
               opacity=".75"
             />
-            <g clipPath="url(#thailand-country-clip)">
+            <g clipPath="url(#market-country-clip)">
               {other.map(point => {
-                const projected = mapPoint(point.longitude, point.latitude);
+                const projected = mapPoint(point.longitude, point.latitude, map.bounds, map.width, map.height);
                 return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.1" fill="#7c8aa1" opacity=".35" />;
               })}
               {eligible.map(point => {
-                const projected = mapPoint(point.longitude, point.latitude);
+                const projected = mapPoint(point.longitude, point.latitude, map.bounds, map.width, map.height);
                 return <circle key={point.person_id} cx={projected.x} cy={projected.y} r="2.4" fill="#67d9c4" opacity=".7" />;
               })}
             </g>
-            {/* 泰国主要城市标注 */}
-            {[
-              { name: "清迈", lat: 18.7883, lng: 98.9853, dx: 7, dy: 3, anchor: "start" },
-              { name: "曼谷", lat: 13.7563, lng: 100.5018, dx: -7, dy: 3, anchor: "end" },
-              { name: "芭提雅 / 春武里", lat: 12.9236, lng: 100.8825, dx: 7, dy: 3, anchor: "start" },
-              { name: "普吉岛", lat: 7.8804, lng: 98.3923, dx: 7, dy: 3, anchor: "start" },
-              { name: "孔敬", lat: 16.4322, lng: 102.8236, dx: 7, dy: 3, anchor: "start" },
-              { name: "呵叻", lat: 14.9799, lng: 102.0978, dx: 7, dy: 3, anchor: "start" },
-              { name: "合艾", lat: 7.0086, lng: 100.4747, dx: 7, dy: 3, anchor: "start" },
-            ].map(city => {
-              const pos = mapPoint(city.lng, city.lat);
+            {map.cities.map(city => {
+              const pos = mapPoint(city.lng, city.lat, map.bounds, map.width, map.height);
               return (
                 <g key={city.name} className="pointer-events-none">
                   <circle cx={pos.x} cy={pos.y} r="5" fill="#f43f5e" opacity="0.35" />
@@ -1435,11 +1556,11 @@ function SampleProfileSection({ data }: { data: ReportData }) {
           <div className="flex flex-wrap gap-3 text-[10px] text-neutral-400">
             <span><i className="inline-block w-2 h-2 rounded-full bg-teal-300 mr-1" />品类目标样本</span>
             <span><i className="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1" />其他大盘样本</span>
-            <span><i className="inline-block w-2 h-2 rounded-full bg-rose-400 mr-1" />泰国主要城市 (曼谷/清迈/普吉/芭提雅等)</span>
+            <span><i className="inline-block w-2 h-2 rounded-full bg-rose-400 mr-1" />{map.name}主要城市</span>
           </div>
           <p className="text-[10px] leading-relaxed text-neutral-500 mt-3">{sample.location_disclosure}</p>
           <p className="text-[9px] leading-relaxed text-neutral-600 mt-2">
-            底图：{THAILAND_BOUNDARY_SOURCE} · {THAILAND_BOUNDARY_VERSION} · 泰国国界及一级行政区真实边界
+            底图：{map.source} · {map.version} · {map.name}国界及一级行政区真实边界
           </p>
         </Card>
 
@@ -1451,12 +1572,12 @@ function SampleProfileSection({ data }: { data: ReportData }) {
               <ScatterChart margin={{ top: 10, right: 18, bottom: 22, left: 18 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#17243a" />
                 <XAxis type="number" dataKey="age" name="年龄" unit="岁" domain={[18, 78]} tick={{ fill: "#8793a8", fontSize: 10 }} label={{ value: "年龄", position: "bottom", fill: "#8793a8", fontSize: 11 }} />
-                <YAxis type="number" dataKey="household_income_thb" name="家庭月收入" unit=" THB" domain={[0, p95Income]} tick={{ fill: "#8793a8", fontSize: 10 }} tickFormatter={value => `${Math.round(Number(value) / 1000)}k`} />
+                <YAxis type="number" dataKey="household_income_local" name="家庭月收入" unit={` ${currencyCode}`} domain={[0, p95Income]} tick={{ fill: "#8793a8", fontSize: 10 }} tickFormatter={value => `${Math.round(Number(value) / 1000)}k`} />
                 <ZAxis range={[18, 18]} />
-                <Tooltip cursor={{ strokeDasharray: "3 3" }} contentStyle={{ background: "#091120", border: "1px solid #213456", borderRadius: 8, fontSize: 11 }} formatter={(value, name) => name === "家庭月收入" ? [`฿${Number(value).toLocaleString()}`, name] : [value, name]} />
+                <Tooltip cursor={{ strokeDasharray: "3 3" }} contentStyle={{ background: "#091120", border: "1px solid #213456", borderRadius: 8, fontSize: 11 }} formatter={(value, name) => name === "家庭月收入" ? [`${currencySymbol}${Number(value).toLocaleString()}`, name] : [value, name]} />
                 <Legend />
-                <Scatter name="品类目标样本" data={eligible.filter(point => point.household_income_thb <= p95Income)} fill="#67d9c4" fillOpacity={0.7} />
-                <Scatter name="其他样本" data={other.filter(point => point.household_income_thb <= p95Income)} fill="#718096" fillOpacity={0.35} />
+                <Scatter name="品类目标样本" data={eligible.filter(point => (point.household_income_local ?? point.household_income_thb) <= p95Income)} fill="#67d9c4" fillOpacity={0.7} />
+                <Scatter name="其他样本" data={other.filter(point => (point.household_income_local ?? point.household_income_thb) <= p95Income)} fill="#718096" fillOpacity={0.35} />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
@@ -1504,7 +1625,7 @@ function RegionalSection({ data }: { data: ReportData }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">区域市场表现</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">泰国各主要大区表现</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">{data.country_code === "MY" ? "马来西亚" : "泰国"}各主要大区表现</h2>
       </div>
 
       <Card>
@@ -1545,14 +1666,14 @@ function ChannelsSection({ data }: { data: ReportData }) {
           <div className="grid sm:grid-cols-[1fr_auto] gap-5">
             <div>
               <span className="eyebrow text-blue-300">电商下单与履约条件</span>
-              <h3 className="text-sm font-semibold text-white mt-1">泰国电商履约与信任诊断</h3>
+              <h3 className="text-sm font-semibold text-white mt-1">{data.country_code === "MY" ? "马来西亚" : "泰国"}电商履约与信任诊断</h3>
               <div className="flex flex-wrap gap-2 mt-3">
                 {data.commerce_analysis.marketplaces.map(item => (
                   <span key={item} className="text-[10px] px-2 py-1 rounded-full bg-blue-400/10 text-blue-200">{item}</span>
                 ))}
               </div>
               <p className="text-xs text-neutral-400 mt-3">
-                运费 ฿{data.commerce_analysis.shipping_fee_thb} · 约 {data.commerce_analysis.delivery_days} 天送达 ·
+                运费 {data.currency_symbol ?? "฿"}{data.commerce_analysis.shipping_fee_thb} · 约 {data.commerce_analysis.delivery_days} 天送达 ·
                 货到付款（COD）{data.commerce_analysis.cod_available ? "支持" : "不支持"} ·
                 官方店 {data.commerce_analysis.official_store ? "有" : "无"}
               </p>
@@ -1701,6 +1822,7 @@ function SocialDynamicsSection({ data }: { data: ReportData }) {
 
 function MarketIntelligenceSection({ data }: { data: ReportData }) {
   const research = data.market_research;
+  const macro = data.macro_context;
   const platformEntries = Object.entries(research?.platform_counts ?? {});
   const consumerSearchSources = research?.evidence?.filter(
     item => item.source_type === "consumer_public_search",
@@ -1708,6 +1830,11 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
   const firecrawlCollector = research?.collectors?.find(
     item => item.collector === "Firecrawl multi-query consumer research",
   );
+  const sourceHealth = research?.source_health;
+  const evidenceAudit = research?.evidence_audit;
+  const activeAdapters = sourceHealth?.adapters.filter(
+    item => item.health !== "inactive",
+  ) ?? [];
   return (
     <div className="space-y-6">
       <div>
@@ -1718,6 +1845,34 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
           系统只读取允许公开访问的资料，并保存来源、采集时间和内容指纹；
           登录页、验证码和非公开经营数据不会进入报告。
         </p>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-3">
+        <Card>
+          <div className="eyebrow">商务部宏观快照</div>
+          <div className="text-sm text-white mt-2">{statusLabel(macro?.status ?? "not_refreshed")}</div>
+          <div className="text-[10px] text-neutral-500 mt-1">
+            {macro?.source_count ? `${macro.source_count} 个版本化来源` : macro?.reason ?? "等待首次刷新"}
+          </div>
+        </Card>
+        <Card>
+          <div className="eyebrow">全国 CPI 同比</div>
+          <div className="text-lg text-white mt-2">
+            {typeof macro?.national_cpi?.yoy === "number" ? `${macro.national_cpi.yoy.toFixed(1)}%` : "暂无"}
+          </div>
+          <div className="text-[10px] text-neutral-500 mt-1">
+            {macro?.national_cpi ? `${macro.national_cpi.year}-${String(macro.national_cpi.month).padStart(2, "0")}` : "官方月度数据"}
+          </div>
+        </Card>
+        <Card>
+          <div className="eyebrow">消费者信心指数</div>
+          <div className="text-lg text-white mt-2">
+            {typeof macro?.consumer_confidence?.index_all === "number" ? macro.consumer_confidence.index_all.toFixed(1) : "暂无"}
+          </div>
+          <div className="text-[10px] text-neutral-500 mt-1">
+            仅作为情境说明，回测前不改变购买率
+          </div>
+        </Card>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1754,6 +1909,57 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
               {platform} · {count}
             </span>
           ))}
+        </div>
+      )}
+
+      {(sourceHealth || evidenceAudit) && (
+        <div className="grid md:grid-cols-2 gap-3">
+          {sourceHealth && (
+            <Card className="border-blue-300/20">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="eyebrow">采集渠道健康</div>
+                  <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
+                    {activeAdapters.length} 个渠道参与本次任务；单个渠道失败时，系统保留其他来源并使用合规备选路径。
+                  </p>
+                </div>
+                <span className="text-[9px] text-blue-100 bg-blue-400/10 px-2 py-1 rounded-full whitespace-nowrap">
+                  {statusLabel(sourceHealth.overall_status)}
+                </span>
+              </div>
+              {!!activeAdapters.length && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {activeAdapters.map(adapter => (
+                    <span key={adapter.adapter_id} className="text-[9px] text-neutral-300 bg-white/5 px-2 py-1 rounded-full">
+                      {COLLECTOR_LABELS[adapter.collector] ?? adapter.collector} · {statusLabel(adapter.health)}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+          {evidenceAudit && (
+            <Card className={cn(evidenceAudit.status === "passed" ? "border-emerald-300/20" : "border-amber-300/20")}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="eyebrow">证据质量审计</div>
+                  <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
+                    来源可追溯率 {Math.round((evidenceAudit.provenance_coverage ?? 0) * 100)}%，
+                    内容指纹覆盖率 {Math.round((evidenceAudit.content_hash_coverage ?? 0) * 100)}%。
+                  </p>
+                </div>
+                <span className="text-[9px] text-emerald-100 bg-emerald-400/10 px-2 py-1 rounded-full whitespace-nowrap">
+                  {statusLabel(evidenceAudit.status)}
+                </span>
+              </div>
+              <p className="text-[10px] text-neutral-500 mt-3">
+                已剔除重复网址 {evidenceAudit.duplicate_url_count ?? 0} 条、重复内容 {evidenceAudit.duplicate_content_count ?? 0} 条；
+                {evidenceAudit.top_domain
+                  ? `最高单域名占比 ${Math.round((evidenceAudit.top_domain_share ?? 0) * 100)}%（${evidenceAudit.top_domain}）`
+                  : "本次没有可计算的域名集中度"}。
+              </p>
+            </Card>
+          )}
         </div>
       )}
 
@@ -1808,6 +2014,11 @@ function MarketIntelligenceSection({ data }: { data: ReportData }) {
                   <span className="text-[10px] text-cyan-100 bg-cyan-400/10 px-2 py-1 rounded-full">
                     {SOURCE_TYPE_LABELS[item.source_type] ?? item.source_type}
                   </span>
+                  {item.data_status && (
+                    <span className="text-[10px] text-emerald-100 bg-emerald-400/10 px-2 py-1 rounded-full">
+                      {item.data_status === "observed_public_evidence" ? "公开观察证据" : "推断或假设"}
+                    </span>
+                  )}
                 </div>
                 <span className="text-[10px] text-neutral-500">证据等级 {item.evidence_grade}</span>
               </div>
@@ -1960,17 +2171,18 @@ function ConsumerVoicesSection({ data }: { data: ReportData }) {
 function SensitivitySection({ data }: { data: ReportData }) {
   const elasticity = data.price_elasticity || [];
   const midpoint = elasticity.length > 0 ? elasticity[Math.floor(elasticity.length / 2)] : null;
+  const currencySymbol = data.currency_symbol ?? "฿";
   const params = (data.implied_wtp || []).map(item => ({
     name: ATTRIBUTE_LABELS[item.attribute] ?? item.attribute,
     impact: Math.min(1, Math.abs(item.implied_wtp_thb) / Math.max(1, midpoint?.price ?? 1)),
-    desc: `属性评分提高 ${item.score_increase.toFixed(1)} 时，模型推算的先验边际支付意愿约为 ฿${item.implied_wtp_thb.toFixed(2)}`,
+    desc: `属性评分提高 ${item.score_increase.toFixed(1)} 时，模型推算的先验边际支付意愿约为 ${currencySymbol}${item.implied_wtp_thb.toFixed(2)}`,
   }));
   if (midpoint && elasticity.length >= 3) {
     const lower = elasticity[Math.max(0, Math.floor(elasticity.length / 2) - 1)];
     params.unshift({
       name: "售价",
       impact: Math.min(1, Math.abs(lower.purchase_rate - midpoint.purchase_rate) / Math.max(0.01, midpoint.purchase_rate)),
-      desc: `售价从 ฿${midpoint.price} 降至 ฿${lower.price} 时，模型购买概率由 ${formatPercent(midpoint.purchase_rate)} 变为 ${formatPercent(lower.purchase_rate)}`,
+      desc: `售价从 ${currencySymbol}${midpoint.price} 降至 ${currencySymbol}${lower.price} 时，模型购买概率由 ${formatPercent(midpoint.purchase_rate)} 变为 ${formatPercent(lower.purchase_rate)}`,
     });
   }
 
@@ -2024,7 +2236,7 @@ function MethodologySection({ data }: { data: ReportData }) {
           <p>
             <strong className="text-white font-semibold">1. 人口数据校准：</strong>{" "}
             {calibrationLabel(calibration?.status ?? data.calibration_status)}。
-            {calibrationClaim(calibration?.status ?? data.calibration_status, calibration?.claim)}
+            {calibrationClaim(calibration?.status ?? data.calibration_status, calibration?.claim, data.country_code)}
           </p>
           <p>
             <strong className="text-white font-semibold">2. 消费者选择模型：</strong>{" "}
@@ -2064,7 +2276,7 @@ function MethodologySection({ data }: { data: ReportData }) {
           {(data.warnings || []).map((warning, index) => (
             <div key={index} className="p-3 rounded-lg bg-black/40 border border-neutral-900">
               <p className="text-neutral-300">
-                <strong className="text-white">限制 {index + 1}：</strong>{warningLabel(warning)}
+                <strong className="text-white">限制 {index + 1}：</strong>{warningLabel(warning, data.country_code)}
               </p>
               <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-amber-300/10 text-amber-200">
                 原因：{limitationReason(warning)}

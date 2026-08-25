@@ -7,6 +7,49 @@ from data_pipeline.market_research import PublicMarketResearch
 
 
 class PublicMarketResearchTests(unittest.TestCase):
+    def test_research_urls_canonicalize_and_cap_one_domain(self):
+        urls = PublicMarketResearch._research_urls(
+            {
+                "inputs": {
+                    "url": "https://shop.example.com/p/one?utm_source=x",
+                    "research_urls": [
+                        "https://shop.example.com/p/one?utm_source=duplicate",
+                        "https://shop.example.com/p/two",
+                        "https://shop.example.com/p/three",
+                        "https://shop.example.com/p/four",
+                        "https://review.example.com/product/one",
+                    ],
+                },
+                "facts": {},
+            }
+        )
+
+        self.assertEqual(
+            urls,
+            [
+                "https://shop.example.com/p/one",
+                "https://shop.example.com/p/two",
+                "https://shop.example.com/p/three",
+                "https://review.example.com/product/one",
+            ],
+        )
+
+    def test_research_urls_allow_ten_marketplace_skus_per_domain(self):
+        urls = PublicMarketResearch._research_urls(
+            {
+                "inputs": {
+                    "research_urls": [
+                        f"https://shopee.co.th/product/{index}"
+                        for index in range(12)
+                    ]
+                },
+                "facts": {},
+            }
+        )
+
+        self.assertEqual(len(urls), 10)
+        self.assertEqual(urls[-1], "https://shopee.co.th/product/9")
+
     def test_official_firecrawl_cloud_is_not_used_without_api_key(self):
         with patch.dict(
             os.environ,
@@ -86,6 +129,115 @@ class PublicMarketResearchTests(unittest.TestCase):
         )
         self.assertEqual(grounded["status"], "succeeded")
         self.assertEqual(grounded["request_count"], 3)
+        grounded_health = next(
+            item
+            for item in bundle["source_health"]["adapters"]
+            if item["adapter_id"] == "google_grounded_search"
+        )
+        self.assertEqual(grounded_health["health"], "healthy")
+        self.assertEqual(
+            grounded_health["credential_policy"],
+            "service_credential_only",
+        )
+        self.assertEqual(bundle["evidence_audit"]["status"], "passed")
+        self.assertEqual(
+            bundle["evidence"][0]["data_status"],
+            "observed_public_evidence",
+        )
+
+    def test_evidence_audit_removes_duplicate_content_and_flags_concentration(self):
+        async def fake_pages(urls):
+            return [
+                {
+                    "source_id": f"src_{index}",
+                    "source_type": "public_page",
+                    "collector": "Crawl4AI",
+                    "platform": "公开网页",
+                    "title": f"Evidence {index}",
+                    "url": f"https://research.example.com/item/{index}",
+                    "published_at": "2020-01-01T00:00:00Z",
+                    "collected_at": "2026-08-25T00:00:00Z",
+                    "evidence_grade": "C",
+                    "content_sha256": (
+                        "a" * 64 if index in {0, 1} else f"{index}" * 64
+                    ),
+                    "limitation": "Public page evidence.",
+                }
+                for index in range(6)
+            ]
+
+        async def fake_videos(query, limit):
+            return []
+
+        collector = PublicMarketResearch(
+            enabled=True,
+            page_reader=fake_pages,
+            video_searcher=fake_videos,
+            firecrawl_enabled=False,
+            google_grounded_search_enabled=False,
+        )
+        bundle = asyncio.run(
+            collector.collect(
+                {
+                    "name": "Evidence audit",
+                    "inputs": {
+                        "research_urls": [
+                            "https://research.example.com/seed"
+                        ]
+                    },
+                    "facts": {},
+                },
+                "PROFESSIONAL",
+            )
+        )
+
+        audit = bundle["evidence_audit"]
+        self.assertEqual(bundle["source_count"], 5)
+        self.assertEqual(audit["duplicate_content_count"], 1)
+        self.assertEqual(audit["top_domain"], "research.example.com")
+        self.assertEqual(audit["top_domain_share"], 1.0)
+        self.assertIn("single_domain_concentration", audit["flags"])
+        self.assertEqual(audit["stale_publication_count"], 5)
+        self.assertEqual(audit["publication_time_coverage"], 1.0)
+        self.assertEqual(bundle["status"], "partial")
+
+    def test_source_health_records_safe_failure_reason_and_fallback(self):
+        async def failing_pages(urls):
+            raise RuntimeError("secret-bearing provider error")
+
+        async def fake_videos(query, limit):
+            return []
+
+        collector = PublicMarketResearch(
+            enabled=True,
+            page_reader=failing_pages,
+            video_searcher=fake_videos,
+            firecrawl_enabled=False,
+            google_grounded_search_enabled=False,
+        )
+        bundle = asyncio.run(
+            collector.collect(
+                {
+                    "name": "Health audit",
+                    "inputs": {"url": "https://example.com/product"},
+                    "facts": {},
+                },
+                "PROFESSIONAL",
+            )
+        )
+
+        page_health = next(
+            item
+            for item in bundle["source_health"]["adapters"]
+            if item["adapter_id"] == "public_page_reader"
+        )
+        self.assertEqual(page_health["health"], "unavailable")
+        self.assertEqual(page_health["failure_reason"], "RuntimeError")
+        self.assertNotIn("secret-bearing", str(page_health))
+        self.assertEqual(
+            page_health["fallback_result"],
+            "public_search_discovery",
+        )
 
     def test_anti_bot_page_is_not_accepted_as_evidence(self):
         item = PublicMarketResearch._page_evidence(

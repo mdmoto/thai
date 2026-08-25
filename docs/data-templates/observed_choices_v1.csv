@@ -1,0 +1,7 @@
+choice_set_id,alternative,chosen,is_outside_option,price_log_ratio,quality_fit,brand_trust,review_proof,convenience,social_influence,localization
+example-001,our_product,1,0,0.095,0.82,0.72,0.76,0.80,0.61,0.88
+example-001,competitor_a,0,0,-0.041,0.74,0.78,0.85,0.72,0.55,0.81
+example-001,no_purchase,0,1,0,0,0,0,0,0,0
+example-002,our_product,0,0,0.182,0.82,0.72,0.76,0.80,0.61,0.88
+example-002,competitor_a,1,0,-0.022,0.74,0.78,0.85,0.72,0.55,0.81
+example-002,no_purchase,0,1,0,0,0,0,0,0,0

@@ -11,7 +11,10 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 
-DATASET_STEM = "worldpop_tha_2025_500m_v1"
+DATASET_STEMS = {
+    "TH": "worldpop_tha_2025_500m_v1",
+    "MY": "worldpop_mys_2025_500m_v1",
+}
 
 
 def _catalog_root() -> Path:
@@ -25,11 +28,15 @@ def _catalog_root() -> Path:
     return Path("/data_catalog")
 
 
-@lru_cache(maxsize=1)
-def _load_grid() -> Optional[Dict[str, Any]]:
+@lru_cache(maxsize=4)
+def _load_grid(country_code: str = "TH") -> Optional[Dict[str, Any]]:
+    normalized_country = str(country_code or "TH").upper()
+    stem = DATASET_STEMS.get(normalized_country)
+    if stem is None:
+        return None
     directory = _catalog_root() / "geo"
-    grid_path = directory / f"{DATASET_STEM}.npz"
-    metadata_path = directory / f"{DATASET_STEM}.json"
+    grid_path = directory / f"{stem}.npz"
+    metadata_path = directory / f"{stem}.json"
     if not grid_path.exists() or not metadata_path.exists():
         return None
     with np.load(grid_path, allow_pickle=False) as archive:
@@ -111,10 +118,11 @@ def _polygon_bounds(polygons: Sequence[Sequence[Any]]) -> Optional[Tuple[float, 
 
 def estimate_population_for_geojson(
     geojson: Mapping[str, Any],
+    country_code: str = "TH",
 ) -> Optional[Dict[str, Any]]:
     """Estimate residential population whose runtime cell centers fall in a polygon."""
 
-    loaded = _load_grid()
+    loaded = _load_grid(country_code)
     polygons = list(_polygons(geojson))
     bounds = _polygon_bounds(polygons)
     if loaded is None or bounds is None:
@@ -156,10 +164,18 @@ def estimate_population_for_geojson(
             polygon_mask &= ~_ring_mask(longitudes, latitudes, hole)
         selected |= polygon_mask
 
-    estimate = float(population[row_start:row_end, col_start:col_end][selected].sum())
+    raw_estimate = float(
+        population[row_start:row_end, col_start:col_end][selected].sum()
+    )
     metadata = loaded["metadata"]
+    adjustment = metadata.get("national_adjustment") or {}
+    adjustment_factor = float(adjustment.get("factor") or 1.0)
+    estimate = raw_estimate * adjustment_factor
     return {
         "estimated_resident_population": int(round(max(0.0, estimate))),
+        "estimated_resident_population_unadjusted": int(
+            round(max(0.0, raw_estimate))
+        ),
         "population_status": "modeled_residential_population_grid",
         "population_dataset_id": metadata["dataset_id"],
         "population_source": "WorldPop 2025",
@@ -168,4 +184,6 @@ def estimate_population_for_geojson(
         "population_license": metadata["license"],
         "population_source_doi": metadata["source_doi"],
         "population_method": "500m_cell_center_in_network_isochrone",
+        "population_adjustment": adjustment.get("method"),
+        "population_adjustment_factor": adjustment_factor,
     }

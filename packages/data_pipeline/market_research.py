@@ -25,9 +25,9 @@ from typing import Any, Awaitable, Callable, Dict, Iterable, List, Mapping, Opti
 import httpx
 
 
-RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.07.6"
-PROFESSIONAL_RESEARCH_VERSION = "TH-MARKET-RESEARCH-2026.08.1"
-USER_AGENT = "ThailandMarketTwin/2.1 (+public-market-research)"
+RESEARCH_VERSION = "SEA-MARKET-RESEARCH-2026.08.1"
+PROFESSIONAL_RESEARCH_VERSION = "SEA-MARKET-RESEARCH-2026.08.1"
+USER_AGENT = "SoutheastAsiaMarketTwin/2.2 (+public-market-research)"
 PLATFORM_HOSTS = {
     "facebook.com": "Facebook",
     "instagram.com": "Instagram",
@@ -36,6 +36,8 @@ PLATFORM_HOSTS = {
     "youtu.be": "YouTube",
     "lazada.co.th": "Lazada",
     "shopee.co.th": "Shopee",
+    "lazada.com.my": "Lazada",
+    "shopee.com.my": "Shopee",
 }
 SOURCE_STRATEGY = [
     {
@@ -110,6 +112,16 @@ PLATFORM_PRIORITY = {
     "公开网页": (3, "公开搜索与评测证据"),
 }
 MARKETPLACE_PLATFORMS = {"Shopee", "Lazada"}
+MAX_RESEARCH_URLS_PER_DOMAIN = 3
+MAX_MARKETPLACE_URLS_PER_DOMAIN = 10
+MARKETPLACE_SOURCE_DOMAINS = (
+    "shopee.co.th",
+    "lazada.co.th",
+    "shopee.com.my",
+    "lazada.com.my",
+    "shop.tiktok.com",
+    "tiktokshop.com",
+)
 ANTI_BOT_MARKERS = (
     "x5secdata",
     "captcha",
@@ -158,10 +170,71 @@ CONSUMER_SIGNAL_TERMS = (
     "cons",
     "unboxing",
 )
+SOURCE_ADAPTER_REGISTRY = {
+    "Crawl4AI public page reader": {
+        "adapter_id": "public_page_reader",
+        "channel": "customer_supplied_public_web",
+        "access_policy": "robots_aware_public_http_only",
+        "credential_policy": "no_personal_cookie",
+        "cost_model": "local_compute",
+        "fallback": "public_search_discovery",
+    },
+    "Firecrawl multi-query consumer research": {
+        "adapter_id": "firecrawl_consumer_search",
+        "channel": "public_web_search",
+        "access_policy": "configured_api_or_self_hosted_only",
+        "credential_policy": "service_api_key_only",
+        "cost_model": "provider_credits",
+        "fallback": "public_pages_and_official_public_apis",
+    },
+    "Gemini Grounding with Google Search": {
+        "adapter_id": "google_grounded_search",
+        "channel": "cited_public_search",
+        "access_policy": "configured_google_provider_only",
+        "credential_policy": "service_credential_only",
+        "cost_model": "provider_requests",
+        "fallback": "customer_urls_and_public_page_reader",
+    },
+    "YouTube public metadata": {
+        "adapter_id": "youtube_public_metadata",
+        "channel": "public_video_metadata",
+        "access_policy": "public_metadata_only",
+        "credential_policy": "no_personal_cookie",
+        "cost_model": "local_compute_or_official_quota",
+        "fallback": "official_api_key_or_public_url",
+    },
+    "Meta / TikTok public discovery": {
+        "adapter_id": "social_public_discovery",
+        "channel": "public_social_discovery",
+        "access_policy": "search_index_and_official_embed_only",
+        "credential_policy": "no_personal_cookie",
+        "cost_model": "included_in_search",
+        "fallback": "customer_authorized_export_or_official_api",
+    },
+    "Lazada / Shopee public commerce evidence": {
+        "adapter_id": "marketplace_public_evidence",
+        "channel": "public_commerce_pages",
+        "access_policy": "public_product_metadata_only",
+        "credential_policy": "no_personal_cookie",
+        "cost_model": "included_in_page_collection",
+        "fallback": "customer_export_or_authorized_provider",
+    },
+}
 
 
 def _is_offline_study(study: Mapping[str, Any]) -> bool:
     return str(study.get("study_type") or "").upper() in OFFLINE_STUDY_TYPES
+
+
+def _country_code(study: Mapping[str, Any]) -> str:
+    facts = study.get("facts") or {}
+    inputs = study.get("inputs") or {}
+    return str(
+        facts.get("country_code")
+        or inputs.get("country_code")
+        or study.get("country_code")
+        or "TH"
+    ).strip().upper()
 
 
 def _is_marketplace_evidence(item: Mapping[str, Any]) -> bool:
@@ -214,6 +287,17 @@ def _hostname_platform(hostname: str) -> str:
         if normalized == suffix or normalized.endswith(f".{suffix}"):
             return platform
     return "公开网页"
+
+
+def _research_url_domain_cap(hostname: str) -> int:
+    """Allow a useful SKU panel without letting other sources dominate."""
+    normalized = hostname.lower().removeprefix("www.").rstrip(".")
+    if any(
+        normalized == domain or normalized.endswith(f".{domain}")
+        for domain in MARKETPLACE_SOURCE_DOMAINS
+    ):
+        return MAX_MARKETPLACE_URLS_PER_DOMAIN
+    return MAX_RESEARCH_URLS_PER_DOMAIN
 
 
 def _grounded_platform(title: str, url: str) -> str:
@@ -335,12 +419,204 @@ def _canonical_url(value: str) -> str:
     )
 
 
+def _evidence_data_status(item: Mapping[str, Any]) -> str:
+    """Keep public observations distinct from assumptions and weak labels."""
+    source_type = str(item.get("source_type") or "").casefold()
+    if item.get("observed") is False or any(
+        marker in source_type
+        for marker in ("assumption", "inferred", "weak_label", "synthetic")
+    ):
+        return "inferred_or_assumed"
+    return "observed_public_evidence"
+
+
+def _source_health_snapshot(
+    collectors: List[Dict[str, Any]],
+    checked_at: str,
+) -> Dict[str, Any]:
+    """Normalize collector outcomes into one operational health contract."""
+    adapters: List[Dict[str, Any]] = []
+    health_counts: Dict[str, int] = {}
+    for collector in collectors:
+        name = str(collector.get("collector") or "unknown")
+        status = str(collector.get("status") or "unknown")
+        failure_reason = collector.get("failure_reason")
+        if status == "succeeded" and not failure_reason:
+            health = "healthy"
+        elif status in {"succeeded", "partial", "public_only"}:
+            health = "degraded"
+        elif status == "unavailable":
+            health = "unavailable"
+        else:
+            health = "inactive"
+        health_counts[health] = health_counts.get(health, 0) + 1
+        requested = int(collector.get("requested") or 0)
+        result_count = int(collector.get("result_count") or 0)
+        registry = SOURCE_ADAPTER_REGISTRY.get(name, {})
+        adapters.append(
+            {
+                "collector": name,
+                **registry,
+                "health": health,
+                "collector_status": status,
+                "requested": requested,
+                "result_count": result_count,
+                "success_rate": (
+                    round(min(1.0, result_count / requested), 4)
+                    if requested > 0
+                    else None
+                ),
+                "failure_reason": failure_reason,
+                "fallback_result": collector.get("fallback_result"),
+                "estimated_credits": int(
+                    collector.get("estimated_credits") or 0
+                ),
+            }
+        )
+    active = [
+        item for item in adapters if item["health"] != "inactive"
+    ]
+    if not active:
+        overall_status = "inactive"
+    elif all(item["health"] == "healthy" for item in active):
+        overall_status = "healthy"
+    elif any(item["health"] == "healthy" for item in active):
+        overall_status = "degraded"
+    else:
+        overall_status = "unavailable"
+    return {
+        "version": "SOURCE-HEALTH-2026.08.1",
+        "checked_at": checked_at,
+        "overall_status": overall_status,
+        "health_counts": health_counts,
+        "adapters": adapters,
+    }
+
+
+def _parse_publication_time(item: Mapping[str, Any]) -> Optional[datetime]:
+    for key in ("published_at", "published_date", "publication_date"):
+        raw = str(item.get(key) or "").strip()
+        if not raw:
+            continue
+        try:
+            parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    return None
+
+
+def _evidence_audit(
+    evidence: List[Dict[str, Any]],
+    *,
+    candidate_count: int,
+    duplicate_url_count: int,
+    duplicate_content_count: int,
+    scope_excluded_count: int,
+    completed_at: str,
+) -> Dict[str, Any]:
+    """Audit evidence quality without converting public signals into sales truth."""
+    domains: Dict[str, int] = {}
+    grade_counts: Dict[str, int] = {}
+    data_status_counts: Dict[str, int] = {}
+    publication_times: List[datetime] = []
+    provenance_count = 0
+    hash_count = 0
+    for item in evidence:
+        hostname = (
+            urllib.parse.urlsplit(str(item.get("url") or "")).hostname or ""
+        ).lower().removeprefix("www.")
+        if hostname:
+            domains[hostname] = domains.get(hostname, 0) + 1
+        grade = str(item.get("evidence_grade") or "ungraded")
+        grade_counts[grade] = grade_counts.get(grade, 0) + 1
+        data_status = str(
+            item.get("data_status") or _evidence_data_status(item)
+        )
+        data_status_counts[data_status] = (
+            data_status_counts.get(data_status, 0) + 1
+        )
+        if item.get("source_id") and item.get("url"):
+            provenance_count += 1
+        if item.get("content_sha256"):
+            hash_count += 1
+        published_at = _parse_publication_time(item)
+        if published_at:
+            publication_times.append(published_at)
+
+    accepted_count = len(evidence)
+    top_domain = max(domains, key=domains.get) if domains else None
+    top_domain_count = domains.get(top_domain, 0) if top_domain else 0
+    top_domain_share = (
+        round(top_domain_count / accepted_count, 4)
+        if accepted_count
+        else 0.0
+    )
+    completed = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+    stale_publication_count = sum(
+        1
+        for published_at in publication_times
+        if (completed - published_at).days > 365
+    )
+    flags: List[str] = []
+    if accepted_count >= 5 and top_domain_share > 0.6:
+        flags.append("single_domain_concentration")
+    if provenance_count != accepted_count:
+        flags.append("missing_provenance")
+    if hash_count != accepted_count:
+        flags.append("missing_content_hash")
+    if data_status_counts.get("inferred_or_assumed", 0):
+        flags.append("inferred_evidence_requires_separation")
+    if stale_publication_count:
+        flags.append("stale_published_evidence_present")
+
+    return {
+        "version": "EVIDENCE-AUDIT-2026.08.1",
+        "status": "attention_required" if flags else "passed",
+        "audited_at": completed_at,
+        "candidate_count": candidate_count,
+        "accepted_count": accepted_count,
+        "duplicate_url_count": duplicate_url_count,
+        "duplicate_content_count": duplicate_content_count,
+        "scope_excluded_count": scope_excluded_count,
+        "provenance_coverage": (
+            round(provenance_count / accepted_count, 4)
+            if accepted_count
+            else 0.0
+        ),
+        "content_hash_coverage": (
+            round(hash_count / accepted_count, 4)
+            if accepted_count
+            else 0.0
+        ),
+        "publication_time_coverage": (
+            round(len(publication_times) / accepted_count, 4)
+            if accepted_count
+            else 0.0
+        ),
+        "stale_publication_count": stale_publication_count,
+        "domain_counts": dict(sorted(domains.items())),
+        "top_domain": top_domain,
+        "top_domain_share": top_domain_share,
+        "grade_counts": dict(sorted(grade_counts.items())),
+        "data_status_counts": dict(sorted(data_status_counts.items())),
+        "flags": flags,
+        "quantitative_policy": (
+            "public evidence may enrich choice-set attributes but may not "
+            "directly calibrate choice coefficients or be presented as sales"
+        ),
+    }
+
+
 def _market_signals(content: str) -> Dict[str, List[str]]:
     patterns = {
         "prices": (
             r"(?:฿\s?[\d][\d,]*(?:\.\d{1,2})?"
             r"|(?:THB|บาท)\s?[\d][\d,]*(?:\.\d{1,2})?"
-            r"|[\d][\d,]*(?:\.\d{1,2})?\s?บาท)"
+            r"|[\d][\d,]*(?:\.\d{1,2})?\s?บาท"
+            r"|(?:RM|MYR)\s?[\d][\d,]*(?:\.\d{1,2})?)"
         ),
         "ratings": (
             r"\b[0-5](?:\.\d{1,2})?\s*"
@@ -516,7 +792,25 @@ class PublicMarketResearch:
                 value = item.get(key)
                 if isinstance(value, str) and _is_public_http_url(value):
                     candidates.append(value.strip())
-        return _unique(candidates)
+        # A customer may paste multiple product variants or tracking links from
+        # the same marketplace. Canonicalise before deduplication and bound a
+        # single host so one unstable source cannot dominate the evidence set.
+        accepted: List[str] = []
+        domain_counts: Dict[str, int] = {}
+        for candidate in candidates:
+            canonical = _canonical_url(candidate)
+            if canonical in accepted:
+                continue
+            hostname = (
+                urllib.parse.urlsplit(canonical).hostname or ""
+            ).lower().removeprefix("www.")
+            if domain_counts.get(hostname, 0) >= _research_url_domain_cap(
+                hostname
+            ):
+                continue
+            domain_counts[hostname] = domain_counts.get(hostname, 0) + 1
+            accepted.append(canonical)
+        return accepted
 
     @staticmethod
     def _search_query(study: Mapping[str, Any]) -> str:
@@ -530,7 +824,12 @@ class PublicMarketResearch:
             ]
         )
         plain = [value for value in pieces if not _is_public_http_url(value)]
-        return _clean_text(" ".join(plain) + " Thailand รีวิว review", 240)
+        suffix = (
+            " Malaysia ulasan review"
+            if _country_code(study) == "MY"
+            else " Thailand รีวิว review"
+        )
+        return _clean_text(" ".join(plain) + suffix, 240)
 
     @staticmethod
     def _offline_location_labels(study: Mapping[str, Any]) -> List[str]:
@@ -568,6 +867,20 @@ class PublicMarketResearch:
     @staticmethod
     def _consumer_search_query(study: Mapping[str, Any]) -> str:
         base = PublicMarketResearch._search_query(study)
+        if _country_code(study) == "MY":
+            if _is_offline_study(study):
+                locations = PublicMarketResearch._offline_location_labels(study)
+                location_context = " ".join(locations) or "Malaysia"
+                return _clean_text(
+                    f"{base} {location_context} ulasan kedai suasana harga "
+                    "Google Maps Facebook TikTok akses pengangkutan parkir",
+                    320,
+                )
+            return _clean_text(
+                f"{base} harga kelebihan kekurangan pengalaman sebenar "
+                "beli Shopee Malaysia Lazada Malaysia TikTok",
+                320,
+            )
         if _is_offline_study(study):
             locations = PublicMarketResearch._offline_location_labels(study)
             location_context = " ".join(locations) or "Thailand"
@@ -584,7 +897,7 @@ class PublicMarketResearch:
 
     @staticmethod
     def _consumer_search_queries(study: Mapping[str, Any]) -> List[str]:
-        """Build Thai consumer-intent query clusters instead of one broad query."""
+        """Build local consumer-intent query clusters instead of one broad query."""
         inputs = study.get("inputs") or {}
         facts = study.get("facts") or {}
         product = _clean_text(
@@ -596,13 +909,34 @@ class PublicMarketResearch:
             100,
         )
         subject = _clean_text(" ".join(_unique([product, category])), 180)
+        is_malaysia = _country_code(study) == "MY"
         if _is_offline_study(study):
             venue_type = _clean_text(
                 facts.get("venue_type") or inputs.get("venue_type") or category,
                 100,
             )
             locations = PublicMarketResearch._offline_location_labels(study)
-            location_context = " ".join(locations) or "Thailand"
+            location_context = " ".join(locations) or (
+                "Malaysia" if is_malaysia else "Thailand"
+            )
+            if is_malaysia:
+                query_templates = [
+                    f"{subject} {location_context} ulasan kedai suasana harga",
+                    f"{venue_type} {location_context} Google Maps ulasan akses parkir",
+                    f"{location_context} tempat popular penduduk tempatan pelancong waktu sibuk",
+                    f"site:facebook.com {subject} {location_context} ulasan Malaysia",
+                    f"site:tiktok.com {subject} {location_context} review Malaysia",
+                    f"site:instagram.com {subject} {location_context} Malaysia review",
+                    f"{location_context} pengangkutan awam parkir pedestrian access",
+                    f"{location_context} cafe restaurant competitor price review Malaysia",
+                    f"{location_context} tourism local demand cafe restaurant Malaysia",
+                    f"{venue_type} Malaysia forum ulasan cadangan masalah",
+                    f"{venue_type} Malaysia operating hours queue service review",
+                    f"{subject} {location_context} local community event demand",
+                ]
+                return _unique(
+                    _clean_text(query, 320) for query in query_templates
+                )
             query_templates = [
                 f"{subject} {location_context} รีวิวร้าน บรรยากาศ ราคา",
                 f"{venue_type} {location_context} Google Maps รีวิว การเดินทาง ที่จอดรถ",
@@ -634,6 +968,28 @@ class PublicMarketResearch:
             )
             if value and not _is_public_http_url(value)
         ][:3]
+        if is_malaysia:
+            query_templates = [
+                f"{subject} ulasan pengalaman sebenar kelebihan kekurangan Malaysia",
+                f"{subject} masalah rosak bising pulangan ulasan negatif",
+                f"{subject} harga berbaloi perbandingan model terbaik",
+                f"{subject} beli Shopee Malaysia Lazada Malaysia ulasan pembeli",
+                f"site:tiktok.com {subject} ulasan Malaysia pengalaman sebenar",
+                f"site:facebook.com {subject} ulasan pendapat Malaysia",
+                f"site:instagram.com {subject} Malaysia review",
+                f"site:youtube.com {subject} Malaysia review test unboxing",
+                f"{category} Malaysia consumer demand buying behaviour",
+                f"{category} Malaysia forum review problem recommendation",
+                f"{category} warranty delivery after sales Malaysia",
+                f"{category} alternatives competitors popular brands Malaysia",
+                *(
+                    f"{subject} vs {competitor} price review Malaysia"
+                    for competitor in competitors
+                ),
+            ]
+            return _unique(
+                _clean_text(query, 320) for query in query_templates
+            )
         query_templates = [
             f"{subject} รีวิว ใช้จริง ข้อดี ข้อเสีย ประเทศไทย",
             f"{subject} ปัญหา เสีย พัง เสียงดัง คืนสินค้า รีวิวลบ",
@@ -721,6 +1077,7 @@ class PublicMarketResearch:
                 queries,
                 self.max_search_results,
                 offline_venue=_is_offline_study(study),
+                country_code=_country_code(study),
             )
         return await self.grounded_searcher(
             queries,
@@ -750,6 +1107,19 @@ class PublicMarketResearch:
             "platform_counts": {},
             "evidence": [],
             "collectors": [],
+            "source_health": {
+                "version": "SOURCE-HEALTH-2026.08.1",
+                "checked_at": started_at,
+                "overall_status": "not_run",
+                "health_counts": {},
+                "adapters": [],
+            },
+            "evidence_audit": {
+                "version": "EVIDENCE-AUDIT-2026.08.1",
+                "status": "not_run",
+                "audited_at": started_at,
+                "flags": [],
+            },
             "warnings": [],
             "source_strategy": {
                 "ranking_basis": (
@@ -785,6 +1155,22 @@ class PublicMarketResearch:
                     "使用个人浏览器 Cookie 进行商业批量采集",
                 ],
             },
+            "source_adapter_policy": {
+                "version": "SOURCE-ADAPTER-REGISTRY-2026.08.1",
+                "adapter_ids": [
+                    item["adapter_id"]
+                    for item in SOURCE_ADAPTER_REGISTRY.values()
+                ],
+                "credential_rule": (
+                    "service credentials, official APIs, customer-authorized "
+                    "exports, or public no-login access only"
+                ),
+                "prohibited": [
+                    "personal browser cookies",
+                    "login or captcha bypass",
+                    "private endpoints",
+                ],
+            },
         }
         if str(plan_code).upper() != "PROFESSIONAL":
             base["warnings"] = ["公开市场深度扫描仅在深度决策中执行。"]
@@ -808,6 +1194,26 @@ class PublicMarketResearch:
             return base
 
         urls = self._research_urls(study)[: self.max_pages]
+        source_domains = sorted(
+            {
+                (urllib.parse.urlsplit(url).hostname or "")
+                .lower()
+                .removeprefix("www.")
+                for url in urls
+            }
+        )
+        base["customer_source_scope"] = {
+            "requested_public_urls": len(urls),
+            "unique_domains": len(source_domains),
+            "domains": source_domains,
+            "per_domain_cap": MAX_RESEARCH_URLS_PER_DOMAIN,
+            "marketplace_per_domain_cap": MAX_MARKETPLACE_URLS_PER_DOMAIN,
+            "marketplace_domains": list(MARKETPLACE_SOURCE_DOMAINS),
+            "purpose": (
+                "Capture attributable public product, competitor, price, "
+                "promotion, rating and product-claim evidence."
+            ),
+        }
         scope_warnings: List[str] = []
         if is_offline:
             marketplace_urls = [
@@ -881,10 +1287,12 @@ class PublicMarketResearch:
         collectors: List[Dict[str, Any]] = []
         warnings: List[str] = list(scope_warnings)
         if isinstance(page_results, Exception):
-            warnings.append(f"公开网页采集失败：{type(page_results).__name__}")
+            page_failure_reason = type(page_results).__name__
+            warnings.append(f"公开网页采集失败：{page_failure_reason}")
             page_items: List[Dict[str, Any]] = []
             page_status = "unavailable"
         else:
+            page_failure_reason = None
             page_items = page_results
             page_status = "succeeded" if page_items else (
                 "not_applicable" if not urls else "partial"
@@ -896,6 +1304,7 @@ class PublicMarketResearch:
                 "status": page_status,
                 "requested": len(urls),
                 "result_count": len(page_items),
+                "failure_reason": page_failure_reason,
                 "fallback_result": (
                     None if page_items else "public_search_discovery"
                 ),
@@ -905,18 +1314,24 @@ class PublicMarketResearch:
         if not self.firecrawl_enabled:
             search_items: List[Dict[str, Any]] = []
             search_status = "disabled"
+            search_failure_reason = None
         elif isinstance(search_results, Exception):
+            search_failure_reason = type(search_results).__name__
             warnings.append(
-                f"消费者公开检索失败：{type(search_results).__name__}"
+                f"消费者公开检索失败：{search_failure_reason}"
             )
             search_items = []
             search_status = "unavailable"
         else:
+            search_failure_reason = None
             search_items = search_results["items"]
             search_status = "succeeded" if search_items else "partial"
             evidence.extend(search_items)
             failed_searches = search_results["failed_queries"]
             if failed_searches:
+                search_failure_reason = (
+                    f"{len(failed_searches)}_query_failures"
+                )
                 warnings.append(
                     f"Firecrawl 有 {len(failed_searches)} 个检索主题失败；"
                     "系统已保留其他成功来源。"
@@ -931,6 +1346,7 @@ class PublicMarketResearch:
                     else 0
                 ),
                 "result_count": len(search_items),
+                "failure_reason": search_failure_reason,
                 "query_count": len(consumer_queries),
                 "completed_queries": (
                     int(search_results.get("completed_queries", 0))
@@ -960,14 +1376,17 @@ class PublicMarketResearch:
         if not self.google_grounded_search_enabled:
             grounded_items: List[Dict[str, Any]] = []
             grounded_status = "disabled"
+            grounded_failure_reason = None
         elif isinstance(grounded_results, Exception):
             grounded_items = []
             grounded_status = "unavailable"
+            grounded_failure_reason = type(grounded_results).__name__
             warnings.append(
                 "Google 公开检索失败："
-                f"{type(grounded_results).__name__}"
+                f"{grounded_failure_reason}"
             )
         else:
+            grounded_failure_reason = None
             grounded_items = list(grounded_results.get("items") or [])
             grounded_status = "succeeded" if grounded_items else "partial"
             evidence.extend(grounded_items)
@@ -975,6 +1394,9 @@ class PublicMarketResearch:
                 grounded_results.get("failed_queries") or []
             )
             if failed_grounded:
+                grounded_failure_reason = (
+                    f"{len(failed_grounded)}_query_failures"
+                )
                 warnings.append(
                     f"Google 公开检索有 {len(failed_grounded)} 个主题失败；"
                     "系统已保留带引用的成功结果。"
@@ -985,6 +1407,7 @@ class PublicMarketResearch:
                 "status": grounded_status,
                 "requested": len(consumer_queries),
                 "result_count": len(grounded_items),
+                "failure_reason": grounded_failure_reason,
                 "query_count": len(consumer_queries),
                 "completed_queries": (
                     int(grounded_results.get("completed_queries", 0))
@@ -1011,12 +1434,14 @@ class PublicMarketResearch:
         )
 
         if isinstance(video_results, Exception):
+            video_failure_reason = type(video_results).__name__
             warnings.append(
-                f"YouTube 公开资料采集失败：{type(video_results).__name__}"
+                f"YouTube 公开资料采集失败：{video_failure_reason}"
             )
             video_items: List[Dict[str, Any]] = []
             video_status = "unavailable"
         else:
+            video_failure_reason = None
             video_items = video_results
             video_status = "succeeded" if video_items else "partial"
             evidence.extend(video_items)
@@ -1026,6 +1451,7 @@ class PublicMarketResearch:
                 "status": video_status,
                 "requested": self.max_videos,
                 "result_count": len(video_items),
+                "failure_reason": video_failure_reason,
                 "fallback_result": (
                     None if video_items else "official_api_key_or_public_url"
                 ),
@@ -1053,14 +1479,26 @@ class PublicMarketResearch:
 
         unique_evidence: List[Dict[str, Any]] = []
         seen_urls = set()
+        seen_content_hashes = set()
+        duplicate_url_count = 0
+        duplicate_content_count = 0
         skipped_marketplace_evidence = 0
         for item in evidence:
             url = item.get("url")
             canonical_url = _canonical_url(str(url or ""))
-            if not canonical_url or canonical_url in seen_urls:
+            if not canonical_url:
+                continue
+            if canonical_url in seen_urls:
+                duplicate_url_count += 1
                 continue
             seen_urls.add(canonical_url)
             item["url"] = canonical_url
+            content_hash = str(item.get("content_sha256") or "").strip()
+            if content_hash and content_hash in seen_content_hashes:
+                duplicate_content_count += 1
+                continue
+            if content_hash:
+                seen_content_hashes.add(content_hash)
             platform = str(item.get("platform") or "公开网页")
             if is_offline and _is_marketplace_evidence(item):
                 skipped_marketplace_evidence += 1
@@ -1071,6 +1509,7 @@ class PublicMarketResearch:
             )
             item["decision_priority"] = priority
             item.setdefault("evidence_role", role)
+            item["data_status"] = _evidence_data_status(item)
             grade_score = {
                 "A": 40,
                 "B": 32,
@@ -1117,6 +1556,25 @@ class PublicMarketResearch:
             platform_counts[platform] = platform_counts.get(platform, 0) + 1
 
         completed_at = _utc_now()
+        evidence_audit = _evidence_audit(
+            unique_evidence,
+            candidate_count=len(evidence),
+            duplicate_url_count=duplicate_url_count,
+            duplicate_content_count=duplicate_content_count,
+            scope_excluded_count=skipped_marketplace_evidence,
+            completed_at=completed_at,
+        )
+        if "single_domain_concentration" in evidence_audit["flags"]:
+            warnings.append(
+                "证据审计发现单一域名占比超过 60%；"
+                "报告保留该证据，但应结合其他独立来源解释。"
+            )
+        if "inferred_evidence_requires_separation" in evidence_audit["flags"]:
+            warnings.append(
+                "证据审计发现推断或假设项；"
+                "系统已标记并禁止其直接校准选择系数。"
+            )
+        source_health = _source_health_snapshot(collectors, completed_at)
         base.update(
             {
                 "status": (
@@ -1139,6 +1597,8 @@ class PublicMarketResearch:
                 "platform_counts": platform_counts,
                 "evidence": unique_evidence,
                 "collectors": collectors,
+                "source_health": source_health,
+                "evidence_audit": evidence_audit,
                 "warnings": warnings,
             }
         )
@@ -1425,6 +1885,7 @@ class PublicMarketResearch:
         queries: List[str],
         limit: int,
         offline_venue: bool = False,
+        country_code: str = "TH",
     ) -> Dict[str, Any]:
         providers = self._grounded_providers()
         if not providers:
@@ -1456,7 +1917,40 @@ class PublicMarketResearch:
         providers_used: List[Dict[str, str]] = []
         for start in range(0, len(queries), group_size):
             group = queries[start : start + group_size]
-            if offline_venue:
+            is_malaysia = country_code == "MY"
+            if offline_venue and is_malaysia:
+                prompt = (
+                    "Search the public web for current, decision-useful "
+                    "Malaysia physical-venue and location evidence for the "
+                    "query clusters below. Prioritize Malay-, English-, and "
+                    "Chinese-language Google Maps or public place listings, "
+                    "customer reviews, Facebook local communities, TikTok or "
+                    "Instagram venue-discovery content, Malaysian local media, "
+                    "transport, tourism, and official district or venue pages. "
+                    "Look for accessibility, parking, opening context, nearby "
+                    "competition, local versus tourist demand, and recurring "
+                    "experience themes. Cite every factual claim. Do not treat "
+                    "likes, views, reviews, or marketplace counters as actual "
+                    "footfall, sales, or conversion. Return a concise Chinese "
+                    "evidence summary.\n\n"
+                    + "\n".join(f"- {query}" for query in group)
+                )
+            elif is_malaysia:
+                prompt = (
+                    "Search the public web for current, decision-useful Malaysia "
+                    "market evidence for the query clusters below. Prioritize "
+                    "Malay-, English-, and Chinese-language sources, Shopee "
+                    "Malaysia, Lazada Malaysia, TikTok, Facebook, Instagram, "
+                    "Malaysian forums and local media, review sites, and official "
+                    "brand pages. Look for prices in MYR, ratings, recurring "
+                    "complaints, warranty, delivery, product comparisons, and "
+                    "real usage contexts. Cite every factual claim. Do not claim "
+                    "that public engagement or displayed sold counts equal "
+                    "verified sales or conversion. Return a concise Chinese "
+                    "evidence summary.\n\n"
+                    + "\n".join(f"- {query}" for query in group)
+                )
+            elif offline_venue:
                 prompt = (
                     "Search the public web for current, decision-useful "
                     "Thailand physical-venue and location evidence for the "

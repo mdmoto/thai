@@ -64,6 +64,7 @@ async def analyze_product_image(
     product_name: str,
     category: str,
     plan_code: str,
+    country_code: str = "TH",
 ) -> Dict[str, Any]:
     """Extract bounded attributes from an upload using a configured Gemini vision model."""
 
@@ -82,14 +83,20 @@ async def analyze_product_image(
     if not image_bytes or len(image_bytes) > 600_000:
         return _unavailable("invalid_image", "图片超过视觉分析安全大小限制。")
 
+    country_name = "Malaysia" if country_code.upper() == "MY" else "Thailand"
+    localization_label = (
+        "Malaysia-localization cues"
+        if country_code.upper() == "MY"
+        else "Thai-localization cues"
+    )
     prompt = (
-        "You are a Thailand consumer-market visual evidence analyst. Analyze only "
+        f"You are a {country_name} consumer-market visual evidence analyst. Analyze only "
         "what is visible in the customer-uploaded image. Do not infer sales, price, "
         "ratings, certifications, safety, or market share. Return concise Chinese JSON. "
         "Scores are weak visual impressions only, not measured consumer outcomes.\n\n"
         f"Product: {product_name[:200]}\nCategory: {category[:120]}\nPlan: {plan_code}\n"
         "Assess visible packaging, form factor, legibility, design differentiation, "
-        "Thai-localization cues, and trust risks such as unreadable copy or unsupported claims."
+        f"{localization_label}, and trust risks such as unreadable copy or unsupported claims."
     )
     model = os.environ.get("GEMINI_VISION_MODEL", "gemini-2.5-flash").strip()
     try:
