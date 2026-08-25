@@ -219,15 +219,14 @@ export function NewStudyWizard() {
   useEffect(() => {
     const user = getStoredUser();
     setAuthReady(Boolean(getStoredToken()));
-    // A first-time account should land on its included free preview rather
-    // than on a paid simulation it cannot run yet. Preserve an explicit plan
-    // choice (for example, a template or a user selection).
+    // A new account should begin with its included preview instead of a paid
+    // plan it cannot run. Do not override an explicit template/user choice.
     if ((user?.free_preview_runs_balance ?? 0) > 0) {
-      setState(current => (
+      setState(current =>
         current.plan_code === INIT_STATE.plan_code
           ? { ...current, plan_code: "PREVIEW" }
-          : current
-      ));
+          : current,
+      );
     }
     setReturnPath(`${window.location.pathname}${window.location.search}`);
   }, []);
