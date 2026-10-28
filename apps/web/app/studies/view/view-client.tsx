@@ -35,9 +35,25 @@ export function StudyViewClient() {
   }
 
   const facts = study.facts || {};
-  const isMalaysia = facts.country_code === "MY";
-  const countryName = isMalaysia ? "马来西亚" : "泰国";
-  const currencySymbol = isMalaysia ? "RM " : "฿";
+  const countryCode = String(facts.country_code || "TH");
+  const COUNTRY_NAMES: Record<string, string> = {
+    TH: "泰国",
+    MY: "马来西亚",
+    ID: "印度尼西亚",
+    VN: "越南",
+    PH: "菲律宾",
+    SG: "新加坡",
+  };
+  const CURRENCY_SYMBOLS: Record<string, string> = {
+    TH: "฿",
+    MY: "RM ",
+    ID: "Rp ",
+    VN: "₫",
+    PH: "₱",
+    SG: "S$",
+  };
+  const countryName = COUNTRY_NAMES[countryCode] || "泰国";
+  const currencySymbol = CURRENCY_SYMBOLS[countryCode] || "฿";
   const canRun = ["READY", "FAILED_RECOVERABLE", "COMPLETED"].includes(study.status);
   const isRunning = [
     "QUEUED",

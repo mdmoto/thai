@@ -87,8 +87,8 @@ class CreateStudyRequest(BaseModel):
     @classmethod
     def validate_country_code(cls, value: str) -> str:
         normalized = value.strip().upper()
-        if normalized not in {"TH", "MY"}:
-            raise ValueError("目前仅支持泰国（TH）和马来西亚（MY）")
+        if normalized not in {"TH", "MY", "ID", "VN", "PH", "SG"}:
+            raise ValueError("目前仅支持东盟六国：泰国（TH）、马来西亚（MY）、印尼（ID）、越南（VN）、菲律宾（PH）、新加坡（SG）")
         return normalized
 
     @field_validator("selling_points", "competitors", "business_questions")

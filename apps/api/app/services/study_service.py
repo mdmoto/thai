@@ -357,7 +357,7 @@ class StudyService:
                     "value": (
                         "人口与收入使用泰国 NSO 公开宏观数据；选择系数与品类渗透仍为先验"
                         if country.code == "TH"
-                        else "人口、年龄、性别、州级收入与 CPI 使用马来西亚 DOSM 公开数据；行为和选择系数仍为跨市场先验"
+                        else f"人口、年龄、性别、区域收入与 CPI 使用{country.name_zh}官方统计数据（{country.code}）；行为和选择系数仍为跨市场先验"
                     ),
                     "grade": "D",
                 },
@@ -1116,10 +1116,15 @@ class StudyService:
             low, high = AGE_GROUP_RANGES.get(age_group, (35, 44))
             age = int(rng.integers(low, high + 1))
             region = str(row.get("region") or "Central")
-            province = str(
-                row.get("province")
-                or ("Bangkok" if country_code == "TH" else "Selangor")
-            )
+            default_prov = {
+                "TH": "Bangkok",
+                "MY": "Selangor",
+                "ID": "Special Capital Region of Jakarta",
+                "VN": "Thành phố Hồ Chí Minh",
+                "PH": "National Capital Region",
+                "SG": "CENTRAL REGION",
+            }.get(country_code, "Bangkok")
+            province = str(row.get("province") or default_prov)
             # These are synthetic display points sampled inside the assigned
             # province polygon, not observed household addresses.
             latitude, longitude = sample_point_in_province(
@@ -1214,12 +1219,15 @@ class StudyService:
                     str(segment.get("segment_id") or "MAINSTREAM"),
                     OFFLINE_SEGMENT_CHANNELS["MAINSTREAM"],
                 )
-            if country_code == "MY":
-                copy["preferred_channel"] = str(
-                    copy.get("preferred_channel") or ""
-                ).replace("Shopee Thailand", "Shopee Malaysia").replace(
-                    "LINE", "WhatsApp"
-                )
+            if country_code != "TH":
+                c_cfg = get_country_config(country_code)
+                channel_str = str(copy.get("preferred_channel") or "")
+                channel_str = channel_str.replace("Shopee Thailand", c_cfg.default_marketplaces[0])
+                if len(c_cfg.default_marketplaces) > 1:
+                    channel_str = channel_str.replace("Lazada Thailand", c_cfg.default_marketplaces[1])
+                chat_app = "WhatsApp / Zalo" if country_code == "VN" else "WhatsApp"
+                channel_str = channel_str.replace("LINE", chat_app)
+                copy["preferred_channel"] = channel_str
             output.append(copy)
         return output
 
@@ -1387,15 +1395,20 @@ class StudyService:
         )
         geo = sim_results.get("geo_analysis")
         public_collectors = list(market_research.get("collectors") or [])
+        snap_label, cpi_label = {
+            "TH": ("Thailand NSO versioned snapshots", "Thailand MOC CPI and consumer confidence"),
+            "MY": ("Malaysia DOSM versioned snapshots", "Malaysia DOSM state CPI"),
+            "ID": ("Indonesia BPS versioned snapshots", "Indonesia BPS provincial CPI"),
+            "VN": ("Vietnam GSO versioned snapshots", "Vietnam GSO statistical yearbook CPI"),
+            "PH": ("Philippines PSA versioned snapshots", "Philippines PSA regional CPI"),
+            "SG": ("Singapore SingStat versioned snapshots", "Singapore SingStat resident CPI"),
+        }.get(country_code, ("National Statistics versioned snapshots", "National CPI series"))
+
         return {
             "execution_policy": "independent_collectors_fail_open",
             "collectors": [
                 {
-                    "collector": (
-                        "Malaysia DOSM versioned snapshots"
-                        if country_code == "MY"
-                        else "Thailand NSO versioned snapshots"
-                    ),
+                    "collector": snap_label,
                     "status": "succeeded" if observed_macro else "fallback",
                     "result_count": observed_macro,
                     "fallback_result": (
@@ -1403,11 +1416,7 @@ class StudyService:
                     ),
                 },
                 {
-                    "collector": (
-                        "Malaysia DOSM state CPI"
-                        if country_code == "MY"
-                        else "Thailand MOC CPI and consumer confidence"
-                    ),
+                    "collector": cpi_label,
                     "status": (
                         "succeeded"
                         if macro_context.get("status")
@@ -1527,12 +1536,12 @@ class StudyService:
         country = get_country_config(country_code)
         macro_context = (
             dict(
-                load_calibration_profile(country_code="MY").get(
+                load_calibration_profile(country_code=country_code).get(
                     "macro_context"
                 )
                 or {}
             )
-            if country_code == "MY"
+            if country_code != "TH"
             else load_latest_moc_context(_data_catalog_root())
         )
         scenarios = list(sim_results["scenarios"])
@@ -1916,9 +1925,13 @@ class StudyService:
                         "商圈自然到店 / 周边可见性",
                         "Google Maps / 本地搜索",
                         (
-                            "Facebook / WhatsApp 本地社群"
-                            if str(study["facts"].get("country_code") or "TH") == "MY"
-                            else "Facebook / LINE 本地社群"
+                            "Facebook / LINE 本地社群"
+                            if str(study["facts"].get("country_code") or "TH") == "TH"
+                            else (
+                                "Facebook / Zalo 本地社群"
+                                if str(study["facts"].get("country_code") or "TH") == "VN"
+                                else "Facebook / WhatsApp 本地社群"
+                            )
                         ),
                         "TikTok 探店内容",
                     ]

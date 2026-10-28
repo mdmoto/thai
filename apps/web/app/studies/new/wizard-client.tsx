@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 type StudyType = keyof typeof STUDY_TYPE_META;
 type PlanCode = keyof typeof PLAN_META;
-type CountryCode = "TH" | "MY";
+type CountryCode = "TH" | "MY" | "ID" | "VN" | "PH" | "SG";
 
 interface WizardState {
   country_code: CountryCode;
@@ -81,6 +81,23 @@ const INIT_STATE: WizardState = {
   cod_available: true,
   official_store: false,
   venue_history_text: "",
+};
+
+export const MARKET_CONFIG: Record<string, {
+  name: string;
+  currency: string;
+  symbol: string;
+  priceExample: string;
+  areas: string;
+  source: string;
+  marketplaces: string[];
+}> = {
+  TH: { name: "泰国", currency: "THB", symbol: "฿", priceExample: "990", areas: "77 府", source: "NSO", marketplaces: ["Shopee Thailand", "Lazada Thailand", "TikTok Shop Thailand"] },
+  MY: { name: "马来西亚", currency: "MYR", symbol: "RM", priceExample: "99", areas: "16 州/联邦直辖区", source: "DOSM", marketplaces: ["Shopee Malaysia", "Lazada Malaysia", "TikTok Shop Malaysia"] },
+  ID: { name: "印度尼西亚", currency: "IDR", symbol: "Rp ", priceExample: "199000", areas: "34 省", source: "BPS", marketplaces: ["Shopee Indonesia", "Tokopedia", "TikTok Shop Indonesia"] },
+  VN: { name: "越南", currency: "VND", symbol: "₫", priceExample: "299000", areas: "64 省/直辖市", source: "GSO", marketplaces: ["Shopee Vietnam", "TikTok Shop Vietnam", "Lazada Vietnam"] },
+  PH: { name: "菲律宾", currency: "PHP", symbol: "₱", priceExample: "699", areas: "17 大区", source: "PSA", marketplaces: ["Shopee Philippines", "Lazada Philippines", "TikTok Shop Philippines"] },
+  SG: { name: "新加坡", currency: "SGD", symbol: "S$", priceExample: "29", areas: "5 规划大区", source: "SingStat", marketplaces: ["Shopee Singapore", "Lazada Singapore", "Amazon Singapore"] },
 };
 
 function parseVenueHistory(value: string) {
@@ -416,15 +433,22 @@ function Step1({ state, update, onNext }: {
         <p className="text-xs text-neutral-400 font-light mt-1">选择目标国家后，系统会加载对应的官方宏观人口、收入、地区与币种配置。</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {([
           { code: "TH", label: "泰国", detail: "NSO · THB · 77 府" },
           { code: "MY", label: "马来西亚", detail: "DOSM · MYR · 16 州/联邦直辖区" },
+          { code: "ID", label: "印度尼西亚", detail: "BPS · IDR · 34 省/核心区" },
+          { code: "VN", label: "越南", detail: "GSO · VND · 64 省/直辖市" },
+          { code: "PH", label: "菲律宾", detail: "PSA · PHP · 17 大区" },
+          { code: "SG", label: "新加坡", detail: "SingStat · SGD · 5 规划大区" },
         ] as const).map(market => (
           <button
             type="button"
             key={market.code}
-            onClick={() => update({ country_code: market.code })}
+            onClick={() => update({
+              country_code: market.code,
+              marketplaces: (MARKET_CONFIG[market.code] || MARKET_CONFIG.TH).marketplaces,
+            })}
             className={cn(
               "card-lazzor p-4 text-left transition-colors",
               state.country_code === market.code ? "bg-neutral-900 border-neutral-500" : "hover:bg-[#171717]",
@@ -501,9 +525,7 @@ function Step2({ state, update, onNext, onBack }: {
   const isCreative = state.study_type === "CREATIVE_TEST";
   const isOffline = Boolean(state.study_type && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type));
   const siteCount = state.location_text.split(/[;\n、]+/).map(value => value.trim()).filter(Boolean).length;
-  const market = state.country_code === "MY"
-    ? { name: "马来西亚", currency: "MYR", symbol: "RM", priceExample: "99" }
-    : { name: "泰国", currency: "THB", symbol: "฿", priceExample: "990" };
+  const market = MARKET_CONFIG[state.country_code] || MARKET_CONFIG.TH;
 
   const addListItem = (field: "selling_points" | "competitors") => {
     update({ [field]: [...state[field], ""] });
@@ -881,9 +903,7 @@ function Step3({ state, onNext, onBack }: {
   const meta = state.study_type ? STUDY_TYPE_META[state.study_type] : null;
   const isOffline = Boolean(state.study_type && ["VENUE_STUDY", "SITE_COMPARISON", "OPERATING_SCENARIO"].includes(state.study_type));
   const isCreative = state.study_type === "CREATIVE_TEST";
-  const market = state.country_code === "MY"
-    ? { name: "马来西亚", currency: "MYR", symbol: "RM", areas: "16 个州/联邦直辖区", source: "DOSM" }
-    : { name: "泰国", currency: "THB", symbol: "฿", areas: "77 府", source: "NSO" };
+  const market = MARKET_CONFIG[state.country_code] || MARKET_CONFIG.TH;
 
   const facts = [
     state.product_name && { label: isOffline ? "门店 / 项目" : isCreative ? "推广产品 / 品牌" : "产品名称", value: state.product_name },

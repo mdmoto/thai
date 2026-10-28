@@ -1,0 +1,716 @@
+{
+  "version": "SG-CONSUMER-MACRO-2026.10.1",
+  "status": "official_macro_calibrated_choice_prior",
+  "claim": "Singapore adult age, binary sex, planning region population, household income and expenditure percentiles calibrated from SingStat (Department of Statistics Singapore) and data.gov.sg official aggregates. Behavioral traits and choice coefficients transferred from cross-market prior.",
+  "country_code": "SG",
+  "country_name": "Singapore",
+  "currency_code": "SGD",
+  "currency_symbol": "S$",
+  "sources": [
+    {
+      "source_id": "SINGSTAT_HES",
+      "title": "SingStat Household Expenditure Survey and Income Trends",
+      "license": "Singapore Open Data Licence / SingStat",
+      "observed": true,
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "SINGSTAT_POPULATION_PLANNING_AREA",
+      "title": "SingStat Singapore Residents by Planning Region / Planning Area",
+      "license": "Singapore Open Data Licence / SingStat",
+      "observed": true,
+      "source_type": "official_public_aggregate"
+    }
+  ],
+  "limitations": [
+    "Regional margins reflect SingStat annual population and household income tables.",
+    "Choice elasticity coefficients are cross-market priors calibrated to Southeast Asian e-commerce benchmarks."
+  ],
+  "population": {
+    "registered_population_total": 5920000,
+    "population_reference_date": "2024-12-31",
+    "age_group": {
+      "18-24": 0.112,
+      "25-34": 0.215,
+      "35-44": 0.221,
+      "45-54": 0.198,
+      "55+": 0.254
+    },
+    "gender": {
+      "Female": 0.511,
+      "Male": 0.489
+    },
+    "region": {
+      "Central & Urban Core": 0.228,
+      "Outer Planning Regions": 0.772
+    },
+    "province_by_region": {
+      "Central & Urban Core": {
+        "CENTRAL REGION": 1.0
+      },
+      "Outer Planning Regions": {
+        "EAST REGION": 0.25,
+        "NORTH REGION": 0.25,
+        "NORTH-EAST REGION": 0.25,
+        "WEST REGION": 0.25
+      }
+    },
+    "income_tier": {
+      "LOW": 0.2,
+      "MID_LOW": 0.2,
+      "MID_HIGH": 0.2,
+      "HIGH": 0.2,
+      "LUXURY": 0.2
+    },
+    "income_monthly_local": {
+      "LOW": 3200.0,
+      "MID_LOW": 6500.0,
+      "MID_HIGH": 10800.0,
+      "HIGH": 17500.0,
+      "LUXURY": 36000.0
+    },
+    "income_currency": "SGD",
+    "region_income_multiplier": {
+      "Central & Urban Core": 1.35,
+      "Outer Planning Regions": 0.92
+    },
+    "province_income_multiplier": {
+      "CENTRAL REGION": 1.45,
+      "EAST REGION": 1.02,
+      "NORTH-EAST REGION": 0.98,
+      "WEST REGION": 0.95,
+      "NORTH REGION": 0.88
+    },
+    "household_size_by_province": {
+      "CENTRAL REGION": 3.1,
+      "EAST REGION": 3.1,
+      "NORTH REGION": 3.1,
+      "NORTH-EAST REGION": 3.1,
+      "WEST REGION": 3.1
+    },
+    "tourist_share_by_region": {
+      "Central & Urban Core": 0.75,
+      "Outer Planning Regions": 0.25
+    }
+  },
+  "behavior": {
+    "disposable_income_share": {
+      "mean": 0.37556661444171835,
+      "sd": 0.08
+    },
+    "online_affinity_beta": [
+      2.6,
+      1.8
+    ],
+    "review_sensitivity_beta": [
+      3.0,
+      1.6
+    ],
+    "novelty_seeking_beta": [
+      2.1,
+      2.3
+    ],
+    "social_influence_beta": [
+      2.0,
+      2.8
+    ],
+    "local_brand_trust_beta": [
+      2.8,
+      2.0
+    ],
+    "pet_ownership_probability": 0.34,
+    "coffee_visits_weekly_lambda": 2.8,
+    "dining_out_weekly_lambda": 2.4,
+    "nightlife_monthly_lambda": 1.2
+  },
+  "defaults": {
+    "brand_awareness": 0.12,
+    "quality_score": 0.6,
+    "review_score": 0.5,
+    "design_score": 0.55,
+    "convenience_score": 0.55,
+    "localization_score": 0.45,
+    "clarity_score": 0.6,
+    "variable_cost_share": 0.5,
+    "distance_km": 3.0
+  },
+  "study_models": {
+    "PRODUCT_VALIDATION": {
+      "model_key": "product_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.9,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -1.35,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 1.05,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "convenience": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "localization": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -0.9,
+      "referral_intercept": -1.5
+    },
+    "PRICING_STUDY": {
+      "model_key": "pricing_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.32
+        },
+        "price_log_ratio": {
+          "mean": -1.9,
+          "sd": 0.34
+        },
+        "affordability": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.52,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.26,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.0,
+      "referral_intercept": -1.7
+    },
+    "CREATIVE_TEST": {
+      "model_key": "creative_response_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.38
+        },
+        "price_log_ratio": {
+          "mean": -1.05,
+          "sd": 0.25
+        },
+        "affordability": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "brand_trust": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.78,
+          "sd": 0.18
+        },
+        "convenience": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "social_influence": {
+          "mean": 0.7,
+          "sd": 0.17
+        },
+        "category_engagement": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.1,
+      "referral_intercept": -1.2
+    },
+    "VENUE_STUDY": {
+      "model_key": "venue_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.8,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.9,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 0.88,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "review_proof": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "novelty": {
+          "mean": 0.32,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.92,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.95,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.15,
+          "sd": 0.25
+        }
+      },
+      "repeat_intercept": -0.65,
+      "referral_intercept": -1.3
+    },
+    "SITE_COMPARISON": {
+      "inherits": "VENUE_STUDY",
+      "model_key": "site_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.75,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.7,
+          "sd": 0.15
+        },
+        "brand_trust": {
+          "mean": 0.4,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.55,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "convenience": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "social_influence": {
+          "mean": 0.25,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -1.45,
+          "sd": 0.3
+        }
+      },
+      "repeat_intercept": -0.8,
+      "referral_intercept": -1.5
+    },
+    "RESTAURANT": {
+      "model_key": "restaurant_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.6,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.0,
+          "sd": 0.24
+        },
+        "affordability": {
+          "mean": 0.5,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 1.08,
+          "sd": 0.22
+        },
+        "brand_trust": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "novelty": {
+          "mean": 0.34,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "social_influence": {
+          "mean": 0.44,
+          "sd": 0.12
+        },
+        "category_engagement": {
+          "mean": 1.02,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "distance_friction": {
+          "mean": -1.2,
+          "sd": 0.26
+        }
+      },
+      "repeat_intercept": -0.45,
+      "referral_intercept": -1.15
+    },
+    "CAFE": {
+      "model_key": "cafe_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.7,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.82,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "novelty": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "convenience": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "social_influence": {
+          "mean": 0.58,
+          "sd": 0.15
+        },
+        "category_engagement": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "distance_friction": {
+          "mean": -1.0,
+          "sd": 0.23
+        }
+      },
+      "repeat_intercept": -0.35,
+      "referral_intercept": -1.0
+    },
+    "BAR": {
+      "model_key": "bar_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.4
+        },
+        "price_log_ratio": {
+          "mean": -0.88,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "brand_trust": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "review_proof": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "convenience": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "social_influence": {
+          "mean": 0.95,
+          "sd": 0.22
+        },
+        "category_engagement": {
+          "mean": 1.12,
+          "sd": 0.25
+        },
+        "localization": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -0.92,
+          "sd": 0.22
+        }
+      },
+      "repeat_intercept": -0.75,
+      "referral_intercept": -0.8
+    },
+    "RETAIL": {
+      "model_key": "retail_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.25,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.55,
+          "sd": 0.13
+        },
+        "review_proof": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.86,
+          "sd": 0.18
+        },
+        "social_influence": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "category_engagement": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "localization": {
+          "mean": 0.46,
+          "sd": 0.11
+        },
+        "distance_friction": {
+          "mean": -0.72,
+          "sd": 0.18
+        }
+      },
+      "repeat_intercept": -0.55,
+      "referral_intercept": -1.4
+    },
+    "OPERATING_SCENARIO": {
+      "model_key": "venue_operations_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.85,
+          "sd": 0.21
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.8,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.96,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.05,
+          "sd": 0.24
+        }
+      },
+      "repeat_intercept": -0.6,
+      "referral_intercept": -1.25
+    }
+  },
+  "dynamics": {
+    "innovation_rate": {
+      "mean": 0.025,
+      "sd": 0.008
+    },
+    "word_of_mouth_rate": {
+      "mean": 0.28,
+      "sd": 0.06
+    },
+    "repeat_quality_effect": 1.1,
+    "referral_social_effect": 0.9
+  },
+  "macro_context": {
+    "status": "official_macro_calibrated_choice_prior",
+    "region_count": 5,
+    "national_cpi": 105.1
+  },
+  "model_transfer": {
+    "source_country": "MY",
+    "target_country": "SG",
+    "transferred_components": [
+      "choice_utility_weights",
+      "price_sensitivity_prior"
+    ],
+    "status": "unvalidated_cross_market_prior"
+  }
+}

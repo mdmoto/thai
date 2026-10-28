@@ -1,0 +1,166 @@
+"""Build compact boundary assets for IDN, VNM, PHL, SGP."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+# Add scripts directory to path to import build_thailand_boundaries
+SCRIPTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+import build_thailand_boundaries as geometry
+
+ROOT = Path(__file__).resolve().parents[1]
+BASE = "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen"
+
+COUNTRIES = {
+    "ID": {
+        "code_3": "IDN",
+        "name_zh": "印度尼西亚",
+        "bounds": (95.0, -11.0, 141.0, 6.0),
+        "viewbox": (640.0, 240.0),
+        "tolerance_adm0": 0.04,
+        "tolerance_adm1": 0.03,
+        "min_area_adm0": 0.005,
+        "min_area_adm1": 0.002,
+        "json_name": "indonesia_adm1_boundaries_v1.json",
+        "ts_name": "indonesia-boundary.ts",
+        "ts_prefix": "INDONESIA",
+    },
+    "VN": {
+        "code_3": "VNM",
+        "name_zh": "越南",
+        "bounds": (102.1, 8.5, 109.5, 23.4),
+        "viewbox": (360.0, 560.0),
+        "tolerance_adm0": 0.018,
+        "tolerance_adm1": 0.012,
+        "min_area_adm0": 0.002,
+        "min_area_adm1": 0.0005,
+        "json_name": "vietnam_adm1_boundaries_v1.json",
+        "ts_name": "vietnam-boundary.ts",
+        "ts_prefix": "VIETNAM",
+    },
+    "PH": {
+        "code_3": "PHL",
+        "name_zh": "菲律宾",
+        "bounds": (116.9, 4.6, 126.6, 21.2),
+        "viewbox": (380.0, 560.0),
+        "tolerance_adm0": 0.02,
+        "tolerance_adm1": 0.015,
+        "min_area_adm0": 0.002,
+        "min_area_adm1": 0.0005,
+        "json_name": "philippines_adm1_boundaries_v1.json",
+        "ts_name": "philippines-boundary.ts",
+        "ts_prefix": "PHILIPPINES",
+    },
+    "SG": {
+        "code_3": "SGP",
+        "name_zh": "新加坡",
+        "bounds": (103.6, 1.2, 104.05, 1.48),
+        "viewbox": (480.0, 300.0),
+        "tolerance_adm0": 0.002,
+        "tolerance_adm1": 0.001,
+        "min_area_adm0": 0.00001,
+        "min_area_adm1": 0.000005,
+        "json_name": "singapore_adm1_boundaries_v1.json",
+        "ts_name": "singapore-boundary.ts",
+        "ts_prefix": "SINGAPORE",
+    },
+}
+
+
+def build_country(code: str, config: dict) -> None:
+    code_3 = config["code_3"]
+    bounds = config["bounds"]
+    viewbox = config["viewbox"]
+    geometry.BOUNDS = bounds
+    geometry.VIEWBOX = viewbox
+
+    adm0_url = f"{BASE}/{code_3}/ADM0/geoBoundaries-{code_3}-ADM0_simplified.geojson"
+    adm1_url = f"{BASE}/{code_3}/ADM1/geoBoundaries-{code_3}-ADM1_simplified.geojson"
+
+    print(f"[{code}] Fetching {adm0_url}...")
+    adm0 = geometry.fetch_json(adm0_url)
+    print(f"[{code}] Fetching {adm1_url}...")
+    adm1 = geometry.fetch_json(adm1_url)
+
+    country_rings = []
+    for raw_ring in geometry.exterior_rings(adm0["features"][0]["geometry"]):
+        ring = geometry.simplify_ring(raw_ring, config["tolerance_adm0"])
+        if ring and abs(geometry.signed_area(ring)) >= config["min_area_adm0"]:
+            country_rings.append(ring)
+
+    provinces = []
+    province_paths = []
+    for feature in adm1["features"]:
+        rings = []
+        for raw_ring in geometry.exterior_rings(feature["geometry"]):
+            ring = geometry.simplify_ring(raw_ring, config["tolerance_adm1"])
+            if ring and abs(geometry.signed_area(ring)) >= config["min_area_adm1"]:
+                rings.append(ring)
+        if not rings:
+            continue
+        primary = max(rings, key=lambda item: abs(geometry.signed_area(item)))
+        longitudes = [point[0] for point in primary]
+        latitudes = [point[1] for point in primary]
+        provinces.append(
+            {
+                "name": feature["properties"]["shapeName"],
+                "iso": feature["properties"].get("shapeISO"),
+                "centroid": geometry.centroid(primary),
+                "bbox": [
+                    round(min(longitudes), 4),
+                    round(min(latitudes), 4),
+                    round(max(longitudes), 4),
+                    round(max(latitudes), 4),
+                ],
+                "rings": rings,
+            }
+        )
+        province_paths.append(geometry.path_for_rings(rings))
+
+    catalog = {
+        "version": f"{code}-GEOBOUNDARIES-ADM1-2026.10.1",
+        "boundary_year": "2024",
+        "source": f"geoBoundaries gbOpen {code_3} ADM0/ADM1",
+        "source_url": f"https://www.geoboundaries.org/api/current/gbOpen/{code_3}/ADM1/",
+        "source_data": "OpenStreetMap, Wambacher",
+        "license": "Open Data Commons Open Database License 1.0",
+        "bounds": list(bounds),
+        "country_rings": country_rings,
+        "provinces": sorted(provinces, key=lambda item: item["name"]),
+    }
+
+    catalog_path = ROOT / "data_catalog" / "geo" / config["json_name"]
+    catalog_path.write_text(
+        json.dumps(catalog, ensure_ascii=False, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+
+    prefix = config["ts_prefix"]
+    typescript = (
+        f"// Generated by scripts/build_asean4_boundaries.py from geoBoundaries gbOpen {code_3} ADM0/ADM1.\n"
+        f"export const {prefix}_BOUNDARY_VERSION = {json.dumps(catalog['version'])};\n"
+        f"export const {prefix}_BOUNDARY_SOURCE = {json.dumps(catalog['source'])};\n"
+        f"export const {prefix}_MAP_BOUNDS = {json.dumps(list(bounds))} as const;\n"
+        f"export const {prefix}_COUNTRY_PATH = {json.dumps(geometry.path_for_rings(country_rings))};\n"
+        f"export const {prefix}_STATE_PATH = {json.dumps(''.join(province_paths))};\n"
+    )
+    frontend_path = ROOT / "apps" / "web" / "lib" / config["ts_name"]
+    frontend_path.write_text(typescript, encoding="utf-8")
+    print(f"[{code}] Wrote {len(provinces)} provinces/regions, {len(country_rings)} country rings to {catalog_path.name} and {frontend_path.name}.")
+
+
+def main() -> None:
+    for code, config in COUNTRIES.items():
+        try:
+            build_country(code, config)
+        except Exception as e:
+            print(f"[{code}] ERROR: {e}")
+            raise
+
+
+if __name__ == "__main__":
+    main()

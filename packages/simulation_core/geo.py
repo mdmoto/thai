@@ -98,11 +98,15 @@ def _load_catalog(country_code: str) -> Dict[str, Any]:
 
 
 def _load_macro_context(country_code: str) -> Dict[str, Any]:
-    profile_name = (
-        "malaysia_consumer_products_macro_v1.json"
-        if country_code == "MY"
-        else "thailand_consumer_products_macro_v1.json"
-    )
+    try:
+        from market_config.countries import get_country_config
+        profile_name = get_country_config(country_code).profile_file
+    except Exception:
+        profile_name = (
+            "malaysia_consumer_products_macro_v1.json"
+            if country_code == "MY"
+            else "thailand_consumer_products_macro_v1.json"
+        )
     return _load_json(
         _catalog_root() / profile_name,
         {"calibration": {}},

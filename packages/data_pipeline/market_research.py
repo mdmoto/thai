@@ -824,11 +824,15 @@ class PublicMarketResearch:
             ]
         )
         plain = [value for value in pieces if not _is_public_http_url(value)]
-        suffix = (
-            " Malaysia ulasan review"
-            if _country_code(study) == "MY"
-            else " Thailand รีวิว review"
-        )
+        cc = _country_code(study)
+        suffix = {
+            "TH": " Thailand รีวิว review",
+            "MY": " Malaysia ulasan review",
+            "ID": " Indonesia ulasan review rekomendasi",
+            "VN": " Vietnam đánh giá review",
+            "PH": " Philippines review legit",
+            "SG": " Singapore review price",
+        }.get(cc, f" {cc} review")
         return _clean_text(" ".join(plain) + suffix, 240)
 
     @staticmethod

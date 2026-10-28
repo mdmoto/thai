@@ -22,11 +22,48 @@ import {
   MALAYSIA_MAP_BOUNDS,
   MALAYSIA_STATE_PATH,
 } from "@/lib/malaysia-boundary";
+import {
+  INDONESIA_BOUNDARY_SOURCE,
+  INDONESIA_BOUNDARY_VERSION,
+  INDONESIA_COUNTRY_PATH,
+  INDONESIA_MAP_BOUNDS,
+  INDONESIA_STATE_PATH,
+} from "@/lib/indonesia-boundary";
+import {
+  VIETNAM_BOUNDARY_SOURCE,
+  VIETNAM_BOUNDARY_VERSION,
+  VIETNAM_COUNTRY_PATH,
+  VIETNAM_MAP_BOUNDS,
+  VIETNAM_STATE_PATH,
+} from "@/lib/vietnam-boundary";
+import {
+  PHILIPPINES_BOUNDARY_SOURCE,
+  PHILIPPINES_BOUNDARY_VERSION,
+  PHILIPPINES_COUNTRY_PATH,
+  PHILIPPINES_MAP_BOUNDS,
+  PHILIPPINES_STATE_PATH,
+} from "@/lib/philippines-boundary";
+import {
+  SINGAPORE_BOUNDARY_SOURCE,
+  SINGAPORE_BOUNDARY_VERSION,
+  SINGAPORE_COUNTRY_PATH,
+  SINGAPORE_MAP_BOUNDS,
+  SINGAPORE_STATE_PATH,
+} from "@/lib/singapore-boundary";
+
+const COUNTRY_NAME_MAP: Record<string, string> = {
+  TH: "泰国",
+  MY: "马来西亚",
+  ID: "印度尼西亚",
+  VN: "越南",
+  PH: "菲律宾",
+  SG: "新加坡",
+};
 
 interface ReportData {
   study_name: string;
   study_type?: string;
-  country_code?: "TH" | "MY";
+  country_code?: "TH" | "MY" | "ID" | "VN" | "PH" | "SG" | string;
   country_name?: string;
   currency_code?: string;
   currency_symbol?: string;
@@ -552,16 +589,24 @@ const COLLECTOR_LABELS: Record<string, string> = {
   "Thailand MOC CPI and consumer confidence": "泰国商务部 CPI 与消费者信心",
   "Malaysia DOSM versioned snapshots": "马来西亚统计局（DOSM）版本化数据",
   "Malaysia DOSM state CPI": "马来西亚 DOSM 州级 CPI",
+  "Indonesia BPS versioned snapshots": "印尼中央统计局（BPS）版本化数据",
+  "Indonesia BPS provincial CPI": "印尼 BPS 省级 CPI 与消费支出",
+  "Vietnam GSO versioned snapshots": "越南统计总局（GSO）版本化数据",
+  "Vietnam GSO statistical yearbook CPI": "越南 GSO 统计年鉴 CPI",
+  "Philippines PSA versioned snapshots": "菲律宾统计局（PSA）版本化数据",
+  "Philippines PSA regional CPI": "菲律宾 PSA 大区 CPI 与家庭收支",
+  "Singapore SingStat versioned snapshots": "新加坡统计局（SingStat）版本化数据",
+  "Singapore SingStat resident CPI": "新加坡 SingStat 居民物价指数",
   "Category competitor public evidence": "品类竞品公开证据",
   "Open geospatial / POI evidence": "开放地理与周边设施数据",
   "Structured LLM research": "大模型结构化消费者研究",
   "Social platform evidence": "社交平台传播证据",
   "Crawl4AI public page reader": "公开网页深度读取",
-  "Firecrawl multi-query consumer research": "泰国消费者多主题公开检索",
+  "Firecrawl multi-query consumer research": "目标市场多主题公开检索",
   "Gemini Grounding with Google Search": "Google 引用式公开检索",
   "YouTube public metadata": "YouTube 公开视频资料",
   "Meta / TikTok public discovery": "Meta / TikTok 公开内容发现",
-  "Lazada / Shopee public commerce evidence": "Lazada / Shopee 公开消费证据",
+  "Lazada / Shopee public commerce evidence": "Shopee / Lazada / Tokopedia 公开电商数据",
 };
 
 const FALLBACK_LABELS: Record<string, string> = {
@@ -632,9 +677,20 @@ function eligibilityLabel(status?: string) {
 
 function calibrationClaim(status?: string, claim?: string, countryCode?: string) {
   if (status === "official_macro_calibrated_choice_prior") {
-    return countryCode === "MY"
-      ? "年龄、性别、州级人口、家庭收入百分位、支出与家庭规模已使用马来西亚 DOSM 公开汇总数据校准；行为特征和选择系数仍是待验证的跨市场先验。"
-      : "地区人口、家庭收入区间、各府收入与支出、家庭规模等人口结构已使用泰国国家统计局公开汇总数据校准；年龄细分、消费行为特征和选择系数仍属于待验证先验。";
+    switch (countryCode) {
+      case "MY":
+        return "年龄、性别、州级人口、家庭收入百分位、支出与家庭规模已使用马来西亚 DOSM 公开汇总数据校准；行为特征和选择系数仍是待验证的跨市场先验。";
+      case "ID":
+        return "年龄、性别、省级人口、家庭支出五分位数与 CPI 已使用印尼中央统计局（BPS）Susenas 与 Sakernas 公开汇总数据校准；行为特征和选择系数仍为跨市场先验。";
+      case "VN":
+        return "年龄、性别、省直辖市人口、收入五档分布与城乡消费已使用越南统计总局（GSO）VHLSS 公开汇总数据校准；行为特征和选择系数仍为跨市场先验。";
+      case "PH":
+        return "年龄、性别、大区人口、家庭收入分位数与 CPI 已使用菲律宾统计局（PSA）FIES 与 OpenSTAT 公开汇总数据校准；行为特征和选择系数仍为跨市场先验。";
+      case "SG":
+        return "年龄、性别、规划大区人口、家庭月收支与住房结构已使用新加坡统计局（SingStat）与 data.gov.sg 公开数据校准；行为特征和选择系数仍为跨市场先验。";
+      default:
+        return "地区人口、家庭收入区间、各府收入与支出、家庭规模等人口结构已使用泰国国家统计局（NSO）公开汇总数据校准；年龄细分、消费行为特征和选择系数仍属于待验证先验。";
+    }
   }
   return claim || "未提供更详细的校准说明。";
 }
@@ -833,7 +889,7 @@ export function ReportClient({
             <div className="eyebrow mb-1">Chiang Mai AI Center · 商业决策报告</div>
             <h1 className="text-2xl font-semibold text-white tracking-tight">{reportData.study_name}</h1>
             <p className="text-xs text-neutral-400 font-light mt-1">
-              覆盖 {reportData.population_size.toLocaleString()} 人{reportData.country_code === "MY" ? "马来西亚" : "泰国"} AI 模拟消费人群 · 深度计算样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} 人 · 完成 {reportData.mc_rounds} 轮风险测试
+              覆盖 {reportData.population_size.toLocaleString()} 人{COUNTRY_NAME_MAP[reportData.country_code || "TH"] || "目标市场"} AI 模拟消费人群 · 深度计算样本 {(reportData.model_sample_size ?? reportData.population_size).toLocaleString()} 人 · 完成 {reportData.mc_rounds} 轮风险测试
             </p>
             <p className="text-[10px] text-neutral-500 mt-1">
               AI 模拟消费人群由模型生成，不是真实问卷受访者或真实订单；人数表示模拟覆盖规模。
@@ -1438,46 +1494,128 @@ function SampleProfileSection({ data }: { data: ReportData }) {
   }
   const eligible = sample.points.filter(point => point.category_eligible);
   const other = sample.points.filter(point => !point.category_eligible);
-  const isMalaysia = data.country_code === "MY";
-  const currencyCode = data.currency_code ?? (isMalaysia ? "MYR" : "THB");
-  const currencySymbol = data.currency_symbol ?? (isMalaysia ? "RM" : "฿");
-  const map = isMalaysia
-    ? {
-        name: "马来西亚",
-        bounds: MALAYSIA_MAP_BOUNDS,
-        width: 640,
-        height: 300,
-        countryPath: MALAYSIA_COUNTRY_PATH,
-        adm1Path: MALAYSIA_STATE_PATH,
-        source: MALAYSIA_BOUNDARY_SOURCE,
-        version: MALAYSIA_BOUNDARY_VERSION,
-        cities: [
-          { name: "吉隆坡", lat: 3.139, lng: 101.6869, dx: 7, dy: 3, anchor: "start" },
-          { name: "槟城", lat: 5.4141, lng: 100.3288, dx: 7, dy: 3, anchor: "start" },
-          { name: "新山", lat: 1.4927, lng: 103.7414, dx: 7, dy: 3, anchor: "start" },
-          { name: "亚庇", lat: 5.9804, lng: 116.0735, dx: 7, dy: 3, anchor: "start" },
-          { name: "古晋", lat: 1.5533, lng: 110.3592, dx: 7, dy: 3, anchor: "start" },
-        ],
-      }
-    : {
-        name: "泰国",
-        bounds: THAILAND_MAP_BOUNDS,
-        width: 360,
-        height: 560,
-        countryPath: THAILAND_COUNTRY_PATH,
-        adm1Path: THAILAND_PROVINCE_PATH,
-        source: THAILAND_BOUNDARY_SOURCE,
-        version: THAILAND_BOUNDARY_VERSION,
-        cities: [
-          { name: "清迈", lat: 18.7883, lng: 98.9853, dx: 7, dy: 3, anchor: "start" },
-          { name: "曼谷", lat: 13.7563, lng: 100.5018, dx: -7, dy: 3, anchor: "end" },
-          { name: "芭提雅 / 春武里", lat: 12.9236, lng: 100.8825, dx: 7, dy: 3, anchor: "start" },
-          { name: "普吉岛", lat: 7.8804, lng: 98.3923, dx: 7, dy: 3, anchor: "start" },
-          { name: "孔敬", lat: 16.4322, lng: 102.8236, dx: 7, dy: 3, anchor: "start" },
-          { name: "呵叻", lat: 14.9799, lng: 102.0978, dx: 7, dy: 3, anchor: "start" },
-          { name: "合艾", lat: 7.0086, lng: 100.4747, dx: 7, dy: 3, anchor: "start" },
-        ],
-      };
+  const cc = (data.country_code || "TH").toUpperCase();
+  const defaultCurrency = { TH: "THB", MY: "MYR", ID: "IDR", VN: "VND", PH: "PHP", SG: "SGD" }[cc] || "THB";
+  const defaultSymbol = { TH: "฿", MY: "RM", ID: "Rp", VN: "₫", PH: "₱", SG: "S$" }[cc] || "฿";
+  const currencyCode = data.currency_code ?? defaultCurrency;
+  const currencySymbol = data.currency_symbol ?? defaultSymbol;
+
+  const MAP_REGISTRY: Record<string, {
+    name: string;
+    bounds: readonly [number, number, number, number];
+    width: number;
+    height: number;
+    countryPath: string;
+    adm1Path: string;
+    source: string;
+    version: string;
+    cities: Array<{ name: string; lat: number; lng: number; dx: number; dy: number; anchor: string }>;
+  }> = {
+    TH: {
+      name: "泰国",
+      bounds: THAILAND_MAP_BOUNDS,
+      width: 360,
+      height: 560,
+      countryPath: THAILAND_COUNTRY_PATH,
+      adm1Path: THAILAND_PROVINCE_PATH,
+      source: THAILAND_BOUNDARY_SOURCE,
+      version: THAILAND_BOUNDARY_VERSION,
+      cities: [
+        { name: "清迈", lat: 18.7883, lng: 98.9853, dx: 7, dy: 3, anchor: "start" },
+        { name: "曼谷", lat: 13.7563, lng: 100.5018, dx: -7, dy: 3, anchor: "end" },
+        { name: "芭提雅 / 春武里", lat: 12.9236, lng: 100.8825, dx: 7, dy: 3, anchor: "start" },
+        { name: "普吉岛", lat: 7.8804, lng: 98.3923, dx: 7, dy: 3, anchor: "start" },
+        { name: "孔敬", lat: 16.4322, lng: 102.8236, dx: 7, dy: 3, anchor: "start" },
+        { name: "呵叻", lat: 14.9799, lng: 102.0978, dx: 7, dy: 3, anchor: "start" },
+        { name: "合艾", lat: 7.0086, lng: 100.4747, dx: 7, dy: 3, anchor: "start" },
+      ],
+    },
+    MY: {
+      name: "马来西亚",
+      bounds: MALAYSIA_MAP_BOUNDS,
+      width: 640,
+      height: 300,
+      countryPath: MALAYSIA_COUNTRY_PATH,
+      adm1Path: MALAYSIA_STATE_PATH,
+      source: MALAYSIA_BOUNDARY_SOURCE,
+      version: MALAYSIA_BOUNDARY_VERSION,
+      cities: [
+        { name: "吉隆坡", lat: 3.139, lng: 101.6869, dx: 7, dy: 3, anchor: "start" },
+        { name: "槟城", lat: 5.4141, lng: 100.3288, dx: 7, dy: 3, anchor: "start" },
+        { name: "新山", lat: 1.4927, lng: 103.7414, dx: 7, dy: 3, anchor: "start" },
+        { name: "亚庇", lat: 5.9804, lng: 116.0735, dx: 7, dy: 3, anchor: "start" },
+        { name: "古晋", lat: 1.5533, lng: 110.3592, dx: 7, dy: 3, anchor: "start" },
+      ],
+    },
+    ID: {
+      name: "印度尼西亚",
+      bounds: INDONESIA_MAP_BOUNDS,
+      width: 640,
+      height: 240,
+      countryPath: INDONESIA_COUNTRY_PATH,
+      adm1Path: INDONESIA_STATE_PATH,
+      source: INDONESIA_BOUNDARY_SOURCE,
+      version: INDONESIA_BOUNDARY_VERSION,
+      cities: [
+        { name: "雅加达", lat: -6.2088, lng: 106.8456, dx: 7, dy: 3, anchor: "start" },
+        { name: "泗水", lat: -7.2575, lng: 112.7521, dx: 7, dy: 3, anchor: "start" },
+        { name: "万隆", lat: -6.9175, lng: 107.6191, dx: 7, dy: 3, anchor: "start" },
+        { name: "棉兰", lat: 3.5952, lng: 98.6722, dx: 7, dy: 3, anchor: "start" },
+        { name: "登巴萨 / 巴厘岛", lat: -8.6705, lng: 115.2126, dx: 7, dy: 3, anchor: "start" },
+        { name: "望加锡", lat: -5.1477, lng: 119.4327, dx: 7, dy: 3, anchor: "start" },
+      ],
+    },
+    VN: {
+      name: "越南",
+      bounds: VIETNAM_MAP_BOUNDS,
+      width: 360,
+      height: 560,
+      countryPath: VIETNAM_COUNTRY_PATH,
+      adm1Path: VIETNAM_STATE_PATH,
+      source: VIETNAM_BOUNDARY_SOURCE,
+      version: VIETNAM_BOUNDARY_VERSION,
+      cities: [
+        { name: "河内", lat: 21.0285, lng: 105.8542, dx: 7, dy: 3, anchor: "start" },
+        { name: "胡志明市", lat: 10.8231, lng: 106.6297, dx: 7, dy: 3, anchor: "start" },
+        { name: "岘港", lat: 16.0544, lng: 108.2022, dx: 7, dy: 3, anchor: "start" },
+        { name: "海防", lat: 20.8449, lng: 106.6881, dx: 7, dy: 3, anchor: "start" },
+        { name: "芹苴", lat: 10.0452, lng: 105.7469, dx: 7, dy: 3, anchor: "start" },
+      ],
+    },
+    PH: {
+      name: "菲律宾",
+      bounds: PHILIPPINES_MAP_BOUNDS,
+      width: 380,
+      height: 560,
+      countryPath: PHILIPPINES_COUNTRY_PATH,
+      adm1Path: PHILIPPINES_STATE_PATH,
+      source: PHILIPPINES_BOUNDARY_SOURCE,
+      version: PHILIPPINES_BOUNDARY_VERSION,
+      cities: [
+        { name: "马尼拉 (NCR)", lat: 14.5995, lng: 120.9842, dx: 7, dy: 3, anchor: "start" },
+        { name: "宿务", lat: 10.3157, lng: 123.8854, dx: 7, dy: 3, anchor: "start" },
+        { name: "达沃", lat: 7.1907, lng: 125.4578, dx: 7, dy: 3, anchor: "start" },
+        { name: "克拉克", lat: 15.1450, lng: 120.5887, dx: 7, dy: 3, anchor: "start" },
+      ],
+    },
+    SG: {
+      name: "新加坡",
+      bounds: SINGAPORE_MAP_BOUNDS,
+      width: 480,
+      height: 300,
+      countryPath: SINGAPORE_COUNTRY_PATH,
+      adm1Path: SINGAPORE_STATE_PATH,
+      source: SINGAPORE_BOUNDARY_SOURCE,
+      version: SINGAPORE_BOUNDARY_VERSION,
+      cities: [
+        { name: "滨海湾 / 核心区", lat: 1.2868, lng: 103.8545, dx: 7, dy: 3, anchor: "start" },
+        { name: "裕廊", lat: 1.3329, lng: 103.7436, dx: 7, dy: 3, anchor: "start" },
+        { name: "淡滨尼", lat: 1.3524, lng: 103.9447, dx: 7, dy: 3, anchor: "start" },
+        { name: "兀兰", lat: 1.4382, lng: 103.7890, dx: 7, dy: 3, anchor: "start" },
+      ],
+    },
+  };
+  const map = MAP_REGISTRY[cc] || MAP_REGISTRY.TH;
   const incomeValues = sample.points
     .map(point => point.household_income_local ?? point.household_income_thb)
     .sort((a, b) => a - b);
@@ -1625,7 +1763,7 @@ function RegionalSection({ data }: { data: ReportData }) {
     <div className="space-y-6">
       <div>
         <div className="eyebrow mb-1">区域市场表现</div>
-        <h2 className="text-base font-semibold text-white tracking-tight">{data.country_code === "MY" ? "马来西亚" : "泰国"}各主要大区表现</h2>
+        <h2 className="text-base font-semibold text-white tracking-tight">{COUNTRY_NAME_MAP[data.country_code || "TH"] || "目标市场"}各主要大区表现</h2>
       </div>
 
       <Card>
@@ -1666,7 +1804,7 @@ function ChannelsSection({ data }: { data: ReportData }) {
           <div className="grid sm:grid-cols-[1fr_auto] gap-5">
             <div>
               <span className="eyebrow text-blue-300">电商下单与履约条件</span>
-              <h3 className="text-sm font-semibold text-white mt-1">{data.country_code === "MY" ? "马来西亚" : "泰国"}电商履约与信任诊断</h3>
+              <h3 className="text-sm font-semibold text-white mt-1">{COUNTRY_NAME_MAP[data.country_code || "TH"] || "目标市场"}电商履约与信任诊断</h3>
               <div className="flex flex-wrap gap-2 mt-3">
                 {data.commerce_analysis.marketplaces.map(item => (
                   <span key={item} className="text-[10px] px-2 py-1 rounded-full bg-blue-400/10 text-blue-200">{item}</span>

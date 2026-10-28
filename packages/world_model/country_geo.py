@@ -13,6 +13,10 @@ from typing import Any, Dict, Mapping, Sequence, Tuple
 BOUNDARY_FILES = {
     "TH": "thailand_adm1_boundaries_v1.json",
     "MY": "malaysia_adm1_boundaries_v1.json",
+    "ID": "indonesia_adm1_boundaries_v1.json",
+    "VN": "vietnam_adm1_boundaries_v1.json",
+    "PH": "philippines_adm1_boundaries_v1.json",
+    "SG": "singapore_adm1_boundaries_v1.json",
 }
 
 ALIASES = {
@@ -24,6 +28,26 @@ ALIASES = {
         "melaka": "malacca",
         "pulaupinang": "penang",
     },
+    "ID": {
+        "dkijakarta": "jakarta",
+        "diiyogyakarta": "yogyakarta",
+    },
+    "VN": {
+        "tphochiminh": "hochiminh",
+        "thanhphohochiminh": "hochiminh",
+        "tpdanang": "danang",
+        "thanhphodanang": "danang",
+        "tphaiphong": "haiphong",
+        "thanhphohaiphong": "haiphong",
+        "tpcantho": "cantho",
+        "thanhphocantho": "cantho",
+        "thanhphohanoi": "hanoi",
+    },
+    "PH": {
+        "nationalcapitalregion": "ncr",
+        "metromanila": "ncr",
+    },
+    "SG": {},
 }
 
 

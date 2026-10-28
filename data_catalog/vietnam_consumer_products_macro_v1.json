@@ -1,0 +1,903 @@
+{
+  "version": "VN-CONSUMER-MACRO-2026.10.1",
+  "status": "official_macro_calibrated_choice_prior",
+  "claim": "Vietnam adult age, binary sex, province population, household expenditure and income tiers calibrated from GSO (General Statistics Office of Vietnam) VHLSS official public aggregates. Behavioral traits and choice coefficients transferred from cross-market prior.",
+  "country_code": "VN",
+  "country_name": "Vietnam",
+  "currency_code": "VND",
+  "currency_symbol": "₫",
+  "sources": [
+    {
+      "source_id": "GSO_VHLSS",
+      "title": "GSO Vietnam Household Living Standards Survey (VHLSS)",
+      "license": "Open Data Commons / GSO",
+      "observed": true,
+      "source_type": "official_public_aggregate"
+    },
+    {
+      "source_id": "GSO_STATISTICAL_YEARBOOK",
+      "title": "GSO Vietnam Statistical Yearbook & Provincial CPI",
+      "license": "Open Data Commons / GSO",
+      "observed": true,
+      "source_type": "official_public_aggregate"
+    }
+  ],
+  "limitations": [
+    "Provincial margins reflect GSO VHLSS survey aggregates; regional variance uses WorldPop population grid proxy.",
+    "Choice elasticity coefficients are cross-market priors calibrated to Southeast Asian e-commerce benchmarks."
+  ],
+  "population": {
+    "registered_population_total": 100300000,
+    "population_reference_date": "2024-12-31",
+    "age_group": {
+      "18-24": 0.162,
+      "25-34": 0.238,
+      "35-44": 0.228,
+      "45-54": 0.174,
+      "55+": 0.198
+    },
+    "gender": {
+      "Female": 0.502,
+      "Male": 0.498
+    },
+    "region": {
+      "Northern Vietnam": 0.325,
+      "Central Vietnam": 0.218,
+      "Southeast (HCMC Core)": 0.219,
+      "Mekong River Delta": 0.238
+    },
+    "province_by_region": {
+      "Northern Vietnam": {
+        "Bắc Giang": 0.04,
+        "Bắc Kạn": 0.04,
+        "Bắc Ninh": 0.04,
+        "Cao Bằng": 0.04,
+        "Hà Giang": 0.04,
+        "Hà Nam": 0.04,
+        "Hà Nội\t": 0.04,
+        "Hòa Bình": 0.04,
+        "Hưng Yên": 0.04,
+        "Hải Dương": 0.04,
+        "Hải Phòng": 0.04,
+        "Lai Châu": 0.04,
+        "Lào Cai": 0.04,
+        "Lạng Sơn": 0.04,
+        "Nam Định": 0.04,
+        "Ninh Bình": 0.04,
+        "Phú Thọ": 0.04,
+        "Quảng Ninh": 0.04,
+        "Sơn La": 0.04,
+        "Thái Bình": 0.04,
+        "Thái Nguyên": 0.04,
+        "Tuyên Quang": 0.04,
+        "Vĩnh Phúc": 0.04,
+        "Yên Bái": 0.04,
+        "Điện Biên": 0.04
+      },
+      "Central Vietnam": {
+        "Bình Thuận": 0.047619,
+        "Bình Định": 0.047619,
+        "Côn Đảo": 0.047619,
+        "Gia Lai": 0.047619,
+        "Ho Chi Minh": 0.047619,
+        "Hà Tĩnh": 0.047619,
+        "Khánh Hòa": 0.047619,
+        "Kon Tum": 0.047619,
+        "Lâm Đồng": 0.047619,
+        "Nghệ An": 0.047619,
+        "Ninh Thuận": 0.047619,
+        "Phú Yên": 0.047619,
+        "Quảng Bình": 0.047619,
+        "Quảng Nam": 0.047619,
+        "Quảng Ngãi": 0.047619,
+        "Quảng Trị": 0.047619,
+        "Thanh Hóa": 0.047619,
+        "Thừa Thiên Huế": 0.047619,
+        "Đà Nẵng": 0.047619,
+        "Đắk Lắk": 0.047619,
+        "Đắk Nông": 0.04762
+      },
+      "Southeast (HCMC Core)": {
+        "Bà Rịa–Vũng Tàu": 0.2,
+        "Bình Dương": 0.2,
+        "Bình Phước": 0.2,
+        "Tây Ninh": 0.2,
+        "Đồng Nai": 0.2
+      },
+      "Mekong River Delta": {
+        "An Giang": 0.076923,
+        "Bạc Liêu": 0.076923,
+        "Bến Tre": 0.076923,
+        "Cà Mau": 0.076923,
+        "Cần Thơ": 0.076923,
+        "Hậu Giang": 0.076923,
+        "Kiên Giang": 0.076923,
+        "Long An": 0.076923,
+        "Sóc Trăng": 0.076923,
+        "Tiền Giang": 0.076923,
+        "Trà Vinh": 0.076923,
+        "Vĩnh Long": 0.076923,
+        "Đồng Tháp": 0.076924
+      }
+    },
+    "income_tier": {
+      "LOW": 0.2,
+      "MID_LOW": 0.2,
+      "MID_HIGH": 0.2,
+      "HIGH": 0.2,
+      "LUXURY": 0.2
+    },
+    "income_monthly_local": {
+      "LOW": 4500000.0,
+      "MID_LOW": 8200000.0,
+      "MID_HIGH": 14000000.0,
+      "HIGH": 24000000.0,
+      "LUXURY": 52000000.0
+    },
+    "income_currency": "VND",
+    "region_income_multiplier": {
+      "Northern Vietnam": 1.22,
+      "Central Vietnam": 0.9,
+      "Southeast (HCMC Core)": 1.45,
+      "Mekong River Delta": 0.88
+    },
+    "province_income_multiplier": {
+      "An Giang": 0.88,
+      "Bà Rịa–Vũng Tàu": 1.05,
+      "Bình Dương": 1.35,
+      "Bình Phước": 1.05,
+      "Bình Thuận": 0.88,
+      "Bình Định": 0.88,
+      "Bạc Liêu": 0.88,
+      "Bắc Giang": 1.05,
+      "Bắc Kạn": 1.05,
+      "Bắc Ninh": 1.05,
+      "Bến Tre": 0.88,
+      "Cao Bằng": 1.05,
+      "Cà Mau": 0.88,
+      "Côn Đảo": 0.88,
+      "Cần Thơ": 0.88,
+      "Gia Lai": 0.88,
+      "Ho Chi Minh": 0.88,
+      "Hà Giang": 1.05,
+      "Hà Nam": 1.05,
+      "Hà Nội\t": 1.85,
+      "Hà Tĩnh": 0.88,
+      "Hòa Bình": 1.05,
+      "Hưng Yên": 1.05,
+      "Hải Dương": 1.05,
+      "Hải Phòng": 1.35,
+      "Hậu Giang": 0.88,
+      "Khánh Hòa": 0.88,
+      "Kiên Giang": 0.88,
+      "Kon Tum": 0.88,
+      "Lai Châu": 1.05,
+      "Long An": 0.88,
+      "Lào Cai": 1.05,
+      "Lâm Đồng": 0.88,
+      "Lạng Sơn": 1.05,
+      "Nam Định": 1.05,
+      "Nghệ An": 0.88,
+      "Ninh Bình": 1.05,
+      "Ninh Thuận": 0.88,
+      "Phú Thọ": 1.05,
+      "Phú Yên": 0.88,
+      "Quảng Bình": 0.88,
+      "Quảng Nam": 0.88,
+      "Quảng Ngãi": 0.88,
+      "Quảng Ninh": 1.05,
+      "Quảng Trị": 0.88,
+      "Sóc Trăng": 0.88,
+      "Sơn La": 1.05,
+      "Thanh Hóa": 0.88,
+      "Thái Bình": 1.05,
+      "Thái Nguyên": 1.05,
+      "Thừa Thiên Huế": 0.88,
+      "Tiền Giang": 0.88,
+      "Trà Vinh": 0.88,
+      "Tuyên Quang": 1.05,
+      "Tây Ninh": 1.05,
+      "Vĩnh Long": 0.88,
+      "Vĩnh Phúc": 1.05,
+      "Yên Bái": 1.05,
+      "Điện Biên": 1.05,
+      "Đà Nẵng": 1.35,
+      "Đắk Lắk": 0.88,
+      "Đắk Nông": 0.88,
+      "Đồng Nai": 1.05,
+      "Đồng Tháp": 0.88
+    },
+    "household_size_by_province": {
+      "An Giang": 3.6,
+      "Bà Rịa–Vũng Tàu": 3.6,
+      "Bình Dương": 3.6,
+      "Bình Phước": 3.6,
+      "Bình Thuận": 3.6,
+      "Bình Định": 3.6,
+      "Bạc Liêu": 3.6,
+      "Bắc Giang": 3.6,
+      "Bắc Kạn": 3.6,
+      "Bắc Ninh": 3.6,
+      "Bến Tre": 3.6,
+      "Cao Bằng": 3.6,
+      "Cà Mau": 3.6,
+      "Côn Đảo": 3.6,
+      "Cần Thơ": 3.6,
+      "Gia Lai": 3.6,
+      "Ho Chi Minh": 3.6,
+      "Hà Giang": 3.6,
+      "Hà Nam": 3.6,
+      "Hà Nội\t": 3.6,
+      "Hà Tĩnh": 3.6,
+      "Hòa Bình": 3.6,
+      "Hưng Yên": 3.6,
+      "Hải Dương": 3.6,
+      "Hải Phòng": 3.6,
+      "Hậu Giang": 3.6,
+      "Khánh Hòa": 3.6,
+      "Kiên Giang": 3.6,
+      "Kon Tum": 3.6,
+      "Lai Châu": 3.6,
+      "Long An": 3.6,
+      "Lào Cai": 3.6,
+      "Lâm Đồng": 3.6,
+      "Lạng Sơn": 3.6,
+      "Nam Định": 3.6,
+      "Nghệ An": 3.6,
+      "Ninh Bình": 3.6,
+      "Ninh Thuận": 3.6,
+      "Phú Thọ": 3.6,
+      "Phú Yên": 3.6,
+      "Quảng Bình": 3.6,
+      "Quảng Nam": 3.6,
+      "Quảng Ngãi": 3.6,
+      "Quảng Ninh": 3.6,
+      "Quảng Trị": 3.6,
+      "Sóc Trăng": 3.6,
+      "Sơn La": 3.6,
+      "Thanh Hóa": 3.6,
+      "Thái Bình": 3.6,
+      "Thái Nguyên": 3.6,
+      "Thừa Thiên Huế": 3.6,
+      "Tiền Giang": 3.6,
+      "Trà Vinh": 3.6,
+      "Tuyên Quang": 3.6,
+      "Tây Ninh": 3.6,
+      "Vĩnh Long": 3.6,
+      "Vĩnh Phúc": 3.6,
+      "Yên Bái": 3.6,
+      "Điện Biên": 3.6,
+      "Đà Nẵng": 3.6,
+      "Đắk Lắk": 3.6,
+      "Đắk Nông": 3.6,
+      "Đồng Nai": 3.6,
+      "Đồng Tháp": 3.6
+    },
+    "tourist_share_by_region": {
+      "Northern Vietnam": 0.28,
+      "Central Vietnam": 0.38,
+      "Southeast (HCMC Core)": 0.26,
+      "Mekong River Delta": 0.08
+    }
+  },
+  "behavior": {
+    "disposable_income_share": {
+      "mean": 0.37556661444171835,
+      "sd": 0.08
+    },
+    "online_affinity_beta": [
+      2.6,
+      1.8
+    ],
+    "review_sensitivity_beta": [
+      3.0,
+      1.6
+    ],
+    "novelty_seeking_beta": [
+      2.1,
+      2.3
+    ],
+    "social_influence_beta": [
+      2.0,
+      2.8
+    ],
+    "local_brand_trust_beta": [
+      2.8,
+      2.0
+    ],
+    "pet_ownership_probability": 0.34,
+    "coffee_visits_weekly_lambda": 2.8,
+    "dining_out_weekly_lambda": 2.4,
+    "nightlife_monthly_lambda": 1.2
+  },
+  "defaults": {
+    "brand_awareness": 0.12,
+    "quality_score": 0.6,
+    "review_score": 0.5,
+    "design_score": 0.55,
+    "convenience_score": 0.55,
+    "localization_score": 0.45,
+    "clarity_score": 0.6,
+    "variable_cost_share": 0.5,
+    "distance_km": 3.0
+  },
+  "study_models": {
+    "PRODUCT_VALIDATION": {
+      "model_key": "product_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.9,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -1.35,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 1.05,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "convenience": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "localization": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -0.9,
+      "referral_intercept": -1.5
+    },
+    "PRICING_STUDY": {
+      "model_key": "pricing_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.32
+        },
+        "price_log_ratio": {
+          "mean": -1.9,
+          "sd": 0.34
+        },
+        "affordability": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.52,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.26,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.3,
+          "sd": 0.1
+        },
+        "social_influence": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.0,
+      "referral_intercept": -1.7
+    },
+    "CREATIVE_TEST": {
+      "model_key": "creative_response_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.38
+        },
+        "price_log_ratio": {
+          "mean": -1.05,
+          "sd": 0.25
+        },
+        "affordability": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "brand_trust": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "review_proof": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.78,
+          "sd": 0.18
+        },
+        "convenience": {
+          "mean": 0.2,
+          "sd": 0.08
+        },
+        "social_influence": {
+          "mean": 0.7,
+          "sd": 0.17
+        },
+        "category_engagement": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "localization": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "distance_friction": {
+          "mean": 0.0,
+          "sd": 0.0
+        }
+      },
+      "repeat_intercept": -1.1,
+      "referral_intercept": -1.2
+    },
+    "VENUE_STUDY": {
+      "model_key": "venue_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.8,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.9,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.42,
+          "sd": 0.12
+        },
+        "quality_fit": {
+          "mean": 0.88,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.45,
+          "sd": 0.12
+        },
+        "review_proof": {
+          "mean": 0.72,
+          "sd": 0.16
+        },
+        "novelty": {
+          "mean": 0.32,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.92,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.95,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.15,
+          "sd": 0.25
+        }
+      },
+      "repeat_intercept": -0.65,
+      "referral_intercept": -1.3
+    },
+    "SITE_COMPARISON": {
+      "inherits": "VENUE_STUDY",
+      "model_key": "site_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.75,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.7,
+          "sd": 0.15
+        },
+        "brand_trust": {
+          "mean": 0.4,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.55,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "convenience": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "social_influence": {
+          "mean": 0.25,
+          "sd": 0.08
+        },
+        "category_engagement": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "localization": {
+          "mean": 0.42,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -1.45,
+          "sd": 0.3
+        }
+      },
+      "repeat_intercept": -0.8,
+      "referral_intercept": -1.5
+    },
+    "RESTAURANT": {
+      "model_key": "restaurant_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.6,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.0,
+          "sd": 0.24
+        },
+        "affordability": {
+          "mean": 0.5,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 1.08,
+          "sd": 0.22
+        },
+        "brand_trust": {
+          "mean": 0.36,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "novelty": {
+          "mean": 0.34,
+          "sd": 0.1
+        },
+        "convenience": {
+          "mean": 0.68,
+          "sd": 0.16
+        },
+        "social_influence": {
+          "mean": 0.44,
+          "sd": 0.12
+        },
+        "category_engagement": {
+          "mean": 1.02,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "distance_friction": {
+          "mean": -1.2,
+          "sd": 0.26
+        }
+      },
+      "repeat_intercept": -0.45,
+      "referral_intercept": -1.15
+    },
+    "CAFE": {
+      "model_key": "cafe_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.7,
+          "sd": 0.35
+        },
+        "price_log_ratio": {
+          "mean": -0.82,
+          "sd": 0.2
+        },
+        "affordability": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "quality_fit": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "brand_trust": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "review_proof": {
+          "mean": 0.62,
+          "sd": 0.15
+        },
+        "novelty": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "convenience": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "social_influence": {
+          "mean": 0.58,
+          "sd": 0.15
+        },
+        "category_engagement": {
+          "mean": 1.05,
+          "sd": 0.22
+        },
+        "localization": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "distance_friction": {
+          "mean": -1.0,
+          "sd": 0.23
+        }
+      },
+      "repeat_intercept": -0.35,
+      "referral_intercept": -1.0
+    },
+    "BAR": {
+      "model_key": "bar_gravity_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -2.0,
+          "sd": 0.4
+        },
+        "price_log_ratio": {
+          "mean": -0.88,
+          "sd": 0.22
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "brand_trust": {
+          "mean": 0.22,
+          "sd": 0.08
+        },
+        "review_proof": {
+          "mean": 0.46,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "convenience": {
+          "mean": 0.52,
+          "sd": 0.14
+        },
+        "social_influence": {
+          "mean": 0.95,
+          "sd": 0.22
+        },
+        "category_engagement": {
+          "mean": 1.12,
+          "sd": 0.25
+        },
+        "localization": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "distance_friction": {
+          "mean": -0.92,
+          "sd": 0.22
+        }
+      },
+      "repeat_intercept": -0.75,
+      "referral_intercept": -0.8
+    },
+    "RETAIL": {
+      "model_key": "retail_mnl_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.75,
+          "sd": 0.34
+        },
+        "price_log_ratio": {
+          "mean": -1.25,
+          "sd": 0.28
+        },
+        "affordability": {
+          "mean": 0.52,
+          "sd": 0.13
+        },
+        "quality_fit": {
+          "mean": 0.82,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.55,
+          "sd": 0.13
+        },
+        "review_proof": {
+          "mean": 0.5,
+          "sd": 0.12
+        },
+        "novelty": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.86,
+          "sd": 0.18
+        },
+        "social_influence": {
+          "mean": 0.28,
+          "sd": 0.09
+        },
+        "category_engagement": {
+          "mean": 0.72,
+          "sd": 0.17
+        },
+        "localization": {
+          "mean": 0.46,
+          "sd": 0.11
+        },
+        "distance_friction": {
+          "mean": -0.72,
+          "sd": 0.18
+        }
+      },
+      "repeat_intercept": -0.55,
+      "referral_intercept": -1.4
+    },
+    "OPERATING_SCENARIO": {
+      "model_key": "venue_operations_choice_prior_v1",
+      "coefficients": {
+        "intercept": {
+          "mean": -1.85,
+          "sd": 0.36
+        },
+        "price_log_ratio": {
+          "mean": -0.85,
+          "sd": 0.21
+        },
+        "affordability": {
+          "mean": 0.4,
+          "sd": 0.11
+        },
+        "quality_fit": {
+          "mean": 0.8,
+          "sd": 0.18
+        },
+        "brand_trust": {
+          "mean": 0.38,
+          "sd": 0.1
+        },
+        "review_proof": {
+          "mean": 0.58,
+          "sd": 0.14
+        },
+        "novelty": {
+          "mean": 0.3,
+          "sd": 0.09
+        },
+        "convenience": {
+          "mean": 0.96,
+          "sd": 0.2
+        },
+        "social_influence": {
+          "mean": 0.35,
+          "sd": 0.1
+        },
+        "category_engagement": {
+          "mean": 0.9,
+          "sd": 0.2
+        },
+        "localization": {
+          "mean": 0.48,
+          "sd": 0.12
+        },
+        "distance_friction": {
+          "mean": -1.05,
+          "sd": 0.24
+        }
+      },
+      "repeat_intercept": -0.6,
+      "referral_intercept": -1.25
+    }
+  },
+  "dynamics": {
+    "innovation_rate": {
+      "mean": 0.025,
+      "sd": 0.008
+    },
+    "word_of_mouth_rate": {
+      "mean": 0.28,
+      "sd": 0.06
+    },
+    "repeat_quality_effect": 1.1,
+    "referral_social_effect": 0.9
+  },
+  "macro_context": {
+    "status": "official_macro_calibrated_choice_prior",
+    "province_count": 64,
+    "national_cpi": 104.2
+  },
+  "model_transfer": {
+    "source_country": "TH",
+    "target_country": "VN",
+    "transferred_components": [
+      "choice_utility_weights",
+      "price_sensitivity_prior"
+    ],
+    "status": "unvalidated_cross_market_prior"
+  }
+}
