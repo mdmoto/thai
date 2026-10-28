@@ -430,17 +430,17 @@ function Step1({ state, update, onNext }: {
       <div>
         <div className="eyebrow mb-1">第 1 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择您的商业出海场景</h2>
-        <p className="text-xs text-neutral-400 font-light mt-1">选择目标国家后，系统会加载对应的官方宏观人口、收入、地区与币种配置。</p>
+        <p className="text-xs text-neutral-400 font-light mt-1">选择目标国家后，系统加载对应的官方宏观人口金字塔、真实收入阶梯与区域网格（非本土地面数据采用跨市场迁移先验）。</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {([
-          { code: "TH", label: "泰国", detail: "NSO · THB · 77 府" },
-          { code: "MY", label: "马来西亚", detail: "DOSM · MYR · 16 州/联邦直辖区" },
-          { code: "ID", label: "印度尼西亚", detail: "BPS · IDR · 34 省/核心区" },
-          { code: "VN", label: "越南", detail: "GSO · VND · 64 省/直辖市" },
-          { code: "PH", label: "菲律宾", detail: "PSA · PHP · 17 大区" },
-          { code: "SG", label: "新加坡", detail: "SingStat · SGD · 5 规划大区" },
+          { code: "TH", label: "泰国", detail: "NSO 官方宏观校准 · 77 府", tag: "全栈校准" },
+          { code: "MY", label: "马来西亚", detail: "DOSM 官方宏观校准 · 16 州", tag: "全栈校准" },
+          { code: "ID", label: "印度尼西亚", detail: "BPS 宏观分位数校准 · 34 省", tag: "行为先验" },
+          { code: "VN", label: "越南", detail: "GSO 宏观五档校准 · 64 省市", tag: "行为先验" },
+          { code: "PH", label: "菲律宾", detail: "PSA 宏观分位数校准 · 17 大区", tag: "行为先验" },
+          { code: "SG", label: "新加坡", detail: "SingStat 宏观住户校准 · 5 规划区", tag: "行为先验" },
         ] as const).map(market => (
           <button
             type="button"
@@ -450,13 +450,21 @@ function Step1({ state, update, onNext }: {
               marketplaces: (MARKET_CONFIG[market.code] || MARKET_CONFIG.TH).marketplaces,
             })}
             className={cn(
-              "card-lazzor p-4 text-left transition-colors",
+              "card-lazzor p-3.5 text-left transition-colors relative",
               state.country_code === market.code ? "bg-neutral-900 border-neutral-500" : "hover:bg-[#171717]",
             )}
           >
             <div className="flex items-center justify-between">
-              <strong className="text-sm text-white">{market.label}</strong>
-              {state.country_code === market.code && <Check size={14} className="text-white" />}
+              <div className="flex items-center gap-1.5">
+                <strong className="text-sm text-white">{market.label}</strong>
+                <span className={cn(
+                  "text-[9px] px-1.5 py-0.5 rounded font-mono",
+                  market.tag === "全栈校准" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-neutral-800 text-neutral-400"
+                )}>
+                  {market.tag}
+                </span>
+              </div>
+              {state.country_code === market.code && <Check size={14} className="text-white shrink-0" />}
             </div>
             <p className="text-[10px] text-neutral-500 mt-1">{market.detail}</p>
           </button>

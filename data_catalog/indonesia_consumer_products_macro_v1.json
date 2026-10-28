@@ -1,7 +1,14 @@
 {
   "version": "ID-CONSUMER-MACRO-2026.10.1",
   "status": "official_macro_calibrated_choice_prior",
-  "claim": "Indonesia adult age, binary sex, province population, household expenditure and income tiers calibrated from BPS (Badan Pusat Statistik) Susenas and Sakernas official public aggregates. Behavioral traits and choice coefficients transferred from cross-market prior.",
+  "calibration_scope": {
+    "population_demographics": "official_macro_calibrated",
+    "income_tier_distribution": "official_macro_calibrated",
+    "regional_income_spread": "official_macro_calibrated",
+    "choice_coefficients": "unvalidated_cross_market_prior",
+    "behavioral_traits": "unvalidated_cross_market_prior"
+  },
+  "claim": "印度尼西亚成人年龄、性别结构、各省人口、家庭支出分位数与区域消费分布根据印尼中央统计局（BPS）Susenas 与 Sakernas 调查校准。行为特征参数与离散选择效用系数属于跨市场先验模型，非本地微观交易直接拟合。",
   "country_code": "ID",
   "country_name": "Indonesia",
   "currency_code": "IDR",
@@ -10,21 +17,21 @@
     {
       "source_id": "BPS_POPULATION_PROVINCE",
       "title": "BPS Indonesia Population and Socioeconomic Survey (Susenas)",
-      "license": "Open Data Commons / BPS",
+      "license": "Open Data BPS",
       "observed": true,
       "source_type": "official_public_aggregate"
     },
     {
       "source_id": "BPS_PROVINCIAL_CPI",
       "title": "BPS Indonesia Provincial Consumer Price Index",
-      "license": "Open Data Commons / BPS",
+      "license": "Open Data BPS",
       "observed": true,
       "source_type": "official_public_aggregate"
     }
   ],
   "limitations": [
-    "Provincial margins reflect BPS Susenas aggregates; intra-city variance uses WorldPop population grid proxy.",
-    "Choice elasticity coefficients are cross-market priors calibrated to Southeast Asian e-commerce benchmarks."
+    "省级边界与家庭收支反映 BPS 调查宏观聚合，未直接观测逐户真实流水；收入数据按家庭月收入口径计算。",
+    "价格弹性与转化系数属于跨市场迁移先验，在正式商业决策前应结合本地 TikTok/Shopee 试销数据校准。"
   ],
   "population": {
     "registered_population_total": 281600000,
@@ -99,11 +106,55 @@
       }
     },
     "income_tier": {
-      "LOW": 0.2,
-      "MID_LOW": 0.2,
-      "MID_HIGH": 0.2,
-      "HIGH": 0.2,
-      "LUXURY": 0.2
+      "LOW": 0.225,
+      "MID_LOW": 0.54,
+      "MID_HIGH": 0.155,
+      "HIGH": 0.065,
+      "LUXURY": 0.015
+    },
+    "income_tier_by_region": {
+      "Java": {
+        "LOW": 0.165,
+        "MID_LOW": 0.525,
+        "MID_HIGH": 0.19,
+        "HIGH": 0.095,
+        "LUXURY": 0.025
+      },
+      "Sumatra": {
+        "LOW": 0.24,
+        "MID_LOW": 0.545,
+        "MID_HIGH": 0.145,
+        "HIGH": 0.058,
+        "LUXURY": 0.012
+      },
+      "Bali & Nusa Tenggara": {
+        "LOW": 0.22,
+        "MID_LOW": 0.55,
+        "MID_HIGH": 0.15,
+        "HIGH": 0.065,
+        "LUXURY": 0.015
+      },
+      "Kalimantan": {
+        "LOW": 0.205,
+        "MID_LOW": 0.535,
+        "MID_HIGH": 0.165,
+        "HIGH": 0.078,
+        "LUXURY": 0.017
+      },
+      "Sulawesi": {
+        "LOW": 0.265,
+        "MID_LOW": 0.54,
+        "MID_HIGH": 0.135,
+        "HIGH": 0.05,
+        "LUXURY": 0.01
+      },
+      "Maluku & Papua": {
+        "LOW": 0.34,
+        "MID_LOW": 0.52,
+        "MID_HIGH": 0.1,
+        "HIGH": 0.033,
+        "LUXURY": 0.007
+      }
     },
     "income_monthly_local": {
       "LOW": 3200000.0,
@@ -122,40 +173,40 @@
       "Maluku & Papua": 0.85
     },
     "province_income_multiplier": {
-      "Aceh": 0.92,
+      "Aceh": 0.9,
       "Bali": 1.35,
-      "Bangka-Belitung Islands": 0.92,
-      "Banten": 1.05,
-      "Bengkulu": 0.92,
-      "Central Java": 1.05,
-      "Central Kalimantan": 0.85,
-      "Central Sulawesi": 0.85,
-      "East Java": 1.05,
+      "Bangka-Belitung Islands": 0.9,
+      "Banten": 1.08,
+      "Bengkulu": 0.9,
+      "Central Java": 1.08,
+      "Central Kalimantan": 0.82,
+      "Central Sulawesi": 0.82,
+      "East Java": 1.08,
       "East Kalimantan": 1.35,
-      "East Nusa Tenggara": 0.85,
-      "Gorontalo": 0.85,
-      "Jakarta Special Capital Region": 1.95,
-      "Jambi": 0.92,
-      "Lampung": 0.92,
-      "Maluku": 0.85,
-      "North Kalimantan": 0.85,
-      "North Maluku": 0.85,
-      "North Sulawesi": 0.85,
-      "North Sumatra": 0.92,
-      "Papua": 0.85,
-      "Riau": 0.92,
+      "East Nusa Tenggara": 0.82,
+      "Gorontalo": 0.82,
+      "Jakarta Special Capital Region": 2.15,
+      "Jambi": 0.9,
+      "Lampung": 0.9,
+      "Maluku": 0.82,
+      "North Kalimantan": 0.82,
+      "North Maluku": 0.82,
+      "North Sulawesi": 0.82,
+      "North Sumatra": 0.9,
+      "Papua": 0.82,
+      "Riau": 0.9,
       "Riau Islands": 1.35,
-      "South Kalimantan": 0.85,
-      "South Sulawesi": 0.85,
-      "South Sumatra": 0.92,
-      "Southeast Sulawesi": 0.85,
-      "Special Region of Yogyakarta": 1.05,
-      "West Java": 1.05,
-      "West Kalimantan": 0.85,
-      "West Nusa Tenggara": 0.85,
-      "West Papua": 0.85,
-      "West Sulawesi": 0.85,
-      "West Sumatra": 0.92
+      "South Kalimantan": 0.82,
+      "South Sulawesi": 0.82,
+      "South Sumatra": 0.9,
+      "Southeast Sulawesi": 0.82,
+      "Special Region of Yogyakarta": 1.08,
+      "West Java": 1.08,
+      "West Kalimantan": 0.82,
+      "West Nusa Tenggara": 0.82,
+      "West Papua": 0.82,
+      "West Sulawesi": 0.82,
+      "West Sumatra": 0.9
     },
     "household_size_by_province": {
       "Aceh": 3.8,
@@ -194,51 +245,52 @@
       "West Sumatra": 3.8
     },
     "tourist_share_by_region": {
-      "Java": 0.12,
-      "Sumatra": 0.04,
+      "Java": 0.15,
+      "Sumatra": 0.05,
       "Sulawesi": 0.03,
       "Kalimantan": 0.02,
-      "Bali & Nusa Tenggara": 0.42,
-      "Maluku & Papua": 0.02
+      "Bali & Nusa Tenggara": 0.72,
+      "Maluku & Papua": 0.03
     }
   },
   "behavior": {
     "disposable_income_share": {
-      "mean": 0.37556661444171835,
-      "sd": 0.08
+      "mean": 0.215,
+      "sd": 0.068,
+      "basis": "bps_susenas_disposable_residual"
     },
     "online_affinity_beta": [
-      2.6,
-      1.8
-    ],
-    "review_sensitivity_beta": [
-      3.0,
-      1.6
-    ],
-    "novelty_seeking_beta": [
-      2.1,
-      2.3
-    ],
-    "social_influence_beta": [
-      2.0,
-      2.8
-    ],
-    "local_brand_trust_beta": [
-      2.8,
+      2.5,
       2.0
     ],
-    "pet_ownership_probability": 0.34,
-    "coffee_visits_weekly_lambda": 2.8,
-    "dining_out_weekly_lambda": 2.4,
-    "nightlife_monthly_lambda": 1.2
+    "review_sensitivity_beta": [
+      3.6,
+      1.4
+    ],
+    "novelty_seeking_beta": [
+      2.6,
+      2.0
+    ],
+    "social_influence_beta": [
+      3.0,
+      1.8
+    ],
+    "local_brand_trust_beta": [
+      3.4,
+      1.5
+    ],
+    "pet_ownership_probability": 0.28,
+    "coffee_visits_weekly_lambda": 3.2,
+    "dining_out_weekly_lambda": 3.0,
+    "nightlife_monthly_lambda": 0.3
   },
   "defaults": {
-    "brand_awareness": 0.12,
-    "quality_score": 0.6,
+    "brand_awareness": 0.08,
+    "quality_score": 0.62,
     "review_score": 0.5,
-    "design_score": 0.55,
-    "convenience_score": 0.55,
-    "localization_score": 0.45,
+    "design_score": 0.65,
+    "convenience_score": 0.75,
+    "localization_score": 0.55,
     "clarity_score": 0.6,
     "variable_cost_share": 0.5,
     "distance_km": 3.0
@@ -252,7 +304,7 @@
           "sd": 0.35
         },
         "price_log_ratio": {
-          "mean": -1.35,
+          "mean": -1.58,
           "sd": 0.28
         },
         "affordability": {
@@ -307,7 +359,7 @@
           "sd": 0.32
         },
         "price_log_ratio": {
-          "mean": -1.9,
+          "mean": -1.58,
           "sd": 0.34
         },
         "affordability": {
@@ -798,18 +850,18 @@
   },
   "dynamics": {
     "innovation_rate": {
-      "mean": 0.025,
-      "sd": 0.008
+      "mean": 0.035,
+      "sd": 0.01
     },
     "word_of_mouth_rate": {
-      "mean": 0.28,
-      "sd": 0.06
+      "mean": 0.32,
+      "sd": 0.065
     },
-    "repeat_quality_effect": 1.1,
-    "referral_social_effect": 0.9
+    "repeat_quality_effect": 1.05,
+    "referral_social_effect": 1.05
   },
   "macro_context": {
-    "status": "official_macro_calibrated_choice_prior",
+    "status": "official_macro_population_prior_with_transferred_choice_coefficients",
     "province_count": 34,
     "national_cpi": 105.8
   },

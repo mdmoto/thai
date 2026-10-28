@@ -1,7 +1,14 @@
 {
   "version": "PH-CONSUMER-MACRO-2026.10.1",
   "status": "official_macro_calibrated_choice_prior",
-  "claim": "Philippines adult age, binary sex, regional population, household income and expenditure tiers calibrated from PSA (Philippine Statistics Authority) FIES and OpenSTAT official aggregates. Behavioral traits and choice coefficients transferred from cross-market prior.",
+  "calibration_scope": {
+    "population_demographics": "official_macro_calibrated",
+    "income_tier_distribution": "official_macro_calibrated",
+    "regional_income_spread": "official_macro_calibrated",
+    "choice_coefficients": "unvalidated_cross_market_prior",
+    "behavioral_traits": "unvalidated_cross_market_prior"
+  },
+  "claim": "菲律宾成人年龄、性别结构、各大区人口、家庭收入分位数与大区消费水平根据菲律宾统计局（PSA）FIES 与 OpenSTAT 调查校准。行为特征参数与离散选择效用系数属于跨市场先验模型，非本地微观交易直接拟合。",
   "country_code": "PH",
   "country_name": "Philippines",
   "currency_code": "PHP",
@@ -10,21 +17,21 @@
     {
       "source_id": "PSA_FIES",
       "title": "PSA Family Income and Expenditure Survey (FIES)",
-      "license": "OpenSTAT Philippines / PSA",
+      "license": "OpenSTAT Philippines",
       "observed": true,
       "source_type": "official_public_aggregate"
     },
     {
       "source_id": "PSA_CPI_REGIONAL",
       "title": "PSA Regional Consumer Price Index Series",
-      "license": "OpenSTAT Philippines / PSA",
+      "license": "OpenSTAT Philippines",
       "observed": true,
       "source_type": "official_public_aggregate"
     }
   ],
   "limitations": [
-    "Regional margins reflect PSA FIES triennial survey aggregates; sub-regional distribution uses WorldPop population grid proxy.",
-    "Choice elasticity coefficients are cross-market priors calibrated to Southeast Asian e-commerce benchmarks."
+    "大区收入与人口根据 PSA 三年一度的普查数据聚合建立，不代表逐户真实流水；收入数据按家庭月收入理解。",
+    "选择转化与决策系数为跨市场先验模型，建议结合 Shopee/Lazada 本地促销数据进行回测验证。"
   ],
   "population": {
     "registered_population_total": 115800000,
@@ -71,11 +78,34 @@
       }
     },
     "income_tier": {
-      "LOW": 0.2,
-      "MID_LOW": 0.2,
-      "MID_HIGH": 0.2,
-      "HIGH": 0.2,
-      "LUXURY": 0.2
+      "LOW": 0.265,
+      "MID_LOW": 0.512,
+      "MID_HIGH": 0.148,
+      "HIGH": 0.06,
+      "LUXURY": 0.015
+    },
+    "income_tier_by_region": {
+      "Luzon (incl. Metro Manila)": {
+        "LOW": 0.185,
+        "MID_LOW": 0.495,
+        "MID_HIGH": 0.195,
+        "HIGH": 0.098,
+        "LUXURY": 0.027
+      },
+      "Visayas": {
+        "LOW": 0.325,
+        "MID_LOW": 0.525,
+        "MID_HIGH": 0.105,
+        "HIGH": 0.037,
+        "LUXURY": 0.008
+      },
+      "Mindanao": {
+        "LOW": 0.36,
+        "MID_LOW": 0.515,
+        "MID_HIGH": 0.09,
+        "HIGH": 0.029,
+        "LUXURY": 0.006
+      }
     },
     "income_monthly_local": {
       "LOW": 14000.0,
@@ -91,23 +121,23 @@
       "Mindanao": 0.82
     },
     "province_income_multiplier": {
-      "ARMM": 0.82,
-      "Bicol Region": 0.82,
-      "CAR": 0.82,
-      "Cagayan Valley": 0.82,
+      "ARMM": 0.78,
+      "Bicol Region": 0.78,
+      "CAR": 0.78,
+      "Cagayan Valley": 0.78,
       "Calabarzon": 1.35,
-      "Caraga": 0.82,
+      "Caraga": 0.78,
       "Central Luzon": 1.35,
-      "Central Visayas": 0.95,
-      "Davao Region": 0.82,
-      "Eastern Visayas": 0.95,
-      "Ilocos Region": 0.82,
-      "Mimaropa": 0.82,
-      "NCR": 2.1,
-      "Northern Mindanao": 0.82,
-      "Soccsksargen": 0.82,
-      "Western Visayas": 0.95,
-      "Zamboanga Peninsula": 0.82
+      "Central Visayas": 0.92,
+      "Davao Region": 0.78,
+      "Eastern Visayas": 0.92,
+      "Ilocos Region": 0.78,
+      "Mimaropa": 0.78,
+      "NCR": 2.25,
+      "Northern Mindanao": 0.78,
+      "Soccsksargen": 0.78,
+      "Western Visayas": 0.92,
+      "Zamboanga Peninsula": 0.78
     },
     "household_size_by_province": {
       "ARMM": 4.2,
@@ -136,41 +166,42 @@
   },
   "behavior": {
     "disposable_income_share": {
-      "mean": 0.37556661444171835,
-      "sd": 0.08
+      "mean": 0.205,
+      "sd": 0.065,
+      "basis": "psa_fies_household_expenditure_residual"
     },
     "online_affinity_beta": [
-      2.6,
-      1.8
+      2.8,
+      1.9
     ],
     "review_sensitivity_beta": [
-      3.0,
+      3.4,
       1.6
     ],
     "novelty_seeking_beta": [
-      2.1,
-      2.3
+      2.5,
+      2.1
     ],
     "social_influence_beta": [
-      2.0,
-      2.8
+      3.2,
+      1.6
     ],
     "local_brand_trust_beta": [
-      2.8,
-      2.0
+      2.2,
+      2.5
     ],
-    "pet_ownership_probability": 0.34,
-    "coffee_visits_weekly_lambda": 2.8,
-    "dining_out_weekly_lambda": 2.4,
-    "nightlife_monthly_lambda": 1.2
+    "pet_ownership_probability": 0.42,
+    "coffee_visits_weekly_lambda": 2.5,
+    "dining_out_weekly_lambda": 2.2,
+    "nightlife_monthly_lambda": 0.8
   },
   "defaults": {
-    "brand_awareness": 0.12,
-    "quality_score": 0.6,
+    "brand_awareness": 0.11,
+    "quality_score": 0.65,
     "review_score": 0.5,
-    "design_score": 0.55,
-    "convenience_score": 0.55,
-    "localization_score": 0.45,
+    "design_score": 0.68,
+    "convenience_score": 0.7,
+    "localization_score": 0.62,
     "clarity_score": 0.6,
     "variable_cost_share": 0.5,
     "distance_km": 3.0
@@ -184,7 +215,7 @@
           "sd": 0.35
         },
         "price_log_ratio": {
-          "mean": -1.35,
+          "mean": -1.52,
           "sd": 0.28
         },
         "affordability": {
@@ -239,7 +270,7 @@
           "sd": 0.32
         },
         "price_log_ratio": {
-          "mean": -1.9,
+          "mean": -1.52,
           "sd": 0.34
         },
         "affordability": {
@@ -730,18 +761,18 @@
   },
   "dynamics": {
     "innovation_rate": {
-      "mean": 0.025,
-      "sd": 0.008
+      "mean": 0.034,
+      "sd": 0.01
     },
     "word_of_mouth_rate": {
-      "mean": 0.28,
-      "sd": 0.06
+      "mean": 0.33,
+      "sd": 0.07
     },
-    "repeat_quality_effect": 1.1,
-    "referral_social_effect": 0.9
+    "repeat_quality_effect": 1.08,
+    "referral_social_effect": 1.02
   },
   "macro_context": {
-    "status": "official_macro_calibrated_choice_prior",
+    "status": "official_macro_population_prior_with_transferred_choice_coefficients",
     "region_count": 17,
     "national_cpi": 106.5
   },

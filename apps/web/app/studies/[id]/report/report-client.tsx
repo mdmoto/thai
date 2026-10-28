@@ -467,7 +467,7 @@ const SENTIMENT_STYLE: Record<string, { tagClass: string; label: string }> = {
 
 const CALIBRATION_LABELS: Record<string, string> = {
   prior_only: "仅工程先验",
-  official_macro_calibrated_choice_prior: "泰国官方宏观校准；选择系数待验证",
+  official_macro_calibrated_choice_prior: "官方宏观统计校准；行为与选择系数待验证",
   customer_override_unvalidated: "客户数据覆盖；尚未回测",
   observed_choice_fit_unvalidated: "真实选择数据拟合；尚未回测",
   platform_category_benchmark_unvalidated:
@@ -476,8 +476,12 @@ const CALIBRATION_LABELS: Record<string, string> = {
   unknown: "未知",
 };
 
-function calibrationLabel(status?: string) {
+function calibrationLabel(status?: string, countryCode?: string) {
   const value = status ?? "unknown";
+  if (value === "official_macro_calibrated_choice_prior") {
+    const name = COUNTRY_NAME_MAP[countryCode || "TH"] || "目标市场";
+    return `${name}官方宏观校准；行为与选择系数待验证`;
+  }
   return CALIBRATION_LABELS[value] ?? value;
 }
 
@@ -895,7 +899,7 @@ export function ReportClient({
               AI 模拟消费人群由模型生成，不是真实问卷受访者或真实订单；人数表示模拟覆盖规模。
             </p>
             <p className="text-[10px] text-neutral-500 font-mono mt-1">
-              校准：{calibrationLabel(reportData.calibration_status)} · {reportData.simulation_model_version}
+              校准：{calibrationLabel(reportData.calibration_status, reportData.country_code)} · {reportData.simulation_model_version}
             </p>
             {reportData.model_lineage?.decision_journey?.enabled && (
               <p className="text-[10px] text-cyan-200/70 mt-1">
