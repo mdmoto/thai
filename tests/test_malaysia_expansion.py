@@ -22,7 +22,7 @@ class MalaysiaExpansionTests(unittest.TestCase):
         self.assertEqual(profile["currency_code"], "MYR")
         self.assertEqual(
             profile["status"],
-            "official_macro_calibrated_choice_prior",
+            "official_macro_population_with_localized_choice_priors",
         )
         self.assertEqual(
             profile["population"]["registered_population_total"],

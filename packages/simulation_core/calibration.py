@@ -130,10 +130,34 @@ def get_study_model(profile: Mapping[str, Any], study_type: str) -> Dict[str, An
     return copy.deepcopy(models["PRODUCT_VALIDATION"])
 
 
+def derive_profile_status(calibration_scope: Mapping[str, Any]) -> str:
+    choice = str(calibration_scope.get("choice_coefficients") or "")
+    if choice == "localized_expert_prior":
+        return "official_macro_population_with_localized_choice_priors"
+    if choice == "unvalidated_cross_market_prior":
+        return "official_macro_population_with_transferred_choice_priors"
+    if choice == "validated":
+        return "validated"
+    if choice == "observed_choice_fit_unvalidated":
+        return "observed_choice_fit_unvalidated"
+    if choice == "platform_category_benchmark_unvalidated":
+        return "platform_category_benchmark_unvalidated"
+    return "uncalibrated_prior"
+
+
 def calibration_summary(profile: Mapping[str, Any]) -> Dict[str, Any]:
+    scope = copy.deepcopy(profile.get("calibration_scope", {}))
+    raw_status = profile.get("status")
+    # Derive canonical status from calibration_scope if available to prevent self-contradiction
+    if scope and (not raw_status or raw_status == "official_macro_calibrated_choice_prior"):
+        status = derive_profile_status(scope)
+    else:
+        status = raw_status or derive_profile_status(scope)
+
     return {
         "profile_version": profile["version"],
-        "status": profile["status"],
+        "status": status,
+        "calibration_scope": scope,
         "claim": profile.get("claim"),
         "sources": copy.deepcopy(profile.get("sources", [])),
         "limitations": copy.deepcopy(profile.get("limitations", [])),

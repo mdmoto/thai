@@ -83,6 +83,21 @@ const INIT_STATE: WizardState = {
   venue_history_text: "",
 };
 
+export interface MarketCalibrationScope {
+  population_demographics: string;
+  income_tier_distribution: string;
+  regional_income_spread: string;
+  choice_coefficients: "localized_expert_prior" | "unvalidated_cross_market_prior" | "validated";
+  behavioral_traits: "localized_expert_prior" | "unvalidated_cross_market_prior" | "validated";
+}
+
+export function marketTagFromScope(scope: MarketCalibrationScope): { tag: string; detailSuffix: string } {
+  if (scope.choice_coefficients === "localized_expert_prior") {
+    return { tag: "本地化先验", detailSuffix: "本地化先验" };
+  }
+  return { tag: "迁移先验", detailSuffix: "迁移先验" };
+}
+
 export const MARKET_CONFIG: Record<string, {
   name: string;
   currency: string;
@@ -91,13 +106,104 @@ export const MARKET_CONFIG: Record<string, {
   areas: string;
   source: string;
   marketplaces: string[];
+  calibrationScope: MarketCalibrationScope;
 }> = {
-  TH: { name: "泰国", currency: "THB", symbol: "฿", priceExample: "990", areas: "77 府", source: "NSO", marketplaces: ["Shopee Thailand", "Lazada Thailand", "TikTok Shop Thailand"] },
-  MY: { name: "马来西亚", currency: "MYR", symbol: "RM", priceExample: "99", areas: "16 州/联邦直辖区", source: "DOSM", marketplaces: ["Shopee Malaysia", "Lazada Malaysia", "TikTok Shop Malaysia"] },
-  ID: { name: "印度尼西亚", currency: "IDR", symbol: "Rp ", priceExample: "199000", areas: "34 省", source: "BPS", marketplaces: ["Shopee Indonesia", "Tokopedia", "TikTok Shop Indonesia"] },
-  VN: { name: "越南", currency: "VND", symbol: "₫", priceExample: "299000", areas: "64 省/直辖市", source: "GSO", marketplaces: ["Shopee Vietnam", "TikTok Shop Vietnam", "Lazada Vietnam"] },
-  PH: { name: "菲律宾", currency: "PHP", symbol: "₱", priceExample: "699", areas: "17 大区", source: "PSA", marketplaces: ["Shopee Philippines", "Lazada Philippines", "TikTok Shop Philippines"] },
-  SG: { name: "新加坡", currency: "SGD", symbol: "S$", priceExample: "29", areas: "5 规划大区", source: "SingStat", marketplaces: ["Shopee Singapore", "Lazada Singapore", "Amazon Singapore"] },
+  TH: {
+    name: "泰国",
+    currency: "THB",
+    symbol: "฿",
+    priceExample: "990",
+    areas: "77 府",
+    source: "NSO",
+    marketplaces: ["Shopee Thailand", "Lazada Thailand", "TikTok Shop Thailand"],
+    calibrationScope: {
+      population_demographics: "official_macro_calibrated",
+      income_tier_distribution: "official_macro_calibrated",
+      regional_income_spread: "official_macro_calibrated",
+      choice_coefficients: "localized_expert_prior",
+      behavioral_traits: "localized_expert_prior",
+    },
+  },
+  MY: {
+    name: "马来西亚",
+    currency: "MYR",
+    symbol: "RM",
+    priceExample: "99",
+    areas: "16 州/联邦直辖区",
+    source: "DOSM",
+    marketplaces: ["Shopee Malaysia", "Lazada Malaysia", "TikTok Shop Malaysia"],
+    calibrationScope: {
+      population_demographics: "official_macro_calibrated",
+      income_tier_distribution: "official_macro_calibrated",
+      regional_income_spread: "official_macro_calibrated",
+      choice_coefficients: "localized_expert_prior",
+      behavioral_traits: "localized_expert_prior",
+    },
+  },
+  ID: {
+    name: "印度尼西亚",
+    currency: "IDR",
+    symbol: "Rp ",
+    priceExample: "199000",
+    areas: "34 省",
+    source: "BPS",
+    marketplaces: ["Shopee Indonesia", "Tokopedia", "TikTok Shop Indonesia"],
+    calibrationScope: {
+      population_demographics: "official_macro_calibrated",
+      income_tier_distribution: "official_macro_calibrated",
+      regional_income_spread: "official_macro_calibrated",
+      choice_coefficients: "unvalidated_cross_market_prior",
+      behavioral_traits: "unvalidated_cross_market_prior",
+    },
+  },
+  VN: {
+    name: "越南",
+    currency: "VND",
+    symbol: "₫",
+    priceExample: "299000",
+    areas: "64 省/直辖市",
+    source: "GSO",
+    marketplaces: ["Shopee Vietnam", "TikTok Shop Vietnam", "Lazada Vietnam"],
+    calibrationScope: {
+      population_demographics: "official_macro_calibrated",
+      income_tier_distribution: "official_macro_calibrated",
+      regional_income_spread: "official_macro_calibrated",
+      choice_coefficients: "unvalidated_cross_market_prior",
+      behavioral_traits: "unvalidated_cross_market_prior",
+    },
+  },
+  PH: {
+    name: "菲律宾",
+    currency: "PHP",
+    symbol: "₱",
+    priceExample: "699",
+    areas: "17 大区",
+    source: "PSA",
+    marketplaces: ["Shopee Philippines", "Lazada Philippines", "TikTok Shop Philippines"],
+    calibrationScope: {
+      population_demographics: "official_macro_calibrated",
+      income_tier_distribution: "official_macro_calibrated",
+      regional_income_spread: "official_macro_calibrated",
+      choice_coefficients: "unvalidated_cross_market_prior",
+      behavioral_traits: "unvalidated_cross_market_prior",
+    },
+  },
+  SG: {
+    name: "新加坡",
+    currency: "SGD",
+    symbol: "S$",
+    priceExample: "29",
+    areas: "5 规划大区",
+    source: "SingStat",
+    marketplaces: ["Shopee Singapore", "Lazada Singapore", "Amazon Singapore"],
+    calibrationScope: {
+      population_demographics: "official_macro_calibrated",
+      income_tier_distribution: "official_macro_calibrated",
+      regional_income_spread: "official_macro_calibrated",
+      choice_coefficients: "unvalidated_cross_market_prior",
+      behavioral_traits: "unvalidated_cross_market_prior",
+    },
+  },
 };
 
 function parseVenueHistory(value: string) {
@@ -434,41 +540,39 @@ function Step1({ state, update, onNext }: {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {([
-          { code: "TH", label: "泰国", detail: "NSO 宏观校准 · 本地化先验", tag: "本地化先验" },
-          { code: "MY", label: "马来西亚", detail: "DOSM 宏观校准 · 本地化先验", tag: "本地化先验" },
-          { code: "ID", label: "印度尼西亚", detail: "BPS 宏观校准 · 迁移先验", tag: "迁移先验" },
-          { code: "VN", label: "越南", detail: "GSO 宏观校准 · 迁移先验", tag: "迁移先验" },
-          { code: "PH", label: "菲律宾", detail: "PSA 宏观校准 · 迁移先验", tag: "迁移先验" },
-          { code: "SG", label: "新加坡", detail: "SingStat 宏观校准 · 迁移先验", tag: "迁移先验" },
-        ] as const).map(market => (
-          <button
-            type="button"
-            key={market.code}
-            onClick={() => update({
-              country_code: market.code,
-              marketplaces: (MARKET_CONFIG[market.code] || MARKET_CONFIG.TH).marketplaces,
-            })}
-            className={cn(
-              "card-lazzor p-3.5 text-left transition-colors relative",
-              state.country_code === market.code ? "bg-neutral-900 border-neutral-500" : "hover:bg-[#171717]",
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <strong className="text-sm text-white">{market.label}</strong>
-                <span className={cn(
-                  "text-[9px] px-1.5 py-0.5 rounded font-mono",
-                  market.tag === "本地化先验" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "bg-neutral-800 text-neutral-400 border border-neutral-700/40"
-                )}>
-                  {market.tag}
-                </span>
+        {(Object.keys(MARKET_CONFIG) as CountryCode[]).map(code => {
+          const market = MARKET_CONFIG[code];
+          const { tag, detailSuffix } = marketTagFromScope(market.calibrationScope);
+          const detail = `${market.source} 宏观校准 · ${detailSuffix}`;
+          return (
+            <button
+              type="button"
+              key={code}
+              onClick={() => update({
+                country_code: code,
+                marketplaces: market.marketplaces,
+              })}
+              className={cn(
+                "card-lazzor p-3.5 text-left transition-colors relative",
+                state.country_code === code ? "bg-neutral-900 border-neutral-500" : "hover:bg-[#171717]",
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <strong className="text-sm text-white">{market.name}</strong>
+                  <span className={cn(
+                    "text-[9px] px-1.5 py-0.5 rounded font-mono",
+                    tag === "本地化先验" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "bg-neutral-800 text-neutral-400 border border-neutral-700/40"
+                  )}>
+                    {tag}
+                  </span>
+                </div>
+                {state.country_code === code && <Check size={14} className="text-white shrink-0" />}
               </div>
-              {state.country_code === market.code && <Check size={14} className="text-white shrink-0" />}
-            </div>
-            <p className="text-[10px] text-neutral-500 mt-1">{market.detail}</p>
-          </button>
-        ))}
+              <p className="text-[10px] text-neutral-500 mt-1">{detail}</p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

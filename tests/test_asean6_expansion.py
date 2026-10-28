@@ -27,7 +27,14 @@ class Asean6ExpansionTests(unittest.TestCase):
             profile = load_calibration_profile(country_code=code)
             self.assertEqual(profile["country_code"], code)
             self.assertEqual(profile["currency_code"], expected_cur)
-            self.assertEqual(profile["status"], "official_macro_calibrated_choice_prior")
+            from simulation_core.calibration import derive_profile_status
+            expected_status = (
+                "official_macro_population_with_localized_choice_priors"
+                if code in {"TH", "MY"}
+                else "official_macro_population_with_transferred_choice_priors"
+            )
+            self.assertEqual(profile["status"], expected_status)
+            self.assertEqual(profile["status"], derive_profile_status(profile["calibration_scope"]))
             self.assertGreater(profile["population"]["registered_population_total"], 5_000_000)
 
             # Validate income tier is NOT uniform 0.2 placeholder
@@ -149,4 +156,48 @@ class Asean6ExpansionTests(unittest.TestCase):
                 product_name="Item",
                 price=10.0,
                 country_code="US",
+            )
+
+    def test_cross_layer_calibration_scope_consistency(self):
+        from simulation_core.calibration import derive_profile_status
+        from pathlib import Path
+        import re
+
+        # 1. Verify all 6 country profiles have self-consistent status and calibration_scope
+        for code in ["TH", "MY", "ID", "VN", "PH", "SG"]:
+            profile = load_calibration_profile(country_code=code)
+            scope = profile["calibration_scope"]
+            self.assertIn("choice_coefficients", scope)
+            self.assertIn("behavioral_traits", scope)
+
+            expected_status = derive_profile_status(scope)
+            self.assertEqual(
+                profile["status"], expected_status,
+                f"{code} profile status ({profile['status']}) contradicts calibration_scope ({expected_status})"
+            )
+
+            if code in {"TH", "MY"}:
+                self.assertEqual(scope["choice_coefficients"], "localized_expert_prior")
+                self.assertEqual(profile["status"], "official_macro_population_with_localized_choice_priors")
+            else:
+                self.assertEqual(scope["choice_coefficients"], "unvalidated_cross_market_prior")
+                self.assertEqual(profile["status"], "official_macro_population_with_transferred_choice_priors")
+
+        # 2. Verify Frontend MARKET_CONFIG (wizard-client.tsx) matches data catalog calibration_scope
+        wizard_ts = (
+            Path(__file__).resolve().parents[1]
+            / "apps" / "web" / "app" / "studies" / "new" / "wizard-client.tsx"
+        ).read_text(encoding="utf-8")
+
+        for code in ["TH", "MY", "ID", "VN", "PH", "SG"]:
+            profile = load_calibration_profile(country_code=code)
+            expected_choice = profile["calibration_scope"]["choice_coefficients"]
+            pattern = rf'{code}:\s*\{{[^}}]*choice_coefficients:\s*["\']([^"\']+)["\']'
+            match = re.search(pattern, wizard_ts, re.DOTALL)
+            self.assertIsNotNone(match, f"Could not find choice_coefficients for {code} in wizard-client.tsx")
+            frontend_choice = match.group(1)
+            self.assertEqual(
+                frontend_choice,
+                expected_choice,
+                f"Frontend wizard-client.tsx choice_coefficients for {code} ({frontend_choice}) drifts from profile ({expected_choice})!"
             )

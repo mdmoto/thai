@@ -77,6 +77,13 @@ interface ReportData {
   mc_rounds: number;
   generated_at: string;
   calibration_status?: string;
+  calibration_scope?: {
+    population_demographics?: string;
+    income_tier_distribution?: string;
+    regional_income_spread?: string;
+    choice_coefficients?: string;
+    behavioral_traits?: string;
+  };
   executive_summary: {
     recommendation: string;
     best_audience: string;
@@ -376,6 +383,13 @@ interface ReportData {
       claim?: string;
       limitations?: string[];
       sources?: { source_id?: string; observed?: boolean }[];
+      calibration_scope?: {
+        population_demographics?: string;
+        income_tier_distribution?: string;
+        regional_income_spread?: string;
+        choice_coefficients?: string;
+        behavioral_traits?: string;
+      };
     };
     uncertainty?: { interval_type?: string; components?: string[]; validated_forecast_error?: number | null };
     agent_signal?: { status?: string; effective_weight?: number; sample_size?: number };
@@ -467,7 +481,9 @@ const SENTIMENT_STYLE: Record<string, { tagClass: string; label: string }> = {
 
 const CALIBRATION_LABELS: Record<string, string> = {
   prior_only: "仅工程先验",
-  official_macro_calibrated_choice_prior: "官方宏观统计校准；行为与选择系数待验证",
+  official_macro_population_with_localized_choice_priors: "官方宏观统计校准 · 本地化先验",
+  official_macro_population_with_transferred_choice_priors: "官方宏观统计校准 · 迁移先验",
+  official_macro_calibrated_choice_prior: "官方宏观统计校准 · 先验模型",
   customer_override_unvalidated: "客户数据覆盖；尚未回测",
   observed_choice_fit_unvalidated: "真实选择数据拟合；尚未回测",
   platform_category_benchmark_unvalidated:
@@ -476,16 +492,31 @@ const CALIBRATION_LABELS: Record<string, string> = {
   unknown: "未知",
 };
 
-function calibrationLabel(status?: string, countryCode?: string) {
-  const value = status ?? "unknown";
-  if (value === "official_macro_calibrated_choice_prior") {
-    const code = (countryCode || "TH").toUpperCase();
-    const name = COUNTRY_NAME_MAP[code] || "目标市场";
-    if (code === "TH" || code === "MY") {
-      return `${name}官方宏观校准 · 本地化行为先验`;
-    }
-    return `${name}官方宏观校准 · 跨市场迁移先验`;
+function calibrationLabel(
+  status?: string,
+  countryCode?: string,
+  calibrationScope?: {
+    choice_coefficients?: string;
+    behavioral_traits?: string;
   }
+) {
+  const code = (countryCode || "TH").toUpperCase();
+  const name = COUNTRY_NAME_MAP[code] || "目标市场";
+
+  if (calibrationScope?.choice_coefficients === "localized_expert_prior") {
+    return `${name}官方宏观校准 · 本地化先验`;
+  }
+  if (calibrationScope?.choice_coefficients === "unvalidated_cross_market_prior") {
+    return `${name}官方宏观校准 · 迁移先验`;
+  }
+  if (status === "official_macro_population_with_localized_choice_priors") {
+    return `${name}官方宏观校准 · 本地化先验`;
+  }
+  if (status === "official_macro_population_with_transferred_choice_priors") {
+    return `${name}官方宏观校准 · 迁移先验`;
+  }
+
+  const value = status ?? "unknown";
   return CALIBRATION_LABELS[value] ?? value;
 }
 
@@ -683,24 +714,22 @@ function eligibilityLabel(status?: string) {
   return status || "通用人群假设";
 }
 
-function calibrationClaim(status?: string, claim?: string, countryCode?: string) {
-  if (status === "official_macro_calibrated_choice_prior") {
-    switch (countryCode) {
-      case "MY":
-        return "年龄、性别、州级人口、家庭收入百分位、支出与家庭规模已使用马来西亚 DOSM 公开汇总数据校准；行为特征和选择系数仍是待验证的跨市场先验。";
-      case "ID":
-        return "年龄、性别、省级人口、家庭支出五分位数与 CPI 已使用印尼中央统计局（BPS）Susenas 与 Sakernas 公开汇总数据校准；行为特征和选择系数仍为跨市场先验。";
-      case "VN":
-        return "年龄、性别、省直辖市人口、收入五档分布与城乡消费已使用越南统计总局（GSO）VHLSS 公开汇总数据校准；行为特征和选择系数仍为跨市场先验。";
-      case "PH":
-        return "年龄、性别、大区人口、家庭收入分位数与 CPI 已使用菲律宾统计局（PSA）FIES 与 OpenSTAT 公开汇总数据校准；行为特征和选择系数仍为跨市场先验。";
-      case "SG":
-        return "年龄、性别、规划大区人口、家庭月收支与住房结构已使用新加坡统计局（SingStat）与 data.gov.sg 公开数据校准；行为特征和选择系数仍为跨市场先验。";
-      default:
-        return "地区人口、家庭收入区间、各府收入与支出、家庭规模等人口结构已使用泰国国家统计局（NSO）公开汇总数据校准；年龄细分、消费行为特征和选择系数仍属于待验证先验。";
-    }
+function calibrationClaim(
+  status?: string,
+  claim?: string,
+  countryCode?: string,
+  calibrationScope?: { choice_coefficients?: string }
+) {
+  if (claim && claim.trim().length > 0) {
+    return claim;
   }
-  return claim || "未提供更详细的校准说明。";
+  const code = (countryCode || "TH").toUpperCase();
+  const name = COUNTRY_NAME_MAP[code] || "目标市场";
+  const isLocalized =
+    calibrationScope?.choice_coefficients === "localized_expert_prior" ||
+    status === "official_macro_population_with_localized_choice_priors";
+  const priorType = isLocalized ? "本地化专家先验" : "跨市场迁移先验";
+  return `${name}地区人口、家庭收入分位数、各区域收入与支出已使用官方统计局公开汇总数据校准；行为特征和选择效用系数属于待验证的${priorType}。`;
 }
 
 function warningLabel(warning: string, countryCode?: string) {
@@ -903,7 +932,7 @@ export function ReportClient({
               AI 模拟消费人群由模型生成，不是真实问卷受访者或真实订单；人数表示模拟覆盖规模。
             </p>
             <p className="text-[10px] text-neutral-500 font-mono mt-1">
-              校准：{calibrationLabel(reportData.calibration_status, reportData.country_code)} · {reportData.simulation_model_version}
+              校准：{calibrationLabel(reportData.calibration_status, reportData.country_code, reportData.calibration_scope || reportData.model_lineage?.calibration?.calibration_scope)} · {reportData.simulation_model_version}
             </p>
             {reportData.model_lineage?.decision_journey?.enabled && (
               <p className="text-[10px] text-cyan-200/70 mt-1">
@@ -2381,8 +2410,8 @@ function MethodologySection({ data }: { data: ReportData }) {
         <div className="space-y-4 text-xs text-neutral-300 font-light leading-relaxed">
           <p>
             <strong className="text-white font-semibold">1. 人口数据校准：</strong>{" "}
-            {calibrationLabel(calibration?.status ?? data.calibration_status)}。
-            {calibrationClaim(calibration?.status ?? data.calibration_status, calibration?.claim, data.country_code)}
+            {calibrationLabel(calibration?.status ?? data.calibration_status, data.country_code, calibration?.calibration_scope ?? data.calibration_scope)}。
+            {calibrationClaim(calibration?.status ?? data.calibration_status, calibration?.claim, data.country_code, calibration?.calibration_scope ?? data.calibration_scope)}
           </p>
           <p>
             <strong className="text-white font-semibold">2. 消费者选择模型：</strong>{" "}

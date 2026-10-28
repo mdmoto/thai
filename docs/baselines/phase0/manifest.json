@@ -24,7 +24,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/pet_water_product_validation.report.json",
-      "report_sha256": "606cbaff61d47df85baa2323c33f05ac91563f76f305758d9b30855879ba7fb2",
+      "report_sha256": "8640f36f5f52c1731351e4aacfe12f711de79ef09d7c64a49787851a687ef3ca",
       "seed": 42
     },
     {
@@ -55,7 +55,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/generic_pricing_study.report.json",
-      "report_sha256": "593dbc7582945701a418f2c32fc14e41d178ca025ae6272e4a860f516b875e3a",
+      "report_sha256": "455290658d052373e48e84438342d00ae2d854283ca8dbb7d74cfb6de7266431",
       "seed": 42
     },
     {
@@ -84,7 +84,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/nimman_cafe_venue.report.json",
-      "report_sha256": "b90f4cb7a06ff054700655570d95e31d0c7a09ec0438683930871c30f8755ea7",
+      "report_sha256": "4293713b97f38a3920ac8706b8b3a81286d48aa6787592074deaba12dc486613",
       "seed": 42
     }
   ],

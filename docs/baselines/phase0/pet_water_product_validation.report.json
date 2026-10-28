@@ -13,7 +13,14 @@
     "source_type": "none",
     "status": "disabled"
   },
-  "calibration_status": "official_macro_calibrated_choice_prior",
+  "calibration_scope": {
+    "behavioral_traits": "localized_expert_prior",
+    "choice_coefficients": "localized_expert_prior",
+    "income_tier_distribution": "official_macro_calibrated",
+    "population_demographics": "official_macro_calibrated",
+    "regional_income_spread": "official_macro_calibrated"
+  },
+  "calibration_status": "official_macro_population_with_localized_choice_priors",
   "category_eligible_population": 40,
   "category_key": "PET_WATER_FOUNTAIN",
   "channels": [
@@ -190,7 +197,7 @@
       "优先验证“首发降价 12%”，同时保留基准方案作为对照组。",
       "上线前执行时间外回测，并记录预测误差、数据版本与模型版本。"
     ],
-    "recommendation": "当前宏观人口已校准、选择系数仍为先验的 product_mnl_prior_v1 模型中，“首发降价 12%”的相对收入指数最高（105.3）。在接入真实订单、选择实验或 A/B 选择数据并完成回测前，该结果应作为方案筛选依据，而不是销量承诺。"
+    "recommendation": "当前宏观人口已校准、选择系数为本地化专家先验的 product_mnl_prior_v1 模型中，“首发降价 12%”的相对收入指数最高（105.3）。在接入真实订单、选择实验或 A/B 选择数据并完成回测前，该结果应作为方案筛选依据，而不是销量承诺。"
   },
   "funnel": [
     {
@@ -412,7 +419,7 @@
   },
   "mc_rounds": 40,
   "methodology": {
-    "calibration_status": "official_macro_calibrated_choice_prior",
+    "calibration_status": "official_macro_population_with_localized_choice_priors",
     "llm_policy": "LLM responses are qualitative weak labels and cannot be directly averaged into market size or purchase rate.",
     "quantitative_path": [
       "official_macro_calibrated_population",
@@ -517,6 +524,13 @@
       "status": "disabled"
     },
     "calibration": {
+      "calibration_scope": {
+        "behavioral_traits": "localized_expert_prior",
+        "choice_coefficients": "localized_expert_prior",
+        "income_tier_distribution": "official_macro_calibrated",
+        "population_demographics": "official_macro_calibrated",
+        "regional_income_spread": "official_macro_calibrated"
+      },
       "claim": "Thailand regional population, binary sex margins, household-income bands, province income, expenditure residual and household size are calibrated from versioned NSO public aggregates. Age, behavioral traits and all discrete-choice coefficients remain unvalidated priors.",
       "country_code": "TH",
       "currency_code": "THB",
@@ -600,7 +614,7 @@
           "title": "Lazzor Engineering Choice Priors and Behavioral Baseline"
         }
       ],
-      "status": "official_macro_calibrated_choice_prior"
+      "status": "official_macro_population_with_localized_choice_priors"
     },
     "category": {
       "category_key": "PET_WATER_FOUNTAIN",

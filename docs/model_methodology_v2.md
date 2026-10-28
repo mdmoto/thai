@@ -23,7 +23,8 @@ weight is zero.
 
 The default consumer-products profile is
 `data_catalog/thailand_consumer_products_macro_v1.json`. It is marked
-`official_macro_calibrated_choice_prior`.
+`official_macro_population_with_localized_choice_priors` with explicit
+`calibration_scope` distinguishing calibrated macro demographics from behavioral choice priors.
 
 The following dimensions are observed public aggregates:
 

@@ -622,7 +622,7 @@ def build_malaysia_profile(
     profile["country_name"] = "Malaysia"
     profile["currency_code"] = "MYR"
     profile["currency_symbol"] = "RM"
-    profile["status"] = "official_macro_calibrated_choice_prior"
+    profile["status"] = "official_macro_population_with_localized_choice_priors"
     profile["claim"] = (
         "Malaysia adult age, binary sex, state population, state household income, "
         "income percentiles, expenditure and household-size margins are calibrated "

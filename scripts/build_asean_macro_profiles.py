@@ -113,7 +113,7 @@ my_study_models = build_country_study_models("MY")
 
 my_profile = {
     "version": "MY-CONSUMER-MACRO-2026.10.1",
-    "status": "official_macro_calibrated_choice_prior",
+    "status": "official_macro_population_with_localized_choice_priors",
     "calibration_scope": {
         "population_demographics": "official_macro_calibrated",
         "income_tier_distribution": "official_macro_calibrated",
@@ -297,7 +297,7 @@ id_study_models = build_country_study_models("ID")
 
 id_profile = {
     "version": "ID-CONSUMER-MACRO-2026.10.1",
-    "status": "official_macro_calibrated_choice_prior",
+    "status": "official_macro_population_with_transferred_choice_priors",
     "calibration_scope": {
         "population_demographics": "official_macro_calibrated",
         "income_tier_distribution": "official_macro_calibrated",
@@ -494,7 +494,7 @@ vn_study_models = build_country_study_models("VN")
 
 vn_profile = {
     "version": "VN-CONSUMER-MACRO-2026.10.1",
-    "status": "official_macro_calibrated_choice_prior",
+    "status": "official_macro_population_with_transferred_choice_priors",
     "calibration_scope": {
         "population_demographics": "official_macro_calibrated",
         "income_tier_distribution": "official_macro_calibrated",
@@ -671,7 +671,7 @@ ph_study_models = build_country_study_models("PH")
 
 ph_profile = {
     "version": "PH-CONSUMER-MACRO-2026.10.1",
-    "status": "official_macro_calibrated_choice_prior",
+    "status": "official_macro_population_with_transferred_choice_priors",
     "calibration_scope": {
         "population_demographics": "official_macro_calibrated",
         "income_tier_distribution": "official_macro_calibrated",
@@ -832,7 +832,7 @@ sg_study_models = build_country_study_models("SG")
 
 sg_profile = {
     "version": "SG-CONSUMER-MACRO-2026.10.1",
-    "status": "official_macro_calibrated_choice_prior",
+    "status": "official_macro_population_with_transferred_choice_priors",
     "calibration_scope": {
         "population_demographics": "official_macro_calibrated",
         "income_tier_distribution": "official_macro_calibrated",

@@ -1592,6 +1592,10 @@ class StudyService:
             choice_calibration_label = "选择系数已由观测选择拟合但尚未回测"
         elif calibration_status == "platform_category_benchmark_unvalidated":
             choice_calibration_label = "选择系数已采用平台品类基准但尚未回测"
+        elif calibration_status == "official_macro_population_with_localized_choice_priors":
+            choice_calibration_label = "选择系数为本地化专家先验"
+        elif calibration_status == "official_macro_population_with_transferred_choice_priors":
+            choice_calibration_label = "选择系数为跨市场迁移先验"
         else:
             choice_calibration_label = "选择系数仍为先验"
         purchase = metrics["purchase_rate"]
@@ -1682,6 +1686,7 @@ class StudyService:
             "mc_rounds": sim_results["mc_rounds"],
             "generated_at": _utc_now(),
             "calibration_status": calibration_status,
+            "calibration_scope": calibration_lineage.get("calibration_scope", {}),
             "executive_summary": {
                 "recommendation": recommendation,
                 "best_audience": (

@@ -168,7 +168,7 @@ npm run build
 
 ## 🛡️ 方法边界与合规声明
 
-当前消费品档案标记为 `official_macro_calibrated_choice_prior`：
+当前消费品档案标记为官方宏观人口校准先验（泰国/马来西亚为 `official_macro_population_with_localized_choice_priors`，印尼/越南/菲律宾/新加坡为 `official_macro_population_with_transferred_choice_priors`，附带显式 `calibration_scope` 声明）：
 1. 人口、地区、家庭收入/支出与规模数据均来自于带 SHA256 哈希快照的泰国国家统计局（NSO）公开数据。
 2. 选择系数与支付意愿 (WTP) 基于选择效用建模。报告用于**商业方案筛选与风险防范**，不构成对销量的绝对担保。
 3. 大语言模型（LLM）仅生成有权重上限的结构化弱信号；在 API 不可用时权重自动归零，切勿替代真实验证。

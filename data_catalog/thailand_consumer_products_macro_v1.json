@@ -1,6 +1,6 @@
 {
   "version": "TH-CONSUMER-MACRO-2026.07.1",
-  "status": "official_macro_calibrated_choice_prior",
+  "status": "official_macro_population_with_localized_choice_priors",
   "calibration_scope": {
     "population_demographics": "official_macro_calibrated",
     "income_tier_distribution": "official_macro_calibrated",

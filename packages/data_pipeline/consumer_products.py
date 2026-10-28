@@ -404,7 +404,7 @@ def build_consumer_products_profile(
 
     profile["version"] = PROFILE_VERSION
     profile["base_profile_version"] = base_profile.get("version")
-    profile["status"] = "official_macro_calibrated_choice_prior"
+    profile["status"] = "official_macro_population_with_localized_choice_priors"
     profile["claim"] = (
         "Thailand regional population, binary sex margins, household-income "
         "bands, province income, expenditure residual and household size are "

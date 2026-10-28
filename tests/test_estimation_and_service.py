@@ -197,7 +197,7 @@ class StudyServiceTests(unittest.TestCase):
         )
         self.assertEqual(
             report["calibration_status"],
-            "official_macro_calibrated_choice_prior",
+            "official_macro_population_with_localized_choice_priors",
         )
         self.assertTrue(
             any(
