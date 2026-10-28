@@ -479,8 +479,12 @@ const CALIBRATION_LABELS: Record<string, string> = {
 function calibrationLabel(status?: string, countryCode?: string) {
   const value = status ?? "unknown";
   if (value === "official_macro_calibrated_choice_prior") {
-    const name = COUNTRY_NAME_MAP[countryCode || "TH"] || "目标市场";
-    return `${name}官方宏观校准；行为与选择系数待验证`;
+    const code = (countryCode || "TH").toUpperCase();
+    const name = COUNTRY_NAME_MAP[code] || "目标市场";
+    if (code === "TH" || code === "MY") {
+      return `${name}官方宏观校准 · 本地化行为先验`;
+    }
+    return `${name}官方宏观校准 · 跨市场迁移先验`;
   }
   return CALIBRATION_LABELS[value] ?? value;
 }

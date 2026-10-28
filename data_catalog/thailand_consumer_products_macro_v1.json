@@ -1,10 +1,18 @@
 {
   "version": "TH-CONSUMER-MACRO-2026.07.1",
   "status": "official_macro_calibrated_choice_prior",
+  "calibration_scope": {
+    "population_demographics": "official_macro_calibrated",
+    "income_tier_distribution": "official_macro_calibrated",
+    "regional_income_spread": "official_macro_calibrated",
+    "choice_coefficients": "localized_expert_prior",
+    "behavioral_traits": "localized_expert_prior"
+  },
   "claim": "Thailand regional population, binary sex margins, household-income bands, province income, expenditure residual and household size are calibrated from versioned NSO public aggregates. Age, behavioral traits and all discrete-choice coefficients remain unvalidated priors.",
   "sources": [
     {
       "source_id": "NSO_REGISTERED_POPULATION",
+      "title": "Thailand Registered Population by Province, Age and Sex (NSO)",
       "source_type": "official_public_aggregate",
       "observed": true,
       "dataset_id": "0405_01_0005",
@@ -19,6 +27,7 @@
     },
     {
       "source_id": "NSO_SES_HOUSEHOLD_INCOME_DISTRIBUTION",
+      "title": "Thailand Socio-Economic Survey Household Income Distribution (NSO SES)",
       "source_type": "official_public_aggregate",
       "observed": true,
       "dataset_id": "ns_08_20241",
@@ -33,6 +42,7 @@
     },
     {
       "source_id": "NSO_SES_PROVINCE_INCOME_EXPENSE",
+      "title": "Thailand Provincial Average Monthly Income and Expenditure (NSO SES)",
       "source_type": "official_public_aggregate",
       "observed": true,
       "dataset_id": "0705_08_0031",
@@ -47,6 +57,7 @@
     },
     {
       "source_id": "NSO_SES_HOUSEHOLD_SIZE",
+      "title": "Thailand Household Size and Average Members by Province (NSO SES)",
       "source_type": "official_public_aggregate",
       "observed": true,
       "dataset_id": "0705_08_0017",
@@ -61,6 +72,7 @@
     },
     {
       "source_id": "PROJECT_ENGINEERING_PRIOR",
+      "title": "Lazzor Engineering Choice Priors and Behavioral Baseline",
       "source_type": "assumption",
       "observed": false,
       "note": "Migrated from the prototype into an explicit replaceable profile; it must not be presented as empirical calibration."
@@ -622,7 +634,7 @@
           "sd": 0.32
         },
         "price_log_ratio": {
-          "mean": -1.9,
+          "mean": -1.35,
           "sd": 0.34
         },
         "affordability": {

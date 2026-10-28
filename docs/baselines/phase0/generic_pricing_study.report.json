@@ -110,7 +110,7 @@
       "basis": "官方宏观校准人口 + 行业选择模型 + 竞品与不选择选项",
       "grade": "C",
       "limitation": "选择系数尚未由真实订单、选择实验或 A/B 数据拟合。",
-      "result": "6.01%，先验预测区间 3.62%–8.54%",
+      "result": "6.07%，先验预测区间 3.65%–8.66%",
       "topic": "购买 / 到店选择"
     },
     {
@@ -138,22 +138,22 @@
       "basis": "晒单、好评、创作者推广与差评冲击的动态传播先验",
       "grade": "D",
       "limitation": "未接入平台曝光—互动—归因成交前，只用于压力测试。",
-      "result": "期末相对销售指数范围 67.9–117.0（自然传播 = 100）",
+      "result": "期末相对销售指数范围 67.8–117.0（自然传播 = 100）",
       "topic": "传播影响"
     }
   ],
   "executive_summary": {
-    "best_audience": "高收入数字消费人群（模型购买率 7.7%）",
+    "best_audience": "高收入数字消费人群（模型购买率 7.8%）",
     "best_scenario": "首发降价 12%",
     "key_metrics": [
       {
         "ci": [
-          0.036236,
-          0.085396
+          0.036453,
+          0.086596
         ],
         "interval_type": "prior_predictive_p10_p90",
         "label": "总体购买概率",
-        "value": 0.060055
+        "value": 0.060705
       },
       {
         "ci": [
@@ -175,12 +175,12 @@
       },
       {
         "ci": [
-          0.401273,
-          0.404843
+          0.401201,
+          0.404823
         ],
         "interval_type": "prior_predictive_p10_p90",
         "label": "购买后复购倾向",
-        "value": 0.402978
+        "value": 0.402934
       }
     ],
     "main_barrier": "当前基线的主要约束是品牌认知不足；此判断来自选择模型漏斗，不是 LLM 投票。",
@@ -190,7 +190,7 @@
       "优先验证“首发降价 12%”，同时保留基准方案作为对照组。",
       "上线前执行时间外回测，并记录预测误差、数据版本与模型版本。"
     ],
-    "recommendation": "当前宏观人口已校准、选择系数仍为先验的 pricing_mnl_prior_v1 模型中，“首发降价 12%”的相对收入指数最高（111.2）。在接入真实订单、选择实验或 A/B 选择数据并完成回测前，该结果应作为方案筛选依据，而不是销量承诺。"
+    "recommendation": "当前宏观人口已校准、选择系数仍为先验的 pricing_mnl_prior_v1 模型中，“首发降价 12%”的相对收入指数最高（106.6）。在接入真实订单、选择实验或 A/B 选择数据并完成回测前，该结果应作为方案筛选依据，而不是销量承诺。"
   },
   "funnel": [
     {
@@ -219,19 +219,19 @@
     },
     {
       "label": "预计选择购买",
-      "rate": 0.060055,
+      "rate": 0.060705,
       "stage": "purchased",
       "value": 6
     },
     {
       "label": "购买后预计复购",
-      "rate": 0.024201,
+      "rate": 0.02446,
       "stage": "repeated",
       "value": 2
     },
     {
       "label": "购买后预计推荐",
-      "rate": 0.014543,
+      "rate": 0.014701,
       "stage": "referred",
       "value": 1
     }
@@ -241,25 +241,25 @@
   "implied_wtp": [
     {
       "attribute": "quality_score",
-      "implied_wtp_thb": 21.18,
+      "implied_wtp_thb": 30.06,
       "score_increase": 0.1,
       "status": "prior_implied_not_empirically_estimated"
     },
     {
       "attribute": "review_score",
-      "implied_wtp_thb": 12.75,
+      "implied_wtp_thb": 18.04,
       "score_increase": 0.1,
       "status": "prior_implied_not_empirically_estimated"
     },
     {
       "attribute": "convenience_score",
-      "implied_wtp_thb": 7.5,
+      "implied_wtp_thb": 10.59,
       "score_increase": 0.1,
       "status": "prior_implied_not_empirically_estimated"
     },
     {
       "attribute": "localization_score",
-      "implied_wtp_thb": 9.71,
+      "implied_wtp_thb": 13.73,
       "score_increase": 0.1,
       "status": "prior_implied_not_empirically_estimated"
     }
@@ -272,31 +272,31 @@
   "market_dynamics": [
     {
       "awareness_rate": 0.1238,
-      "cumulative_adoption_rate": 0.06005,
-      "new_adoption_rate": 0.06005,
+      "cumulative_adoption_rate": 0.06071,
+      "new_adoption_rate": 0.06071,
       "period": 0,
-      "repeat_rate": 0.40298
+      "repeat_rate": 0.40293
     },
     {
-      "awareness_rate": 0.15267,
-      "cumulative_adoption_rate": 0.076,
-      "new_adoption_rate": 0.01594,
+      "awareness_rate": 0.15275,
+      "cumulative_adoption_rate": 0.07686,
+      "new_adoption_rate": 0.01615,
       "period": 1,
-      "repeat_rate": 0.40298
+      "repeat_rate": 0.40293
     },
     {
-      "awareness_rate": 0.18238,
-      "cumulative_adoption_rate": 0.09286,
-      "new_adoption_rate": 0.01686,
+      "awareness_rate": 0.18255,
+      "cumulative_adoption_rate": 0.09395,
+      "new_adoption_rate": 0.01709,
       "period": 2,
-      "repeat_rate": 0.40298
+      "repeat_rate": 0.40293
     },
     {
-      "awareness_rate": 0.21288,
-      "cumulative_adoption_rate": 0.11064,
-      "new_adoption_rate": 0.01779,
+      "awareness_rate": 0.21316,
+      "cumulative_adoption_rate": 0.11198,
+      "new_adoption_rate": 0.01803,
       "period": 3,
-      "repeat_rate": 0.40298
+      "repeat_rate": 0.40293
     }
   ],
   "market_research": {
@@ -436,13 +436,13 @@
       "standard_deviation": 0.0
     },
     "checkout_readiness_rate": {
-      "mean": 0.0596,
-      "median": 0.057115,
-      "p10": 0.036236,
-      "p25": 0.046015,
-      "p75": 0.072088,
-      "p90": 0.085075,
-      "standard_deviation": 0.018658
+      "mean": 0.060163,
+      "median": 0.057629,
+      "p10": 0.036453,
+      "p25": 0.046361,
+      "p75": 0.072989,
+      "p90": 0.086203,
+      "standard_deviation": 0.018906
     },
     "comparison_rate": {
       "mean": 0.077871,
@@ -472,31 +472,31 @@
       "standard_deviation": 0.021112
     },
     "purchase_rate": {
-      "mean": 0.060055,
-      "median": 0.057115,
-      "p10": 0.036236,
-      "p25": 0.046015,
-      "p75": 0.072108,
-      "p90": 0.085396,
-      "standard_deviation": 0.01964
+      "mean": 0.060705,
+      "median": 0.057629,
+      "p10": 0.036453,
+      "p25": 0.046361,
+      "p75": 0.073012,
+      "p90": 0.086596,
+      "standard_deviation": 0.020073
     },
     "referral_rate": {
-      "mean": 0.242159,
-      "median": 0.242207,
-      "p10": 0.241743,
-      "p25": 0.242056,
-      "p75": 0.242364,
-      "p90": 0.242495,
-      "standard_deviation": 0.000317
+      "mean": 0.242167,
+      "median": 0.242217,
+      "p10": 0.24175,
+      "p25": 0.242063,
+      "p75": 0.242375,
+      "p90": 0.242505,
+      "standard_deviation": 0.000318
     },
     "repeat_rate": {
-      "mean": 0.402978,
-      "median": 0.403043,
-      "p10": 0.401273,
-      "p25": 0.401806,
-      "p75": 0.403996,
-      "p90": 0.404843,
-      "standard_deviation": 0.001488
+      "mean": 0.402934,
+      "median": 0.403006,
+      "p10": 0.401201,
+      "p25": 0.401742,
+      "p75": 0.403973,
+      "p90": 0.404823,
+      "standard_deviation": 0.001513
     },
     "trust_rate": {
       "mean": 0.077871,
@@ -544,7 +544,8 @@
           "sha256": "655d596dfd9bb4a1f78baf25a4c7c62a8c42f5f3d9a5de9ea86ac9200283acf1",
           "snapshot_path": "data_catalog/raw/nso/2026-07-24/OS_0405_01_0005_01.json.gz",
           "source_id": "NSO_REGISTERED_POPULATION",
-          "source_type": "official_public_aggregate"
+          "source_type": "official_public_aggregate",
+          "title": "Thailand Registered Population by Province, Age and Sex (NSO)"
         },
         {
           "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_41_03&format=json",
@@ -558,7 +559,8 @@
           "sha256": "4928161da72d549f72d68cbc14a867b3e4ea88104c4b9479c9bd5499f99f1f96",
           "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_41_03.json.gz",
           "source_id": "NSO_SES_HOUSEHOLD_INCOME_DISTRIBUTION",
-          "source_type": "official_public_aggregate"
+          "source_type": "official_public_aggregate",
+          "title": "Thailand Socio-Economic Survey Household Income Distribution (NSO SES)"
         },
         {
           "api_url": "https://catalogapi.nso.go.th/api/index?table=SFD_SPB0801&format=json",
@@ -572,7 +574,8 @@
           "sha256": "883be00883b73d0b5f65127e54a5abf5a0144741e3fc6bd09524522a98e67f87",
           "snapshot_path": "data_catalog/raw/nso/2026-07-24/SFD_SPB0801.json.gz",
           "source_id": "NSO_SES_PROVINCE_INCOME_EXPENSE",
-          "source_type": "official_public_aggregate"
+          "source_type": "official_public_aggregate",
+          "title": "Thailand Provincial Average Monthly Income and Expenditure (NSO SES)"
         },
         {
           "api_url": "https://catalogapi.nso.go.th/api/index?table=SES_0705_08_0049_01&format=json",
@@ -586,13 +589,15 @@
           "sha256": "f193d50a66fefa280c0780298189256ba36f0127c86e67609a8f028bc753d0ad",
           "snapshot_path": "data_catalog/raw/nso/2026-07-24/SES_0705_08_0049_01.json.gz",
           "source_id": "NSO_SES_HOUSEHOLD_SIZE",
-          "source_type": "official_public_aggregate"
+          "source_type": "official_public_aggregate",
+          "title": "Thailand Household Size and Average Members by Province (NSO SES)"
         },
         {
           "note": "Migrated from the prototype into an explicit replaceable profile; it must not be presented as empirical calibration.",
           "observed": false,
           "source_id": "PROJECT_ENGINEERING_PRIOR",
-          "source_type": "assumption"
+          "source_type": "assumption",
+          "title": "Lazzor Engineering Choice Priors and Behavioral Baseline"
         }
       ],
       "status": "official_macro_calibrated_choice_prior"
@@ -651,7 +656,7 @@
         "source": "calibration_profile_prior"
       },
       "price_log_ratio": {
-        "mean": -1.9,
+        "mean": -1.35,
         "sd": 0.34,
         "source": "calibration_profile_prior"
       },
@@ -779,61 +784,61 @@
     {
       "price": 349.3,
       "price_ratio": 0.7,
-      "purchase_p10": 0.05968,
-      "purchase_p90": 0.135705,
-      "purchase_rate": 0.095052,
-      "revenue_idx": 110.79
+      "purchase_p10": 0.053043,
+      "purchase_p90": 0.122647,
+      "purchase_rate": 0.085361,
+      "revenue_idx": 98.43
     },
     {
       "price": 499.0,
       "price_ratio": 1.0,
-      "purchase_p10": 0.036236,
-      "purchase_p90": 0.085396,
-      "purchase_rate": 0.060055,
+      "purchase_p10": 0.036453,
+      "purchase_p90": 0.086596,
+      "purchase_rate": 0.060705,
       "revenue_idx": 100.0
     },
     {
       "price": 648.7,
       "price_ratio": 1.3,
-      "purchase_p10": 0.024614,
-      "purchase_p90": 0.062072,
-      "purchase_rate": 0.043158,
-      "revenue_idx": 93.42
+      "purchase_p10": 0.027044,
+      "purchase_p90": 0.068603,
+      "purchase_rate": 0.047605,
+      "revenue_idx": 101.95
     }
   ],
   "regional_breakdown": [
     {
-      "purchase_rate": 0.0664,
+      "purchase_rate": 0.067,
       "readiness": "中",
       "region": "Bangkok Metro",
       "share": "21.0%"
     },
     {
-      "purchase_rate": 0.0616,
+      "purchase_rate": 0.0623,
       "readiness": "中",
       "region": "South",
       "share": "13.0%"
     },
     {
-      "purchase_rate": 0.0601,
+      "purchase_rate": 0.0608,
       "readiness": "中",
       "region": "North",
       "share": "19.0%"
     },
     {
-      "purchase_rate": 0.057,
+      "purchase_rate": 0.0576,
       "readiness": "中",
       "region": "Northeast",
       "share": "28.0%"
     },
     {
-      "purchase_rate": 0.0569,
+      "purchase_rate": 0.0575,
       "readiness": "中",
       "region": "Central",
       "share": "16.0%"
     },
     {
-      "purchase_rate": 0.0542,
+      "purchase_rate": 0.0548,
       "readiness": "中",
       "region": "East / EEC",
       "share": "3.0%"
@@ -2224,20 +2229,20 @@
       "margin_idx": 100.0,
       "name": "基准方案",
       "price": 499.0,
-      "purchase_p10": 0.036236,
-      "purchase_p90": 0.085396,
-      "purchase_rate": 0.060055,
+      "purchase_p10": 0.036453,
+      "purchase_p90": 0.086596,
+      "purchase_rate": 0.060705,
       "revenue_idx": 100.0,
       "scenario_id": "baseline"
     },
     {
-      "margin_idx": 96.08,
+      "margin_idx": 92.07,
       "name": "首发降价 12%",
       "price": 439.12,
-      "purchase_p10": 0.046841,
-      "purchase_p90": 0.106202,
-      "purchase_rate": 0.075921,
-      "revenue_idx": 111.25,
+      "purchase_p10": 0.045095,
+      "purchase_p90": 0.103267,
+      "purchase_rate": 0.073542,
+      "revenue_idx": 106.61,
       "scenario_id": "value_launch"
     }
   ],
@@ -2257,7 +2262,7 @@
       "population": 11,
       "preferred_channel": "Lazada / 品牌旗舰店",
       "price_sensitivity": 0.34,
-      "purchase_rate": 0.0772,
+      "purchase_rate": 0.0777,
       "segment_id": "AFFLUENT_DIGITAL",
       "size": 0.11
     },
@@ -2276,7 +2281,7 @@
       "population": 3,
       "preferred_channel": "TikTok Shop / 社交电商",
       "price_sensitivity": 0.589,
-      "purchase_rate": 0.0703,
+      "purchase_rate": 0.0711,
       "segment_id": "TREND_EXPLORER",
       "size": 0.03
     },
@@ -2296,7 +2301,7 @@
       "population": 2,
       "preferred_channel": "TikTok Shop / Facebook 内容",
       "price_sensitivity": 0.727,
-      "purchase_rate": 0.0618,
+      "purchase_rate": 0.0626,
       "segment_id": "SOCIAL_COMMERCE",
       "size": 0.02
     },
@@ -2315,7 +2320,7 @@
       "population": 34,
       "preferred_channel": "Shopee / Lazada",
       "price_sensitivity": 0.624,
-      "purchase_rate": 0.0612,
+      "purchase_rate": 0.0618,
       "segment_id": "MAINSTREAM",
       "size": 0.34
     },
@@ -2335,7 +2340,7 @@
       "population": 13,
       "preferred_channel": "品牌官网 / Lazada 官方店",
       "price_sensitivity": 0.807,
-      "purchase_rate": 0.058,
+      "purchase_rate": 0.0588,
       "segment_id": "EVIDENCE_SEEKER",
       "size": 0.13
     },
@@ -2354,7 +2359,7 @@
       "population": 4,
       "preferred_channel": "线下零售 / 门店",
       "price_sensitivity": 0.38,
-      "purchase_rate": 0.057,
+      "purchase_rate": 0.0574,
       "segment_id": "LOCAL_TRUST_OFFLINE",
       "size": 0.04
     },
@@ -2373,7 +2378,7 @@
       "population": 33,
       "preferred_channel": "Shopee Thailand",
       "price_sensitivity": 0.824,
-      "purchase_rate": 0.0533,
+      "purchase_rate": 0.054,
       "segment_id": "VALUE_SEEKER",
       "size": 0.33
     }
@@ -2382,7 +2387,7 @@
   "social_dynamics": [
     {
       "awareness_rate": 0.123802,
-      "cumulative_adoption_rate": 0.060055,
+      "cumulative_adoption_rate": 0.060705,
       "name": "自然传播基准",
       "period": 0,
       "relative_sales_index": 100.0,
@@ -2391,8 +2396,8 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.152674,
-      "cumulative_adoption_rate": 0.075997,
+      "awareness_rate": 0.152749,
+      "cumulative_adoption_rate": 0.076856,
       "name": "自然传播基准",
       "period": 1,
       "relative_sales_index": 100.0,
@@ -2401,8 +2406,8 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.182383,
-      "cumulative_adoption_rate": 0.092858,
+      "awareness_rate": 0.182552,
+      "cumulative_adoption_rate": 0.093947,
       "name": "自然传播基准",
       "period": 2,
       "relative_sales_index": 100.0,
@@ -2411,8 +2416,8 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.212876,
-      "cumulative_adoption_rate": 0.110643,
+      "awareness_rate": 0.213156,
+      "cumulative_adoption_rate": 0.111982,
       "name": "自然传播基准",
       "period": 3,
       "relative_sales_index": 100.0,
@@ -2422,7 +2427,7 @@
     },
     {
       "awareness_rate": 0.138658,
-      "cumulative_adoption_rate": 0.063658,
+      "cumulative_adoption_rate": 0.064347,
       "name": "客户晒单扩散",
       "period": 0,
       "relative_sales_index": 106.0,
@@ -2431,38 +2436,38 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.172577,
-      "cumulative_adoption_rate": 0.083274,
+      "awareness_rate": 0.172683,
+      "cumulative_adoption_rate": 0.08423,
       "name": "客户晒单扩散",
       "period": 1,
-      "relative_sales_index": 109.58,
+      "relative_sales_index": 109.59,
       "scenario_id": "ugc_showcase",
       "sentiment_balance": 0.28,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.20806,
-      "cumulative_adoption_rate": 0.104365,
+      "awareness_rate": 0.208303,
+      "cumulative_adoption_rate": 0.105623,
       "name": "客户晒单扩散",
       "period": 2,
-      "relative_sales_index": 112.39,
+      "relative_sales_index": 112.43,
       "scenario_id": "ugc_showcase",
       "sentiment_balance": 0.28,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.245008,
-      "cumulative_adoption_rate": 0.12693,
+      "awareness_rate": 0.245417,
+      "cumulative_adoption_rate": 0.128522,
       "name": "客户晒单扩散",
       "period": 3,
-      "relative_sales_index": 114.72,
+      "relative_sales_index": 114.77,
       "scenario_id": "ugc_showcase",
       "sentiment_balance": 0.28,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
       "awareness_rate": 0.129992,
-      "cumulative_adoption_rate": 0.066061,
+      "cumulative_adoption_rate": 0.066776,
       "name": "持续好评累积",
       "period": 0,
       "relative_sales_index": 110.0,
@@ -2471,38 +2476,38 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.162342,
-      "cumulative_adoption_rate": 0.085665,
+      "awareness_rate": 0.162445,
+      "cumulative_adoption_rate": 0.086647,
       "name": "持续好评累积",
       "period": 1,
-      "relative_sales_index": 112.72,
+      "relative_sales_index": 112.74,
       "scenario_id": "positive_reviews",
       "sentiment_balance": 0.42,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.196206,
-      "cumulative_adoption_rate": 0.106773,
+      "awareness_rate": 0.196441,
+      "cumulative_adoption_rate": 0.108057,
       "name": "持续好评累积",
       "period": 2,
-      "relative_sales_index": 114.99,
+      "relative_sales_index": 115.02,
       "scenario_id": "positive_reviews",
       "sentiment_balance": 0.42,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.23151,
-      "cumulative_adoption_rate": 0.129397,
+      "awareness_rate": 0.231905,
+      "cumulative_adoption_rate": 0.131016,
       "name": "持续好评累积",
       "period": 3,
-      "relative_sales_index": 116.95,
+      "relative_sales_index": 117.0,
       "scenario_id": "positive_reviews",
       "sentiment_balance": 0.42,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
       "awareness_rate": 0.167133,
-      "cumulative_adoption_rate": 0.061857,
+      "cumulative_adoption_rate": 0.062526,
       "name": "Facebook / Instagram 创作者推广",
       "period": 0,
       "relative_sales_index": 103.0,
@@ -2511,8 +2516,8 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.203291,
-      "cumulative_adoption_rate": 0.081977,
+      "awareness_rate": 0.203378,
+      "cumulative_adoption_rate": 0.082908,
       "name": "Facebook / Instagram 创作者推广",
       "period": 1,
       "relative_sales_index": 107.87,
@@ -2521,28 +2526,28 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.240384,
-      "cumulative_adoption_rate": 0.103232,
+      "awareness_rate": 0.240583,
+      "cumulative_adoption_rate": 0.104451,
       "name": "Facebook / Instagram 创作者推广",
       "period": 2,
-      "relative_sales_index": 111.17,
+      "relative_sales_index": 111.18,
       "scenario_id": "creator_campaign",
       "sentiment_balance": 0.18,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.278272,
-      "cumulative_adoption_rate": 0.12559,
+      "awareness_rate": 0.278606,
+      "cumulative_adoption_rate": 0.127122,
       "name": "Facebook / Instagram 创作者推广",
       "period": 3,
-      "relative_sales_index": 113.51,
+      "relative_sales_index": 113.52,
       "scenario_id": "creator_campaign",
       "sentiment_balance": 0.18,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
       "awareness_rate": 0.133706,
-      "cumulative_adoption_rate": 0.04324,
+      "cumulative_adoption_rate": 0.043708,
       "name": "集中差评冲击",
       "period": 0,
       "relative_sales_index": 72.0,
@@ -2551,31 +2556,31 @@
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.160568,
-      "cumulative_adoption_rate": 0.053625,
+      "awareness_rate": 0.160605,
+      "cumulative_adoption_rate": 0.054219,
       "name": "集中差评冲击",
       "period": 1,
-      "relative_sales_index": 70.56,
+      "relative_sales_index": 70.55,
       "scenario_id": "negative_review_shock",
       "sentiment_balance": -0.55,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.187404,
-      "cumulative_adoption_rate": 0.064243,
+      "awareness_rate": 0.187487,
+      "cumulative_adoption_rate": 0.064967,
       "name": "集中差评冲击",
       "period": 2,
-      "relative_sales_index": 69.18,
+      "relative_sales_index": 69.15,
       "scenario_id": "negative_review_shock",
       "sentiment_balance": -0.55,
       "status": "uncalibrated_social_propagation_prior"
     },
     {
-      "awareness_rate": 0.214183,
-      "cumulative_adoption_rate": 0.075087,
+      "awareness_rate": 0.214317,
+      "cumulative_adoption_rate": 0.075947,
       "name": "集中差评冲击",
       "period": 3,
-      "relative_sales_index": 67.86,
+      "relative_sales_index": 67.82,
       "scenario_id": "negative_review_shock",
       "sentiment_balance": -0.55,
       "status": "uncalibrated_social_propagation_prior"

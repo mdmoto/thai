@@ -24,7 +24,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/pet_water_product_validation.report.json",
-      "report_sha256": "2367e820e90173d7cfeed0e2f356da97887cd5294649c55c8a71ada2ae215240",
+      "report_sha256": "606cbaff61d47df85baa2323c33f05ac91563f76f305758d9b30855879ba7fb2",
       "seed": 42
     },
     {
@@ -48,14 +48,14 @@
       },
       "key_metrics": {
         "best_scenario": "首发降价 12%",
-        "purchase_p10": 0.036236,
-        "purchase_p90": 0.085396,
-        "purchase_rate": 0.060055
+        "purchase_p10": 0.036453,
+        "purchase_p90": 0.086596,
+        "purchase_rate": 0.060705
       },
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/generic_pricing_study.report.json",
-      "report_sha256": "683f00930ccc87214c9412e5330c1cab2a18cef85d8cbc1810ca6a65d1b519a3",
+      "report_sha256": "593dbc7582945701a418f2c32fc14e41d178ca025ae6272e4a860f516b875e3a",
       "seed": 42
     },
     {
@@ -84,7 +84,7 @@
       "mc_rounds": 40,
       "population_size": 100,
       "report_path": "docs/baselines/phase0/nimman_cafe_venue.report.json",
-      "report_sha256": "0e39a83d23cc6f60f012db481a1332b6c7baf80684a6d8e0795406b1ef3c7170",
+      "report_sha256": "b90f4cb7a06ff054700655570d95e31d0c7a09ec0438683930871c30f8755ea7",
       "seed": 42
     }
   ],

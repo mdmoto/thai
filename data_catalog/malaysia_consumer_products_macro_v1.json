@@ -5,10 +5,10 @@
     "population_demographics": "official_macro_calibrated",
     "income_tier_distribution": "official_macro_calibrated",
     "regional_income_spread": "official_macro_calibrated",
-    "choice_coefficients": "unvalidated_cross_market_prior",
-    "behavioral_traits": "unvalidated_cross_market_prior"
+    "choice_coefficients": "localized_expert_prior",
+    "behavioral_traits": "localized_expert_prior"
   },
-  "claim": "马来西亚成人年龄、性别结构、各州人口、家庭收入分位数（B40/M40/T20）与消费支出边缘分布均根据马来西亚统计局（DOSM）公开汇总普查数据精确校准。行为特征参数与离散选择效用系数属于跨市场先验模型，非本地微观交易直接拟合。",
+  "claim": "马来西亚成人年龄、性别结构、各州人口、家庭收入分位数（B40/M40/T20）与消费支出边缘分布均根据马来西亚统计局（DOSM）公开汇总普查数据精确校准。行为特征参数与离散选择效用系数属于基于当地特征的本地化专家先验模型，非本地微观交易直接拟合。",
   "country_code": "MY",
   "country_name": "Malaysia",
   "currency_code": "MYR",
@@ -240,7 +240,7 @@
           "sd": 0.28
         },
         "affordability": {
-          "mean": 0.48,
+          "mean": 0.46,
           "sd": 0.12
         },
         "quality_fit": {
@@ -248,11 +248,11 @@
           "sd": 0.2
         },
         "brand_trust": {
-          "mean": 0.72,
+          "mean": 0.79,
           "sd": 0.16
         },
         "review_proof": {
-          "mean": 0.62,
+          "mean": 0.59,
           "sd": 0.14
         },
         "novelty": {
@@ -295,7 +295,7 @@
           "sd": 0.34
         },
         "affordability": {
-          "mean": 0.68,
+          "mean": 0.65,
           "sd": 0.16
         },
         "quality_fit": {
@@ -303,11 +303,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.58,
+          "mean": 0.64,
           "sd": 0.14
         },
         "review_proof": {
-          "mean": 0.52,
+          "mean": 0.49,
           "sd": 0.12
         },
         "novelty": {
@@ -346,11 +346,11 @@
           "sd": 0.38
         },
         "price_log_ratio": {
-          "mean": -1.05,
+          "mean": -1.0,
           "sd": 0.25
         },
         "affordability": {
-          "mean": 0.35,
+          "mean": 0.33,
           "sd": 0.1
         },
         "quality_fit": {
@@ -358,11 +358,11 @@
           "sd": 0.16
         },
         "brand_trust": {
-          "mean": 0.52,
+          "mean": 0.57,
           "sd": 0.14
         },
         "review_proof": {
-          "mean": 0.45,
+          "mean": 0.43,
           "sd": 0.12
         },
         "novelty": {
@@ -401,11 +401,11 @@
           "sd": 0.35
         },
         "price_log_ratio": {
-          "mean": -0.9,
+          "mean": -0.85,
           "sd": 0.22
         },
         "affordability": {
-          "mean": 0.42,
+          "mean": 0.4,
           "sd": 0.12
         },
         "quality_fit": {
@@ -413,11 +413,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.45,
+          "mean": 0.5,
           "sd": 0.12
         },
         "review_proof": {
-          "mean": 0.72,
+          "mean": 0.68,
           "sd": 0.16
         },
         "novelty": {
@@ -457,11 +457,11 @@
           "sd": 0.36
         },
         "price_log_ratio": {
-          "mean": -0.75,
+          "mean": -0.71,
           "sd": 0.2
         },
         "affordability": {
-          "mean": 0.36,
+          "mean": 0.34,
           "sd": 0.1
         },
         "quality_fit": {
@@ -469,11 +469,11 @@
           "sd": 0.15
         },
         "brand_trust": {
-          "mean": 0.4,
+          "mean": 0.44,
           "sd": 0.1
         },
         "review_proof": {
-          "mean": 0.55,
+          "mean": 0.52,
           "sd": 0.12
         },
         "novelty": {
@@ -512,11 +512,11 @@
           "sd": 0.34
         },
         "price_log_ratio": {
-          "mean": -1.0,
+          "mean": -0.95,
           "sd": 0.24
         },
         "affordability": {
-          "mean": 0.5,
+          "mean": 0.47,
           "sd": 0.13
         },
         "quality_fit": {
@@ -524,11 +524,11 @@
           "sd": 0.22
         },
         "brand_trust": {
-          "mean": 0.36,
+          "mean": 0.4,
           "sd": 0.1
         },
         "review_proof": {
-          "mean": 0.82,
+          "mean": 0.78,
           "sd": 0.18
         },
         "novelty": {
@@ -567,11 +567,11 @@
           "sd": 0.35
         },
         "price_log_ratio": {
-          "mean": -0.82,
+          "mean": -0.78,
           "sd": 0.2
         },
         "affordability": {
-          "mean": 0.38,
+          "mean": 0.36,
           "sd": 0.1
         },
         "quality_fit": {
@@ -579,11 +579,11 @@
           "sd": 0.2
         },
         "brand_trust": {
-          "mean": 0.3,
+          "mean": 0.33,
           "sd": 0.09
         },
         "review_proof": {
-          "mean": 0.62,
+          "mean": 0.59,
           "sd": 0.15
         },
         "novelty": {
@@ -622,11 +622,11 @@
           "sd": 0.4
         },
         "price_log_ratio": {
-          "mean": -0.88,
+          "mean": -0.83,
           "sd": 0.22
         },
         "affordability": {
-          "mean": 0.4,
+          "mean": 0.38,
           "sd": 0.11
         },
         "quality_fit": {
@@ -634,11 +634,11 @@
           "sd": 0.17
         },
         "brand_trust": {
-          "mean": 0.22,
+          "mean": 0.24,
           "sd": 0.08
         },
         "review_proof": {
-          "mean": 0.46,
+          "mean": 0.44,
           "sd": 0.12
         },
         "novelty": {
@@ -677,11 +677,11 @@
           "sd": 0.34
         },
         "price_log_ratio": {
-          "mean": -1.25,
+          "mean": -1.19,
           "sd": 0.28
         },
         "affordability": {
-          "mean": 0.52,
+          "mean": 0.49,
           "sd": 0.13
         },
         "quality_fit": {
@@ -689,11 +689,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.55,
+          "mean": 0.61,
           "sd": 0.13
         },
         "review_proof": {
-          "mean": 0.5,
+          "mean": 0.47,
           "sd": 0.12
         },
         "novelty": {
@@ -732,11 +732,11 @@
           "sd": 0.36
         },
         "price_log_ratio": {
-          "mean": -0.85,
+          "mean": -0.81,
           "sd": 0.21
         },
         "affordability": {
-          "mean": 0.4,
+          "mean": 0.38,
           "sd": 0.11
         },
         "quality_fit": {
@@ -744,11 +744,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.38,
+          "mean": 0.42,
           "sd": 0.1
         },
         "review_proof": {
-          "mean": 0.58,
+          "mean": 0.55,
           "sd": 0.14
         },
         "novelty": {

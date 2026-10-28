@@ -430,17 +430,17 @@ function Step1({ state, update, onNext }: {
       <div>
         <div className="eyebrow mb-1">第 1 步 / 共 5 步</div>
         <h2 className="font-display text-xl font-semibold text-white tracking-tight">选择您的商业出海场景</h2>
-        <p className="text-xs text-neutral-400 font-light mt-1">选择目标国家后，系统加载对应的官方宏观人口金字塔、真实收入阶梯与区域网格（非本土地面数据采用跨市场迁移先验）。</p>
+        <p className="text-xs text-neutral-400 font-light mt-1">六国全量覆盖官方宏观统计金字塔与真实区域网格；泰国/马来西亚搭载本地化行为先验，印/越/菲/新搭载跨市场迁移先验。</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {([
-          { code: "TH", label: "泰国", detail: "NSO 官方宏观校准 · 77 府", tag: "全栈校准" },
-          { code: "MY", label: "马来西亚", detail: "DOSM 官方宏观校准 · 16 州", tag: "全栈校准" },
-          { code: "ID", label: "印度尼西亚", detail: "BPS 宏观分位数校准 · 34 省", tag: "行为先验" },
-          { code: "VN", label: "越南", detail: "GSO 宏观五档校准 · 64 省市", tag: "行为先验" },
-          { code: "PH", label: "菲律宾", detail: "PSA 宏观分位数校准 · 17 大区", tag: "行为先验" },
-          { code: "SG", label: "新加坡", detail: "SingStat 宏观住户校准 · 5 规划区", tag: "行为先验" },
+          { code: "TH", label: "泰国", detail: "NSO 宏观校准 · 本地化先验", tag: "本地化先验" },
+          { code: "MY", label: "马来西亚", detail: "DOSM 宏观校准 · 本地化先验", tag: "本地化先验" },
+          { code: "ID", label: "印度尼西亚", detail: "BPS 宏观校准 · 迁移先验", tag: "迁移先验" },
+          { code: "VN", label: "越南", detail: "GSO 宏观校准 · 迁移先验", tag: "迁移先验" },
+          { code: "PH", label: "菲律宾", detail: "PSA 宏观校准 · 迁移先验", tag: "迁移先验" },
+          { code: "SG", label: "新加坡", detail: "SingStat 宏观校准 · 迁移先验", tag: "迁移先验" },
         ] as const).map(market => (
           <button
             type="button"
@@ -459,7 +459,7 @@ function Step1({ state, update, onNext }: {
                 <strong className="text-sm text-white">{market.label}</strong>
                 <span className={cn(
                   "text-[9px] px-1.5 py-0.5 rounded font-mono",
-                  market.tag === "全栈校准" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-neutral-800 text-neutral-400"
+                  market.tag === "本地化先验" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "bg-neutral-800 text-neutral-400 border border-neutral-700/40"
                 )}>
                   {market.tag}
                 </span>

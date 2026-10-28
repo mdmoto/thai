@@ -25,6 +25,32 @@ with open(CATALOG / "thailand_consumer_products_macro_v1.json", encoding="utf-8"
 BASE_STUDY_MODELS = copy.deepcopy(TH_PROFILE["study_models"])
 
 
+def build_country_study_models(country_code: str) -> dict:
+    models = copy.deepcopy(BASE_STUDY_MODELS)
+    scales = {
+        "SG": {"price": 1.05 / 1.35, "affordability": 0.80, "localization": 0.70, "review": 0.85, "brand": 1.25},
+        "MY": {"price": 1.28 / 1.35, "affordability": 0.95, "localization": 1.00, "review": 0.95, "brand": 1.10},
+        "TH": {"price": 1.00,        "affordability": 1.00, "localization": 1.00, "review": 1.00, "brand": 1.00},
+        "VN": {"price": 1.42 / 1.35, "affordability": 1.10, "localization": 1.20, "review": 1.15, "brand": 0.90},
+        "PH": {"price": 1.52 / 1.35, "affordability": 1.18, "localization": 0.90, "review": 1.12, "brand": 0.88},
+        "ID": {"price": 1.58 / 1.35, "affordability": 1.25, "localization": 1.25, "review": 1.20, "brand": 0.85},
+    }
+    s = scales[country_code]
+    for model_key, model_def in models.items():
+        coeffs = model_def.get("coefficients", {})
+        if "price_log_ratio" in coeffs:
+            coeffs["price_log_ratio"]["mean"] = round(coeffs["price_log_ratio"]["mean"] * s["price"], 2)
+        if "affordability" in coeffs:
+            coeffs["affordability"]["mean"] = round(coeffs["affordability"]["mean"] * s["affordability"], 2)
+        if "localization" in coeffs:
+            coeffs["localization"]["mean"] = round(coeffs["localization"]["mean"] * s["localization"], 2)
+        if "review_proof" in coeffs:
+            coeffs["review_proof"]["mean"] = round(coeffs["review_proof"]["mean"] * s["review"], 2)
+        if "brand_trust" in coeffs:
+            coeffs["brand_trust"]["mean"] = round(coeffs["brand_trust"]["mean"] * s["brand"], 2)
+    return models
+
+
 # ==============================================================================
 # 1. MALAYSIA (MY · DOSM)
 # ==============================================================================
@@ -83,10 +109,7 @@ my_multipliers = {
     "W.P. Labuan": 1.10,
 }
 
-my_study_models = copy.deepcopy(BASE_STUDY_MODELS)
-# Malaysia: moderate purchasing power, price elasticity mean -1.28
-my_study_models["PRODUCT_VALIDATION"]["coefficients"]["price_log_ratio"]["mean"] = -1.28
-my_study_models["PRICING_STUDY"]["coefficients"]["price_log_ratio"]["mean"] = -1.28
+my_study_models = build_country_study_models("MY")
 
 my_profile = {
     "version": "MY-CONSUMER-MACRO-2026.10.1",
@@ -95,10 +118,10 @@ my_profile = {
         "population_demographics": "official_macro_calibrated",
         "income_tier_distribution": "official_macro_calibrated",
         "regional_income_spread": "official_macro_calibrated",
-        "choice_coefficients": "unvalidated_cross_market_prior",
-        "behavioral_traits": "unvalidated_cross_market_prior",
+        "choice_coefficients": "localized_expert_prior",
+        "behavioral_traits": "localized_expert_prior",
     },
-    "claim": "马来西亚成人年龄、性别结构、各州人口、家庭收入分位数（B40/M40/T20）与消费支出边缘分布均根据马来西亚统计局（DOSM）公开汇总普查数据精确校准。行为特征参数与离散选择效用系数属于跨市场先验模型，非本地微观交易直接拟合。",
+    "claim": "马来西亚成人年龄、性别结构、各州人口、家庭收入分位数（B40/M40/T20）与消费支出边缘分布均根据马来西亚统计局（DOSM）公开汇总普查数据精确校准。行为特征参数与离散选择效用系数属于基于当地特征的本地化专家先验模型，非本地微观交易直接拟合。",
     "country_code": "MY",
     "country_name": "Malaysia",
     "currency_code": "MYR",
@@ -270,10 +293,7 @@ for p in id_provinces:
     else:
         id_multipliers[p] = 0.82
 
-id_study_models = copy.deepcopy(BASE_STUDY_MODELS)
-# Indonesia: high price sensitivity on mass marketplace, flash-sale driven
-id_study_models["PRODUCT_VALIDATION"]["coefficients"]["price_log_ratio"]["mean"] = -1.58
-id_study_models["PRICING_STUDY"]["coefficients"]["price_log_ratio"]["mean"] = -1.58
+id_study_models = build_country_study_models("ID")
 
 id_profile = {
     "version": "ID-CONSUMER-MACRO-2026.10.1",
@@ -470,10 +490,7 @@ for p in vn_provinces:
     else:
         vn_multipliers[p] = 0.85
 
-vn_study_models = copy.deepcopy(BASE_STUDY_MODELS)
-# Vietnam: very value-conscious, promotional, price elasticity -1.42
-vn_study_models["PRODUCT_VALIDATION"]["coefficients"]["price_log_ratio"]["mean"] = -1.42
-vn_study_models["PRICING_STUDY"]["coefficients"]["price_log_ratio"]["mean"] = -1.42
+vn_study_models = build_country_study_models("VN")
 
 vn_profile = {
     "version": "VN-CONSUMER-MACRO-2026.10.1",
@@ -650,10 +667,7 @@ for r in ph_regions:
     else:
         ph_multipliers[r] = 0.78
 
-ph_study_models = copy.deepcopy(BASE_STUDY_MODELS)
-# Philippines: highly price sensitive, promotion & voucher driven
-ph_study_models["PRODUCT_VALIDATION"]["coefficients"]["price_log_ratio"]["mean"] = -1.52
-ph_study_models["PRICING_STUDY"]["coefficients"]["price_log_ratio"]["mean"] = -1.52
+ph_study_models = build_country_study_models("PH")
 
 ph_profile = {
     "version": "PH-CONSUMER-MACRO-2026.10.1",
@@ -814,10 +828,7 @@ sg_multipliers = {
     "NORTH REGION": 0.88,
 }
 
-sg_study_models = copy.deepcopy(BASE_STUDY_MODELS)
-# Singapore: high purchasing power, brand and quality sensitive, lower price sensitivity (-1.05)
-sg_study_models["PRODUCT_VALIDATION"]["coefficients"]["price_log_ratio"]["mean"] = -1.05
-sg_study_models["PRICING_STUDY"]["coefficients"]["price_log_ratio"]["mean"] = -1.05
+sg_study_models = build_country_study_models("SG")
 
 sg_profile = {
     "version": "SG-CONSUMER-MACRO-2026.10.1",

@@ -1,3 +1,4 @@
+import json
 import math
 import unittest
 import numpy as np
@@ -47,6 +48,40 @@ class Asean6ExpansionTests(unittest.TestCase):
                 self.assertTrue(
                     math.isclose(sum(profile["population"][dist].values()), 1.0, abs_tol=1e-5),
                     f"{code} {dist} probabilities do not sum to 1.0",
+                )
+
+            # Validate calibration_scope and sources title
+            self.assertIn("calibration_scope", profile, f"{code} must have calibration_scope")
+            self.assertIsNotNone(profile["calibration_scope"])
+            for s in profile.get("sources", []):
+                self.assertTrue(bool(s.get("title")), f"{code} source {s.get('source_id')} missing title")
+
+    def test_all_ten_study_models_are_differentiated_across_six_countries(self):
+        profiles = {code: load_calibration_profile(country_code=code) for code in ["TH", "MY", "ID", "VN", "PH", "SG"]}
+        models = list(profiles["TH"]["study_models"].keys())
+        self.assertEqual(len(models), 10, "Should have exactly 10 study models")
+
+        # Verify Thailand pricing study is aligned with product validation (-1.35), not historical -1.9
+        th_pricing_plr = profiles["TH"]["study_models"]["PRICING_STUDY"]["coefficients"]["price_log_ratio"]["mean"]
+        self.assertEqual(th_pricing_plr, -1.35, "Thailand PRICING_STUDY price_log_ratio should be -1.35")
+
+        for model_name in models:
+            unique_sets = set()
+            plrs = []
+            for code in ["SG", "MY", "TH", "VN", "PH", "ID"]:
+                m = profiles[code]["study_models"][model_name]
+                unique_sets.add(json.dumps(m["coefficients"], sort_keys=True))
+                plrs.append(m["coefficients"]["price_log_ratio"]["mean"])
+
+            self.assertEqual(
+                len(unique_sets), 6,
+                f"Model {model_name} must have 6/6 unique coefficient sets across the 6 countries"
+            )
+            # Ensure price elasticity follows the gradient (SG least elastic, ID most elastic)
+            for i in range(len(plrs) - 1):
+                self.assertGreater(
+                    plrs[i], plrs[i + 1],
+                    f"Model {model_name} price elasticity gradient violated: {plrs}"
                 )
 
     def test_behavior_and_elasticity_are_differentiated(self):

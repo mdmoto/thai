@@ -372,7 +372,7 @@
           "sd": 0.28
         },
         "affordability": {
-          "mean": 0.48,
+          "mean": 0.53,
           "sd": 0.12
         },
         "quality_fit": {
@@ -380,11 +380,11 @@
           "sd": 0.2
         },
         "brand_trust": {
-          "mean": 0.72,
+          "mean": 0.65,
           "sd": 0.16
         },
         "review_proof": {
-          "mean": 0.62,
+          "mean": 0.71,
           "sd": 0.14
         },
         "novelty": {
@@ -404,7 +404,7 @@
           "sd": 0.14
         },
         "localization": {
-          "mean": 0.58,
+          "mean": 0.7,
           "sd": 0.14
         },
         "distance_friction": {
@@ -427,7 +427,7 @@
           "sd": 0.34
         },
         "affordability": {
-          "mean": 0.68,
+          "mean": 0.75,
           "sd": 0.16
         },
         "quality_fit": {
@@ -435,11 +435,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.58,
+          "mean": 0.52,
           "sd": 0.14
         },
         "review_proof": {
-          "mean": 0.52,
+          "mean": 0.6,
           "sd": 0.12
         },
         "novelty": {
@@ -459,7 +459,7 @@
           "sd": 0.12
         },
         "localization": {
-          "mean": 0.42,
+          "mean": 0.5,
           "sd": 0.12
         },
         "distance_friction": {
@@ -478,11 +478,11 @@
           "sd": 0.38
         },
         "price_log_ratio": {
-          "mean": -1.05,
+          "mean": -1.1,
           "sd": 0.25
         },
         "affordability": {
-          "mean": 0.35,
+          "mean": 0.39,
           "sd": 0.1
         },
         "quality_fit": {
@@ -490,11 +490,11 @@
           "sd": 0.16
         },
         "brand_trust": {
-          "mean": 0.52,
+          "mean": 0.47,
           "sd": 0.14
         },
         "review_proof": {
-          "mean": 0.45,
+          "mean": 0.52,
           "sd": 0.12
         },
         "novelty": {
@@ -514,7 +514,7 @@
           "sd": 0.12
         },
         "localization": {
-          "mean": 0.82,
+          "mean": 0.98,
           "sd": 0.18
         },
         "distance_friction": {
@@ -533,11 +533,11 @@
           "sd": 0.35
         },
         "price_log_ratio": {
-          "mean": -0.9,
+          "mean": -0.95,
           "sd": 0.22
         },
         "affordability": {
-          "mean": 0.42,
+          "mean": 0.46,
           "sd": 0.12
         },
         "quality_fit": {
@@ -545,11 +545,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.45,
+          "mean": 0.41,
           "sd": 0.12
         },
         "review_proof": {
-          "mean": 0.72,
+          "mean": 0.83,
           "sd": 0.16
         },
         "novelty": {
@@ -569,7 +569,7 @@
           "sd": 0.2
         },
         "localization": {
-          "mean": 0.5,
+          "mean": 0.6,
           "sd": 0.12
         },
         "distance_friction": {
@@ -589,11 +589,11 @@
           "sd": 0.36
         },
         "price_log_ratio": {
-          "mean": -0.75,
+          "mean": -0.79,
           "sd": 0.2
         },
         "affordability": {
-          "mean": 0.36,
+          "mean": 0.4,
           "sd": 0.1
         },
         "quality_fit": {
@@ -601,11 +601,11 @@
           "sd": 0.15
         },
         "brand_trust": {
-          "mean": 0.4,
+          "mean": 0.36,
           "sd": 0.1
         },
         "review_proof": {
-          "mean": 0.55,
+          "mean": 0.63,
           "sd": 0.12
         },
         "novelty": {
@@ -625,7 +625,7 @@
           "sd": 0.18
         },
         "localization": {
-          "mean": 0.42,
+          "mean": 0.5,
           "sd": 0.1
         },
         "distance_friction": {
@@ -644,11 +644,11 @@
           "sd": 0.34
         },
         "price_log_ratio": {
-          "mean": -1.0,
+          "mean": -1.05,
           "sd": 0.24
         },
         "affordability": {
-          "mean": 0.5,
+          "mean": 0.55,
           "sd": 0.13
         },
         "quality_fit": {
@@ -656,11 +656,11 @@
           "sd": 0.22
         },
         "brand_trust": {
-          "mean": 0.36,
+          "mean": 0.32,
           "sd": 0.1
         },
         "review_proof": {
-          "mean": 0.82,
+          "mean": 0.94,
           "sd": 0.18
         },
         "novelty": {
@@ -680,7 +680,7 @@
           "sd": 0.22
         },
         "localization": {
-          "mean": 0.62,
+          "mean": 0.74,
           "sd": 0.15
         },
         "distance_friction": {
@@ -699,11 +699,11 @@
           "sd": 0.35
         },
         "price_log_ratio": {
-          "mean": -0.82,
+          "mean": -0.86,
           "sd": 0.2
         },
         "affordability": {
-          "mean": 0.38,
+          "mean": 0.42,
           "sd": 0.1
         },
         "quality_fit": {
@@ -711,11 +711,11 @@
           "sd": 0.2
         },
         "brand_trust": {
-          "mean": 0.3,
+          "mean": 0.27,
           "sd": 0.09
         },
         "review_proof": {
-          "mean": 0.62,
+          "mean": 0.71,
           "sd": 0.15
         },
         "novelty": {
@@ -735,7 +735,7 @@
           "sd": 0.22
         },
         "localization": {
-          "mean": 0.52,
+          "mean": 0.62,
           "sd": 0.13
         },
         "distance_friction": {
@@ -754,11 +754,11 @@
           "sd": 0.4
         },
         "price_log_ratio": {
-          "mean": -0.88,
+          "mean": -0.93,
           "sd": 0.22
         },
         "affordability": {
-          "mean": 0.4,
+          "mean": 0.44,
           "sd": 0.11
         },
         "quality_fit": {
@@ -766,11 +766,11 @@
           "sd": 0.17
         },
         "brand_trust": {
-          "mean": 0.22,
+          "mean": 0.2,
           "sd": 0.08
         },
         "review_proof": {
-          "mean": 0.46,
+          "mean": 0.53,
           "sd": 0.12
         },
         "novelty": {
@@ -790,7 +790,7 @@
           "sd": 0.25
         },
         "localization": {
-          "mean": 0.38,
+          "mean": 0.46,
           "sd": 0.1
         },
         "distance_friction": {
@@ -809,11 +809,11 @@
           "sd": 0.34
         },
         "price_log_ratio": {
-          "mean": -1.25,
+          "mean": -1.31,
           "sd": 0.28
         },
         "affordability": {
-          "mean": 0.52,
+          "mean": 0.57,
           "sd": 0.13
         },
         "quality_fit": {
@@ -821,11 +821,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.55,
+          "mean": 0.5,
           "sd": 0.13
         },
         "review_proof": {
-          "mean": 0.5,
+          "mean": 0.57,
           "sd": 0.12
         },
         "novelty": {
@@ -845,7 +845,7 @@
           "sd": 0.17
         },
         "localization": {
-          "mean": 0.46,
+          "mean": 0.55,
           "sd": 0.11
         },
         "distance_friction": {
@@ -864,11 +864,11 @@
           "sd": 0.36
         },
         "price_log_ratio": {
-          "mean": -0.85,
+          "mean": -0.89,
           "sd": 0.21
         },
         "affordability": {
-          "mean": 0.4,
+          "mean": 0.44,
           "sd": 0.11
         },
         "quality_fit": {
@@ -876,11 +876,11 @@
           "sd": 0.18
         },
         "brand_trust": {
-          "mean": 0.38,
+          "mean": 0.34,
           "sd": 0.1
         },
         "review_proof": {
-          "mean": 0.58,
+          "mean": 0.67,
           "sd": 0.14
         },
         "novelty": {
@@ -900,7 +900,7 @@
           "sd": 0.2
         },
         "localization": {
-          "mean": 0.48,
+          "mean": 0.58,
           "sd": 0.12
         },
         "distance_friction": {
